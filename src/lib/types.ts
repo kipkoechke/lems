@@ -66,6 +66,7 @@ export interface WorkflowState {
     | "recommendation"
     | "booking"
     | "consent"
+    | "fulfillment"
     | "validation"
     | "service"
     | "completion"

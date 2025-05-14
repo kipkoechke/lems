@@ -1,10 +1,11 @@
 "use client";
 
 import DiagnosticServices from "@/components/new/DiagnosticServices";
+import PatientConsent from "@/components/new/PatientConsent";
 import PatientRegistration from "@/components/new/PatientRegistration";
 import ServiceBooking from "@/components/new/ServiceBooking";
+import ServiceFulfillment from "@/components/new/ServiceFulfillment";
 import ServiceRecommendation from "@/components/new/ServiceRecommendation";
-import ServiceValidation from "@/components/new/ServiceValidation";
 import { useWorkflow } from "@/context/WorkflowContext";
 
 function Clinicians() {
@@ -19,10 +20,11 @@ function Clinicians() {
       case "booking":
         return <ServiceBooking />;
       case "consent":
+        return <PatientConsent />;
       case "service":
         return <DiagnosticServices />;
-      case "validation":
-        return <ServiceValidation />;
+      case "fulfillment":
+        return <ServiceFulfillment />;
       default:
         return <div>Step not implemented.</div>;
     }

@@ -1,11 +1,11 @@
 "use client";
 import { IServiceBooking } from "@/services/apiBooking";
+import { Equipment } from "@/services/apiEquipment";
+import { Facility } from "@/services/apiFacility";
 import { Patient } from "@/services/apiPatient";
 import { ServiceInfo } from "@/services/apiServiceInfo";
 import React, { createContext, ReactNode, useContext, useReducer } from "react";
 import { Invoice, ValidationReport, WorkflowState } from "./../lib/types";
-import { Equipment } from "@/services/apiEquipment";
-import { Facility } from "@/services/apiFacility";
 
 // Update WorkflowState to include equipment and facility
 type WorkflowAction =
@@ -81,17 +81,19 @@ interface WorkflowProviderProps {
   children: ReactNode;
 }
 
+// Update the step order to match our new workflow
 const stepOrder: WorkflowState["currentStep"][] = [
   "registration",
   "recommendation",
   "booking",
   "consent",
-  "validation",
+  "fulfillment",
   "service",
   "completion",
   "invoice",
   "approval",
   "disbursement",
+  "validation",
 ];
 
 export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({

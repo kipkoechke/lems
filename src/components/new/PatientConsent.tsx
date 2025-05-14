@@ -3,9 +3,11 @@ import { useWorkflow } from "@/context/WorkflowContext";
 import React, { useState } from "react";
 import OTPValidation from "./OTPValidation";
 import StatusCard from "./StatusCard";
+import { usePatientConsent } from "./usePatientConsent";
 
 const PatientConsent: React.FC = () => {
-  const { state, dispatch, goToNextStep, goToPreviousStep } = useWorkflow();
+  const { state, goToPreviousStep } = useWorkflow();
+  const { registerPatientConsent, isRegistering } = usePatientConsent();
   const [showOTP, setShowOTP] = useState(false);
   const [consentStatus, setConsentStatus] = useState<
     "pending" | "approved" | "rejected"
@@ -42,24 +44,20 @@ const PatientConsent: React.FC = () => {
   };
 
   const handleValidateOTP = (otp: string) => {
-    // Simulate OTP validation
-    // In a real scenario, this would make an API call to validate the OTP
-    if (otp === "123456") {
-      setConsentStatus("approved");
-      dispatch({ type: "SET_CONSENT", payload: true });
-
-      // Move to the next step after a short delay
-      setTimeout(() => {
-        goToNextStep();
-      }, 1500);
-    } else {
-      setConsentStatus("rejected");
+    if (!state.booking || !state.patient) {
+      return;
     }
+
+    registerPatientConsent({
+      bookingId: state.booking.bookingId,
+      patientId: state.patient.patientId,
+      otpCode: otp,
+      consent: true,
+    });
   };
 
   const handleRejectConsent = () => {
     setConsentStatus("rejected");
-    dispatch({ type: "SET_CONSENT", payload: false });
   };
 
   const handleRetry = () => {
@@ -108,7 +106,7 @@ const PatientConsent: React.FC = () => {
           description={`Please enter the 6-digit OTP sent to ${state.patient.mobileNumber} to confirm consent for ${state.selectedService.description}.`}
           onValidate={handleValidateOTP}
           onCancel={handleRejectConsent}
-          processingLabel="Verify Consent"
+          processingLabel={isRegistering ? "Verifying..." : "Verify Consent"}
         />
       ) : (
         <div className="bg-white shadow-md rounded-lg p-6">

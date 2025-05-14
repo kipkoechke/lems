@@ -46,7 +46,6 @@ export const createServiceBooking = async (
     }
   );
 
-  console.log("Response from booking API:", response);
   if (!response.ok) {
     throw new Error("Failed to book service");
   }
@@ -67,10 +66,11 @@ export const patientConsent = async (
       body: JSON.stringify(data),
     }
   );
+
   if (!response.ok) {
     throw new Error("Failed to submit patient consent");
   }
-  return response.json();
+  return data;
 };
 
 export const getServiceBookingPatient = async (
