@@ -54,7 +54,7 @@ const DiagnosticServices: React.FC = () => {
   };
 
   // Check prerequisites - moved after all hooks
-  if (!state.patient || !state.selectedService || !state.serviceValidated) {
+  if (!state.patient || !state.selectedService) {
     return (
       <div className="max-w-2xl mx-auto">
         <StatusCard

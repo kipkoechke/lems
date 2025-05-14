@@ -1,7 +1,6 @@
 "use client";
 
 import DiagnosticServices from "@/components/new/DiagnosticServices";
-import PatientConsent from "@/components/new/PatientConsent";
 import PatientRegistration from "@/components/new/PatientRegistration";
 import ServiceBooking from "@/components/new/ServiceBooking";
 import ServiceRecommendation from "@/components/new/ServiceRecommendation";
@@ -20,11 +19,10 @@ function Clinicians() {
       case "booking":
         return <ServiceBooking />;
       case "consent":
-        return <PatientConsent />;
-      case "validation":
-        return <ServiceValidation />;
       case "service":
         return <DiagnosticServices />;
+      case "validation":
+        return <ServiceValidation />;
       default:
         return <div>Step not implemented.</div>;
     }

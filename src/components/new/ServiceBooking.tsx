@@ -20,22 +20,6 @@ const ServiceBooking: React.FC = () => {
   // Get current date for min date value
   const today = new Date().toISOString().split("T")[0];
 
-  // Simulate available time slots
-  const availableTimeSlots = [
-    "09:00",
-    "09:30",
-    "10:00",
-    "10:30",
-    "11:00",
-    "11:30",
-    "12:00",
-    "14:00",
-    "14:30",
-    "15:00",
-    "15:30",
-    "16:00",
-  ];
-
   const onSubmit = (data: ServiceBookingForm) => {
     if (
       !state.selectedService ||
@@ -173,7 +157,7 @@ const ServiceBooking: React.FC = () => {
               })}
               id="startTime"
               type="datetime-local"
-              min={`${today}T00:00`} // Ensure the minimum date is today
+              min={`${today}T00:00`}
               className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {errors.startTime && (
