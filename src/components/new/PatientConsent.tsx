@@ -168,9 +168,9 @@ const PatientConsent: React.FC = () => {
           <div className="bg-gray-50 p-4 rounded-md mb-6">
             <h4 className="font-medium mb-2">Consent Verification Process</h4>
             <p className="text-gray-700 text-sm">
-              A one-time password (OTP) will be sent to the patient's registered
-              mobile number for verification. The patient must provide this OTP
-              to confirm consent.
+              A one-time password (OTP) will be sent to the patient&apos;s
+              registered mobile number for verification. The patient must
+              provide this OTP to confirm consent.
             </p>
           </div>
 

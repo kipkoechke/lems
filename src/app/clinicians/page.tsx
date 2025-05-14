@@ -9,7 +9,7 @@ import ServiceValidation from "@/components/new/ServiceValidation";
 import { useWorkflow } from "@/context/WorkflowContext";
 
 function Clinicians() {
-  const { state, goToNextStep, goToPreviousStep } = useWorkflow();
+  const { state } = useWorkflow();
 
   const renderStepComponent = () => {
     switch (state.currentStep) {

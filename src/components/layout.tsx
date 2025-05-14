@@ -1,7 +1,6 @@
 // components/Layout.tsx
 "use client";
 
-import { usePathname } from "next/navigation"; // ✅ FIXED
 import React, { ReactNode } from "react";
 
 interface LayoutProps {
@@ -9,12 +8,6 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const pathname = usePathname(); // ✅ instead of useRouter
-
-  const isActiveRoute = (route: string) => {
-    return pathname === route ? "bg-blue-700" : "";
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-grow container mx-auto px-4 py-8">{children}</main>

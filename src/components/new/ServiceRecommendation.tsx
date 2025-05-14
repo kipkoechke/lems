@@ -99,8 +99,8 @@ const ServiceRecommendation: React.FC = () => {
           Clinician Recommendation
         </h3>
         <p className="text-blue-700">
-          Based on the patient's condition, please select a service, equipment,
-          and facility to proceed with booking.
+          Based on the patient&apos;s condition, please select a service,
+          equipment, and facility to proceed with booking.
         </p>
       </div>
 
@@ -122,7 +122,7 @@ const ServiceRecommendation: React.FC = () => {
           </option>
           {serviceInfos?.map((service) => (
             <option key={service.serviceId} value={service.serviceId}>
-              {service.description} - Ksh{" "}
+              {service.description} - Ksh
               {service.facilityShare.toLocaleString()}
             </option>
           ))}

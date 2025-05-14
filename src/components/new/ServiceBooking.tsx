@@ -2,7 +2,7 @@
 
 import { useWorkflow } from "@/context/WorkflowContext";
 import { ServiceBookingForm } from "@/services/apiBooking";
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import StatusCard from "./StatusCard";
 import { useCreateBooking } from "./useCreateBooking";
@@ -10,7 +10,6 @@ import { useCreateBooking } from "./useCreateBooking";
 const ServiceBooking: React.FC = () => {
   const { state, goToPreviousStep } = useWorkflow();
   const { createBooking, isCreating } = useCreateBooking();
-  const [bookingComplete, setBookingComplete] = useState(false);
 
   const {
     register,
@@ -78,7 +77,6 @@ const ServiceBooking: React.FC = () => {
     console.log("Booking Data:", bookingData);
 
     createBooking(bookingData);
-    setBookingComplete(true);
   };
 
   if (!state.selectedService) {
