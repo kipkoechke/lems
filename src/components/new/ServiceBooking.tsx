@@ -36,22 +36,6 @@ const ServiceBooking: React.FC = () => {
     "16:00",
   ];
 
-  // Calculate end time (30 minutes after start time)
-  const calculateEndTime = (startTime: string): string => {
-    const [hours, minutes] = startTime.split(":").map(Number);
-    let newHours = hours;
-    let newMinutes = minutes + 30;
-
-    if (newMinutes >= 60) {
-      newHours += 1;
-      newMinutes -= 60;
-    }
-
-    return `${newHours.toString().padStart(2, "0")}:${newMinutes
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
   const onSubmit = (data: ServiceBookingForm) => {
     if (
       !state.selectedService ||
@@ -68,8 +52,8 @@ const ServiceBooking: React.FC = () => {
       equipmentId: state.selectedEquipment.equipmentId,
       facilityId: state.selectedFacility.facilityId,
       bookingDate: new Date(data.bookingDate),
-      startTime: data.startTime,
-      endTime: calculateEndTime(data.startTime),
+      startTime: new Date(data.startTime),
+      endTime: new Date(new Date(data.startTime).getTime() + 60 * 60 * 1000),
       status: "Pending",
       notes: data.notes || "",
       cost: state.selectedService.shaRate,
@@ -181,22 +165,17 @@ const ServiceBooking: React.FC = () => {
               htmlFor="startTime"
               className="block text-gray-700 font-medium mb-2"
             >
-              Appointment Time
+              Appointment Start Date & Time
             </label>
-            <select
+            <input
               {...register("startTime", {
-                required: "Appointment time is required",
+                required: "Appointment start date and time are required",
               })}
               id="startTime"
+              type="datetime-local"
+              min={`${today}T00:00`} // Ensure the minimum date is today
               className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select time slot</option>
-              {availableTimeSlots.map((time) => (
-                <option key={time} value={time}>
-                  {time}
-                </option>
-              ))}
-            </select>
+            />
             {errors.startTime && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.startTime.message}

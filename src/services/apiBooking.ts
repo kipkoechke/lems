@@ -5,8 +5,8 @@ export interface IServiceBooking {
   equipmentId: string;
   facilityId: string;
   bookingDate: Date;
-  startTime: string;
-  endTime: string;
+  startTime: Date;
+  endTime: Date;
   status: string;
   notes: string;
   cost: number;
@@ -18,8 +18,8 @@ export interface ServiceBookingForm {
   equipmentId: string;
   facilityId: string;
   bookingDate: Date;
-  startTime: string;
-  endTime: string;
+  startTime: Date;
+  endTime: Date;
   status: string;
   notes: string;
   cost: number;
