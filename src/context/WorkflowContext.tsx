@@ -88,7 +88,7 @@ const stepOrder: WorkflowState["currentStep"][] = [
   "booking",
   "consent",
   "fulfillment",
-  "service",
+  "report",
   "completion",
   "invoice",
   "approval",

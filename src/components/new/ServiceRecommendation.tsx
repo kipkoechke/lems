@@ -21,9 +21,6 @@ const ServiceRecommendation: React.FC = () => {
   const { isLoading: loadingServices, serviceInfos } = useServiceInfos();
   const { isLoading: loadingEquipments, equipments } = useEquipments();
   const { isLoading: loadingFacilities, facilities } = useFacilities();
-  console.log("Service Recommendation - Service Infos:", serviceInfos);
-  console.log("Service Recommendation - Equipments:", equipments);
-  console.log("Service Recommendation - Facilities:", facilities);
 
   const handleContinue = () => {
     if (selectedServiceId && selectedEquipmentId && selectedFacilityId) {
@@ -87,7 +84,9 @@ const ServiceRecommendation: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Service Recommendation</h2>
+        <h2 className="text-2xl font-bold">
+          Clinician Diagnostic Test Recommendation
+        </h2>
         <div>
           <span className="text-gray-600 mr-2">Patient:</span>
           <span className="font-medium">{state.patient?.patientName}</span>
