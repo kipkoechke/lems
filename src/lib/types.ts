@@ -1,9 +1,3 @@
-import { IServiceBooking } from "@/services/apiBooking";
-import { Equipment } from "@/services/apiEquipment";
-import { Facility } from "@/services/apiFacility";
-import { Patient } from "@/services/apiPatient";
-import { ServiceInfo } from "@/services/apiServiceInfo";
-
 export interface Invoice {
   invoiceID: string;
   dateGenerated: string;
