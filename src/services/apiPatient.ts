@@ -1,3 +1,5 @@
+import axios from "../lib/axios";
+
 export interface Patient {
   patientId: string;
   patientName: string;
@@ -6,59 +8,33 @@ export interface Patient {
   paymentMode: "Cash" | "SHA" | "Insurance";
 }
 
-export interface PatientRegistrationForm {
-  patientName: string;
-  mobileNumber: string;
-  dateOfBirth: string;
-  paymentMode: "Cash" | "SHA" | "Insurance";
-}
-
-export const BASEURL = "https://vemsapi.azurewebsites.net/api";
+export type PatientRegistrationForm = Omit<Patient, "patientId">;
 
 export const registerPatient = async (
   data: PatientRegistrationForm
 ): Promise<Patient> => {
-  const response = await fetch(`${BASEURL}/Patient`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to register patient");
-  }
-
-  return response.json();
+  const response = await axios.post<Patient>("/Patient", data);
+  return response.data;
 };
 
 export const getRegisteredPatients = async (): Promise<Patient[]> => {
-  const response = await fetch(`${BASEURL}/Patient`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch registered patients");
-  }
-
-  return response.json();
+  const response = await axios.get<Patient[]>("/Patient");
+  return response.data;
 };
 
 export const getPatientById = async (patientID: string): Promise<Patient> => {
-  const response = await fetch(`${BASEURL}/Patient/${patientID}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  const response = await axios.get<Patient>(`/Patient/${patientID}`);
+  return response.data;
+};
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch patient details");
-  }
+export const updatePatient = async (
+  patientID: string,
+  data: Partial<Patient>
+): Promise<Patient> => {
+  const response = await axios.patch<Patient>(`/Patient/${patientID}`, data);
+  return response.data;
+};
 
-  return response.json();
+export const deletePatient = async (patientID: string): Promise<void> => {
+  await axios.delete<void>(`/Patient/${patientID}`);
 };

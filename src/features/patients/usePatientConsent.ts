@@ -1,10 +1,11 @@
-import { useWorkflow } from "@/context/WorkflowContext";
+import { goToNextStep, setConsent } from "@/context/workflowSlice";
+import { useAppDispatch } from "@/hooks/hooks";
 import { patientConsent, PatientConsent } from "@/services/apiBooking";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 export function usePatientConsent() {
-  const { dispatch, goToNextStep } = useWorkflow();
+  const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
 
   const { mutate: registerPatientConsent, isPending: isRegistering } =
@@ -15,8 +16,8 @@ export function usePatientConsent() {
           id: "registerPatientConsent",
         });
         queryClient.invalidateQueries({ queryKey: ["patients"] });
-        dispatch({ type: "SET_CONSENT", payload: !!data });
-        goToNextStep();
+        dispatch(setConsent(!!data));
+        dispatch(goToNextStep());
       },
       onError: (error) => {
         toast.error(error.message || "Something went wrong", {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useFacilityReport } from "@/components/new/useFacilityReport";
+import { useFacilityReport } from "@/features/reports/useFacilityReport";
 import React, { useState } from "react";
 
 const FacilityReport: React.FC = () => {

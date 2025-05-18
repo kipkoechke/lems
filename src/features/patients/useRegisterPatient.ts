@@ -1,12 +1,12 @@
-import { useWorkflow } from "@/context/WorkflowContext";
-
+import { goToNextStep, setPatient } from "@/context/workflowSlice";
+import { useAppDispatch } from "@/hooks/hooks";
 import { Patient, registerPatient } from "@/services/apiPatient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 export function useRegisterPatient() {
-  const { dispatch, goToNextStep } = useWorkflow();
   const queryClient = useQueryClient();
+  const dispatch = useAppDispatch();
 
   const { mutate: registerPatients, isPending: isRegistering } = useMutation({
     mutationFn: registerPatient,
@@ -15,8 +15,8 @@ export function useRegisterPatient() {
         id: "registerPatient",
       });
       queryClient.invalidateQueries({ queryKey: ["patients"] });
-      dispatch({ type: "SET_PATIENT", payload: data });
-      goToNextStep();
+      dispatch(setPatient(data));
+      dispatch(goToNextStep());
     },
     onError: (error) => {
       toast.error(error.message || "Something went wrong", {

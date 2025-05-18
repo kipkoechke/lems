@@ -1,12 +1,17 @@
 "use client";
-import { useWorkflow } from "@/context/WorkflowContext";
+
+import { goToPreviousStep } from "@/context/workflowSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import React, { useState } from "react";
-import OTPValidation from "./OTPValidation";
-import StatusCard from "./StatusCard";
+import OTPValidation from "../../components/OTPValidation";
+import StatusCard from "../../components/StatusCard";
 import { usePatientConsent } from "./usePatientConsent";
 
 const PatientConsent: React.FC = () => {
-  const { state, goToPreviousStep } = useWorkflow();
+  const { currentStep, patient, selectedService, booking } = useAppSelector(
+    (store) => store.workflow
+  );
+  const dispatch = useAppDispatch();
   const { registerPatientConsent, isRegistering } = usePatientConsent();
   const [showOTP, setShowOTP] = useState(false);
   const [consentStatus, setConsentStatus] = useState<
@@ -14,7 +19,11 @@ const PatientConsent: React.FC = () => {
   >("pending");
   const [otpSent, setOtpSent] = useState(false);
 
-  if (!state.patient || !state.selectedService) {
+  const handlePreviousStep = () => {
+    dispatch(goToPreviousStep());
+  };
+
+  if (!patient || !selectedService) {
     return (
       <div className="max-w-2xl mx-auto">
         <StatusCard
@@ -25,7 +34,7 @@ const PatientConsent: React.FC = () => {
         />
         <div className="mt-4">
           <button
-            onClick={goToPreviousStep}
+            onClick={handlePreviousStep}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Back
@@ -44,13 +53,13 @@ const PatientConsent: React.FC = () => {
   };
 
   const handleValidateOTP = (otp: string) => {
-    if (!state.booking || !state.patient) {
+    if (!booking || !patient) {
       return;
     }
 
     registerPatientConsent({
-      bookingId: state.booking.bookingId,
-      patientId: state.patient.patientId,
+      bookingId: booking.bookingId,
+      patientId: patient.patientId,
       otpCode: otp,
       consent: true,
     });
@@ -68,11 +77,12 @@ const PatientConsent: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
+      <h1>Current Step: {currentStep}</h1>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Patient Consent</h2>
         <div>
           <span className="text-gray-600 mr-2">Patient:</span>
-          <span className="font-medium">{state.patient.patientName}</span>
+          <span className="font-medium">{patient.patientName}</span>
         </div>
       </div>
 
@@ -103,7 +113,7 @@ const PatientConsent: React.FC = () => {
       ) : showOTP ? (
         <OTPValidation
           title="Verify Patient Consent"
-          description={`Please enter the 6-digit OTP sent to ${state.patient.mobileNumber} to confirm consent for ${state.selectedService.description}.`}
+          description={`Please enter the 6-digit OTP sent to ${patient.mobileNumber} to confirm consent for ${selectedService.description}.`}
           onValidate={handleValidateOTP}
           onCancel={handleRejectConsent}
           processingLabel={isRegistering ? "Verifying..." : "Verify Consent"}
@@ -124,14 +134,12 @@ const PatientConsent: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Service Name</p>
-                  <p className="font-medium">
-                    {state.selectedService.description}
-                  </p>
+                  <p className="font-medium">{selectedService.description}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Cost</p>
                   <p className="font-medium">
-                    Ksh {state.selectedService.shaRate.toLocaleString()}
+                    Ksh {selectedService.shaRate.toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -174,7 +182,7 @@ const PatientConsent: React.FC = () => {
 
           <div className="flex justify-between">
             <button
-              onClick={goToPreviousStep}
+              onClick={handlePreviousStep}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400"
             >
               Back

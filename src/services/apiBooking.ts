@@ -1,3 +1,5 @@
+import axios from "../lib/axios";
+
 export interface IServiceBooking {
   bookingId: string;
   patientId: string;
@@ -12,18 +14,7 @@ export interface IServiceBooking {
   cost: number;
 }
 
-export interface ServiceBookingForm {
-  patientId: string;
-  serviceId: string;
-  equipmentId: string;
-  facilityId: string;
-  bookingDate: Date;
-  startTime: Date;
-  endTime: Date;
-  status: string;
-  notes: string;
-  cost: number;
-}
+export type ServiceBookingForm = Omit<IServiceBooking, "bookingId">;
 
 export interface PatientConsent {
   bookingId: string;
@@ -35,98 +26,43 @@ export interface PatientConsent {
 export const createServiceBooking = async (
   data: ServiceBookingForm
 ): Promise<IServiceBooking> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/ServiceBooking`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to book service");
-  }
-
-  return response.json();
+  const response = await axios.post<IServiceBooking>("/ServiceBooking", data);
+  return response.data;
 };
 
 export const patientConsent = async (
   data: PatientConsent
 ): Promise<PatientConsent> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/ServiceBooking/patient-consent`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }
+  const response = await axios.post<PatientConsent>(
+    "/ServiceBooking/patient-consent",
+    data
   );
-
-  if (!response.ok) {
-    throw new Error("Failed to submit patient consent");
-  }
-  return data;
+  return response.data;
 };
 
 export const getServiceBookingPatient = async (
   patientId: string
 ): Promise<IServiceBooking[]> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/ServiceBooking/patient/${patientId}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
+  const response = await axios.get<IServiceBooking[]>(
+    `/ServiceBooking/patient/${patientId}`
   );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch service bookings for patient");
-  }
-
-  return response.json();
+  return response.data;
 };
 
 export const getServiceBookingFacility = async (
   facilityId: string
 ): Promise<IServiceBooking[]> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/ServiceBooking/facility/${facilityId}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
+  const response = await axios.get<IServiceBooking[]>(
+    `/ServiceBooking/facility/${facilityId}`
   );
-  if (!response.ok) {
-    throw new Error("Failed to fetch service bookings for facility");
-  }
-  return response.json();
+  return response.data;
 };
 
 export const getServiceBookingById = async (
   bookingId: string
 ): Promise<IServiceBooking> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/ServiceBooking/${bookingId}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
+  const response = await axios.get<IServiceBooking>(
+    `/ServiceBooking/${bookingId}`
   );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch service booking details");
-  }
-
-  return response.json();
+  return response.data;
 };

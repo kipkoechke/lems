@@ -1,3 +1,5 @@
+import axios from "../lib/axios";
+
 export interface Facility {
   facilityId: string;
   facilityName: string;
@@ -6,104 +8,33 @@ export interface Facility {
   mobileNumber: string;
 }
 
-export interface FacilityForm {
-  facilityName: string;
-  facilityCode: string;
-  county: string;
-  mobileNumber: string;
-}
+export type FacilityForm = Omit<Facility, "facilityId">;
 
 export const getFacilities = async (): Promise<Facility[]> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/Facility`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch facilities");
-  }
-
-  return response.json();
+  const response = await axios.get<Facility[]>("/Facility");
+  return response.data;
 };
 
 export const getFacilityById = async (
   facilityId: string
 ): Promise<Facility> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/Facility/${facilityId}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch facility");
-  }
-
-  return response.json();
+  const response = await axios.get<Facility>(`/Facility/${facilityId}`);
+  return response.data;
 };
 
 export const createFacility = async (data: FacilityForm): Promise<Facility> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/Facility`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to create facility");
-  }
-
-  return response.json();
+  const response = await axios.post<Facility>("/Facility", data);
+  return response.data;
 };
 
 export const updateFacility = async (
   facilityId: string,
-  data: FacilityForm
+  data: Partial<Facility>
 ): Promise<Facility> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/Facility/${facilityId}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to update facility");
-  }
-
-  return response.json();
+  const response = await axios.patch<Facility>(`/Facility/${facilityId}`, data);
+  return response.data;
 };
 
 export const deleteFacility = async (facilityId: string): Promise<void> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/Facility/${facilityId}`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to delete facility");
-  }
+  await axios.delete<void>(`/Facility/${facilityId}`);
 };

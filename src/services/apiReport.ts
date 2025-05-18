@@ -1,33 +1,91 @@
-// apiReport.ts
-export const fetchFacilityReport = async (startDate: Date, endDate: Date) => {
-  const url = new URL(
-    "https://vemsapi.azurewebsites.net/api/Report/facilities"
-  );
+import axios from "../lib/axios";
 
-  // Format dates in the exact format expected by the API: 2024-05-15T12:00:00.000Z
-  const formatDateForApi = (date: Date) => {
-    return date.toISOString();
-  };
+const formatDateForApi = (date: Date) => date.toISOString();
 
-  url.searchParams.append("startDate", formatDateForApi(startDate));
-  url.searchParams.append("endDate", formatDateForApi(endDate));
+export const getVendorsReport = async (startDate: Date, endDate: Date) => {
+  const response = await axios.get("/Report/vendors", {
+    params: {
+      startDate: formatDateForApi(startDate),
+      endDate: formatDateForApi(endDate),
+    },
+  });
+  return response.data;
+};
+export const getVendorReport = async (
+  vendorId: string,
+  startDate: Date,
+  endDate: Date
+) => {
+  const response = await axios.get(`/Report/vendors/${vendorId}`, {
+    params: {
+      startDate: formatDateForApi(startDate),
+      endDate: formatDateForApi(endDate),
+    },
+  });
+  return response.data;
+};
 
-  console.log("Request URL:", url.toString()); // For debugging
-
-  const response = await fetch(url.toString(), {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
+export const getFacilitiesReport = async (startDate: Date, endDate: Date) => {
+  const response = await axios.get("/Report/facilities", {
+    params: {
+      startDate: formatDateForApi(startDate),
+      endDate: formatDateForApi(endDate),
     },
   });
 
-  if (!response.ok) {
-    const errorText = await response.text(); // Get error details
-    throw new Error(`Failed to fetch facility report: ${errorText}`);
-  }
+  return response.data;
+};
 
-  const data = await response.json();
-  console.log("Response data:", data); // For debugging
+export const getFacilityReport = async (
+  facilityId: string,
+  startDate: Date,
+  endDate: Date
+) => {
+  const response = await axios.get(`/Report/facilities/${facilityId}`, {
+    params: {
+      startDate: formatDateForApi(startDate),
+      endDate: formatDateForApi(endDate),
+    },
+  });
 
-  return data;
+  return response.data;
+};
+
+export const getFacilitiesSummaryReport = async (
+  startDate: Date,
+  endDate: Date
+) => {
+  const response = await axios.get("/Report/facilities/summary", {
+    params: {
+      startDate: formatDateForApi(startDate),
+      endDate: formatDateForApi(endDate),
+    },
+  });
+
+  return response.data;
+};
+
+export const getFacilityVendorReport = async (
+  facilityId: string,
+  vendorId: string,
+  startDate: Date,
+  endDate: Date
+) => {
+  const response = await axios.get(
+    `/Report/facilities/${facilityId}/vendors/${vendorId}`,
+    {
+      params: {
+        startDate: formatDateForApi(startDate),
+        endDate: formatDateForApi(endDate),
+      },
+    }
+  );
+  return response.data;
+};
+
+export const getFacilityTrend = async (facilityId: string, year: number) => {
+  const response = await axios.get(
+    `/Report/facilities/${facilityId}/trend/${year}`
+  );
+  return response.data;
 };

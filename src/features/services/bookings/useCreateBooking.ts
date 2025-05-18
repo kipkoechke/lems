@@ -1,11 +1,13 @@
-import { useWorkflow } from "@/context/WorkflowContext";
+import { goToNextStep, setBooking } from "@/context/workflowSlice";
+import { useAppDispatch } from "@/hooks/hooks";
 import { createServiceBooking, IServiceBooking } from "@/services/apiBooking";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 export function useCreateBooking() {
-  const { dispatch, goToNextStep } = useWorkflow();
   const queryClient = useQueryClient();
+
+  const dispatch = useAppDispatch();
 
   const { mutate: createBooking, isPending: isCreating } = useMutation({
     mutationFn: createServiceBooking,
@@ -14,8 +16,8 @@ export function useCreateBooking() {
         id: "createBooking",
       });
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      dispatch({ type: "SET_BOOKING", payload: data });
-      goToNextStep();
+      dispatch(setBooking(data));
+      dispatch(goToNextStep());
     },
     onError: (error) => {
       toast.error(error.message || "Something went wrong", {

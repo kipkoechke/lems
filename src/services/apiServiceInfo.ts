@@ -1,3 +1,5 @@
+import axios from "../lib/axios";
+
 export interface ServiceInfo {
   serviceId: string;
   description: string;
@@ -7,72 +9,38 @@ export interface ServiceInfo {
   categoryId: string;
 }
 
-export interface ServiceInfoForm {
-  description: string;
-  shaRate: number;
-  vendorShare: number;
-  facilityShare: number;
-  categoryId: string;
-}
+export type ServiceInfoForm = Omit<ServiceInfo, "serviceId">;
+
+export const createServiceInfo = async (
+  data: ServiceInfoForm
+): Promise<ServiceInfo> => {
+  const response = await axios.post<ServiceInfo>(`/ServiceInfo`, data);
+  return response.data;
+};
 
 export const getServiceInfo = async (): Promise<ServiceInfo[]> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/ServiceInfo`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch service info");
-  }
-
-  const data = await response.json(); // Parse the JSON response
-  console.log("Service Info Response:", data); // Log the parsed data
-
-  return data; // Return the parsed data
+  const response = await axios.get<ServiceInfo[]>(`/ServiceInfo`);
+  return response.data;
 };
 
 export const getServiceInfoById = async (
   serviceId: string
 ): Promise<ServiceInfo> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/ServiceInfo/${serviceId}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch service info");
-  }
-
-  return response.json();
+  const response = await axios.get<ServiceInfo>(`/ServiceInfo/${serviceId}`);
+  return response.data;
 };
 
-export const createServiceInfo = async (
-  data: ServiceInfoForm
+export const updateServiceInfo = async (
+  serviceId: string,
+  data: Partial<ServiceInfo>
 ): Promise<ServiceInfo> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/ServiceInfo`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }
+  const response = await axios.patch<ServiceInfo>(
+    `/ServiceInfo/${serviceId}`,
+    data
   );
+  return response.data;
+};
 
-  if (!response.ok) {
-    throw new Error("Failed to create service info");
-  }
-
-  return response.json();
+export const deleteServiceInfo = async (serviceId: string): Promise<void> => {
+  await axios.delete<void>(`/ServiceInfo/${serviceId}`);
 };

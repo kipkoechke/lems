@@ -1,12 +1,21 @@
 "use client";
-import { useWorkflow } from "@/context/WorkflowContext";
+
+import {
+  goToNextStep,
+  goToPreviousStep,
+  selectEquipment,
+  selectFacility,
+  selectService,
+} from "@/context/workflowSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import React, { useState } from "react";
-import { useEquipments } from "./useEquipments";
-import { useFacilities } from "./useFacilities";
-import { useServiceInfos } from "./useInfo";
+import { useEquipments } from "../../equipments/useEquipments";
+import { useFacilities } from "../../facilities/useFacilities";
+import { useServiceInfos } from "../useServiceInfo";
 
 const ServiceRecommendation: React.FC = () => {
-  const { state, dispatch, goToNextStep, goToPreviousStep } = useWorkflow();
+  const { patient } = useAppSelector((store) => store.workflow);
+  const dispatch = useAppDispatch();
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(
     null
   );
@@ -35,32 +44,17 @@ const ServiceRecommendation: React.FC = () => {
       );
 
       if (selectedService) {
-        dispatch({
-          type: "SELECT_SERVICE",
-          payload: {
-            ...selectedService,
-          },
-        });
+        dispatch(selectService({ ...selectedService }));
 
         if (selectedEquipment) {
-          dispatch({
-            type: "SELECT_EQUIPMENT",
-            payload: {
-              ...selectedEquipment,
-            },
-          });
+          dispatch(selectEquipment({ ...selectedEquipment }));
         }
 
         if (selectedFacility) {
-          dispatch({
-            type: "SELECT_FACILITY",
-            payload: {
-              ...selectedFacility,
-            },
-          });
+          dispatch(selectFacility({ ...selectedFacility }));
         }
 
-        goToNextStep();
+        dispatch(goToNextStep());
       }
     }
   };
@@ -89,7 +83,7 @@ const ServiceRecommendation: React.FC = () => {
         </h2>
         <div>
           <span className="text-gray-600 mr-2">Patient:</span>
-          <span className="font-medium">{state.patient?.patientName}</span>
+          <span className="font-medium">{patient?.patientName}</span>
         </div>
       </div>
 
@@ -178,7 +172,7 @@ const ServiceRecommendation: React.FC = () => {
 
       <div className="flex justify-between">
         <button
-          onClick={goToPreviousStep}
+          onClick={() => dispatch(goToPreviousStep())}
           className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400"
         >
           Back

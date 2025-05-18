@@ -1,3 +1,5 @@
+import axios from "../lib/axios";
+
 export interface ServiceCategory {
   categoryId: string;
   name: string;
@@ -8,70 +10,25 @@ export interface ServiceCategory {
   equipmentName: string;
 }
 
-export interface ServiceCategoryForm {
-  name: string;
-  vendorId: string;
-  vendorName: string;
-  vendorContact: string;
-  equipmentId: string;
-  equipmentName: string;
-}
+export type ServiceCategoryForm = Omit<ServiceCategory, "categoryId">;
 
 export const getServiceCategories = async (): Promise<ServiceCategory[]> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/ServiceCategory`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch service categories");
-  }
-
-  return response.json();
+  const response = await axios.get<ServiceCategory[]>("/ServiceCategory");
+  return response.data;
 };
 
 export const getServiceCategoryById = async (
   categoryId: string
 ): Promise<ServiceCategory> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/ServiceCategory/${categoryId}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
+  const response = await axios.get<ServiceCategory>(
+    `/ServiceCategory/${categoryId}`
   );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch service category");
-  }
-
-  return response.json();
+  return response.data;
 };
 
 export const createServiceCategory = async (
   data: ServiceCategoryForm
 ): Promise<ServiceCategory> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/ServiceCategory`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to create service category");
-  }
-
-  return response.json();
+  const response = await axios.post<ServiceCategory>("/ServiceCategory", data);
+  return response.data;
 };

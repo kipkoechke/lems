@@ -1,19 +1,20 @@
 "use client";
 
-import DiagnosticServices from "@/components/new/DiagnosticServices";
-import FacilityReport from "@/components/new/FacilityReport";
-import PatientConsent from "@/components/new/PatientConsent";
-import PatientRegistration from "@/components/new/PatientRegistration";
-import ServiceBooking from "@/components/new/ServiceBooking";
-import ServiceFulfillment from "@/components/new/ServiceFulfillment";
-import ServiceRecommendation from "@/components/new/ServiceRecommendation";
-import { useWorkflow } from "@/context/WorkflowContext";
+import DiagnosticServices from "@/components/DiagnosticServices";
+
+import PatientConsent from "@/features/patients/PatientConsent";
+import PatientRegistration from "@/features/patients/PatientRegistration";
+import FacilityReport from "@/features/reports/FacilityReport";
+import ServiceBooking from "@/features/services/bookings/ServiceBooking";
+import ServiceFulfillment from "@/features/services/fulfillments/ServiceFulfillment";
+import ServiceRecommendation from "@/features/services/recommendations/ServiceRecommendation";
+import { useAppSelector } from "@/hooks/hooks";
 
 function Clinicians() {
-  const { state } = useWorkflow();
+  const { currentStep } = useAppSelector((store) => store.workflow);
 
   const renderStepComponent = () => {
-    switch (state.currentStep) {
+    switch (currentStep) {
       case "registration":
         return <PatientRegistration />;
       case "recommendation":

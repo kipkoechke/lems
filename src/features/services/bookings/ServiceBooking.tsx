@@ -1,14 +1,17 @@
 "use client";
 
-import { useWorkflow } from "@/context/WorkflowContext";
+import { goToPreviousStep } from "@/context/workflowSlice";
+import { useAppSelector } from "@/hooks/hooks";
 import { ServiceBookingForm } from "@/services/apiBooking";
 import React from "react";
 import { useForm } from "react-hook-form";
-import StatusCard from "./StatusCard";
+import StatusCard from "../../../components/StatusCard";
 import { useCreateBooking } from "./useCreateBooking";
 
 const ServiceBooking: React.FC = () => {
-  const { state, goToPreviousStep } = useWorkflow();
+  const { selectedService, patient, selectedEquipment, selectedFacility } =
+    useAppSelector((store) => store.workflow);
+
   const { createBooking, isCreating } = useCreateBooking();
 
   const {
@@ -22,32 +25,36 @@ const ServiceBooking: React.FC = () => {
 
   const onSubmit = (data: ServiceBookingForm) => {
     if (
-      !state.selectedService ||
-      !state.patient ||
-      !state.selectedEquipment ||
-      !state.selectedFacility
+      !selectedService ||
+      !patient ||
+      !selectedEquipment ||
+      !selectedFacility
     ) {
       return;
     }
 
     const bookingData: ServiceBookingForm = {
-      patientId: state.patient.patientId,
-      serviceId: state.selectedService.serviceId,
-      equipmentId: state.selectedEquipment.equipmentId,
-      facilityId: state.selectedFacility.facilityId,
+      patientId: patient.patientId,
+      serviceId: selectedService.serviceId,
+      equipmentId: selectedEquipment.equipmentId,
+      facilityId: selectedFacility.facilityId,
       bookingDate: new Date(data.bookingDate),
       startTime: new Date(data.startTime),
       endTime: new Date(new Date(data.startTime).getTime() + 60 * 60 * 1000),
       status: "Pending",
       notes: data.notes || "",
-      cost: state.selectedService.shaRate,
+      cost: selectedService.shaRate,
     };
     console.log("Booking Data:", bookingData);
 
     createBooking(bookingData);
   };
 
-  if (!state.selectedService) {
+  const handlePreviousStep = () => {
+    return goToPreviousStep();
+  };
+
+  if (!selectedService) {
     return (
       <div className="max-w-2xl mx-auto">
         <StatusCard
@@ -58,7 +65,7 @@ const ServiceBooking: React.FC = () => {
         />
         <div className="mt-4">
           <button
-            onClick={goToPreviousStep}
+            onClick={handlePreviousStep}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Back to Service Selection
@@ -74,7 +81,7 @@ const ServiceBooking: React.FC = () => {
         <h2 className="text-2xl font-bold">Service Booking</h2>
         <div>
           <span className="text-gray-600 mr-2">Patient:</span>
-          <span className="font-medium">{state.patient?.patientName}</span>
+          <span className="font-medium">{patient?.patientName}</span>
         </div>
       </div>
 
@@ -85,28 +92,28 @@ const ServiceBooking: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Service Name</p>
-            <p className="font-medium">{state.selectedService.description}</p>
+            <p className="font-medium">{selectedService.description}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Service ID</p>
-            <p className="font-medium">{state.selectedService.serviceId}</p>
+            <p className="font-medium">{selectedService.serviceId}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Equipment</p>
             <p className="font-medium">
-              {state.selectedEquipment?.equipmentName || "Not specified"}
+              {selectedEquipment?.equipmentName || "Not specified"}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Facility</p>
             <p className="font-medium">
-              {state.selectedFacility?.facilityName || "Not specified"}
+              {selectedFacility?.facilityName || "Not specified"}
             </p>
           </div>
           <div className="md:col-span-2">
             <p className="text-sm text-gray-500">Cost</p>
             <p className="font-medium text-lg">
-              Ksh{state.selectedService.shaRate.toLocaleString()}
+              Ksh{selectedService.shaRate.toLocaleString()}
             </p>
           </div>
         </div>
@@ -196,7 +203,7 @@ const ServiceBooking: React.FC = () => {
         <div className="flex justify-between">
           <button
             type="button"
-            onClick={goToPreviousStep}
+            onClick={handlePreviousStep}
             className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400"
           >
             Back
