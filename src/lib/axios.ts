@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: "https://vemsapi.azurewebsites.net/api",
+  // baseURL: "https://vemsapi.azurewebsites.net/api",
+  baseURL: "  https://api.lems.dreamguys.africa/api/v1",
+
   //   withCredentials: true,
   timeout: 10000,
 });

@@ -3,17 +3,34 @@
 import { goToPreviousStep } from "@/context/workflowSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import OTPValidation from "../../components/OTPValidation";
 import StatusCard from "../../components/StatusCard";
+import { usePatientConsentOverride } from "./useConsentOverride";
 import { usePatientConsent } from "./usePatientConsent";
+import { useOtpValidation } from "./useValidateOtp";
+import { useOtpValidationOverride } from "./useValidateOverride";
 
 const PatientConsent: React.FC = () => {
-  const { currentStep, patient, selectedService, booking } = useAppSelector(
+  const { patient, selectedService, booking } = useAppSelector(
     (store) => store.workflow
   );
   const dispatch = useAppDispatch();
-  const { registerPatientConsent, isRegistering } = usePatientConsent();
+  const { requestPatientConsentOtp, isRegistering } = usePatientConsent();
+  const { requestConsentOtpOverride, isRegistering: isOverrideRegistering } =
+    usePatientConsentOverride();
+  const { validateConsentOverrideOtp, isValidating: isOverrideValidating } =
+    useOtpValidationOverride();
   const [showOTP, setShowOTP] = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState<string | null>(null);
+  const [generatedOverrideOtp, setGeneratedOverrideOtp] = useState<
+    string | null
+  >(null);
+
+  const [showOverrideOTP, setShowOverrideOTP] = useState(false);
+
+  const { validateOtpMutation, isValidating } = useOtpValidation();
+
   const [consentStatus, setConsentStatus] = useState<
     "pending" | "approved" | "rejected"
   >("pending");
@@ -44,24 +61,75 @@ const PatientConsent: React.FC = () => {
     );
   }
 
+  const handleSendOverrideOTP = () => {
+    if (!booking || !patient) {
+      toast.error("Booking or patient information is missing.");
+      return;
+    }
+    requestConsentOtpOverride(
+      { booking_id: booking.bookingId },
+      {
+        onSuccess: (data) => {
+          if (data.otp_code) {
+            setGeneratedOverrideOtp(data.otp_code);
+            toast.success(`Override OTP Code: ${data.otp_code}`);
+            setTimeout(() => setShowOverrideOTP(true), 1000);
+          } else {
+            toast.error("No OTP code returned from server.");
+          }
+        },
+        onError: () => {},
+      }
+    );
+  };
+
+  // Handler for override OTP validation
+  const handleValidateOverrideOTP = (otp: string) => {
+    if (!booking) {
+      toast.error("Booking information is missing.");
+      return;
+    }
+    validateConsentOverrideOtp({
+      booking_id: booking.bookingId,
+      otp_code: otp,
+    });
+  };
+
   const handleSendOTP = () => {
-    // Simulate sending OTP to patient's contact number
+    if (!booking || !patient) {
+      toast.error("Booking or patient information is missing.");
+      return;
+    }
     setOtpSent(true);
-    setTimeout(() => {
-      setShowOTP(true);
-    }, 1000);
+
+    requestPatientConsentOtp(
+      { booking_id: booking.bookingId },
+      {
+        onSuccess: (data) => {
+          if (data.otp_code) {
+            setGeneratedOtp(data.otp_code);
+            toast.success(`OTP Code: ${data.otp_code}`);
+            setTimeout(() => setShowOTP(true), 1000);
+          } else {
+            toast.error("No OTP code returned from server.");
+            setOtpSent(false);
+          }
+        },
+        onError: () => {
+          setOtpSent(false);
+        },
+      }
+    );
   };
 
   const handleValidateOTP = (otp: string) => {
-    if (!booking || !patient) {
+    if (!booking) {
+      toast.error("Booking information is missing.");
       return;
     }
-
-    registerPatientConsent({
-      bookingId: booking.bookingId,
-      patientId: patient.patientId,
-      otpCode: otp,
-      consent: true,
+    validateOtpMutation({
+      booking_id: booking.bookingId,
+      otp_code: otp,
     });
   };
 
@@ -77,7 +145,6 @@ const PatientConsent: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1>Current Step: {currentStep}</h1>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Patient Consent</h2>
         <div>
@@ -86,7 +153,18 @@ const PatientConsent: React.FC = () => {
         </div>
       </div>
 
-      {consentStatus === "approved" ? (
+      {showOverrideOTP ? (
+        <OTPValidation
+          title="Facility Manager OTP Override"
+          description="Enter the override OTP sent to the facility manager for this booking."
+          onValidate={handleValidateOverrideOTP}
+          onCancel={() => setShowOverrideOTP(false)}
+          processingLabel={
+            isOverrideValidating ? "Verifying..." : "Verify Override"
+          }
+          initialOtp={generatedOverrideOtp ?? ""}
+        />
+      ) : consentStatus === "approved" ? (
         <StatusCard
           title="Consent Obtained"
           status="success"
@@ -116,20 +194,28 @@ const PatientConsent: React.FC = () => {
           description={`Please enter the 6-digit OTP sent to ${patient.mobileNumber} to confirm consent for ${selectedService.description}.`}
           onValidate={handleValidateOTP}
           onCancel={handleRejectConsent}
-          processingLabel={isRegistering ? "Verifying..." : "Verify Consent"}
+          processingLabel={isValidating ? "Verifying..." : "Verify Consent"}
+          initialOtp={generatedOtp ?? ""}
         />
       ) : (
         <div className="bg-white shadow-md rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Service Consent Form
-          </h3>
-
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">
+              Service Consent Form
+            </h3>
+            <button
+              onClick={handleSendOverrideOTP}
+              className="ml-4 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            >
+              Override OTP
+            </button>
+          </div>
+          {/* ...rest of your form as before... */}
           <div className="mb-6">
             <p className="text-gray-700 mb-4">
               The patient is required to provide consent for the following
               service:
             </p>
-
             <div className="bg-gray-50 p-4 rounded-md mb-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -144,7 +230,6 @@ const PatientConsent: React.FC = () => {
                 </div>
               </div>
             </div>
-
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
               <div className="flex">
                 <div className="flex-shrink-0">
@@ -170,7 +255,6 @@ const PatientConsent: React.FC = () => {
               </div>
             </div>
           </div>
-
           <div className="bg-gray-50 p-4 rounded-md mb-6">
             <h4 className="font-medium mb-2">Consent Verification Process</h4>
             <p className="text-gray-700 text-sm">
@@ -179,7 +263,6 @@ const PatientConsent: React.FC = () => {
               provide this OTP to confirm consent.
             </p>
           </div>
-
           <div className="flex justify-between">
             <button
               onClick={handlePreviousStep}

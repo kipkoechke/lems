@@ -54,6 +54,15 @@ const ServiceValidation: React.FC = () => {
   };
 
   // Conditional rendering for JSX only
+
+  React.useEffect(() => {
+    console.log("workflow state", {
+      patient,
+      selectedService,
+      consentObtained,
+    });
+  }, [patient, selectedService, consentObtained]);
+
   if (!patient || !selectedService || !consentObtained) {
     return (
       <div className="max-w-2xl mx-auto">

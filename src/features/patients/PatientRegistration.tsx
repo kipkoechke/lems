@@ -1,31 +1,43 @@
 "use client";
 
-import { PatientRegistrationForm } from "@/services/apiPatient";
+import { Patient, PatientRegistrationForm } from "@/services/apiPatient";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useRegisterPatient } from "./useRegisterPatient";
 
-const PatientRegistration: React.FC = () => {
+interface PatientRegistrationProps {
+  onPatientAdded?: (patient: Patient) => void;
+  onCloseModal?: () => void;
+}
+
+const PatientRegistration: React.FC<PatientRegistrationProps> = ({
+  onPatientAdded,
+  onCloseModal,
+}) => {
   const { registerPatients, isRegistering } = useRegisterPatient();
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<PatientRegistrationForm>();
 
   const onSubmit = (data: PatientRegistrationForm) => {
-    registerPatients(data);
+    registerPatients(data, {
+      onSuccess: (newPatient: Patient) => {
+        if (onPatientAdded) onPatientAdded(newPatient);
+        reset();
+        onCloseModal?.();
+      },
+    });
   };
 
   return (
     <div className="max-w-2xl mx-auto">
       <h2 className="text-2xl font-bold mb-6">Patient Registration</h2>
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="bg-white shadow-md rounded-lg p-6"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg ">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="mb-4">
             <label
@@ -35,16 +47,14 @@ const PatientRegistration: React.FC = () => {
               Full Name
             </label>
             <input
-              {...register("patientName", { required: "Name is required" })}
+              {...register("name", { required: "Name is required" })}
               id="name"
               type="text"
               className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter full name"
             />
-            {errors.patientName && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.patientName.message}
-              </p>
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
             )}
           </div>
 
@@ -56,48 +66,48 @@ const PatientRegistration: React.FC = () => {
               Contact Number
             </label>
             <input
-              {...register("mobileNumber", {
+              {...register("phone", {
                 required: "Contact number is required",
                 pattern: {
                   value: /^\d{10}$/,
                   message: "Please enter a valid 10-digit phone number",
                 },
               })}
-              id="mobileNumber"
+              id="phone"
               type="text"
               className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="10-digit phone number"
             />
-            {errors.mobileNumber && (
+            {errors.phone && (
               <p className="text-red-500 text-sm mt-1">
-                {errors.mobileNumber.message}
+                {errors.phone.message}
               </p>
             )}
           </div>
 
           <div className="mb-4">
             <label
-              htmlFor="dateOfBirth"
+              htmlFor="date_of_birth"
               className="block text-gray-700 font-medium mb-2"
             >
               Date of Birth
             </label>
             <input
-              {...register("dateOfBirth", {
+              {...register("date_of_birth", {
                 required: "Date of birth is required",
               })}
-              id="dateOfBirth"
+              id="date_of_birth"
               type="date"
               className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.dateOfBirth && (
+            {errors.date_of_birth && (
               <p className="text-red-500 text-sm mt-1">
-                {errors.dateOfBirth.message}
+                {errors.date_of_birth.message}
               </p>
             )}
           </div>
 
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <label
               htmlFor="paymentMode"
               className="block text-gray-700 font-medium mb-2"
@@ -121,7 +131,7 @@ const PatientRegistration: React.FC = () => {
                 {errors.paymentMode.message}
               </p>
             )}
-          </div>
+          </div> */}
         </div>
 
         <div className="flex justify-end">

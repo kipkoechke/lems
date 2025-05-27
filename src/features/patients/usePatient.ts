@@ -11,6 +11,7 @@ export function usePatient() {
   } = useQuery({
     queryKey: ["patient", patientId],
     queryFn: () => getPatientById(patientId as string),
+    enabled: !!patientId,
     retry: false,
   });
 

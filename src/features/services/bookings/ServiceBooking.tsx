@@ -9,8 +9,13 @@ import StatusCard from "../../../components/StatusCard";
 import { useCreateBooking } from "./useCreateBooking";
 
 const ServiceBooking: React.FC = () => {
-  const { selectedService, patient, selectedEquipment, selectedFacility } =
-    useAppSelector((store) => store.workflow);
+  const {
+    selectedService,
+    patient,
+    selectedEquipment,
+    selectedFacility,
+    selectedPaymentMode,
+  } = useAppSelector((store) => store.workflow);
 
   const { createBooking, isCreating } = useCreateBooking();
 
@@ -28,19 +33,19 @@ const ServiceBooking: React.FC = () => {
       !selectedService ||
       !patient ||
       !selectedEquipment ||
-      !selectedFacility
+      !selectedFacility ||
+      !selectedPaymentMode
     ) {
       return;
     }
 
     const bookingData: ServiceBookingForm = {
-      patientId: patient.patientId,
-      serviceId: selectedService.serviceId,
-      equipmentId: selectedEquipment.equipmentId,
-      facilityId: selectedFacility.facilityId,
-      bookingDate: new Date(data.bookingDate),
-      startTime: new Date(data.startTime),
-      endTime: new Date(new Date(data.startTime).getTime() + 60 * 60 * 1000),
+      patient_id: patient.patientId,
+      service_id: selectedService.serviceId,
+      equipment_id: selectedEquipment.equipmentId,
+      facility_id: selectedFacility.facilityId,
+      payment_mode_id: data.payment_mode_id,
+      booking_date: new Date(data.booking_date),
       status: "Pending",
       notes: data.notes || "",
       cost: selectedService.shaRate,
@@ -136,40 +141,17 @@ const ServiceBooking: React.FC = () => {
               Appointment Date
             </label>
             <input
-              {...register("bookingDate", {
+              {...register("booking_date", {
                 required: "Appointment date is required",
               })}
-              id="bookingDate"
-              type="date"
+              id="booking_date"
+              type="datetime-local"
               min={today}
               className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.bookingDate && (
+            {errors.booking_date && (
               <p className="text-red-500 text-sm mt-1">
-                {errors.bookingDate.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="startTime"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Appointment Start Date & Time
-            </label>
-            <input
-              {...register("startTime", {
-                required: "Appointment start date and time are required",
-              })}
-              id="startTime"
-              type="datetime-local"
-              min={`${today}T00:00`}
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {errors.startTime && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.startTime.message}
+                {errors.booking_date.message}
               </p>
             )}
           </div>
@@ -192,11 +174,13 @@ const ServiceBooking: React.FC = () => {
         </div>
 
         {/* Hidden fields */}
-        <input type="hidden" {...register("patientId")} />
-        <input type="hidden" {...register("serviceId")} />
-        <input type="hidden" {...register("equipmentId")} />
-        <input type="hidden" {...register("facilityId")} />
-        <input type="hidden" {...register("endTime")} />
+        <input type="hidden" {...register("patient_id")} />
+        <input type="hidden" {...register("service_id")} />
+        <input type="hidden" {...register("equipment_id")} />
+        <input type="hidden" {...register("facility_id")} />
+        <input type="hidden" {...register("payment_mode_id")} />
+        {/* <input type="hidden" {...register("startTime")} /> */}
+        {/* <input type="hidden" {...register("endTime")} /> */}
         <input type="hidden" {...register("status")} />
         <input type="hidden" {...register("cost")} />
 

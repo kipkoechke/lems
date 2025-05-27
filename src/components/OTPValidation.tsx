@@ -1,4 +1,3 @@
-// components/OTPValidation.tsx
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -8,6 +7,7 @@ interface OTPValidationProps {
   onValidate: (otp: string) => void;
   onCancel: () => void;
   processingLabel?: string;
+  initialOtp?: string;
 }
 
 interface OTPForm {
@@ -20,21 +20,26 @@ const OTPValidation: React.FC<OTPValidationProps> = ({
   onValidate,
   onCancel,
   processingLabel = "Validate",
+  initialOtp = "",
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<OTPForm>();
+    setValue,
+  } = useForm<OTPForm>({
+    defaultValues: { otp: initialOtp },
+  });
+
+  React.useEffect(() => {
+    setValue("otp", initialOtp || "");
+  }, [initialOtp, setValue]);
 
   const onSubmit = (data: OTPForm) => {
     setIsProcessing(true);
-    // Simulate processing delay
-    setTimeout(() => {
-      onValidate(data.otp);
-      setIsProcessing(false);
-    }, 1000);
+    onValidate(data.otp);
+    setIsProcessing(false);
   };
 
   return (

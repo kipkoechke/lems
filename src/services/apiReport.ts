@@ -9,7 +9,7 @@ export const getVendorsReport = async (startDate: Date, endDate: Date) => {
       endDate: formatDateForApi(endDate),
     },
   });
-  return response.data;
+  return response.data.data;
 };
 export const getVendorReport = async (
   vendorId: string,
@@ -22,7 +22,7 @@ export const getVendorReport = async (
       endDate: formatDateForApi(endDate),
     },
   });
-  return response.data;
+  return response.data.data;
 };
 
 export const getFacilitiesReport = async (startDate: Date, endDate: Date) => {
@@ -33,7 +33,7 @@ export const getFacilitiesReport = async (startDate: Date, endDate: Date) => {
     },
   });
 
-  return response.data;
+  return response.data.data;
 };
 
 export const getFacilityReport = async (
@@ -48,7 +48,7 @@ export const getFacilityReport = async (
     },
   });
 
-  return response.data;
+  return response.data.data;
 };
 
 export const getFacilitiesSummaryReport = async (
@@ -62,7 +62,7 @@ export const getFacilitiesSummaryReport = async (
     },
   });
 
-  return response.data;
+  return response.data.data;
 };
 
 export const getFacilityVendorReport = async (
@@ -80,12 +80,12 @@ export const getFacilityVendorReport = async (
       },
     }
   );
-  return response.data;
+  return response.data.data;
 };
 
 export const getFacilityTrend = async (facilityId: string, year: number) => {
   const response = await axios.get(
     `/Report/facilities/${facilityId}/trend/${year}`
   );
-  return response.data;
+  return response.data.data;
 };

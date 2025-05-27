@@ -1,0 +1,103 @@
+"use client";
+
+import { useOutsideClick } from "@/hooks/useOutsideClick";
+import {
+  ReactElement,
+  ReactNode,
+  cloneElement,
+  createContext,
+  useContext,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
+import { HiXMark } from "react-icons/hi2";
+
+interface ModalContextType {
+  openName: string;
+  close: () => void;
+  open: (name: string) => void;
+}
+
+const ModalContext = createContext<ModalContextType | undefined>(undefined);
+
+interface ModalProps {
+  children: ReactNode;
+}
+
+function Modal({ children }: ModalProps) {
+  const [openName, setOpenName] = useState("");
+
+  const close = () => setOpenName("");
+  const open = setOpenName;
+
+  return (
+    <ModalContext.Provider value={{ openName, close, open }}>
+      {children}
+    </ModalContext.Provider>
+  );
+}
+
+interface OpenProps {
+  children: ReactElement;
+  opens: string;
+}
+
+function Open({ children, opens: opensWindowName }: OpenProps) {
+  const typedChildren = children as ReactElement<any>;
+  const context = useContext(ModalContext);
+
+  if (!context) {
+    throw new Error("Modal.Open must be used within a Modal");
+  }
+
+  const { open } = context;
+  return cloneElement(typedChildren, { onClick: () => open(opensWindowName) });
+}
+
+interface WindowProps {
+  children: ReactElement<{ onCloseModal?: () => void }>;
+  name: string;
+}
+
+function Window({ children, name }: WindowProps) {
+  const context = useContext(ModalContext);
+
+  if (!context) {
+    throw new Error("Modal.Window must be used within a Modal");
+  }
+
+  const { openName, close } = context;
+  const ref = useOutsideClick(close);
+
+  if (name !== openName) return null;
+
+  return createPortal(
+    <div className="fixed top-0 left-0 w-full h-screen bg-black/50 backdrop-blur-sm z-50 transition-all duration-500">
+      <div
+        ref={ref}
+        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-8 transition-all duration-500"
+      >
+        <button
+          onClick={close}
+          className="absolute top-3 right-5 p-1 rounded hover:bg-gray-100 transition-all duration-200"
+        >
+          <HiXMark className="w-6 h-6 text-gray-500" />
+        </button>
+
+        <div>{cloneElement(children, { onCloseModal: close } as any)}</div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+// Add types to the Modal component
+interface Modal extends React.FC<ModalProps> {
+  Open: React.FC<OpenProps>;
+  Window: React.FC<WindowProps>;
+}
+
+Modal.Open = Open;
+Modal.Window = Window;
+
+export default Modal;

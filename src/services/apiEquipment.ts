@@ -11,47 +11,34 @@ export interface Equipment {
 export type EquipmentForm = Omit<Equipment, "equipmentId">;
 
 export const getEquipments = async (): Promise<Equipment[]> => {
-  const response = await axios.get<Equipment[]>("/Equipment");
-  return response.data;
+  const response = await axios.get("/equipments");
+  return response.data.data;
 };
 
 export const getEquipmentById = async (
   equipmentId: string
 ): Promise<Equipment> => {
-  const response = await axios.get<Equipment>(`/Equipment/${equipmentId}`);
-  return response.data;
+  const response = await axios.get(`/equipment/${equipmentId}`);
+  return response.data.data;
 };
 
 export const getEquipmentByCategory = async (
   categoryId: string
 ): Promise<Equipment[]> => {
-  const response = await fetch(
-    `https://vemsapi.azurewebsites.net/api/Equipment/category/${categoryId}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-  if (!response.ok) {
-    throw new Error("Failed to fetch equipment by category");
-  }
-  return response.json();
+  const response = await axios.get(`/Equipment/category/${categoryId}`);
+  return response.data.data;
 };
 
 export const getEquipmentByFacility = async (
   facilityId: string
 ): Promise<Equipment[]> => {
-  const response = await axios.get<Equipment[]>(
-    `/Equipment/facility/${facilityId}`
-  );
-  return response.data;
+  const response = await axios.get(`/Equipment/facility/${facilityId}`);
+  return response.data.data;
 };
 
 export const createEquipment = async (
   data: EquipmentForm
 ): Promise<Equipment> => {
-  const response = await axios.post<Equipment>("/Equipment", data);
-  return response.data;
+  const response = await axios.post("/Equipment", data);
+  return response.data.data;
 };

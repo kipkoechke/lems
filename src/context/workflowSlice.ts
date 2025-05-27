@@ -4,15 +4,19 @@ import { IServiceBooking } from "@/services/apiBooking";
 import { Equipment } from "@/services/apiEquipment";
 import { Facility } from "@/services/apiFacility";
 import { Patient } from "@/services/apiPatient";
+import { PaymentMode } from "@/services/apiPaymentMode";
 import { ServiceInfo } from "@/services/apiServiceInfo";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface WorkflowState {
   currentStep:
-    | "registration"
-    | "recommendation"
-    | "booking"
+    | "basicBooking"
+    // | "registration"
+    // | "recommendation"
+    // | "booking"
     | "consent"
+    | "serviceInProgress"
+    // | "serviceValidation"
     | "service"
     | "fulfillment"
     | "report"
@@ -25,6 +29,7 @@ export interface WorkflowState {
   selectedService?: ServiceInfo;
   selectedEquipment?: Equipment;
   selectedFacility?: Facility;
+  selectedPaymentMode?: PaymentMode;
   booking?: IServiceBooking;
   consentObtained?: boolean;
   serviceValidated?: boolean;
@@ -36,15 +41,18 @@ export interface WorkflowState {
 }
 
 const initialState: WorkflowState = {
-  currentStep: "registration",
+  currentStep: "basicBooking",
 };
 
 // Update the step order to match our workflow
 export const stepOrder: WorkflowState["currentStep"][] = [
-  "registration",
-  "recommendation",
-  "booking",
+  "basicBooking",
+  // "registration",
+  // "recommendation",
+  // "booking",
   "consent",
+  "serviceInProgress",
+  // "serviceValidation",
   "fulfillment",
   "report",
   "completion",
@@ -72,6 +80,9 @@ export const workflowSlice = createSlice({
     },
     selectFacility: (state, action: PayloadAction<Facility>) => {
       state.selectedFacility = action.payload;
+    },
+    selectPaymentMode: (state, action: PayloadAction<PaymentMode>) => {
+      state.selectedPaymentMode = action.payload;
     },
     setConsent: (state, action: PayloadAction<boolean>) => {
       state.consentObtained = action.payload;
@@ -120,6 +131,7 @@ export const {
   selectService,
   selectEquipment,
   selectFacility,
+  selectPaymentMode,
   setConsent,
   validateService,
   completeService,

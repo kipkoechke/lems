@@ -1,26 +1,36 @@
 "use client";
 
+import BasicBookingStep from "@/components/BasicBooking";
+import ServiceInProgress from "@/components/ServiceInProgress";
 import PatientConsent from "@/features/patients/PatientConsent";
-import PatientRegistration from "@/features/patients/PatientRegistration";
 import FacilityReport from "@/features/reports/FacilityReport";
-import ServiceBooking from "@/features/services/bookings/ServiceBooking";
 import ServiceFulfillment from "@/features/services/fulfillments/ServiceFulfillment";
-import ServiceRecommendation from "@/features/services/recommendations/ServiceRecommendation";
 import { useAppSelector } from "@/hooks/hooks";
+import { useEffect } from "react";
 
 function Clinicians() {
   const { currentStep } = useAppSelector((store) => store.workflow);
 
+  useEffect(() => {
+    console.log("Current workflow step:", currentStep);
+  }, [currentStep]);
+
   const renderStepComponent = () => {
     switch (currentStep) {
-      case "registration":
-        return <PatientRegistration />;
-      case "recommendation":
-        return <ServiceRecommendation />;
-      case "booking":
-        return <ServiceBooking />;
+      case "basicBooking":
+        return <BasicBookingStep />;
+      // case "registration":
+      //   return <PatientRegistration />;
+      // case "recommendation":
+      //   return <ServiceRecommendation />;
+      // case "booking":
+      //   return <ServiceBooking />;
       case "consent":
         return <PatientConsent />;
+      case "serviceInProgress":
+        return <ServiceInProgress />;
+      // case "serviceValidation":
+      //   return <ServiceValidation />;
       case "fulfillment":
         return <ServiceFulfillment />;
       case "report":
