@@ -93,22 +93,22 @@ const FacilityReport: React.FC = () => {
             <table className="min-w-full bg-white border border-gray-300">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-2 border-b text-left font-semibold">
+                  <th className="px-4 py-2 border-b border-gray-300 text-left font-semibold">
                     Facility
                   </th>
-                  <th className="px-4 py-2 border-b text-left font-semibold">
+                  <th className="px-4 py-2 border-b border-gray-300 text-left font-semibold">
                     Total Revenue
                   </th>
-                  <th className="px-4 py-2 border-b text-left font-semibold">
+                  <th className="px-4 py-2 border-b border-gray-300 text-left font-semibold">
                     Equipment
                   </th>
-                  <th className="px-4 py-2 border-b text-left font-semibold">
+                  <th className="px-4 py-2 border-b border-gray-300 text-left font-semibold">
                     Equipment Revenue
                   </th>
-                  <th className="px-4 py-2 border-b text-left font-semibold">
+                  <th className="px-4 py-2 border-b border-gray-300 text-left font-semibold">
                     Service
                   </th>
-                  <th className="px-4 py-2 border-b text-left font-semibold">
+                  <th className="px-4 py-2 border-b border-gray-300 text-left font-semibold">
                     Service Revenue
                   </th>
                 </tr>
@@ -142,19 +142,19 @@ const FacilityReport: React.FC = () => {
                             return (
                               <tr
                                 key={`${facilityIndex}-${equipmentIndex}-${serviceIndex}`}
-                                className="border-b"
+                                className="border-b border-gray-300"
                               >
                                 {/* Facility name and total revenue - only show on first row */}
                                 {isFirstRowOfFacility && (
                                   <>
                                     <td
-                                      className="px-4 py-2 border-r font-semibold bg-blue-50"
+                                      className="px-4 py-2 border-r border-gray-300 font-semibold bg-blue-50"
                                       rowSpan={facilityRowSpan}
                                     >
                                       {facility.facility}
                                     </td>
                                     <td
-                                      className="px-4 py-2 border-r font-semibold bg-blue-50"
+                                      className="px-4 py-2 border-r border-gray-300 font-semibold bg-blue-50"
                                       rowSpan={facilityRowSpan}
                                     >
                                       $
@@ -167,13 +167,13 @@ const FacilityReport: React.FC = () => {
                                 {isFirstRowOfEquipment && (
                                   <>
                                     <td
-                                      className="px-4 py-2 border-r bg-gray-50"
+                                      className="px-4 py-2 border-r border-gray-300 bg-gray-50"
                                       rowSpan={equipmentRowSpan}
                                     >
                                       {equipment.equipment}
                                     </td>
                                     <td
-                                      className="px-4 py-2 border-r bg-gray-50"
+                                      className="px-4 py-2 border-r border-gray-300 bg-gray-50"
                                       rowSpan={equipmentRowSpan}
                                     >
                                       $
@@ -183,7 +183,7 @@ const FacilityReport: React.FC = () => {
                                 )}
 
                                 {/* Service name and revenue - always show */}
-                                <td className="px-4 py-2 border-r">
+                                <td className="px-4 py-2 border-r border-gray-300">
                                   {service.service}
                                 </td>
                                 <td className="px-4 py-2">
