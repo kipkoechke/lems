@@ -1,20 +1,46 @@
-import MainNav from "@/components/Sidebar";
-import Clinicians from "./clinicians/page";
+"use client";
 
-export default function Home() {
-  return (
-    <div className="h-screen grid grid-cols-[1fr_5fr] grid-rows-[auto_1fr]">
-      <div className="bg-gray-200 h-16 flex items-center px-8 col-span-full">
-        Header
-      </div>
-      <div className="bg-gray-200 border-r h-full overflow-y-auto">
-        <MainNav />
-      </div>
-      <main className="overflow-auto bg-gray-50 p-16">
-        <div className="mx-auto flex max-w-screen-xl flex-col gap-8">
-          <Clinicians />
-        </div>
-      </main>
-    </div>
-  );
+import BasicBookingStep from "@/components/BasicBooking";
+import ServiceInProgress from "@/components/ServiceInProgress";
+import PatientConsent from "@/features/patients/PatientConsent";
+import FacilityReport from "@/features/reports/FacilityReport";
+import ServiceFulfillment from "@/features/services/fulfillments/ServiceFulfillment";
+import { useAppSelector } from "@/hooks/hooks";
+import { useEffect } from "react";
+
+function Clinicians() {
+  const { currentStep } = useAppSelector((store) => store.workflow);
+
+  useEffect(() => {
+    console.log("Current workflow step:", currentStep);
+  }, [currentStep]);
+
+  const renderStepComponent = () => {
+    switch (currentStep) {
+      case "basicBooking":
+        return <BasicBookingStep />;
+      // case "registration":
+      //   return <PatientRegistration />;
+      // case "recommendation":
+      //   return <ServiceRecommendation />;
+      // case "booking":
+      //   return <ServiceBooking />;
+      case "consent":
+        return <PatientConsent />;
+      case "serviceInProgress":
+        return <ServiceInProgress />;
+      // case "serviceValidation":
+      //   return <ServiceValidation />;
+      case "fulfillment":
+        return <ServiceFulfillment />;
+      case "report":
+        return <FacilityReport />;
+      default:
+        return <div>Step not implemented.</div>;
+    }
+  };
+
+  return <div className="max-w-4xl mx-auto mt-2">{renderStepComponent()}</div>;
 }
+
+export default Clinicians;

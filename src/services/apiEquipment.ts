@@ -6,6 +6,9 @@ export interface Equipment {
   facilityId: string;
   serialNumber: string;
   installationDate: Date;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
   lastMaintenanceDate: Date;
 }
 export type EquipmentForm = Omit<Equipment, "equipmentId">;

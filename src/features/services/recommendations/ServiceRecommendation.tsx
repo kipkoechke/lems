@@ -164,7 +164,7 @@ const ServiceRecommendation: React.FC = () => {
           </option>
           {facilities?.map((facility) => (
             <option key={facility.facilityId} value={facility.facilityId}>
-              {facility.facilityName} - {facility.county}
+              {facility.facilityName} - {facility.facilityCode}
             </option>
           ))}
         </select>

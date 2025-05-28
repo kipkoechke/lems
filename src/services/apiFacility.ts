@@ -4,8 +4,10 @@ export interface Facility {
   facilityId: string;
   facilityName: string;
   facilityCode: string;
-  county: string;
-  mobileNumber: string;
+  contactInfo: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
 }
 
 export type FacilityForm = Omit<Facility, "facilityId">;

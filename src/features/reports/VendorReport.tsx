@@ -1,13 +1,14 @@
 "use client";
 
-import { IFacilityReport, ReportForm } from "@/services/apiReport";
+import { IVendorReport, ReportForm } from "@/services/apiReport";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useCreateFacilityReport } from "./useCreateFacilityReport";
+import { useCreateVendorReport } from "./useCreateVendorReport";
 
-const FacilityReport: React.FC = () => {
-  const { createReport, isCreatingReport } = useCreateFacilityReport();
-  const [reportData, setReportData] = useState<IFacilityReport[] | null>(null);
+const VendorReport: React.FC = () => {
+  const { isCreatingVendorReport, generateVendorReport } =
+    useCreateVendorReport();
+  const [reportData, setReportData] = useState<IVendorReport[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -17,11 +18,11 @@ const FacilityReport: React.FC = () => {
     formState: { errors },
   } = useForm<ReportForm>();
 
-  const getChartData = (data: IFacilityReport[]) => {
+  const getChartData = (data: IVendorReport[]) => {
     if (!data) return [];
-    return data.flatMap((facility: IFacilityReport) =>
-      (facility.equipments ?? []).map((eq: any) => ({
-        facility_equipment: `${facility.facility} - ${eq.equipment}`,
+    return data.flatMap((vendor: IVendorReport) =>
+      (vendor.equipments ?? []).map((eq: any) => ({
+        vendor_equipment: `${vendor.vendor} - ${eq.equipment}`,
         equipment_total_revenue: eq.equipment_total_revenue,
       }))
     );
@@ -31,10 +32,10 @@ const FacilityReport: React.FC = () => {
     setError(null);
     setReportData(null);
 
-    createReport(
+    generateVendorReport(
       { start_date: data.start_date, end_date: data.end_date },
       {
-        onSuccess: (result: IFacilityReport[]) => setReportData(result), // Remove the array wrapping
+        onSuccess: (result: IVendorReport[]) => setReportData(result),
         onError: (err: any) =>
           setError(err?.message || "Failed to generate report."),
       }
@@ -43,7 +44,7 @@ const FacilityReport: React.FC = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Facility Report</h1>
+      <h1 className="text-2xl font-bold mb-6">Vendor Report</h1>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
@@ -77,10 +78,10 @@ const FacilityReport: React.FC = () => {
         </div>
         <button
           type="submit"
-          disabled={isCreatingReport}
+          disabled={isCreatingVendorReport}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-300"
         >
-          {isCreatingReport ? "Generating..." : "Generate Report"}
+          {isCreatingVendorReport ? "Generating..." : "Generate Report"}
         </button>
       </form>
 
@@ -88,13 +89,13 @@ const FacilityReport: React.FC = () => {
 
       {reportData && reportData.length > 0 && (
         <div className="mt-10">
-          <h2 className="text-lg font-bold mb-4">Facility Revenue Report</h2>
+          <h2 className="text-lg font-bold mb-4">Vendor Revenue Report</h2>
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white border border-gray-300">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-2 border-b text-left font-semibold">
-                    Facility
+                    Vendor
                   </th>
                   <th className="px-4 py-2 border-b text-left font-semibold">
                     Total Revenue
@@ -114,16 +115,16 @@ const FacilityReport: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {reportData.map((facility, facilityIndex) => {
-                  let facilityRowSpan = 0;
-                  // Calculate total rows needed for this facility
-                  facility.equipments?.forEach((eq) => {
-                    facilityRowSpan += eq.services?.length || 1;
+                {reportData.map((vendor, vendorIndex) => {
+                  let vendorRowSpan = 0;
+                  // Calculate total rows needed for this vendor
+                  vendor.equipments?.forEach((eq) => {
+                    vendorRowSpan += eq.services?.length || 1;
                   });
 
                   let currentRow = 0;
                   return (
-                    facility.equipments?.map((equipment, equipmentIndex) => {
+                    vendor.equipments?.map((equipment, equipmentIndex) => {
                       const equipmentRowSpan = equipment.services?.length || 1;
 
                       return (
@@ -135,30 +136,29 @@ const FacilityReport: React.FC = () => {
                             },
                             serviceIndex: number
                           ) => {
-                            const isFirstRowOfFacility = currentRow === 0;
+                            const isFirstRowOfVendor = currentRow === 0;
                             const isFirstRowOfEquipment = serviceIndex === 0;
                             currentRow++;
 
                             return (
                               <tr
-                                key={`${facilityIndex}-${equipmentIndex}-${serviceIndex}`}
+                                key={`${vendorIndex}-${equipmentIndex}-${serviceIndex}`}
                                 className="border-b"
                               >
-                                {/* Facility name and total revenue - only show on first row */}
-                                {isFirstRowOfFacility && (
+                                {/* Vendor name and total revenue - only show on first row */}
+                                {isFirstRowOfVendor && (
                                   <>
                                     <td
                                       className="px-4 py-2 border-r font-semibold bg-blue-50"
-                                      rowSpan={facilityRowSpan}
+                                      rowSpan={vendorRowSpan}
                                     >
-                                      {facility.facility}
+                                      {vendor.vendor}
                                     </td>
                                     <td
                                       className="px-4 py-2 border-r font-semibold bg-blue-50"
-                                      rowSpan={facilityRowSpan}
+                                      rowSpan={vendorRowSpan}
                                     >
-                                      $
-                                      {facility.total_revenue?.toLocaleString()}
+                                      ${vendor.total_revenue?.toLocaleString()}
                                     </td>
                                   </>
                                 )}
@@ -206,4 +206,4 @@ const FacilityReport: React.FC = () => {
   );
 };
 
-export default FacilityReport;
+export default VendorReport;

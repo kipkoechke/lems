@@ -2,6 +2,37 @@ import axios from "../lib/axios";
 
 const formatDateForApi = (date: Date) => date.toISOString();
 
+export interface IFacilityReport {
+  facility: string;
+  total_revenue: number;
+  equipments: any[];
+}
+
+export interface IVendorReport {
+  vendor: string;
+  total_revenue: number;
+  equipments: any[];
+}
+
+export interface ReportForm {
+  start_date: Date;
+  end_date: Date;
+}
+
+export const createFacilityReport = async (
+  data: ReportForm
+): Promise<IFacilityReport[]> => {
+  const response = await axios.post("/reports/facility-revenue-summary", data);
+  return response.data;
+};
+
+export const createVendorReport = async (
+  data: ReportForm
+): Promise<IVendorReport[]> => {
+  const response = await axios.post("/reports/vendor-revenue-summary", data);
+  return response.data;
+};
+
 export const getVendorsReport = async (startDate: Date, endDate: Date) => {
   const response = await axios.get("/Report/vendors", {
     params: {
@@ -9,31 +40,29 @@ export const getVendorsReport = async (startDate: Date, endDate: Date) => {
       endDate: formatDateForApi(endDate),
     },
   });
-  return response.data.data;
-};
-export const getVendorReport = async (
-  vendorId: string,
-  startDate: Date,
-  endDate: Date
-) => {
-  const response = await axios.get(`/Report/vendors/${vendorId}`, {
-    params: {
-      startDate: formatDateForApi(startDate),
-      endDate: formatDateForApi(endDate),
-    },
-  });
-  return response.data.data;
+  return response.data;
 };
 
-export const getFacilitiesReport = async (startDate: Date, endDate: Date) => {
-  const response = await axios.get("/Report/facilities", {
-    params: {
-      startDate: formatDateForApi(startDate),
-      endDate: formatDateForApi(endDate),
-    },
-  });
+export const getVendorReport = async () => {
+  const response = await axios.get("/reports/vendor-revenue-summary");
+  return response.data;
+};
 
-  return response.data.data;
+// export const getFacilitiesReport = async (startDate: Date, endDate: Date) => {
+//   const response = await axios.get("/Report/facilities", {
+//     params: {
+//       startDate: formatDateForApi(startDate),
+//       endDate: formatDateForApi(endDate),
+//     },
+//   });
+
+//   return response.data.data;
+// };
+
+export const getFacilitiesReport = async () => {
+  const response = await axios.get("/reports/facility-revenue-summary");
+
+  return response.data;
 };
 
 export const getFacilityReport = async (
