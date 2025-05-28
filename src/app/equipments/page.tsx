@@ -78,22 +78,23 @@ function Equipments() {
           <table className="min-w-full bg-white border border-gray-300 rounded-lg">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 border-b text-left font-semibold text-gray-700">
-                  Equipment Name
-                </th>
-                <th className="px-4 py-3 border-b text-left font-semibold text-gray-700">
+                {/* <th className="px-4 py-3 border-b text-left font-semibold text-gray-700">
+                  Equipment ID
+                </th> */}
+                <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
                   Serial Number
                 </th>
-                <th className="px-4 py-3 border-b text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
+                  Equipment Name
+                </th>
+                <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
                   Status
                 </th>
-                <th className="px-4 py-3 border-b text-left font-semibold text-gray-700">
-                  Equipment ID
-                </th>
-                <th className="px-4 py-3 border-b text-left font-semibold text-gray-700">
+
+                <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
                   Created Date
                 </th>
-                <th className="px-4 py-3 border-b text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
                   Last Updated
                 </th>
               </tr>
@@ -102,21 +103,22 @@ function Equipments() {
               {equipmentData.map((equipment: Equipment, index: number) => (
                 <tr
                   key={equipment.equipmentId}
-                  className={`border-b hover:bg-gray-50 ${
+                  className={`border-b border-gray-200 hover:bg-gray-50 ${
                     index % 2 === 0 ? "bg-white" : "bg-gray-25"
                   }`}
                 >
-                  <td className="px-4 py-3 font-medium text-gray-900">
-                    {equipment.equipmentName}
-                  </td>
+                  {/* <td className="px-4 py-3 text-xs text-gray-500 font-mono">
+                    {equipment.equipmentId}
+                  </td> */}
                   <td className="px-4 py-3 text-gray-700 font-mono">
                     {equipment.serialNumber}
                   </td>
+                  <td className="px-4 py-3 font-medium text-gray-900">
+                    {equipment.equipmentName}
+                  </td>
+
                   <td className="px-4 py-3">
                     {getStatusBadge(equipment.status)}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-gray-500 font-mono">
-                    {equipment.equipmentId}
                   </td>
                   <td className="px-4 py-3 text-gray-600">
                     {new Date(equipment.createdAt).toLocaleDateString("en-US", {

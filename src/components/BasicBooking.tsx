@@ -85,133 +85,218 @@ const BasicBookingStep: React.FC = () => {
     }
   };
 
+  const inputClasses = `
+    w-full h-12 px-4 py-3
+    border border-gray-300 rounded-lg
+    bg-white text-gray-900 text-sm
+    placeholder:text-gray-500
+    cursor-pointer
+    transition-all duration-200 ease-in-out
+    hover:border-blue-400 hover:shadow-sm
+    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+    disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-500
+  `;
+
+  const labelClasses = `
+    block text-sm font-semibold text-gray-700 mb-2
+  `;
+
   return (
-    <form
-      className="bg-white shadow-2xs rounded-lg p-6"
-      onSubmit={handleSubmit}
-    >
-      <h2 className="text-2xl font-bold mb-4">Basic Information</h2>
-      <p className="mb-4 text-gray-600">
-        Please fill in the form below to proceed
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="block font-medium">Patient Name</label>
-            <Modal>
-              <Modal.Open opens="patient-form">
-                <button
-                  type="button"
-                  className="ml-2 px-3 py-1 bg-blue-500 text-white rounded"
-                  title="Add new patient"
-                >
-                  +
-                </button>
-              </Modal.Open>
-              <Modal.Window name="patient-form">
-                <PatientRegistration onPatientAdded={handleAddPatient} />
-              </Modal.Window>
-            </Modal>
+    <div className="max-w-4xl mx-auto">
+      <form
+        className="bg-white shadow-lg rounded-xl px-8 py-4 border border-gray-200"
+        onSubmit={handleSubmit}
+      >
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Book a Service
+          </h2>
+          <p className="text-gray-600">
+            Please fill in the form below to proceed with the booking
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
+          {/* Patient Name */}
+          <div className="space-y-2">
+            <div className="relative">
+              <label className={labelClasses}>Patient Name</label>{" "}
+              <Modal>
+                <Modal.Open opens="patient-form">
+                  <button
+                    type="button"
+                    className="
+                      absolute right-1 top-1/2 -translate-y-1/2
+                      flex items-center justify-center
+                      w-6 h-6 rounded-full
+                      bg-blue-500 hover:bg-blue-600
+                      text-white font-bold text-sm
+                      transition-colors duration-200
+                      cursor-pointer
+                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                      z-10
+                    "
+                    title="Add new patient"
+                  >
+                    +
+                  </button>
+                </Modal.Open>
+                <Modal.Window name="patient-form">
+                  <PatientRegistration onPatientAdded={handleAddPatient} />
+                </Modal.Window>
+              </Modal>
+            </div>
+            <div>
+              <select
+                value={selectedPatientId}
+                onChange={(e) => setSelectedPatientId(e.target.value)}
+                className={inputClasses}
+                required
+              >
+                <option value="">Select a patient (e.g. John Doe)</option>
+                {patients?.map((p) => (
+                  <option key={p.patientId} value={p.patientId}>
+                    {p.patientName}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <select
-            value={selectedPatientId}
-            onChange={(e) => setSelectedPatientId(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
+
+          {/* Service Name */}
+          <div className="space-y-2">
+            <label className={labelClasses}>Service Name</label>
+            <select
+              value={selectedServiceId}
+              onChange={(e) => setSelectedServiceId(e.target.value)}
+              className={inputClasses}
+              required
+            >
+              <option value="">Select a service (e.g. X-Ray)</option>
+              {serviceInfos?.map((s) => (
+                <option key={s.serviceId} value={s.serviceId}>
+                  {s.description}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Equipment */}
+          <div className="space-y-2">
+            <label className={labelClasses}>Equipment</label>
+            <select
+              value={selectedEquipmentId}
+              onChange={(e) => setSelectedEquipmentId(e.target.value)}
+              className={inputClasses}
+              required
+            >
+              <option value="">Select equipment (e.g. X-Ray Scanner)</option>
+              {equipments?.map((e) => (
+                <option key={e.equipmentId} value={e.equipmentId}>
+                  {e.equipmentName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Facility */}
+          <div className="space-y-2">
+            <label className={labelClasses}>Facility</label>
+            <select
+              value={selectedFacilityId}
+              onChange={(e) => setSelectedFacilityId(e.target.value)}
+              className={inputClasses}
+              required
+            >
+              <option value="">Select a facility</option>
+              {facilities?.map((f) => (
+                <option key={f.facilityId} value={f.facilityId}>
+                  {f.facilityName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Payment Mode */}
+          <div className="space-y-2">
+            <label className={labelClasses}>Payment Mode</label>
+            <select
+              value={selectedPaymentModeId}
+              onChange={(e) => setSelectedPaymentModeId(e.target.value)}
+              className={inputClasses}
+              required
+            >
+              <option value="">Select payment mode (e.g. SHA)</option>
+              {paymentModes?.map((e) => (
+                <option key={e.paymentModeId} value={e.paymentModeId}>
+                  {e.paymentModeName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Booking Date & Time */}
+          <div className="space-y-2">
+            <label className={labelClasses}>Booking Date & Time</label>
+            <input
+              type="datetime-local"
+              value={bookingDate}
+              onChange={(e) => setBookingDate(e.target.value)}
+              className={inputClasses}
+              required
+            />
+          </div>
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex justify-end pt-6 border-t border-gray-200">
+          <button
+            type="submit"
+            disabled={isCreating}
+            className="
+              px-8 py-3 min-w-[120px]
+              bg-blue-600 hover:bg-blue-700
+              disabled:bg-gray-400 disabled:cursor-not-allowed
+              text-white font-semibold text-sm
+              rounded-lg shadow-sm
+              transition-all duration-200
+              cursor-pointer
+              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+              hover:shadow-md
+              flex items-center justify-center
+            "
           >
-            <option value="">e.g. John Doe</option>
-            {patients?.map((p) => (
-              <option key={p.patientId} value={p.patientId}>
-                {p.patientName}
-              </option>
-            ))}
-          </select>
+            {isCreating ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Processing...
+              </>
+            ) : (
+              "Next"
+            )}
+          </button>
         </div>
-        <div>
-          <label className="block font-medium mb-1">Service Name</label>
-          <select
-            value={selectedServiceId}
-            onChange={(e) => setSelectedServiceId(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          >
-            <option value="">e.g. X-Ray</option>
-            {serviceInfos?.map((s) => (
-              <option key={s.serviceId} value={s.serviceId}>
-                {s.description}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Equipment</label>
-          <select
-            value={selectedEquipmentId}
-            onChange={(e) => setSelectedEquipmentId(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          >
-            <option value="">e.g. X-Ray Scanner</option>
-            {equipments?.map((e) => (
-              <option key={e.equipmentId} value={e.equipmentId}>
-                {e.equipmentName}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Facility</label>
-          <select
-            value={selectedFacilityId}
-            onChange={(e) => setSelectedFacilityId(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          >
-            <option value="">Select Facility</option>
-            {facilities?.map((f) => (
-              <option key={f.facilityId} value={f.facilityId}>
-                {f.facilityName}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Payment Mode</label>
-          <select
-            value={selectedPaymentModeId}
-            onChange={(e) => setSelectedPaymentModeId(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          >
-            <option value="">e.g. SHA</option>
-            {paymentModes?.map((e) => (
-              <option key={e.paymentModeId} value={e.paymentModeId}>
-                {e.paymentModeName}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Booking Date & Time</label>
-          <input
-            type="datetime-local"
-            value={bookingDate}
-            onChange={(e) => setBookingDate(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-      </div>
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 w-full md:w-auto"
-          disabled={isCreating}
-        >
-          Next
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 };
 

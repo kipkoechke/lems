@@ -33,10 +33,10 @@ export default function RootLayout({
             <div className="bg-white font-bold tracking-widest border-b border-gray-200 h-16 flex items-center px-8 col-span-full">
               Leased Management System
             </div>
-            <div className="bg-white border-r border-gray-200 shadow-2xl h-full overflow-y-auto">
+            <div className="bg-white border-r shadow-lg  border-gray-200 h-full overflow-y-auto">
               <MainNav />
             </div>
-            <main className="overflow-auto bg-gray-100 p-16">
+            <main className="overflow-auto bg-gray-100">
               <div className="mx-auto flex max-w-screen-xl flex-col gap-8">
                 {children}
               </div>

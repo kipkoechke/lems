@@ -47,19 +47,19 @@ function Facilities() {
           <table className="min-w-full bg-white border border-gray-300 rounded-lg">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 border-b text-left font-semibold text-gray-700">
-                  Facility Name
-                </th>
-                <th className="px-4 py-3 border-b text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
                   Facility Code
                 </th>
-                <th className="px-4 py-3 border-b text-left font-semibold text-gray-700">
+                <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
+                  Facility Name
+                </th>
+                <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
                   Contact Info
                 </th>
-                <th className="px-4 py-3 border-b text-left font-semibold text-gray-700">
+                {/* <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
                   Facility ID
-                </th>
-                <th className="px-4 py-3 border-b text-left font-semibold text-gray-700">
+                </th> */}
+                <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
                   Created Date
                 </th>
               </tr>
@@ -68,22 +68,22 @@ function Facilities() {
               {facilityData.map((facility: Facility, index: number) => (
                 <tr
                   key={facility.facilityId}
-                  className={`border-b hover:bg-gray-50 ${
+                  className={`border-b border-gray-200 hover:bg-gray-50 ${
                     index % 2 === 0 ? "bg-white" : "bg-gray-25"
                   }`}
                 >
+                  <td className="px-4 py-3 text-gray-700">
+                    {facility.facilityCode}
+                  </td>
                   <td className="px-4 py-3 font-medium text-gray-900">
                     {facility.facilityName}
                   </td>
                   <td className="px-4 py-3 text-gray-700">
-                    {facility.facilityCode}
-                  </td>
-                  <td className="px-4 py-3 text-gray-700">
                     {facility.contactInfo}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-500 font-mono">
+                  {/* <td className="px-4 py-3 text-xs text-gray-500 font-mono">
                     {facility.facilityId}
-                  </td>
+                  </td> */}
                   <td className="px-4 py-3 text-gray-600">
                     {new Date(facility.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",
