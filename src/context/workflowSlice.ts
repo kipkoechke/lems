@@ -2,11 +2,11 @@
 import { Invoice, ValidationReport } from "@/lib/types";
 import { IServiceBooking } from "@/services/apiBooking";
 import { ServiceCategory } from "@/services/apiCategory";
-import { ServiceWithCategory } from "@/services/apiEquipment";
+import { EquipmentWithService } from "@/services/apiEquipment";
 import { Facility } from "@/services/apiFacility";
 import { Patient } from "@/services/apiPatient";
 import { PaymentMode } from "@/services/apiPaymentMode";
-import { ServiceInfo } from "@/services/apiServiceInfo";
+import { ServiceWithCategory } from "@/services/apiServiceInfo";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface WorkflowState {
@@ -28,8 +28,8 @@ export interface WorkflowState {
     | "disbursement";
   patient?: Patient;
   selectedCategory?: ServiceCategory;
-  selectedService?: ServiceInfo;
-  selectedEquipment?: ServiceWithCategory;
+  selectedService?: ServiceWithCategory;
+  selectedEquipment?: EquipmentWithService;
   selectedFacility?: Facility;
   selectedPaymentMode?: PaymentMode;
   booking?: IServiceBooking;
@@ -77,10 +77,10 @@ export const workflowSlice = createSlice({
     selectCategory: (state, action: PayloadAction<ServiceCategory>) => {
       state.selectedCategory = action.payload;
     },
-    selectService: (state, action: PayloadAction<ServiceInfo>) => {
+    selectService: (state, action: PayloadAction<ServiceWithCategory>) => {
       state.selectedService = action.payload;
     },
-    selectEquipment: (state, action: PayloadAction<ServiceWithCategory>) => {
+    selectEquipment: (state, action: PayloadAction<EquipmentWithService>) => {
       state.selectedEquipment = action.payload;
     },
     selectFacility: (state, action: PayloadAction<Facility>) => {

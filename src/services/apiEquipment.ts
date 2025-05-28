@@ -22,7 +22,7 @@ export interface ServiceCategory {
   deletedAt: string | null;
 }
 
-export interface ServiceWithCategory {
+export interface EquipmentWithService {
   equipmentId: string;
   equipmentName: string;
   serialNumber: string;
@@ -35,10 +35,6 @@ export interface ServiceWithCategory {
   deletedAt: string | null;
   category: ServiceCategory;
   services: string;
-}
-
-export interface ServiceWithCategoryResponse {
-  data: ServiceWithCategory;
 }
 
 export type EquipmentForm = Omit<Equipment, "equipmentId">;
@@ -57,7 +53,7 @@ export const getEquipmentById = async (
 
 export const getEquipmentByService = async (
   serviceId: string
-): Promise<ServiceWithCategory[]> => {
+): Promise<EquipmentWithService[]> => {
   const response = await axios.get(`/service/equipments/${serviceId}`);
   return response.data.data;
 };

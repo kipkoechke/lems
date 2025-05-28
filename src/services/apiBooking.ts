@@ -15,7 +15,7 @@ export interface IServiceBooking {
   endTime: Date;
   status: string;
   notes: string;
-  cost: number;
+  cost: string;
 }
 
 export type ServiceBookingForm = {
@@ -25,7 +25,7 @@ export type ServiceBookingForm = {
   facility_id: string;
   payment_mode_id: string;
   booking_date: Date;
-  cost: number;
+  cost: string;
   notes?: string;
   otp_overriden?: boolean;
   status?: string;

@@ -1,6 +1,6 @@
 import {
+  EquipmentWithService,
   getEquipmentByService,
-  ServiceWithCategory,
 } from "@/services/apiEquipment";
 import { useQuery } from "@tanstack/react-query";
 
@@ -9,7 +9,7 @@ export const useEquipmentByService = (serviceId: string) => {
     isLoading,
     data: equipments,
     error,
-  } = useQuery<ServiceWithCategory[]>({
+  } = useQuery<EquipmentWithService[]>({
     queryKey: ["equipmentByService", serviceId],
     queryFn: () => getEquipmentByService(serviceId),
     enabled: !!serviceId,

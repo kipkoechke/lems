@@ -1,4 +1,5 @@
 import axios from "../lib/axios";
+import { ServiceCategory } from "./apiCategory";
 
 export interface ServiceInfo {
   serviceId: string;
@@ -9,7 +10,21 @@ export interface ServiceInfo {
   facilityShare: number;
   categoryId: string;
   capitated: number;
-  category: any
+  category: any;
+}
+
+export interface ServiceWithCategory {
+  serviceId: string;
+  serviceName: string;
+  description: string;
+  shaRate: string;
+  vendorShare: string;
+  facilityShare: string;
+  capitated: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  category: ServiceCategory;
 }
 
 export type ServiceInfoForm = Omit<ServiceInfo, "serviceId">;
@@ -23,6 +38,13 @@ export const createServiceInfo = async (
 
 export const getServiceInfo = async (): Promise<ServiceInfo[]> => {
   const response = await axios.get(`/services`);
+  return response.data.data;
+};
+
+export const getServiceByCategory = async (
+  categoryId: string
+): Promise<ServiceWithCategory[]> => {
+  const response = await axios.get(`/category/services/${categoryId}`);
   return response.data.data;
 };
 

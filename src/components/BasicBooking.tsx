@@ -13,7 +13,7 @@ import { usePatients } from "@/features/patients/usePatients";
 import { usePaymentModes } from "@/features/paymentModes/usePaymentModes";
 import { useCreateBooking } from "@/features/services/bookings/useCreateBooking";
 import { useCategories } from "@/features/services/categories/useCategories";
-import { useServiceInfos } from "@/features/services/useServiceInfo";
+import { useServiceByCategory } from "@/features/services/useServiceByCategory";
 import { useAppDispatch } from "@/hooks/hooks";
 import { Patient } from "@/services/apiPatient";
 import React, { useState } from "react";
@@ -22,7 +22,7 @@ import Modal from "./Modal";
 const BasicBookingStep: React.FC = () => {
   const dispatch = useAppDispatch();
   const { patients } = usePatients();
-  const { serviceInfos } = useServiceInfos();
+  // const { serviceInfos } = useServiceInfos();
   // const { equipments } = useEquipments();
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
   const { data: equipments, isLoading: isEquipmentsLoading } =
@@ -32,10 +32,14 @@ const BasicBookingStep: React.FC = () => {
   const { createBooking, isCreating } = useCreateBooking();
   const { isLoading, categories, error } = useCategories();
 
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+
+  const { isPending, data: services } =
+    useServiceByCategory(selectedCategoryId);
+
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>("");
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [selectedPaymentModeId, setSelectedPaymentModeId] =
     useState<string>("");
   const [bookingDate, setBookingDate] = useState<string>("");
@@ -51,9 +55,8 @@ const BasicBookingStep: React.FC = () => {
     const category = categories?.find(
       (c) => c.categoryId === selectedCategoryId
     );
-    const service = serviceInfos?.find(
-      (s) => s.serviceId === selectedServiceId
-    );
+    const service = services?.find((s) => s.serviceId === selectedServiceId);
+
     const equipment = equipments?.find(
       (e) => e.equipmentId === selectedEquipmentId
     );
@@ -219,7 +222,7 @@ const BasicBookingStep: React.FC = () => {
               required
             >
               <option value="">Select a service (e.g. X-Ray)</option>
-              {serviceInfos?.map((s) => (
+              {services?.map((s) => (
                 <option key={s.serviceId} value={s.serviceId}>
                   {s.serviceName}
                 </option>
