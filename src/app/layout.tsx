@@ -29,11 +29,11 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Providers>
-          <div className="h-screen grid grid-cols-[1fr_5fr] grid-rows-[auto_1fr]">
-            <div className="bg-white h-16 flex items-center px-8 col-span-full">
-              Header
+          <div className="h-screen grid grid-cols-[1fr_6fr] grid-rows-[auto_1fr]">
+            <div className="bg-white font-bold tracking-widest border-b border-gray-200 h-16 flex items-center px-8 col-span-full">
+              Leased Management System
             </div>
-            <div className="bg-white border-r h-full overflow-y-auto">
+            <div className="bg-white border-r border-gray-200 shadow-2xl h-full overflow-y-auto">
               <MainNav />
             </div>
             <main className="overflow-auto bg-gray-100 p-16">
