@@ -1,9 +1,9 @@
-import { getServiceInfo } from "@/services/apiServiceInfo";
+import { getServiceInfo } from "@/services/apiServices";
 import { useQuery } from "@tanstack/react-query";
 
 export function useServiceInfos() {
   const {
-    isLoading,
+    isPending: isServiceLoading,
     data: serviceInfos,
     error,
   } = useQuery({
@@ -11,5 +11,5 @@ export function useServiceInfos() {
     queryFn: getServiceInfo,
   });
 
-  return { isLoading, serviceInfos, error };
+  return { isServiceLoading, serviceInfos, error };
 }

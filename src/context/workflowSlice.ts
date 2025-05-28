@@ -6,7 +6,7 @@ import { EquipmentWithService } from "@/services/apiEquipment";
 import { Facility } from "@/services/apiFacility";
 import { Patient } from "@/services/apiPatient";
 import { PaymentMode } from "@/services/apiPaymentMode";
-import { ServiceWithCategory } from "@/services/apiServiceInfo";
+import { ServiceWithCategory } from "@/services/apiServices";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface WorkflowState {

@@ -1,12 +1,12 @@
 import {
   getServiceByCategory,
   ServiceWithCategory,
-} from "@/services/apiServiceInfo";
+} from "@/services/apiServices";
 import { useQuery } from "@tanstack/react-query";
 
 export const useServiceByCategory = (categoryId: string) => {
   const {
-    isPending,
+    isPending: isServiceByCategoryLoading,
     data: services,
     error,
   } = useQuery<ServiceWithCategory[]>({
@@ -16,8 +16,8 @@ export const useServiceByCategory = (categoryId: string) => {
   });
 
   return {
-    isPending,
-    data: services,
+    isServiceByCategoryLoading,
+    services,
     error,
   };
 };

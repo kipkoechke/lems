@@ -22,10 +22,9 @@ import Modal from "./Modal";
 const BasicBookingStep: React.FC = () => {
   const dispatch = useAppDispatch();
   const { patients } = usePatients();
-  // const { serviceInfos } = useServiceInfos();
-  // const { equipments } = useEquipments();
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
-  const { data: equipments, isLoading: isEquipmentsLoading } =
+  // const { handleSendOTP } = usePatientConsentOtp();
+  const { equipments, isEquipmentsLoading } =
     useEquipmentByService(selectedServiceId);
   const { facilities } = useFacilities();
   const { paymentModes } = usePaymentModes();
@@ -34,7 +33,7 @@ const BasicBookingStep: React.FC = () => {
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
 
-  const { isPending, data: services } =
+  const { isServiceByCategoryLoading, services } =
     useServiceByCategory(selectedCategoryId);
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
@@ -194,24 +193,6 @@ const BasicBookingStep: React.FC = () => {
             </select>
           </div>
 
-          {/* Equipment */}
-          <div className="space-y-2">
-            <label className={labelClasses}>Equipment</label>
-            <select
-              value={selectedEquipmentId}
-              onChange={(e) => setSelectedEquipmentId(e.target.value)}
-              className={inputClasses}
-              required
-            >
-              <option value="">Select equipment (e.g. X-Ray Scanner)</option>
-              {equipments?.map((e) => (
-                <option key={e.equipmentId} value={e.equipmentId}>
-                  {e.equipmentName}
-                </option>
-              ))}
-            </select>
-          </div>
-
           {/* Service Name */}
           <div className="space-y-2">
             <label className={labelClasses}>Service Name</label>
@@ -225,6 +206,24 @@ const BasicBookingStep: React.FC = () => {
               {services?.map((s) => (
                 <option key={s.serviceId} value={s.serviceId}>
                   {s.serviceName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Equipment */}
+          <div className="space-y-2">
+            <label className={labelClasses}>Equipment</label>
+            <select
+              value={selectedEquipmentId}
+              onChange={(e) => setSelectedEquipmentId(e.target.value)}
+              className={inputClasses}
+              required
+            >
+              <option value="">Select equipment (e.g. X-Ray Scanner)</option>
+              {equipments?.map((e) => (
+                <option key={e.equipmentId} value={e.equipmentId}>
+                  {e.equipmentName}
                 </option>
               ))}
             </select>
