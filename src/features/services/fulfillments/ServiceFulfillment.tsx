@@ -6,7 +6,7 @@ import {
   goToPreviousStep,
 } from "@/context/workflowSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import OTPValidation from "../../../components/OTPValidation";
 import StatusCard from "../../../components/StatusCard";
 
@@ -27,6 +27,10 @@ const ServiceFulfillment: React.FC = () => {
       setShowOTP(true);
     }, 1000);
   };
+
+  useEffect(() => {
+    handleSendOTP();
+  }, []);
 
   const handleValidateOTP = (otp: string) => {
     if (otp === "123456") {
@@ -116,7 +120,7 @@ const ServiceFulfillment: React.FC = () => {
           processingLabel="Confirm Completion"
         />
       ) : (
-        <div className="bg-white shadow-md rounded-lg p-6">
+        /*    <div className="bg-white shadow-md rounded-lg p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Diagnostic Service Fulfillment
           </h3>
@@ -207,6 +211,9 @@ const ServiceFulfillment: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>*/
+        <div className="flex items-center justify-center h-32">
+          <span className="text-gray-500">Sending OTP to patient...</span>
         </div>
       )}
     </div>
