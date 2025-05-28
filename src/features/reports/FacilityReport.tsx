@@ -34,7 +34,7 @@ const FacilityReport: React.FC = () => {
     createReport(
       { start_date: data.start_date, end_date: data.end_date },
       {
-        onSuccess: (result: IFacilityReport[]) => setReportData(result), // Remove the array wrapping
+        onSuccess: (result: IFacilityReport[]) => setReportData(result),
         onError: (err: any) =>
           setError(err?.message || "Failed to generate report."),
       }

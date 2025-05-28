@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -34,6 +35,13 @@ function MainNav() {
 
   return (
     <div className="bg-white rounded-lg shadow p-4 h-full">
+      <Image
+        src="/assets/logo.png"
+        alt="Logo"
+        width={150}
+        height={50}
+        className="mb-4"
+      />
       <nav>
         <ul className="flex flex-col gap-2">
           {navItems.map((item) =>

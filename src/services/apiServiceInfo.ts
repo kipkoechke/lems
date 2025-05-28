@@ -2,11 +2,14 @@ import axios from "../lib/axios";
 
 export interface ServiceInfo {
   serviceId: string;
+  serviceName: string;
   description: string;
   shaRate: number;
   vendorShare: number;
   facilityShare: number;
   categoryId: string;
+  capitated: number;
+  category: any
 }
 
 export type ServiceInfoForm = Omit<ServiceInfo, "serviceId">;

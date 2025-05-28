@@ -11,6 +11,36 @@ export interface Equipment {
   updatedAt: string;
   lastMaintenanceDate: Date;
 }
+
+export interface ServiceCategory {
+  vendorId: string;
+  vendorName: string;
+  vendorCode: string;
+  contactInfo: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface ServiceWithCategory {
+  equipmentId: string;
+  equipmentName: string;
+  serialNumber: string;
+  status: string;
+  vendorShare: string;
+  facilityShare: string;
+  capitated: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  category: ServiceCategory;
+  services: string;
+}
+
+export interface ServiceWithCategoryResponse {
+  data: ServiceWithCategory;
+}
+
 export type EquipmentForm = Omit<Equipment, "equipmentId">;
 
 export const getEquipments = async (): Promise<Equipment[]> => {
@@ -22,6 +52,13 @@ export const getEquipmentById = async (
   equipmentId: string
 ): Promise<Equipment> => {
   const response = await axios.get(`/equipment/${equipmentId}`);
+  return response.data.data;
+};
+
+export const getEquipmentByService = async (
+  serviceId: string
+): Promise<ServiceWithCategory[]> => {
+  const response = await axios.get(`/service/equipments/${serviceId}`);
   return response.data.data;
 };
 

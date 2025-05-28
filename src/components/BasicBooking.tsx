@@ -1,16 +1,18 @@
 import {
+  selectCategory,
   selectEquipment,
   selectFacility,
   selectPaymentMode,
   selectService,
   setPatient,
 } from "@/context/workflowSlice";
-import { useEquipments } from "@/features/equipments/useEquipments";
+import { useEquipmentByService } from "@/features/equipments/userServiceEquipment";
 import { useFacilities } from "@/features/facilities/useFacilities";
 import PatientRegistration from "@/features/patients/PatientRegistration";
 import { usePatients } from "@/features/patients/usePatients";
 import { usePaymentModes } from "@/features/paymentModes/usePaymentModes";
 import { useCreateBooking } from "@/features/services/bookings/useCreateBooking";
+import { useCategories } from "@/features/services/categories/useCategories";
 import { useServiceInfos } from "@/features/services/useServiceInfo";
 import { useAppDispatch } from "@/hooks/hooks";
 import { Patient } from "@/services/apiPatient";
@@ -21,15 +23,19 @@ const BasicBookingStep: React.FC = () => {
   const dispatch = useAppDispatch();
   const { patients } = usePatients();
   const { serviceInfos } = useServiceInfos();
-  const { equipments } = useEquipments();
+  // const { equipments } = useEquipments();
+  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
+  const { data: equipments, isLoading: isEquipmentsLoading } =
+    useEquipmentByService(selectedServiceId);
   const { facilities } = useFacilities();
   const { paymentModes } = usePaymentModes();
   const { createBooking, isCreating } = useCreateBooking();
+  const { isLoading, categories, error } = useCategories();
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
-  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>("");
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [selectedPaymentModeId, setSelectedPaymentModeId] =
     useState<string>("");
   const [bookingDate, setBookingDate] = useState<string>("");
@@ -42,6 +48,9 @@ const BasicBookingStep: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const patient = patients?.find((p) => p.patientId === selectedPatientId);
+    const category = categories?.find(
+      (c) => c.categoryId === selectedCategoryId
+    );
     const service = serviceInfos?.find(
       (s) => s.serviceId === selectedServiceId
     );
@@ -58,6 +67,7 @@ const BasicBookingStep: React.FC = () => {
 
     if (
       patient &&
+      category &&
       service &&
       equipment &&
       facility &&
@@ -65,6 +75,7 @@ const BasicBookingStep: React.FC = () => {
       bookingDate
     ) {
       dispatch(setPatient(patient));
+      dispatch(selectCategory(category));
       dispatch(selectService(service));
       dispatch(selectEquipment(equipment));
       dispatch(selectFacility(facility));
@@ -111,16 +122,13 @@ const BasicBookingStep: React.FC = () => {
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Book a Service
           </h2>
-          <p className="text-gray-600">
-            Please fill in the form below to proceed with the booking
-          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
           {/* Patient Name */}
           <div className="space-y-2">
             <div className="relative">
-              <label className={labelClasses}>Patient Name</label>{" "}
+              <label className={labelClasses}>Patient</label>{" "}
               <Modal>
                 <Modal.Open opens="patient-form">
                   <button
@@ -163,19 +171,21 @@ const BasicBookingStep: React.FC = () => {
             </div>
           </div>
 
-          {/* Service Name */}
+          {/* Service Category */}
           <div className="space-y-2">
-            <label className={labelClasses}>Service Name</label>
+            <label className={labelClasses}>Diagnostic Service</label>
             <select
-              value={selectedServiceId}
-              onChange={(e) => setSelectedServiceId(e.target.value)}
+              value={selectedCategoryId}
+              onChange={(e) => setSelectedCategoryId(e.target.value)}
               className={inputClasses}
               required
             >
-              <option value="">Select a service (e.g. X-Ray)</option>
-              {serviceInfos?.map((s) => (
-                <option key={s.serviceId} value={s.serviceId}>
-                  {s.description}
+              <option value="">Select a category (e.g. X-Ray)</option>
+              {categories?.map((s) => (
+                <option key={s.categoryId} value={s.categoryId}>
+                  <span>
+                    {s.lotNumber} - {s.categoryName}
+                  </span>
                 </option>
               ))}
             </select>
@@ -194,6 +204,24 @@ const BasicBookingStep: React.FC = () => {
               {equipments?.map((e) => (
                 <option key={e.equipmentId} value={e.equipmentId}>
                   {e.equipmentName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Service Name */}
+          <div className="space-y-2">
+            <label className={labelClasses}>Service Name</label>
+            <select
+              value={selectedServiceId}
+              onChange={(e) => setSelectedServiceId(e.target.value)}
+              className={inputClasses}
+              required
+            >
+              <option value="">Select a service (e.g. X-Ray)</option>
+              {serviceInfos?.map((s) => (
+                <option key={s.serviceId} value={s.serviceId}>
+                  {s.serviceName}
                 </option>
               ))}
             </select>

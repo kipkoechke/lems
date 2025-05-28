@@ -1,7 +1,8 @@
 // src/store/workflowSlice.ts
 import { Invoice, ValidationReport } from "@/lib/types";
 import { IServiceBooking } from "@/services/apiBooking";
-import { Equipment } from "@/services/apiEquipment";
+import { ServiceCategory } from "@/services/apiCategory";
+import { ServiceWithCategory } from "@/services/apiEquipment";
 import { Facility } from "@/services/apiFacility";
 import { Patient } from "@/services/apiPatient";
 import { PaymentMode } from "@/services/apiPaymentMode";
@@ -26,8 +27,9 @@ export interface WorkflowState {
     | "approval"
     | "disbursement";
   patient?: Patient;
+  selectedCategory?: ServiceCategory;
   selectedService?: ServiceInfo;
-  selectedEquipment?: Equipment;
+  selectedEquipment?: ServiceWithCategory;
   selectedFacility?: Facility;
   selectedPaymentMode?: PaymentMode;
   booking?: IServiceBooking;
@@ -72,10 +74,13 @@ export const workflowSlice = createSlice({
     setPatient: (state, action: PayloadAction<Patient>) => {
       state.patient = action.payload;
     },
+    selectCategory: (state, action: PayloadAction<ServiceCategory>) => {
+      state.selectedCategory = action.payload;
+    },
     selectService: (state, action: PayloadAction<ServiceInfo>) => {
       state.selectedService = action.payload;
     },
-    selectEquipment: (state, action: PayloadAction<Equipment>) => {
+    selectEquipment: (state, action: PayloadAction<ServiceWithCategory>) => {
       state.selectedEquipment = action.payload;
     },
     selectFacility: (state, action: PayloadAction<Facility>) => {
@@ -128,6 +133,7 @@ export const workflowSlice = createSlice({
 export const {
   setStep,
   setPatient,
+  selectCategory,
   selectService,
   selectEquipment,
   selectFacility,

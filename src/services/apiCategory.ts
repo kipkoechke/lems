@@ -2,18 +2,17 @@ import axios from "../lib/axios";
 
 export interface ServiceCategory {
   categoryId: string;
-  name: string;
-  vendorId: string;
-  vendorName: string;
-  vendorContact: string;
-  equipmentId: string;
-  equipmentName: string;
+  lotNumber: string;
+  categoryName: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
 }
 
 export type ServiceCategoryForm = Omit<ServiceCategory, "categoryId">;
 
 export const getServiceCategories = async (): Promise<ServiceCategory[]> => {
-  const response = await axios.get("/ServiceCategory");
+  const response = await axios.get("/categories");
   return response.data.data;
 };
 
