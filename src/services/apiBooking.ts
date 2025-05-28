@@ -1,4 +1,8 @@
 import axios from "../lib/axios";
+import { Equipment } from "./apiEquipment";
+import { Facility } from "./apiFacility";
+import { Patient } from "./apiPatient";
+import { PaymentMode } from "./apiPaymentMode";
 
 export interface IServiceBooking {
   bookingId: string;
@@ -29,6 +33,23 @@ export type ServiceBookingForm = {
 
 export interface PatientConsent {
   booking_id: string;
+}
+
+export interface BookingWithDetails {
+  bookingId: string;
+  cost: string;
+  bookingDate: string;
+  status: string;
+  notes: string | null;
+  otpOverridden: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  patient: Patient;
+  facility: Facility;
+  service: any;
+  equipment: Equipment;
+  paymentMode: PaymentMode;
 }
 
 export interface ValidateOtp {
@@ -87,6 +108,11 @@ export const getServiceBookingPatient = async (
   patientId: string
 ): Promise<IServiceBooking[]> => {
   const response = await axios.get(`/ServiceBooking/patient/${patientId}`);
+  return response.data.data;
+};
+
+export const getBookings = async (): Promise<BookingWithDetails[]> => {
+  const response = await axios.get("/bookings");
   return response.data.data;
 };
 

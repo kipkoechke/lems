@@ -21,6 +21,7 @@ function MainNav() {
     { href: "/", label: "Home", icon: <HiOutlineHome /> },
     { href: "/equipments", label: "Equipments", icon: <HiOutlineUsers /> },
     { href: "/facilities", label: "Facilities", icon: <HiOutlineUsers /> },
+    { href: "/bookings", label: "Bookings Report", icon: <HiOutlineUsers /> },
     {
       label: "Reports",
       icon: <HiOutlineUsers />,
