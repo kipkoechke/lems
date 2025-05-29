@@ -14,6 +14,7 @@ export interface IServiceBooking {
   status: string;
   notes: string;
   cost: string;
+  otp_overridden: boolean;
 }
 
 export type ServiceBookingForm = {

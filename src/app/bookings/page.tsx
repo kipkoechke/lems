@@ -127,9 +127,12 @@ const BookingReport: React.FC = () => {
   return (
     <div className="bg-white">
       <div className="px-4 py-5 sm:p-6">
-        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-          Booking Management ({bookings.length} bookings)
-        </h3>
+        <div className="flex justify-between items-center ">
+          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+            Services
+          </h3>
+          <span> ({bookings.length} bookings)</span>
+        </div>
 
         <div className="overflow-hidden md:rounded-lg">
           <table className="min-w-full divide-y divide-gray-300">

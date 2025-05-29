@@ -2,6 +2,7 @@ import MainNav from "@/components/Sidebar";
 import Providers from "@/lib/providers";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Image from "next/image";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
@@ -31,7 +32,13 @@ export default function RootLayout({
         <Providers>
           <div className="h-screen grid grid-cols-[1fr_5fr] grid-rows-[auto_1fr]">
             <div className="bg-white font-bold tracking-widest border-b border-gray-200 h-16 flex items-center px-8 col-span-full">
-              Leased Management System
+              <Image
+                src="/assets/logo.png"
+                alt="Logo"
+                width={150}
+                height={100}
+                className="mb-4"
+              />
             </div>
             <div className="bg-white border-r shadow-lg  border-gray-200 h-full overflow-y-auto">
               <MainNav />

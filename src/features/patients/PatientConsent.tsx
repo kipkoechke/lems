@@ -1,8 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-
 "use client";
-
-import { goToPreviousStep } from "@/context/workflowSlice";
+import { goToNextStep, goToPreviousStep } from "@/context/workflowSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -23,28 +21,183 @@ const PatientConsent: React.FC = () => {
     usePatientConsentOverride();
   const { validateConsentOverrideOtp, isValidating: isOverrideValidating } =
     useOtpValidationOverride();
+  const { validateOtpMutation, isValidating } = useOtpValidation();
+
   const [showOTP, setShowOTP] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState<string | null>(null);
   const [generatedOverrideOtp, setGeneratedOverrideOtp] = useState<
     string | null
   >(null);
-
   const [showOverrideOTP, setShowOverrideOTP] = useState(false);
-
-  const { validateOtpMutation, isValidating } = useOtpValidation();
-
   const [consentStatus, setConsentStatus] = useState<
     "pending" | "approved" | "rejected"
   >("pending");
   const [otpSent, setOtpSent] = useState(false);
+  const [overrideSent, setOverrideSent] = useState(false);
 
-  useEffect(() => {
-    handleSendOTP();
-  }, [booking, patient]);
+  // Check if booking was created with override
+  const isBookingOverridden = booking?.otp_overridden || false;
+
+  const handleSendOTP = () => {
+    if (!booking || !patient) {
+      toast.error("Booking or patient information is missing.");
+      return;
+    }
+
+    // If booking was created with override, skip normal OTP and go to next step
+    if (isBookingOverridden) {
+      console.log(
+        "Booking was created with override, skipping patient consent..."
+      );
+      setConsentStatus("approved");
+      toast.success("Booking was approved via emergency override");
+      setTimeout(() => {
+        dispatch(goToNextStep());
+      }, 1000);
+      return;
+    }
+
+    setOtpSent(true);
+    requestPatientConsentOtp(
+      { booking_id: booking.bookingId },
+      {
+        onSuccess: (data) => {
+          if (data.otp_code) {
+            setGeneratedOtp(data.otp_code);
+            toast.success(`Patient Consent OTP: ${data.otp_code}`);
+            setTimeout(() => setShowOTP(true), 1000);
+          } else {
+            toast.error("No OTP code returned from server.");
+            setOtpSent(false);
+          }
+        },
+        onError: (error) => {
+          console.error("Failed to send patient consent OTP:", error);
+          toast.error("Failed to send patient consent OTP");
+          setOtpSent(false);
+        },
+      }
+    );
+  };
+
+  const handleSendOverrideOTP = () => {
+    if (!booking || !patient) {
+      toast.error("Booking or patient information is missing.");
+      return;
+    }
+
+    setOverrideSent(true);
+    requestConsentOtpOverride(
+      { booking_id: booking.bookingId },
+      {
+        onSuccess: (data) => {
+          if (data.otp_code) {
+            setGeneratedOverrideOtp(data.otp_code);
+            toast.success(`Manager Override OTP: ${data.otp_code}`);
+            setTimeout(() => setShowOverrideOTP(true), 1000);
+            setOverrideSent(false);
+          } else {
+            toast.error("No override OTP code returned from server.");
+            setOverrideSent(false);
+          }
+        },
+        onError: (error) => {
+          console.error("Failed to send override OTP:", error);
+          toast.error("Failed to send override OTP");
+          setOverrideSent(false);
+        },
+      }
+    );
+  };
+
+  const handleValidatePatientOTP = (otp: string) => {
+    if (!booking) {
+      toast.error("Booking information is missing.");
+      return;
+    }
+
+    validateOtpMutation(
+      {
+        booking_id: booking.bookingId,
+        otp_code: otp,
+      },
+      {
+        onSuccess: (data) => {
+          console.log("Patient OTP validation successful:", data);
+          setConsentStatus("approved");
+          toast.success("Patient consent verified successfully!");
+          setShowOTP(false);
+
+          // Proceed to next step
+          setTimeout(() => {
+            dispatch(goToNextStep());
+          }, 1000);
+        },
+        onError: (error) => {
+          console.error("Patient OTP validation failed:", error);
+          toast.error("Invalid OTP. Please try again.");
+        },
+      }
+    );
+  };
+
+  const handleValidateOverrideOTP = (otp: string) => {
+    if (!booking) {
+      toast.error("Booking information is missing.");
+      return;
+    }
+
+    validateConsentOverrideOtp(
+      {
+        booking_id: booking.bookingId,
+        otp_code: otp,
+      },
+      {
+        onSuccess: (data) => {
+          console.log("Override OTP validation successful:", data);
+          setConsentStatus("approved");
+          toast.success("Manager override approved successfully!");
+          setShowOverrideOTP(false);
+
+          // Proceed to next step
+          setTimeout(() => {
+            dispatch(goToNextStep());
+          }, 1000);
+        },
+        onError: (error) => {
+          console.error("Override OTP validation failed:", error);
+          toast.error("Invalid override OTP. Please try again.");
+        },
+      }
+    );
+  };
+
+  const handleCancelOTP = () => {
+    setShowOTP(false);
+    setGeneratedOtp(null);
+    toast("Patient consent cancelled");
+  };
+
+  const handleCancelOverrideOTP = () => {
+    setShowOverrideOTP(false);
+    setGeneratedOverrideOtp(null);
+    toast("Override OTP cancelled");
+  };
+
+  const handleRejectConsent = () => {
+    setConsentStatus("rejected");
+    toast.error("Patient consent has been rejected");
+  };
 
   const handlePreviousStep = () => {
     dispatch(goToPreviousStep());
   };
+
+  useEffect(() => {
+    if (booking && patient && !otpSent) {
+      handleSendOTP();
+    }
+  }, [booking, patient]);
 
   if (!patient || !selectedService) {
     return (
@@ -67,147 +220,291 @@ const PatientConsent: React.FC = () => {
     );
   }
 
-  const handleSendOTP = () => {
-    if (!booking || !patient) {
-      toast.error("Booking or patient information is missing.");
-      return;
-    }
-    setOtpSent(true);
-
-    requestPatientConsentOtp(
-      { booking_id: booking.bookingId },
-      {
-        onSuccess: (data) => {
-          if (data.otp_code) {
-            setGeneratedOtp(data.otp_code);
-            toast.success(`OTP Code: ${data.otp_code}`);
-            setTimeout(() => setShowOTP(true), 1000);
-          } else {
-            toast.error("No OTP code returned from server.");
-            setOtpSent(false);
-          }
-        },
-        onError: () => {
-          setOtpSent(false);
-        },
-      }
-    );
-  };
-
-  const handleSendOverrideOTP = () => {
-    if (!booking || !patient) {
-      toast.error("Booking or patient information is missing.");
-      return;
-    }
-    requestConsentOtpOverride(
-      { booking_id: booking.bookingId },
-      {
-        onSuccess: (data) => {
-          if (data.otp_code) {
-            setGeneratedOverrideOtp(data.otp_code);
-            toast.success(`Override OTP Code: ${data.otp_code}`);
-            setTimeout(() => setShowOverrideOTP(true), 1000);
-          } else {
-            toast.error("No OTP code returned from server.");
-          }
-        },
-        onError: () => {},
-      }
-    );
-  };
-
-  // Handler for override OTP validation
-  const handleValidateOverrideOTP = (otp: string) => {
-    if (!booking) {
-      toast.error("Booking information is missing.");
-      return;
-    }
-    validateConsentOverrideOtp({
-      booking_id: booking.bookingId,
-      otp_code: otp,
-    });
-  };
-
-  const handleValidateOTP = (otp: string) => {
-    if (!booking) {
-      toast.error("Booking information is missing.");
-      return;
-    }
-    validateOtpMutation({
-      booking_id: booking.bookingId,
-      otp_code: otp,
-    });
-  };
-
-  const handleRejectConsent = () => {
-    setConsentStatus("rejected");
-  };
-
-  const handleRetry = () => {
-    setShowOTP(false);
-    setOtpSent(false);
-    setConsentStatus("pending");
-  };
+  const buttonClasses = `
+    px-6 py-3 min-w-[140px]
+    font-semibold text-sm
+    rounded-lg shadow-sm
+    transition-all duration-200
+    cursor-pointer
+    focus:outline-none focus:ring-2 focus:ring-offset-2
+    hover:shadow-md
+    flex items-center justify-center
+    disabled:cursor-not-allowed
+  `;
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Patient Consent</h2>
-        <div>
-          <span className="text-gray-600 mr-2">Patient:</span>
-          <span className="font-medium">{patient.patientName}</span>
-        </div>
-      </div>
-
-      {showOverrideOTP ? (
-        <OTPValidation
-          title="Facility Manager OTP Override"
-          description="Enter the override OTP sent to the facility manager for this booking."
-          onValidate={handleValidateOverrideOTP}
-          onCancel={() => setShowOverrideOTP(false)}
-          processingLabel={
-            isOverrideValidating ? "Verifying..." : "Verify Override"
-          }
-          initialOtp={generatedOverrideOtp ?? ""}
-        />
-      ) : consentStatus === "approved" ? (
-        <StatusCard
-          title="Consent Obtained"
-          status="success"
-          message="Patient has provided consent for the service."
-          details="Proceeding to service validation..."
-        />
-      ) : consentStatus === "rejected" ? (
-        <div className="mb-6">
-          <StatusCard
-            title="Consent Rejected"
-            status="error"
-            message="Patient has not provided consent or OTP validation failed."
-            details="Please retry or go back to the previous step."
-          />
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={handleRetry}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Retry
-            </button>
+    <div className="max-w-4xl mx-auto">
+      {/* Patient OTP Modal */}
+      {showOTP && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <OTPValidation
+              title="Patient Consent Verification"
+              description={`Enter the OTP sent to ${patient.patientName} (${patient.mobileNumber}) to confirm consent for ${selectedService.serviceName}.`}
+              onValidate={handleValidatePatientOTP}
+              onCancel={handleCancelOTP}
+              processingLabel={isValidating ? "Verifying..." : "Verify Consent"}
+              initialOtp={generatedOtp ?? ""}
+            />
           </div>
         </div>
-      ) : showOTP ? (
-        <OTPValidation
-          title="Verify Patient Consent"
-          description={`Please enter the 6-digit OTP sent to ${patient.mobileNumber} to confirm consent for ${selectedService.description}.`}
-          onValidate={handleValidateOTP}
-          onCancel={handleRejectConsent}
-          processingLabel={isValidating ? "Verifying..." : "Verify Consent"}
-          initialOtp={generatedOtp ?? ""}
-        />
-      ) : (
-        <div className="flex items-center justify-center h-32">
-          <span className="text-gray-500">Sending OTP to patient...</span>
+      )}
+
+      {/* Override OTP Modal */}
+      {showOverrideOTP && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <OTPValidation
+              title="Manager Override OTP"
+              description="Enter the override OTP sent to the facility manager to approve this booking without patient consent."
+              onValidate={handleValidateOverrideOTP}
+              onCancel={handleCancelOverrideOTP}
+              processingLabel={
+                isOverrideValidating ? "Verifying..." : "Verify Override"
+              }
+              initialOtp={generatedOverrideOtp ?? ""}
+            />
+          </div>
         </div>
       )}
+
+      <div className="bg-white shadow-lg rounded-xl px-8 py-6 border border-gray-200">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Patient Consent Verification
+          </h2>
+          <p className="text-gray-600">
+            Verifying patient consent for the requested medical service
+          </p>
+        </div>
+
+        {/* Booking Override Indicator */}
+        {isBookingOverridden && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center">
+              <svg
+                className="w-5 h-5 text-green-600 mr-2"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span className="text-green-800 font-medium">
+                Emergency Override Applied
+              </span>
+            </div>
+            <p className="text-green-700 text-sm mt-1">
+              This booking was approved via emergency override and bypassed
+              patient consent requirements.
+            </p>
+          </div>
+        )}
+
+        {/* Patient Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-gray-800 mb-2">
+              Patient Details
+            </h3>
+            <p>
+              <span className="font-medium">Name:</span> {patient.patientName}
+            </p>
+            <p>
+              <span className="font-medium">Phone:</span> {patient.mobileNumber}
+            </p>
+            <p>
+              <span className="font-medium">ID:</span> {patient.patientId}
+            </p>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-gray-800 mb-2">
+              Service Details
+            </h3>
+            <p>
+              <span className="font-medium">Service:</span>{" "}
+              {selectedService.serviceName}
+            </p>
+            <p>
+              <span className="font-medium">Cost:</span> KSh{" "}
+              {selectedService.shaRate?.toLocaleString()}
+            </p>
+            {booking && (
+              <p>
+                <span className="font-medium">Booking ID:</span>{" "}
+                {booking.bookingId}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Consent Status */}
+        <div className="mb-8">
+          <StatusCard
+            title="Consent Status"
+            status={
+              consentStatus === "pending"
+                ? "pending"
+                : consentStatus === "approved"
+                ? "success"
+                : "error"
+            }
+            message={
+              consentStatus === "pending"
+                ? isBookingOverridden
+                  ? "Approved via emergency override"
+                  : otpSent
+                  ? "Waiting for patient consent verification..."
+                  : "Sending consent verification..."
+                : consentStatus === "approved"
+                ? "Patient consent has been verified successfully"
+                : "Patient consent has been rejected"
+            }
+            details={
+              consentStatus === "pending"
+                ? isBookingOverridden
+                  ? "This booking was processed as an emergency case"
+                  : "An OTP has been sent to the patient's phone number for verification"
+                : consentStatus === "approved"
+                ? "The patient has successfully confirmed their consent for this service"
+                : "The booking cannot proceed without patient consent"
+            }
+          />
+        </div>
+
+        {/* Action Buttons */}
+        {!isBookingOverridden && consentStatus === "pending" && (
+          <div className="flex justify-between items-center pt-6 border-t border-gray-200">
+            <div className="flex space-x-3">
+              <button
+                onClick={handlePreviousStep}
+                className={`${buttonClasses} bg-gray-500 hover:bg-gray-600 text-white focus:ring-gray-500`}
+              >
+                Back
+              </button>
+
+              <button
+                onClick={handleRejectConsent}
+                className={`${buttonClasses} bg-red-600 hover:bg-red-700 text-white focus:ring-red-500`}
+              >
+                Reject Consent
+              </button>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={handleSendOTP}
+                disabled={isRegistering || otpSent}
+                className={`${buttonClasses} bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500 disabled:bg-gray-400`}
+              >
+                {isRegistering ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Sending OTP...
+                  </>
+                ) : otpSent ? (
+                  "OTP Sent"
+                ) : (
+                  "Resend OTP"
+                )}
+              </button>
+
+              <button
+                onClick={handleSendOverrideOTP}
+                disabled={isOverrideRegistering || overrideSent}
+                className={`${buttonClasses} bg-amber-600 hover:bg-amber-700 text-white focus:ring-amber-500 disabled:bg-gray-400`}
+              >
+                {isOverrideRegistering || overrideSent ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Requesting Override...
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Manager Override
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation for approved/rejected states */}
+        {(consentStatus === "approved" ||
+          consentStatus === "rejected" ||
+          isBookingOverridden) && (
+          <div className="flex justify-between items-center pt-6 border-t border-gray-200">
+            <button
+              onClick={handlePreviousStep}
+              className={`${buttonClasses} bg-gray-500 hover:bg-gray-600 text-white focus:ring-gray-500`}
+            >
+              Back
+            </button>
+
+            {(consentStatus === "approved" || isBookingOverridden) && (
+              <button
+                onClick={() => dispatch(goToNextStep())}
+                className={`${buttonClasses} bg-green-600 hover:bg-green-700 text-white focus:ring-green-500`}
+              >
+                Continue to Next Step
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
