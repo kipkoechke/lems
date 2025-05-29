@@ -26,12 +26,12 @@ export const getRegisteredPatients = async (): Promise<Patient[]> => {
   return response.data.data;
 };
 
-export const getPatientByBooking = async (
-  serviceId: string
-): Promise<EquipmentWithService[]> => {
-  const response = await axios.get(`/service/equipments/${serviceId}`);
-  return response.data.data;
-};
+// export const getPatientByBooking = async (
+//   serviceId: string
+// ): Promise<EquipmentWithService[]> => {
+//   const response = await axios.get(`/service/equipments/${serviceId}`);
+//   return response.data.data;
+// };
 
 export const getPatientById = async (patientID: string): Promise<Patient> => {
   const response = await axios.get(`/patient/${patientID}`);
