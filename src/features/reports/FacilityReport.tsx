@@ -157,7 +157,7 @@ const FacilityReport: React.FC = () => {
                                       className="px-4 py-2 border-r border-gray-300 font-semibold bg-blue-50"
                                       rowSpan={facilityRowSpan}
                                     >
-                                      $
+                                      Ksh
                                       {facility.total_revenue?.toLocaleString()}
                                     </td>
                                   </>
@@ -176,7 +176,7 @@ const FacilityReport: React.FC = () => {
                                       className="px-4 py-2 border-r border-gray-300 bg-gray-50"
                                       rowSpan={equipmentRowSpan}
                                     >
-                                      $
+                                      Ksh
                                       {equipment.equipment_total_revenue?.toLocaleString()}
                                     </td>
                                   </>
@@ -187,7 +187,7 @@ const FacilityReport: React.FC = () => {
                                   {service.service}
                                 </td>
                                 <td className="px-4 py-2">
-                                  ${service.revenue?.toLocaleString()}
+                                  Ksh {service.revenue?.toLocaleString()}
                                 </td>
                               </tr>
                             );
