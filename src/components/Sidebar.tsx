@@ -8,6 +8,7 @@ import {
   HiOutlineChevronRight,
   HiOutlineHome,
   HiOutlineHomeModern,
+  HiOutlineUser,
   HiOutlineUsers,
 } from "react-icons/hi2";
 
@@ -19,9 +20,10 @@ function MainNav() {
 
   const navItems = [
     { href: "/", label: "Home", icon: <HiOutlineHome /> },
+    { href: "/patients", label: "Patients", icon: <HiOutlineUser /> },
     { href: "/equipments", label: "Equipments", icon: <HiOutlineUsers /> },
     { href: "/facilities", label: "Facilities", icon: <HiOutlineUsers /> },
-    { href: "/bookings", label: "Bookings Report", icon: <HiOutlineUsers /> },
+    { href: "/bookings", label: "Bookings", icon: <HiOutlineUsers /> },
     {
       label: "Reports",
       icon: <HiOutlineUsers />,

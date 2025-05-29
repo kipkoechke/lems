@@ -5,7 +5,7 @@ export interface Patient {
   patientName: string;
   mobileNumber: string;
   dateOfBirth: string;
-  paymentMode: "Cash" | "SHA" | "Insurance";
+  createdAt: string;
 }
 
 export type PatientRegistrationForm = {
@@ -23,6 +23,13 @@ export const registerPatient = async (
 
 export const getRegisteredPatients = async (): Promise<Patient[]> => {
   const response = await axios.get("/patients");
+  return response.data.data;
+};
+
+export const getPatientByBooking = async (
+  serviceId: string
+): Promise<EquipmentWithService[]> => {
+  const response = await axios.get(`/service/equipments/${serviceId}`);
   return response.data.data;
 };
 
