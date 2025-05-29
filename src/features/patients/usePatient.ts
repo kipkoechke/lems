@@ -1,9 +1,7 @@
 import { getPatientById } from "@/services/apiPatient";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
 
-export function usePatient() {
-  const { patientId } = useParams();
+export function usePatient(patientId: string) {
   const {
     isLoading,
     data: patient,

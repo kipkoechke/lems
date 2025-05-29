@@ -7,6 +7,8 @@ import {
   FaPhone,
   FaUser,
 } from "react-icons/fa";
+import { usePatient } from "./usePatient";
+import { usePatientBookings } from "./usePatientBookings";
 
 // Mock booking data - replace with your actual API call
 const mockBookingData = [
@@ -117,12 +119,13 @@ function PatientBookings() {
   const patientId = params.patientId as string;
 
   // In real implementation, fetch patient data and bookings based on patientId
-  // const { patient, isLoading: patientLoading } = usePatient(patientId);
   // const { bookings, isLoading: bookingsLoading } = usePatientBookings(patientId);
+  const { patient, isLoading: patientLoading } = usePatient(patientId);
+  const { bookings, bookingsLoading, isError } = usePatientBookings(patientId);
 
   // Mock data for now
-  const bookings = mockBookingData;
-  const patient = bookings[0]?.patient; // Get patient data from booking
+  //   const bookings = mockBookingData;
+  //   const patient = bookings[0]?.patient; // Get patient data from booking
 
   const handleBackClick = () => {
     router.push("/patients");

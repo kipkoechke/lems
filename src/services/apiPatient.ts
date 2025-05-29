@@ -14,6 +14,82 @@ export type PatientRegistrationForm = {
   date_of_birth: string;
 };
 
+export interface PatientWithBookings {
+  bookingId: string;
+  cost: string;
+  bookingDate: string;
+  status: string;
+  notes: string | null;
+  otpOverridden: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  patient: {
+    patientId: string;
+    patientName: string;
+    mobileNumber: string;
+    dateOfBirth: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
+  };
+  facility: {
+    facilityId: string;
+    facilityName: string;
+    facilityCode: string;
+    contactInfo: string;
+    createdAt: string;
+    updatedAt: string;
+    deleteddAt: string | null;
+  };
+  service: {
+    serviceId: string;
+    serviceName: string;
+    description: string;
+    shaRate: string;
+    vendorShare: string;
+    facilityShare: string;
+    capitated: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
+    category: {
+      categoryId: string;
+      lotNumber: string;
+      categoryName: string;
+      createdAt: string;
+      updatedAt: string;
+      deletedAt: string | null;
+    };
+  };
+  equipment: {
+    equipmentId: string;
+    equipmentName: string;
+    serialNumber: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    deleteddAt: string | null;
+    category: {
+      vendorId: string;
+      vendorName: string;
+      vendorCode: string;
+      contactInfo: string;
+      createdAt: string;
+      updatedAt: string;
+      deleteddAt: string | null;
+    };
+    serviceIds: string;
+  };
+  paymentMode: {
+    paymentModeId: string;
+    paymentModeName: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
+  };
+}
+
 export const registerPatient = async (
   data: PatientRegistrationForm
 ): Promise<Patient> => {
@@ -26,15 +102,15 @@ export const getRegisteredPatients = async (): Promise<Patient[]> => {
   return response.data.data;
 };
 
-// export const getPatientByBooking = async (
-//   serviceId: string
-// ): Promise<EquipmentWithService[]> => {
-//   const response = await axios.get(`/service/equipments/${serviceId}`);
-//   return response.data.data;
-// };
+export const getPatientByBooking = async (
+  patientId: string
+): Promise<PatientWithBookings[]> => {
+  const response = await axios.get(`/patient/bookings/${patientId}`);
+  return response.data.data;
+};
 
-export const getPatientById = async (patientID: string): Promise<Patient> => {
-  const response = await axios.get(`/patient/${patientID}`);
+export const getPatientById = async (patientId: string): Promise<Patient> => {
+  const response = await axios.get(`/patient/${patientId}`);
   return response.data.data;
 };
 
