@@ -6,7 +6,6 @@ import {
   HiOutlineChevronDown,
   HiOutlineChevronRight,
   HiOutlineHome,
-  HiOutlineHomeModern,
   HiOutlineUser,
   HiOutlineUsers,
 } from "react-icons/hi2";
@@ -31,7 +30,7 @@ function MainNav() {
         { href: "/reports/vendor", label: "Vendor Report" },
       ],
     },
-    { href: "/services", label: "Services", icon: <HiOutlineHomeModern /> },
+    // { href: "/services", label: "Services", icon: <HiOutlineHomeModern /> },
     // { href: "/lems", label: "Lems", icon: <HiOutlineCog6Tooth /> },
   ];
 

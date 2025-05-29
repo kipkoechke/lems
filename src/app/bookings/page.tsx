@@ -8,6 +8,7 @@ import {
   Check,
   Clock,
   CreditCard,
+  DollarSign,
   Eye,
   User,
   Wrench,
@@ -79,11 +80,11 @@ const BookingReport: React.FC = () => {
     });
   };
 
-  const formatCurrency = (amount: string) => {
+  const formatCurrency = (amount: string | number) => {
     return new Intl.NumberFormat("en-KE", {
       style: "currency",
       currency: "KES",
-    }).format(parseFloat(amount));
+    }).format(typeof amount === "string" ? parseFloat(amount) : amount);
   };
 
   if (isLoading) {
@@ -145,7 +146,7 @@ const BookingReport: React.FC = () => {
                   Service & Facility
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Cost & Payment
+                  Cost Breakdown & Payment
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -195,12 +196,44 @@ const BookingReport: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        <div className="font-medium">
+                        {/* <div className="font-medium text-lg">
                           {formatCurrency(booking.cost)}
+                        </div> */}
+                        {/* Cost Breakdown */}
+                        <div className="text-xs text-gray-600 mt-1 space-y-0.5">
+                          <div className="flex justify-between items-center">
+                            <span className="text-blue-600">SHA Rate:</span>
+                            <span className="font-medium">
+                              {formatCurrency(
+                                booking.service.shaRate || booking.cost
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-green-600">
+                              Vendor Share:
+                            </span>
+                            <span className="font-medium">
+                              {formatCurrency(
+                                booking.service.vendorShare || "0"
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-purple-600">
+                              Facility Share:
+                            </span>
+                            <span className="font-medium">
+                              {formatCurrency(
+                                booking.service.facilityShare || "0"
+                              )}
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500">
+                        {/* Payment Mode */}
+                        <div className="text-xs text-gray-500 mt-2">
                           <CreditCard className="inline h-3 w-3 mr-1" />
-                          {booking.paymentMode.paymentModeName}
+                          Payment Mode: {booking.paymentMode.paymentModeName}
                         </div>
                       </div>
                     </td>
@@ -246,7 +279,7 @@ const BookingReport: React.FC = () => {
                   {expandedRows.has(booking.bookingId) && (
                     <tr>
                       <td colSpan={5} className="px-6 py-4 bg-gray-50">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                           <div className="bg-white p-4 rounded-lg shadow-sm">
                             <h4 className="font-medium text-gray-900 mb-2 flex items-center">
                               <User className="h-4 w-4 mr-2" />
@@ -310,8 +343,53 @@ const BookingReport: React.FC = () => {
                             </div>
                           </div>
 
+                          <div className="bg-white p-4 rounded-lg shadow-sm">
+                            <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                              <DollarSign className="h-4 w-4 mr-2" />
+                              Detailed Cost Breakdown
+                            </h4>
+                            <div className="text-sm space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-blue-600 font-medium">
+                                  SHA Rate:
+                                </span>
+                                <span className="font-semibold">
+                                  {formatCurrency(booking.service.shaRate)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-green-600 font-medium">
+                                  Vendor Share:
+                                </span>
+                                <span className="font-semibold">
+                                  {booking.service.vendorShare}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-purple-600 font-medium">
+                                  Facility Share:
+                                </span>
+                                <span className="font-semibold">
+                                  {formatCurrency(
+                                    booking.service.facilityShare
+                                  )}
+                                </span>
+                              </div>
+                              <div className="border-t pt-2 mt-2">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-900 font-bold">
+                                    Total Cost:
+                                  </span>
+                                  <span className="font-bold text-lg">
+                                    {formatCurrency(booking.cost)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
                           {booking.notes && (
-                            <div className="bg-white p-4 rounded-lg shadow-sm md:col-span-2 lg:col-span-3">
+                            <div className="bg-white p-4 rounded-lg shadow-sm md:col-span-2 lg:col-span-4">
                               <h4 className="font-medium text-gray-900 mb-2">
                                 Notes
                               </h4>
