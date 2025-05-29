@@ -1,8 +1,6 @@
 import axios from "../lib/axios";
-import { Equipment } from "./apiEquipment";
 import { Facility } from "./apiFacility";
 import { Patient } from "./apiPatient";
-import { PaymentMode } from "./apiPaymentMode";
 
 export interface IServiceBooking {
   bookingId: string;
@@ -35,7 +33,24 @@ export interface PatientConsent {
   booking_id: string;
 }
 
-export interface BookingWithDetails {
+// export interface BookingWithDetails {
+//   bookingId: string;
+//   cost: string;
+//   bookingDate: string;
+//   status: string;
+//   notes: string | null;
+//   otpOverridden: string;
+//   createdAt: string;
+//   updatedAt: string;
+//   deletedAt: string | null;
+//   patient: Patient;
+//   facility: Facility;
+//   service: ServiceCategory;
+//   equipment: Equipment;
+//   paymentMode: PaymentMode;
+// }
+
+export interface Bookings {
   bookingId: string;
   cost: string;
   bookingDate: string;
@@ -46,10 +61,55 @@ export interface BookingWithDetails {
   updatedAt: string;
   deletedAt: string | null;
   patient: Patient;
-  facility: Facility;
-  service: any;
-  equipment: Equipment;
-  paymentMode: PaymentMode;
+  facility: Facility & {
+    deleteddAt: string | null;
+  };
+  service: {
+    serviceId: string;
+    serviceName: string;
+    description: string;
+    shaRate: string;
+    vendorShare: string;
+    facilityShare: string;
+    capitated: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
+    category: {
+      categoryId: string;
+      lotNumber: string;
+      categoryName: string;
+      createdAt: string;
+      updatedAt: string;
+      deletedAt: string | null;
+    };
+  };
+  equipment: {
+    equipmentId: string;
+    equipmentName: string;
+    serialNumber: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    deleteddAt: string | null;
+    category: {
+      vendorId: string;
+      vendorName: string;
+      vendorCode: string;
+      contactInfo: string;
+      createdAt: string;
+      updatedAt: string;
+      deleteddAt: string | null;
+    };
+    serviceIds: string;
+  };
+  paymentMode: {
+    paymentModeId: string;
+    paymentModeName: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
+  };
 }
 
 export interface ValidateOtp {
@@ -111,8 +171,13 @@ export const getServiceBookingPatient = async (
   return response.data.data;
 };
 
-export const getBookings = async (): Promise<BookingWithDetails[]> => {
+export const getBookings = async (): Promise<Bookings[]> => {
   const response = await axios.get("/bookings");
+  return response.data.data;
+};
+
+export const approveBooking = async (bookingId: string): Promise<Bookings> => {
+  const response = await axios.put(`/approve-booking/${bookingId}`);
   return response.data.data;
 };
 
