@@ -1,6 +1,7 @@
 "use client";
 import { usePatients } from "@/features/patients/usePatients";
 import { Patient } from "@/services/apiPatient";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FaCalendar, FaChevronRight, FaPhone, FaUser } from "react-icons/fa";
 import { FiMoreVertical } from "react-icons/fi";
@@ -295,15 +296,24 @@ function Patients() {
   const { isLoading, patients, error } = usePatients();
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showBookingsModal, setShowBookingsModal] = useState(false);
+  const router = useRouter();
+
+  // const handlePatientClick = (patient: Patient) => {
+  //   setSelectedPatient(patient);
+  //   setShowBookingsModal(true);
+  // };
+
+  // const handleViewBookings = (patient: Patient) => {
+  //   setSelectedPatient(patient);
+  //   setShowBookingsModal(true);
+  // };
 
   const handlePatientClick = (patient: Patient) => {
-    setSelectedPatient(patient);
-    setShowBookingsModal(true);
+    router.push(`/patients/${patient.patientId}/bookings`);
   };
 
   const handleViewBookings = (patient: Patient) => {
-    setSelectedPatient(patient);
-    setShowBookingsModal(true);
+    router.push(`/patients/${patient.patientId}/bookings`);
   };
 
   if (isLoading) {
@@ -413,14 +423,14 @@ function Patients() {
         </div>
       )}
 
-      <BookingDetailsModal
+      {/* <BookingDetailsModal
         patient={selectedPatient}
         isOpen={showBookingsModal}
         onClose={() => {
           setShowBookingsModal(false);
           setSelectedPatient(null);
         }}
-      />
+      /> */}
     </div>
   );
 }

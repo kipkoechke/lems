@@ -116,38 +116,6 @@ const PatientConsent: React.FC = () => {
     );
   };
 
-  // // Automatically send OTP when component mounts and booking exists
-  // useEffect(() => {
-  //   if (
-  //     booking &&
-  //     patient &&
-  //     consentStatus === "pending" &&
-  //     !showOTP &&
-  //     !otpSent
-  //   ) {
-  //     setOtpSent(true);
-  //     requestPatientConsentOtp(
-  //       { booking_id: booking.bookingId },
-  //       {
-  //         onSuccess: (data) => {
-  //           if (data.otp_code) {
-  //             setGeneratedOtp(data.otp_code);
-  //             toast.success(`OTP Code: ${data.otp_code}`);
-  //             setTimeout(() => setShowOTP(true), 500);
-  //           } else {
-  //             toast.error("No OTP code returned from server.");
-  //             setOtpSent(false);
-  //           }
-  //         },
-  //         onError: () => {
-  //           setOtpSent(false);
-  //         },
-  //       }
-  //     );
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [booking, patient]);
-
   // Handler for override OTP validation
   const handleValidateOverrideOTP = (otp: string) => {
     if (!booking) {

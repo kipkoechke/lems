@@ -193,6 +193,24 @@ const BasicBookingStep: React.FC = () => {
             </select>
           </div>
 
+          {/* Facility */}
+          <div className="space-y-2">
+            <label className={labelClasses}>Facility</label>
+            <select
+              value={selectedFacilityId}
+              onChange={(e) => setSelectedFacilityId(e.target.value)}
+              className={inputClasses}
+              required
+            >
+              <option value="">Select a facility</option>
+              {facilities?.map((f) => (
+                <option key={f.facilityId} value={f.facilityId}>
+                  {f.facilityName}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Service Name */}
           <div className="space-y-2">
             <label className={labelClasses}>Service Name</label>
@@ -224,24 +242,6 @@ const BasicBookingStep: React.FC = () => {
               {equipments?.map((e) => (
                 <option key={e.equipmentId} value={e.equipmentId}>
                   {e.equipmentName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Facility */}
-          <div className="space-y-2">
-            <label className={labelClasses}>Facility</label>
-            <select
-              value={selectedFacilityId}
-              onChange={(e) => setSelectedFacilityId(e.target.value)}
-              className={inputClasses}
-              required
-            >
-              <option value="">Select a facility</option>
-              {facilities?.map((f) => (
-                <option key={f.facilityId} value={f.facilityId}>
-                  {f.facilityName}
                 </option>
               ))}
             </select>
