@@ -3,7 +3,6 @@
 import BasicBookingStep from "@/components/BasicBooking";
 import ServiceInProgress from "@/components/ServiceInProgress";
 import PatientConsent from "@/features/patients/PatientConsent";
-import FacilityReport from "@/features/reports/FacilityReport";
 import ServiceFulfillment from "@/features/services/fulfillments/ServiceFulfillment";
 import { useAppSelector } from "@/hooks/hooks";
 import { useEffect } from "react";
@@ -33,8 +32,8 @@ function Clinicians() {
       //   return <ServiceValidation />;
       case "fulfillment":
         return <ServiceFulfillment />;
-      case "report":
-        return <FacilityReport />;
+      // case "report":
+      //   return <FacilityReport />;
       default:
         return <div>Step not implemented.</div>;
     }

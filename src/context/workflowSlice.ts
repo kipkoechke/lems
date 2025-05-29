@@ -20,7 +20,7 @@ export interface WorkflowState {
     // | "serviceValidation"
     | "service"
     | "fulfillment"
-    | "report"
+    // | "report"
     | "validation"
     | "completion"
     | "invoice"
@@ -56,7 +56,7 @@ export const stepOrder: WorkflowState["currentStep"][] = [
   "serviceInProgress",
   // "serviceValidation",
   "fulfillment",
-  "report",
+  // "report",
   "completion",
   "invoice",
   "approval",

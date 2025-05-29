@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  completeService,
-  goToNextStep,
-  goToPreviousStep,
-} from "@/context/workflowSlice";
+import { completeService, goToPreviousStep } from "@/context/workflowSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import React, { useEffect, useState } from "react";
 import OTPValidation from "../../../components/OTPValidation";
@@ -37,9 +33,9 @@ const ServiceFulfillment: React.FC = () => {
       setFulfillmentStatus("completed");
       dispatch(completeService(true));
 
-      setTimeout(() => {
-        dispatch(goToNextStep());
-      }, 1500);
+      // setTimeout(() => {
+      //   dispatch(goToNextStep());
+      // }, 1500);
     } else {
       setFulfillmentStatus("failed");
     }
@@ -213,7 +209,7 @@ const ServiceFulfillment: React.FC = () => {
           </div>
         </div>*/
         <div className="flex items-center justify-center h-32">
-          <span className="text-gray-500">Sending OTP to patient...</span>
+          <span className="text-gray-500">Sending OTP...</span>
         </div>
       )}
     </div>
