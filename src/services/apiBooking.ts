@@ -165,6 +165,25 @@ export const validateOverrideOtp = async (
   return response.data;
 };
 
+export const requestServiceFulfillmentOtp = async (
+  bookingId: string
+): Promise<RequestConsentResponse> => {
+  const response = await axios.post(
+    `/initiate-service-completion/${bookingId}`
+  );
+  return response.data;
+};
+
+export const validateServiceFulfillmentOtp = async (
+  data: ValidateOtp
+): Promise<ValidateOtpResponse> => {
+  const response = await axios.put(
+    `/service-completion/${data.booking_id}`,
+    data
+  );
+  return response.data;
+};
+
 export const getServiceBookingPatient = async (
   patientId: string
 ): Promise<IServiceBooking[]> => {
