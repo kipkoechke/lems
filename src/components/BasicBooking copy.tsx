@@ -167,7 +167,7 @@ const BasicBookingStep: React.FC = () => {
         facility_id: facility.facilityId,
         booking_date: new Date(bookingDate),
         payment_mode_id: paymentMode.paymentModeId,
-        status: "Pending",
+        status: "pending",
         notes: "",
         otp_overriden: isOverrideMode,
         cost: service.shaRate,

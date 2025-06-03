@@ -1,6 +1,6 @@
 import { goToNextStep, setBooking } from "@/context/workflowSlice";
 import { useAppDispatch } from "@/hooks/hooks";
-import { createServiceBooking, IServiceBooking } from "@/services/apiBooking";
+import { Bookings, createServiceBooking } from "@/services/apiBooking";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -11,7 +11,7 @@ export function useCreateBooking() {
 
   const { mutate: createBooking, isPending: isCreating } = useMutation({
     mutationFn: createServiceBooking,
-    onSuccess: (data: IServiceBooking) => {
+    onSuccess: (data: Bookings) => {
       toast.success("Booking created successfully!", {
         id: "createBooking",
       });

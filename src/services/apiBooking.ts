@@ -1,61 +1,34 @@
 import axios from "../lib/axios";
 import { Facility } from "./apiFacility";
 import { Patient } from "./apiPatient";
-
-export interface IServiceBooking {
-  bookingId: string;
-  patientId: string;
-  serviceId: string;
-  equipmentId: string;
-  facilityId: string;
-  bookingDate: Date;
-  startTime: Date;
-  endTime: Date;
-  status: string;
-  notes: string;
-  cost: string;
-  otp_overridden: boolean;
-}
+import { PaymentMode } from "./apiPaymentMode";
 
 export type ServiceBookingForm = {
   patient_id: string;
   service_id: string;
-  equipment_id: string;
+  equipment_id?: string;
   facility_id: string;
   payment_mode_id: string;
   booking_date: Date;
   cost: string;
   notes?: string;
   otp_overriden?: boolean;
-  status?: string;
+  status: "pending" | "confirmed" | "completed" | "cancelled";
+  service_completion?: "pending" | "completed";
+  approval?: "pending" | "approved" | "rejected";
 };
 
 export interface PatientConsent {
   booking_id: string;
 }
 
-// export interface BookingWithDetails {
-//   bookingId: string;
-//   cost: string;
-//   bookingDate: string;
-//   status: string;
-//   notes: string | null;
-//   otpOverridden: string;
-//   createdAt: string;
-//   updatedAt: string;
-//   deletedAt: string | null;
-//   patient: Patient;
-//   facility: Facility;
-//   service: ServiceCategory;
-//   equipment: Equipment;
-//   paymentMode: PaymentMode;
-// }
-
 export interface Bookings {
   bookingId: string;
   cost: string;
   bookingDate: string;
-  status: string;
+  status: "pending" | "confirmed" | "completed" | "cancelled";
+  serviceCompletion: "pending" | "completed";
+  approval: "pending" | "approved" | "rejected";
   notes: string | null;
   otpOverridden: string;
   createdAt: string;
@@ -85,32 +58,26 @@ export interface Bookings {
       deletedAt: string | null;
     };
   };
-  equipment: {
-    equipmentId: string;
-    equipmentName: string;
-    serialNumber: string;
-    status: string;
-    createdAt: string;
-    updatedAt: string;
-    deleteddAt: string | null;
-    category: {
-      vendorId: string;
-      vendorName: string;
-      vendorCode: string;
-      contactInfo: string;
-      createdAt: string;
-      updatedAt: string;
-      deleteddAt: string | null;
-    };
-    serviceIds: string;
-  };
-  paymentMode: {
-    paymentModeId: string;
-    paymentModeName: string;
-    createdAt: string;
-    updatedAt: string;
-    deletedAt: string | null;
-  };
+  // equipment: {
+  //   equipmentId: string;
+  //   equipmentName: string;
+  //   serialNumber: string;
+  //   status: string;
+  //   createdAt: string;
+  //   updatedAt: string;
+  //   deleteddAt: string | null;
+  //   category: {
+  //     vendorId: string;
+  //     vendorName: string;
+  //     vendorCode: string;
+  //     contactInfo: string;
+  //     createdAt: string;
+  //     updatedAt: string;
+  //     deleteddAt: string | null;
+  //   };
+  //   serviceIds: string;
+  // };
+  paymentMode: PaymentMode;
 }
 
 export interface ValidateOtp {
@@ -132,7 +99,7 @@ export interface ValidateOtpResponse {
 
 export const createServiceBooking = async (
   data: ServiceBookingForm
-): Promise<IServiceBooking> => {
+): Promise<Bookings> => {
   const response = await axios.post("/create-booking", data);
   return response.data.booking;
 };
@@ -186,7 +153,7 @@ export const validateServiceFulfillmentOtp = async (
 
 export const getServiceBookingPatient = async (
   patientId: string
-): Promise<IServiceBooking[]> => {
+): Promise<Bookings[]> => {
   const response = await axios.get(`/ServiceBooking/patient/${patientId}`);
   return response.data.data;
 };
@@ -201,16 +168,21 @@ export const approveBooking = async (bookingId: string): Promise<Bookings> => {
   return response.data.data;
 };
 
+export const rejectBooking = async (bookingId: string): Promise<Bookings> => {
+  const response = await axios.put(`/reject-booking/${bookingId}`);
+  return response.data.data;
+};
+
 export const getServiceBookingFacility = async (
   facilityId: string
-): Promise<IServiceBooking[]> => {
+): Promise<Bookings[]> => {
   const response = await axios.get(`/ServiceBooking/facility/${facilityId}`);
   return response.data.data;
 };
 
 export const getServiceBookingById = async (
   bookingId: string
-): Promise<IServiceBooking> => {
+): Promise<Bookings> => {
   const response = await axios.get(`/ServiceBooking/${bookingId}`);
   return response.data.data;
 };

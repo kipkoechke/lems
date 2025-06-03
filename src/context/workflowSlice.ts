@@ -1,6 +1,6 @@
 // src/store/workflowSlice.ts
 import { Invoice, ValidationReport } from "@/lib/types";
-import { IServiceBooking } from "@/services/apiBooking";
+import { Bookings } from "@/services/apiBooking";
 import { ServiceCategory } from "@/services/apiCategory";
 import { EquipmentWithService } from "@/services/apiEquipment";
 import { Facility } from "@/services/apiFacility";
@@ -32,7 +32,7 @@ export interface WorkflowState {
   selectedEquipment?: EquipmentWithService;
   selectedFacility?: Facility;
   selectedPaymentMode?: PaymentMode;
-  booking?: IServiceBooking;
+  booking?: Bookings;
   consentObtained?: boolean;
   serviceValidated?: boolean;
   serviceCompleted?: boolean;
@@ -110,7 +110,7 @@ export const workflowSlice = createSlice({
     completeDisbursement: (state, action: PayloadAction<boolean>) => {
       state.disbursementComplete = action.payload;
     },
-    setBooking: (state, action: PayloadAction<IServiceBooking>) => {
+    setBooking: (state, action: PayloadAction<Bookings>) => {
       state.booking = action.payload;
     },
     resetWorkflow: () => initialState,

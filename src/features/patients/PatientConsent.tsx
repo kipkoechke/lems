@@ -36,7 +36,7 @@ const PatientConsent: React.FC = () => {
   const [overrideSent, setOverrideSent] = useState(false);
 
   // Check if booking was created with override
-  const isBookingOverridden = booking?.otp_overridden || false;
+  const isBookingOverridden = booking?.otpOverridden || false;
 
   const handleSendOTP = () => {
     if (!booking || !patient) {

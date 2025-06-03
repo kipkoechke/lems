@@ -10,86 +10,6 @@ import {
 import { usePatient } from "./usePatient";
 import { usePatientBookings } from "./usePatientBookings";
 
-// Mock booking data - replace with your actual API call
-const mockBookingData = [
-  {
-    bookingId: "019716cf-671a-726b-aa16-55d84fa71ebf",
-    cost: "11000",
-    bookingDate: "2025-05-21 12:06:00",
-    status: "Pending",
-    notes: null,
-    otpOverridden: "0",
-    createdAt: "2025-05-28T12:13:00.000000Z",
-    updatedAt: "2025-05-28T12:13:00.000000Z",
-    deletedAt: null,
-    patient: {
-      patientId: "019714ab-7bd5-73e9-9d6c-0bfcf809440e",
-      patientName: "Jane Doe",
-      mobileNumber: "0782680815",
-      dateOfBirth: "2025-05-28",
-      createdAt: "2025-05-28T02:14:32.000000Z",
-      updatedAt: "2025-05-28T02:14:32.000000Z",
-      deletedAt: null,
-    },
-    facility: {
-      facilityId: "01971667-41de-7034-b0eb-f920e2899518",
-      facilityName: "South B Hospital",
-      facilityCode: "47006",
-      contactInfo: "Nairobi, kenya",
-      createdAt: "2025-05-28T10:19:15.000000Z",
-      updatedAt: "2025-05-28T10:19:15.000000Z",
-      deleteddAt: null,
-    },
-    service: {
-      serviceId: "0197167f-d5e3-71d0-99b6-a2f1840884cc",
-      serviceName: "Radionucleide scan",
-      description: "Nuclear Medicine",
-      shaRate: "11000",
-      vendorShare: "8000",
-      facilityShare: "3000",
-      capitated: "0",
-      createdAt: "2025-05-28T10:46:06.000000Z",
-      updatedAt: "2025-05-28T10:46:06.000000Z",
-      deletedAt: null,
-      category: {
-        categoryId: "01971675-9c2e-7231-9eb7-37117c5366c7",
-        lotNumber: "LOT 8",
-        categoryName: "Nuclear Medicine",
-        createdAt: "2025-05-28T10:34:55.000000Z",
-        updatedAt: "2025-05-28T10:34:55.000000Z",
-        deletedAt: null,
-      },
-    },
-    equipment: {
-      equipmentId: "01971695-e12d-722f-8aac-6c53161e92f3",
-      equipmentName: "Nuclear Medicine Machine",
-      serialNumber: "EQ5GVC9",
-      status: "available",
-      createdAt: "2025-05-28T11:10:10.000000Z",
-      updatedAt: "2025-05-28T11:10:10.000000Z",
-      deleteddAt: null,
-      category: {
-        vendorId: "0197166c-3402-7198-ba71-70d8a693eb5c",
-        vendorName: "Megascope Healthcare Limited",
-        vendorCode: "VEN002",
-        contactInfo: "Nairobi, Kenya",
-        createdAt: "2025-05-28T10:24:39.000000Z",
-        updatedAt: "2025-05-28T10:24:39.000000Z",
-        deleteddAt: null,
-      },
-      serviceIds:
-        "0197167d-d706-70d2-b6b7-f77219d96f1b,0197167f-d5e3-71d0-99b6-a2f1840884cc",
-    },
-    paymentMode: {
-      paymentModeId: "01971688-3b5d-73e2-a957-963328ecd81e",
-      paymentModeName: "SHA",
-      createdAt: "2025-05-28T10:55:16.000000Z",
-      updatedAt: "2025-05-28T10:55:16.000000Z",
-      deletedAt: null,
-    },
-  },
-];
-
 // Breadcrumb Component
 function PatientBreadcrumb({ patient }: { patient: any }) {
   return (
@@ -118,8 +38,6 @@ function PatientBookings() {
   const router = useRouter();
   const patientId = params.patientId as string;
 
-  // In real implementation, fetch patient data and bookings based on patientId
-  // const { bookings, isLoading: bookingsLoading } = usePatientBookings(patientId);
   const { patient, isLoading: patientLoading } = usePatient(patientId);
   const { bookings, bookingsLoading, isError } = usePatientBookings(patientId);
 
@@ -185,9 +103,9 @@ function PatientBookings() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Payment Mode
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Equipment
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -250,18 +168,16 @@ function PatientBookings() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          booking.status === "Pending"
+                          booking.approval === "pending"
                             ? "bg-yellow-100 text-yellow-800"
-                            : booking.status === "Confirmed"
+                            : booking.approval === "approved"
                             ? "bg-green-100 text-green-800"
-                            : booking.status === "Completed"
-                            ? "bg-blue-100 text-blue-800"
-                            : booking.status === "Cancelled"
+                            : booking.approval === "rejected"
                             ? "bg-red-100 text-red-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {booking.status}
+                        {booking.approval}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -278,7 +194,7 @@ function PatientBookings() {
                         {booking.paymentMode.paymentModeName}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div>
                         <div className="font-medium">
                           {booking.equipment.equipmentName}
@@ -304,7 +220,7 @@ function PatientBookings() {
                           Vendor: {booking.equipment.category.vendorName}
                         </div>
                       </div>
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>

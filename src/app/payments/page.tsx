@@ -1,6 +1,5 @@
 "use client";
 
-import { useApproveBooking } from "@/features/services/bookings/useApproveBooking";
 import { useBookings } from "@/features/services/bookings/useBookings";
 import {
   Building,
@@ -8,7 +7,7 @@ import {
   CreditCard,
   DollarSign,
   Users,
-  Wrench,
+  // Wrench, // Commented out equipment vendor icon
   X,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
@@ -16,27 +15,28 @@ import React, { useMemo, useState } from "react";
 interface PaymentSummaryItem {
   facilityName: string;
   facilityId: string;
-  equipmentVendor: string;
   serviceCategory: string;
   patientCount: number;
   shaRate: number;
   facilityShare: number;
   vendorShare: number;
+  totalShaAmount: number;
+  totalFacilityAmount: number;
+  totalVendorAmount: number;
   bookingIds: string[];
 }
 
 const PaymentReport: React.FC = () => {
-  const { isLoading, bookings, error, refetchBookings } = useBookings();
-  const { approve, isApproving } = useApproveBooking();
+  const { isLoading, bookings, error } = useBookings();
+
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const [approvingItems, setApprovingItems] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<"summary" | "approved">("summary");
 
   // Filter bookings by status for different tabs
   const pendingBookings =
-    bookings?.filter((booking) => booking.status === "Pending") || [];
+    bookings?.filter((booking) => booking.approval === "pending") || [];
   const approvedBookings =
-    bookings?.filter((booking) => booking.status === "Approved") || [];
+    bookings?.filter((booking) => booking.approval === "approved") || [];
 
   // Generate payment summary from pending bookings
   const paymentSummary = useMemo(() => {
@@ -45,22 +45,34 @@ const PaymentReport: React.FC = () => {
     const summaryMap = new Map<string, PaymentSummaryItem>();
 
     pendingBookings.forEach((booking) => {
-      const key = `${booking.facility.facilityId}-${booking.equipment.category.vendorName}-${booking.service.category.categoryName}`;
+      const key = `${booking.facility.facilityId}-${booking.service.category.categoryName}`;
 
       if (summaryMap.has(key)) {
         const existing = summaryMap.get(key)!;
         existing.patientCount += 1;
         existing.bookingIds.push(booking.bookingId);
+        // Recalculate totals
+        existing.totalShaAmount = existing.shaRate * existing.patientCount;
+        existing.totalFacilityAmount =
+          existing.facilityShare * existing.patientCount;
+        existing.totalVendorAmount =
+          existing.vendorShare * existing.patientCount;
       } else {
+        const shaRate = parseFloat(booking.service.shaRate || booking.cost);
+        const facilityShare = parseFloat(booking.service.facilityShare || "0");
+        const vendorShare = parseFloat(booking.service.vendorShare || "0");
+
         summaryMap.set(key, {
           facilityName: booking.facility.facilityName,
           facilityId: booking.facility.facilityId,
-          equipmentVendor: booking.equipment.category.vendorName,
           serviceCategory: booking.service.category.categoryName,
           patientCount: 1,
-          shaRate: parseFloat(booking.service.shaRate || booking.cost),
-          facilityShare: parseFloat(booking.service.facilityShare || "0"),
-          vendorShare: parseFloat(booking.service.vendorShare || "0"),
+          shaRate: shaRate,
+          facilityShare: facilityShare,
+          vendorShare: vendorShare,
+          totalShaAmount: shaRate,
+          totalFacilityAmount: facilityShare,
+          totalVendorAmount: vendorShare,
           bookingIds: [booking.bookingId],
         });
       }
@@ -76,22 +88,34 @@ const PaymentReport: React.FC = () => {
     const summaryMap = new Map<string, PaymentSummaryItem>();
 
     approvedBookings.forEach((booking) => {
-      const key = `${booking.facility.facilityId}-${booking.equipment.category.vendorName}-${booking.service.category.categoryName}`;
+      const key = `${booking.facility.facilityId}-${booking.service.category.categoryName}`;
 
       if (summaryMap.has(key)) {
         const existing = summaryMap.get(key)!;
         existing.patientCount += 1;
         existing.bookingIds.push(booking.bookingId);
+        // Recalculate totals
+        existing.totalShaAmount = existing.shaRate * existing.patientCount;
+        existing.totalFacilityAmount =
+          existing.facilityShare * existing.patientCount;
+        existing.totalVendorAmount =
+          existing.vendorShare * existing.patientCount;
       } else {
+        const shaRate = parseFloat(booking.service.shaRate || booking.cost);
+        const facilityShare = parseFloat(booking.service.facilityShare || "0");
+        const vendorShare = parseFloat(booking.service.vendorShare || "0");
+
         summaryMap.set(key, {
           facilityName: booking.facility.facilityName,
           facilityId: booking.facility.facilityId,
-          equipmentVendor: booking.equipment.category.vendorName,
           serviceCategory: booking.service.category.categoryName,
           patientCount: 1,
-          shaRate: parseFloat(booking.service.shaRate || booking.cost),
-          facilityShare: parseFloat(booking.service.facilityShare || "0"),
-          vendorShare: parseFloat(booking.service.vendorShare || "0"),
+          shaRate: shaRate,
+          facilityShare: facilityShare,
+          vendorShare: vendorShare,
+          totalShaAmount: shaRate,
+          totalFacilityAmount: facilityShare,
+          totalVendorAmount: vendorShare,
           bookingIds: [booking.bookingId],
         });
       }
@@ -107,6 +131,11 @@ const PaymentReport: React.FC = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(typeof amount === "string" ? parseFloat(amount) : amount);
+  };
+
+  const formatRateWithLabel = (rate: number, patientCount: number) => {
+    const formattedRate = formatCurrency(rate);
+    return patientCount > 1 ? `${formattedRate} /patient` : formattedRate;
   };
 
   const handleSelectAll = () => {
@@ -131,52 +160,30 @@ const PaymentReport: React.FC = () => {
     });
   };
 
-  const handleApprove = async (itemIndex?: string) => {
-    const itemsToApprove = itemIndex ? [itemIndex] : Array.from(selectedItems);
+  // Calculate totals
+  const pendingTotals = useMemo(() => {
+    return paymentSummary.reduce(
+      (acc, item) => ({
+        patients: acc.patients + item.patientCount,
+        shaAmount: acc.shaAmount + item.totalShaAmount,
+        facilityAmount: acc.facilityAmount + item.totalFacilityAmount,
+        vendorAmount: acc.vendorAmount + item.totalVendorAmount,
+      }),
+      { patients: 0, shaAmount: 0, facilityAmount: 0, vendorAmount: 0 }
+    );
+  }, [paymentSummary]);
 
-    if (itemsToApprove.length === 0) return;
-
-    setApprovingItems(new Set(itemsToApprove));
-
-    try {
-      // Get all booking IDs from selected items
-      const bookingIds = itemsToApprove.flatMap(
-        (index) => paymentSummary[parseInt(index)]?.bookingIds || []
-      );
-
-      // Approve all bookings
-      for (const bookingId of bookingIds) {
-        await new Promise((resolve, reject) => {
-          approve(bookingId, {
-            onSuccess: resolve,
-            onError: reject,
-          });
-        });
-      }
-
-      // Clear selections and refresh data
-      setSelectedItems(new Set());
-      refetchBookings();
-    } catch (error) {
-      console.error("Error approving bookings:", error);
-    } finally {
-      setApprovingItems(new Set());
-    }
-  };
-
-  const handleReject = (itemIndex: string) => {
-    // For now, we'll just remove from selection
-    // In a real implementation, you'd update the booking status to "Rejected"
-    setSelectedItems((prev) => {
-      const newSet = new Set(prev);
-      newSet.delete(itemIndex);
-      return newSet;
-    });
-
-    console.log("Rejecting item:", paymentSummary[parseInt(itemIndex)]);
-    // Here you would implement the rejection logic
-    // This might involve calling a rejection API or updating booking status
-  };
+  const approvedTotals = useMemo(() => {
+    return approvedSummary.reduce(
+      (acc, item) => ({
+        patients: acc.patients + item.patientCount,
+        shaAmount: acc.shaAmount + item.totalShaAmount,
+        facilityAmount: acc.facilityAmount + item.totalFacilityAmount,
+        vendorAmount: acc.vendorAmount + item.totalVendorAmount,
+      }),
+      { patients: 0, shaAmount: 0, facilityAmount: 0, vendorAmount: 0 }
+    );
+  }, [approvedSummary]);
 
   if (isLoading) {
     return (
@@ -236,41 +243,6 @@ const PaymentReport: React.FC = () => {
               <h3 className="text-lg leading-6 font-medium text-gray-900">
                 Payment Summary Report
               </h3>
-              <div className="flex space-x-2">
-                {paymentSummary.length > 0 && (
-                  <>
-                    <button
-                      onClick={handleSelectAll}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
-                    >
-                      {selectedItems.size === paymentSummary.length
-                        ? "Deselect All"
-                        : "Select All"}
-                    </button>
-                    {selectedItems.size > 0 && (
-                      <>
-                        <button
-                          onClick={() => handleApprove()}
-                          disabled={approvingItems.size > 0}
-                          className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-3 py-1 rounded text-sm inline-flex items-center"
-                        >
-                          {approvingItems.size > 0 ? (
-                            <>
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                              Approving...
-                            </>
-                          ) : (
-                            <>
-                              <Check className="h-3 w-3 mr-1" />
-                              Approve Selected ({selectedItems.size})
-                            </>
-                          )}
-                        </button>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
             </div>
 
             {paymentSummary.length === 0 ? (
@@ -284,88 +256,55 @@ const PaymentReport: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+              <div className="overflow-x-auto shadow md:rounded-lg">
                 <table className="min-w-full divide-y divide-gray-300">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="sticky left-0 z-10 bg-gray-50 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
-                        <input
-                          type="checkbox"
-                          checked={
-                            selectedItems.size === paymentSummary.length &&
-                            paymentSummary.length > 0
-                          }
-                          onChange={handleSelectAll}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">
                         Facility Name
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
-                        Equipment Vendor
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[140px]">
                         Service Category
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
-                        Patients
+                        Total Patients
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
                         SHA Rate
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Total SHA Amount
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
                         Facility Share
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Total Facility Amount
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
                         Vendor Share
                       </th>
-                      <th className="sticky right-0 z-10 bg-gray-50 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 min-w-[160px]">
-                        Actions
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Total Vendor Amount
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {paymentSummary.map((item, index) => (
                       <tr
-                        key={`${item.facilityId}-${item.equipmentVendor}-${item.serviceCategory}`}
+                        key={`${item.facilityId}-${item.serviceCategory}`}
                         className="hover:bg-gray-50"
                       >
-                        <td className="sticky left-0 z-10 bg-white px-4 py-4 whitespace-nowrap border-r border-gray-200">
-                          <input
-                            type="checkbox"
-                            checked={selectedItems.has(index.toString())}
-                            onChange={() => handleSelectItem(index.toString())}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-normal">
                           <div className="flex items-center">
                             <Building className="h-4 w-4 text-blue-600 mr-2 flex-shrink-0" />
-                            <div
-                              className="text-sm font-medium text-gray-900 truncate max-w-[140px]"
-                              title={item.facilityName}
-                            >
+                            <div className="text-sm font-medium text-gray-900 break-words">
                               {item.facilityName}
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <Wrench className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                            <div
-                              className="text-sm text-gray-900 truncate max-w-[110px]"
-                              title={item.equipmentVendor}
-                            >
-                              {item.equipmentVendor}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div
-                            className="text-sm text-gray-900 truncate max-w-[100px]"
-                            title={item.serviceCategory}
-                          >
+                        <td className="px-4 py-4 whitespace-normal">
+                          <div className="text-sm text-gray-900 break-words">
                             {item.serviceCategory}
                           </div>
                         </td>
@@ -379,47 +318,80 @@ const PaymentReport: React.FC = () => {
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-blue-600">
-                            {formatCurrency(item.shaRate)}
+                            {formatRateWithLabel(
+                              item.shaRate,
+                              item.patientCount
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-blue-700">
+                            {formatCurrency(item.totalShaAmount)}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-green-600">
-                            {formatCurrency(item.facilityShare)}
+                            {formatRateWithLabel(
+                              item.facilityShare,
+                              item.patientCount
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-green-700">
+                            {formatCurrency(item.totalFacilityAmount)}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-purple-600">
-                            {formatCurrency(item.vendorShare)}
+                            {formatRateWithLabel(
+                              item.vendorShare,
+                              item.patientCount
+                            )}
                           </div>
                         </td>
-                        <td className="sticky right-0 z-10 bg-white px-4 py-4 whitespace-nowrap text-sm font-medium space-x-2 border-l border-gray-200">
-                          <button
-                            onClick={() => handleApprove(index.toString())}
-                            disabled={approvingItems.has(index.toString())}
-                            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-2 py-1 rounded text-xs inline-flex items-center"
-                          >
-                            {approvingItems.has(index.toString()) ? (
-                              <>
-                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                                Approving...
-                              </>
-                            ) : (
-                              <>
-                                <Check className="h-3 w-3 mr-1" />
-                                Approve
-                              </>
-                            )}
-                          </button>
-                          <button
-                            onClick={() => handleReject(index.toString())}
-                            className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs inline-flex items-center"
-                          >
-                            <X className="h-3 w-3 mr-1" />
-                            Reject
-                          </button>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-purple-700">
+                            {formatCurrency(item.totalVendorAmount)}
+                          </div>
                         </td>
                       </tr>
                     ))}
+                    {/* Totals Row */}
+                    <tr className="bg-gray-100 border-t-2 border-gray-300 font-semibold">
+                      <td
+                        className="px-4 py-4 text-sm font-bold text-gray-900"
+                        colSpan={2}
+                      >
+                        TOTALS
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 text-purple-600 mr-1 flex-shrink-0" />
+                          <span className="text-sm font-bold text-gray-900">
+                            {pendingTotals.patients}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">-</td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-blue-800">
+                          {formatCurrency(pendingTotals.shaAmount)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">-</td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-green-800">
+                          {formatCurrency(pendingTotals.facilityAmount)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">-</td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-purple-800">
+                          {formatCurrency(pendingTotals.vendorAmount)}
+                        </div>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -454,23 +426,29 @@ const PaymentReport: React.FC = () => {
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">
                         Facility Name
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
-                        Equipment Vendor
-                      </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[140px]">
                         Service Category
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
-                        Patients
+                        Total Patients
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
                         SHA Rate
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Total SHA Amount
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
                         Facility Share
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Total Facility Amount
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
                         Vendor Share
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Total Vendor Amount
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
                         Status
@@ -480,7 +458,7 @@ const PaymentReport: React.FC = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {approvedSummary.map((item, index) => (
                       <tr
-                        key={`approved-${item.facilityId}-${item.equipmentVendor}-${item.serviceCategory}`}
+                        key={`approved-${item.facilityId}-${item.serviceCategory}`}
                         className="hover:bg-gray-50"
                       >
                         <td className="px-4 py-4 whitespace-nowrap">
@@ -491,17 +469,6 @@ const PaymentReport: React.FC = () => {
                               title={item.facilityName}
                             >
                               {item.facilityName}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <Wrench className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                            <div
-                              className="text-sm text-gray-900 truncate max-w-[110px]"
-                              title={item.equipmentVendor}
-                            >
-                              {item.equipmentVendor}
                             </div>
                           </div>
                         </td>
@@ -523,17 +490,41 @@ const PaymentReport: React.FC = () => {
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-blue-600">
-                            {formatCurrency(item.shaRate)}
+                            {formatRateWithLabel(
+                              item.shaRate,
+                              item.patientCount
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-blue-700">
+                            {formatCurrency(item.totalShaAmount)}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-green-600">
-                            {formatCurrency(item.facilityShare)}
+                            {formatRateWithLabel(
+                              item.facilityShare,
+                              item.patientCount
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-green-700">
+                            {formatCurrency(item.totalFacilityAmount)}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-purple-600">
-                            {formatCurrency(item.vendorShare)}
+                            {formatRateWithLabel(
+                              item.vendorShare,
+                              item.patientCount
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-purple-700">
+                            {formatCurrency(item.totalVendorAmount)}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
@@ -544,6 +535,42 @@ const PaymentReport: React.FC = () => {
                         </td>
                       </tr>
                     ))}
+                    {/* Totals Row */}
+                    <tr className="bg-gray-100 border-t-2 border-gray-300 font-semibold">
+                      <td
+                        className="px-4 py-4 text-sm font-bold text-gray-900"
+                        colSpan={2}
+                      >
+                        TOTALS
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 text-purple-600 mr-1 flex-shrink-0" />
+                          <span className="text-sm font-bold text-gray-900">
+                            {approvedTotals.patients}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">-</td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-blue-800">
+                          {formatCurrency(approvedTotals.shaAmount)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">-</td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-green-800">
+                          {formatCurrency(approvedTotals.facilityAmount)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">-</td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-purple-800">
+                          {formatCurrency(approvedTotals.vendorAmount)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">-</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -565,12 +592,7 @@ const PaymentReport: React.FC = () => {
                       Total Pending Value
                     </dt>
                     <dd className="text-lg font-medium text-gray-900">
-                      {formatCurrency(
-                        paymentSummary.reduce(
-                          (acc, item) => acc + item.shaRate * item.patientCount,
-                          0
-                        )
-                      )}
+                      {formatCurrency(pendingTotals.shaAmount)}
                     </dd>
                   </dl>
                 </div>
@@ -590,10 +612,7 @@ const PaymentReport: React.FC = () => {
                       Pending Patients
                     </dt>
                     <dd className="text-lg font-medium text-gray-900">
-                      {paymentSummary.reduce(
-                        (acc, item) => acc + item.patientCount,
-                        0
-                      )}
+                      {pendingTotals.patients}
                     </dd>
                   </dl>
                 </div>
@@ -613,10 +632,7 @@ const PaymentReport: React.FC = () => {
                       Approved Patients
                     </dt>
                     <dd className="text-lg font-medium text-gray-900">
-                      {approvedSummary.reduce(
-                        (acc, item) => acc + item.patientCount,
-                        0
-                      )}
+                      {approvedTotals.patients}
                     </dd>
                   </dl>
                 </div>

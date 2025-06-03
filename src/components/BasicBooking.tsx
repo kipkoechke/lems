@@ -1,14 +1,14 @@
 import {
   goToNextStep,
   selectCategory,
-  selectEquipment,
+  // selectEquipment,
   selectFacility,
   selectPaymentMode,
   selectService,
   setBooking,
   setPatient,
 } from "@/context/workflowSlice";
-import { useEquipmentByService } from "@/features/equipments/userServiceEquipment";
+// import { useEquipmentByService } from "@/features/equipments/userServiceEquipment";
 import { useFacilities } from "@/features/facilities/useFacilities";
 import PatientRegistration from "@/features/patients/PatientRegistration";
 import { usePatients } from "@/features/patients/usePatients";
@@ -16,7 +16,7 @@ import { usePaymentModes } from "@/features/paymentModes/usePaymentModes";
 import { useCreateBooking } from "@/features/services/bookings/useCreateBooking";
 import { useCategories } from "@/features/services/categories/useCategories";
 import { useServiceByCategory } from "@/features/services/useServiceByCategory";
-import { useAppDispatch } from "@/hooks/hooks";
+import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import { Patient } from "@/services/apiPatient";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
@@ -25,6 +25,20 @@ import { usePatientConsentOverride } from "@/features/patients/useConsentOverrid
 import { usePatientConsent } from "@/features/patients/usePatientConsent";
 import { useOtpValidation } from "@/features/patients/useValidateOtp";
 import { useOtpValidationOverride } from "@/features/patients/useValidateOverride";
+import {
+  FaCalendarAlt,
+  FaCheckCircle,
+  FaExclamationTriangle,
+  FaSyncAlt,
+} from "react-icons/fa";
+import {
+  FaHospital,
+  FaMoneyBillWave,
+  FaStethoscope,
+  FaUserCheck,
+  FaUserPlus,
+  FaUserShield,
+} from "react-icons/fa6";
 import Modal from "./Modal";
 import OTPValidation from "./OTPValidation";
 
@@ -32,12 +46,11 @@ const BasicBookingStep: React.FC = () => {
   const dispatch = useAppDispatch();
   const { patients } = usePatients();
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
-  const { equipments, isEquipmentsLoading } =
-    useEquipmentByService(selectedServiceId);
+  // const { equipments } = useEquipmentByService(selectedServiceId);
   const { facilities } = useFacilities();
   const { paymentModes } = usePaymentModes();
   const { createBooking, isCreating } = useCreateBooking();
-  const { isLoading, categories, error } = useCategories();
+  const { categories } = useCategories();
 
   // Patient consent hooks
   const { requestPatientConsentOtp, isRegistering: isPatientOtpRegistering } =
@@ -52,12 +65,10 @@ const BasicBookingStep: React.FC = () => {
     useOtpValidationOverride();
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
-
-  const { isServiceByCategoryLoading, services } =
-    useServiceByCategory(selectedCategoryId);
+  const { services } = useServiceByCategory(selectedCategoryId);
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
-  const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>("");
+  // const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>("");
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>("");
   const [selectedPaymentModeId, setSelectedPaymentModeId] =
     useState<string>("");
@@ -73,6 +84,8 @@ const BasicBookingStep: React.FC = () => {
   const [generatedPatientOtp, setGeneratedPatientOtp] = useState<string | null>(
     null
   );
+  const booking = useAppSelector((store) => store.workflow.booking);
+
   const [patientConsentVerified, setPatientConsentVerified] =
     useState<boolean>(false);
 
@@ -94,9 +107,9 @@ const BasicBookingStep: React.FC = () => {
       (c) => c.categoryId === selectedCategoryId
     );
     const service = services?.find((s) => s.serviceId === selectedServiceId);
-    const equipment = equipments?.find(
-      (e) => e.equipmentId === selectedEquipmentId
-    );
+    // const equipment = equipments?.find(
+    //   (e) => e.equipmentId === selectedEquipmentId
+    // );
     const facility = facilities?.find(
       (f) => f.facilityId === selectedFacilityId
     );
@@ -108,7 +121,7 @@ const BasicBookingStep: React.FC = () => {
       !patient ||
       !category ||
       !service ||
-      !equipment ||
+      // !equipment ||
       !facility ||
       !paymentMode ||
       !bookingDate
@@ -121,7 +134,7 @@ const BasicBookingStep: React.FC = () => {
       patient,
       category,
       service,
-      equipment,
+      // equipment,
       facility,
       paymentMode,
     };
@@ -148,14 +161,19 @@ const BasicBookingStep: React.FC = () => {
   };
 
   const createBookingFirst = (validatedFields: any) => {
-    const { patient, category, service, equipment, facility, paymentMode } =
-      validatedFields;
+    const {
+      patient,
+      category,
+      service,
+      /* equipment, */ facility,
+      paymentMode,
+    } = validatedFields;
 
     // Store all selections in Redux
     dispatch(setPatient(patient));
     dispatch(selectCategory(category));
     dispatch(selectService(service));
-    dispatch(selectEquipment(equipment));
+    // dispatch(selectEquipment(equipment));
     dispatch(selectFacility(facility));
     dispatch(selectPaymentMode(paymentMode));
 
@@ -163,26 +181,22 @@ const BasicBookingStep: React.FC = () => {
       {
         patient_id: patient.patientId,
         service_id: service.serviceId,
-        equipment_id: equipment.equipmentId,
+        // equipment_id: equipment.equipmentId,
         facility_id: facility.facilityId,
         booking_date: new Date(bookingDate),
         payment_mode_id: paymentMode.paymentModeId,
-        status: "Pending",
+        status: "pending",
         notes: "",
         otp_overriden: isOverrideMode,
         cost: service.shaRate,
       },
       {
         onSuccess: (bookingData) => {
-          console.log("Booking created successfully:", bookingData);
           toast.success("Booking created successfully!");
-
-          // Store booking in Redux
           dispatch(setBooking(bookingData));
           setCurrentBookingId(bookingData.bookingId);
           setBookingCreated(true);
 
-          // Show appropriate message based on mode
           if (isOverrideMode) {
             toast(
               "Click 'Request Override OTP' to proceed with emergency booking"
@@ -191,8 +205,7 @@ const BasicBookingStep: React.FC = () => {
             toast("Click 'Verify OTP and Book' to get patient consent");
           }
         },
-        onError: (error) => {
-          console.error("Booking creation failed:", error);
+        onError: () => {
           toast.error("Failed to create booking");
         },
       }
@@ -201,22 +214,18 @@ const BasicBookingStep: React.FC = () => {
 
   const handleNormalFlow = () => {
     if (!patientConsentVerified) {
-      // Send patient OTP for consent verification
       handleSendPatientOTP();
     } else {
-      // Patient consent verified, proceed to next step
       dispatch(goToNextStep());
     }
   };
 
   const handleOverrideFlow = () => {
     if (!overrideVerified) {
-      // Send override OTP
       handleSendOverrideOTP();
     } else {
-      // Override verified, skip consent step and proceed
       dispatch(goToNextStep());
-      dispatch(goToNextStep()); // Skip consent step
+      dispatch(goToNextStep());
     }
   };
 
@@ -230,22 +239,15 @@ const BasicBookingStep: React.FC = () => {
       { booking_id: currentBookingId },
       {
         onSuccess: (otpData) => {
-          console.log("Patient OTP request successful:", otpData);
-
           if (otpData.otp_code) {
             setGeneratedPatientOtp(otpData.otp_code);
             toast.success(`Patient Consent OTP: ${otpData.otp_code}`);
-
-            // Show OTP modal after a short delay
-            setTimeout(() => {
-              setShowPatientOTP(true);
-            }, 1000);
+            setShowPatientOTP(true);
           } else {
             toast.error("No OTP code returned from server.");
           }
         },
-        onError: (error) => {
-          console.error("Patient OTP request failed:", error);
+        onError: () => {
           toast.error("Failed to send patient consent OTP");
         },
       }
@@ -262,37 +264,23 @@ const BasicBookingStep: React.FC = () => {
       { booking_id: currentBookingId },
       {
         onSuccess: (otpData) => {
-          console.log("Override OTP request successful:", otpData);
-
           if (otpData.otp_code) {
             setGeneratedOverrideOtp(otpData.otp_code);
             toast.success(`Override OTP Code: ${otpData.otp_code}`);
 
-            // Show OTP modal after a short delay
-            setTimeout(() => {
-              setShowOverrideOTP(true);
-            }, 1000);
+            setShowOverrideOTP(true);
           } else {
             toast.error("No OTP code returned from server.");
           }
         },
-        onError: (error) => {
-          console.error("Override OTP request failed:", error);
+        onError: () => {
           toast.error("Failed to send override OTP");
         },
       }
     );
   };
 
-  // Handler for patient OTP validation
   const handleValidatePatientOTP = (otp: string) => {
-    console.log(
-      "Validating Patient OTP:",
-      otp,
-      "Booking ID:",
-      currentBookingId
-    );
-
     if (!currentBookingId) {
       toast.error("Booking information is missing. Please try again.");
       setShowPatientOTP(false);
@@ -305,37 +293,32 @@ const BasicBookingStep: React.FC = () => {
         otp_code: otp,
       },
       {
-        onSuccess: (data) => {
-          console.log("Patient OTP validation successful:", data);
+        onSuccess: () => {
           setPatientConsentVerified(true);
           setShowPatientOTP(false);
+          if (booking) {
+            dispatch(
+              setBooking({
+                ...booking,
+                bookingId: booking.bookingId ?? "",
+                status: "confirmed",
+                cost: booking.cost ?? "",
+              })
+            );
+          }
           toast.success("Patient consent verified successfully!");
-
-          // Clear temporary states
           setGeneratedPatientOtp(null);
 
-          // Automatically proceed to next step after successful verification
-          setTimeout(() => {
-            dispatch(goToNextStep());
-          }, 1500);
+          dispatch(goToNextStep());
         },
-        onError: (error) => {
-          console.error("Patient OTP validation failed:", error);
+        onError: () => {
           toast.error("Invalid patient consent OTP. Please try again.");
         },
       }
     );
   };
 
-  // Handler for override OTP validation
   const handleValidateOverrideOTP = (otp: string) => {
-    console.log(
-      "Validating Override OTP:",
-      otp,
-      "Booking ID:",
-      currentBookingId
-    );
-
     if (!currentBookingId) {
       toast.error("Booking information is missing. Please try again.");
       setShowOverrideOTP(false);
@@ -348,37 +331,35 @@ const BasicBookingStep: React.FC = () => {
         otp_code: otp,
       },
       {
-        onSuccess: (data) => {
-          console.log("Override OTP validation successful:", data);
+        onSuccess: () => {
           setOverrideVerified(true);
           setShowOverrideOTP(false);
+          // dispatch(
+          //   setBooking({
+          //       ...booking,
+          //       bookingId: booking.bookingId ?? "",
+          //       status: "confirmed",
+          //       cost: booking.cost ?? "",
+          //   })
+          // );
           toast.success("Override OTP verified successfully!");
-
-          // Clear temporary states
           setGeneratedOverrideOtp(null);
-
-          // Automatically proceed to next step after successful verification
-          setTimeout(() => {
-            dispatch(goToNextStep());
-            dispatch(goToNextStep()); // Skip consent step for override
-          }, 1500);
+          dispatch(goToNextStep());
+          dispatch(goToNextStep());
         },
-        onError: (error) => {
-          console.error("Override OTP validation failed:", error);
+        onError: () => {
           toast.error("Invalid override OTP. Please try again.");
         },
       }
     );
   };
 
-  // Handler to close patient OTP modal
   const handleCancelPatientOTP = () => {
     setShowPatientOTP(false);
     setGeneratedPatientOtp(null);
     toast("Patient consent OTP cancelled");
   };
 
-  // Handler to close override OTP modal
   const handleCancelOverrideOTP = () => {
     setShowOverrideOTP(false);
     setGeneratedOverrideOtp(null);
@@ -413,7 +394,6 @@ const BasicBookingStep: React.FC = () => {
     disabled:cursor-not-allowed
   `;
 
-  // Determine what the main button should show and do
   const getMainButtonConfig = () => {
     if (!bookingCreated) {
       return {
@@ -506,7 +486,8 @@ const BasicBookingStep: React.FC = () => {
         onSubmit={handleSubmit}
       >
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+            <FaStethoscope className="text-blue-600" />
             Book a Service
           </h2>
         </div>
@@ -515,17 +496,7 @@ const BasicBookingStep: React.FC = () => {
         {bookingCreated && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center">
-              <svg
-                className="w-5 h-5 text-green-600 mr-2"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <FaCheckCircle className="w-5 h-5 text-green-600 mr-2" />
               <span className="text-green-800 font-medium">
                 Booking Created Successfully
               </span>
@@ -543,21 +514,13 @@ const BasicBookingStep: React.FC = () => {
         {isOverrideMode && (
           <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
             <div className="flex items-center">
-              <svg
-                className="w-5 h-5 text-amber-600 mr-2"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <FaExclamationTriangle className="w-5 h-5 text-amber-600 mr-2" />
               <span className="text-amber-800 font-medium">
                 Emergency Override Mode Active
                 {overrideVerified && (
-                  <span className="ml-2 text-green-600">✓ Verified</span>
+                  <span className="ml-2 text-green-600 flex items-center">
+                    <FaCheckCircle className="inline w-4 h-4 mr-1" /> Verified
+                  </span>
                 )}
               </span>
             </div>
@@ -572,19 +535,10 @@ const BasicBookingStep: React.FC = () => {
         {!isOverrideMode && patientConsentVerified && (
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center">
-              <svg
-                className="w-5 h-5 text-blue-600 mr-2"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="text-blue-800 font-medium">
-                Patient Consent Verified ✓
+              <FaUserCheck className="w-5 h-5 text-blue-600 mr-2" />
+              <span className="text-blue-800 font-medium flex items-center">
+                Patient Consent Verified{" "}
+                <FaCheckCircle className="inline w-4 h-4 ml-1" />
               </span>
             </div>
             <p className="text-blue-700 text-sm mt-1">
@@ -597,7 +551,9 @@ const BasicBookingStep: React.FC = () => {
           {/* Patient Name */}
           <div className="space-y-2">
             <div className="relative">
-              <label className={labelClasses}>Patient</label>{" "}
+              <label className={labelClasses}>
+                <FaUserShield className="inline mr-1 text-blue-500" /> Patient
+              </label>
               <Modal>
                 <Modal.Open opens="patient-form">
                   <button
@@ -615,7 +571,7 @@ const BasicBookingStep: React.FC = () => {
                     "
                     title="Add new patient"
                   >
-                    +
+                    <FaUserPlus />
                   </button>
                 </Modal.Open>
                 <Modal.Window name="patient-form">
@@ -643,7 +599,10 @@ const BasicBookingStep: React.FC = () => {
 
           {/* Service Category */}
           <div className="space-y-2">
-            <label className={labelClasses}>Diagnostic Service</label>
+            <label className={labelClasses}>
+              <FaStethoscope className="inline mr-1 text-green-600" />{" "}
+              Diagnostic Service
+            </label>
             <select
               value={selectedCategoryId}
               onChange={(e) => setSelectedCategoryId(e.target.value)}
@@ -662,7 +621,9 @@ const BasicBookingStep: React.FC = () => {
 
           {/* Facility */}
           <div className="space-y-2">
-            <label className={labelClasses}>Facility</label>
+            <label className={labelClasses}>
+              <FaHospital className="inline mr-1 text-purple-600" /> Facility
+            </label>
             <select
               value={selectedFacilityId}
               onChange={(e) => setSelectedFacilityId(e.target.value)}
@@ -681,7 +642,10 @@ const BasicBookingStep: React.FC = () => {
 
           {/* Service Name */}
           <div className="space-y-2">
-            <label className={labelClasses}>Service Name</label>
+            <label className={labelClasses}>
+              <FaStethoscope className="inline mr-1 text-blue-600" /> Service
+              Name
+            </label>
             <select
               value={selectedServiceId}
               onChange={(e) => setSelectedServiceId(e.target.value)}
@@ -700,7 +664,10 @@ const BasicBookingStep: React.FC = () => {
 
           {/* Payment Mode */}
           <div className="space-y-2">
-            <label className={labelClasses}>Payment Mode</label>
+            <label className={labelClasses}>
+              <FaMoneyBillWave className="inline mr-1 text-amber-600" /> Payment
+              Mode
+            </label>
             <select
               value={selectedPaymentModeId}
               onChange={(e) => setSelectedPaymentModeId(e.target.value)}
@@ -717,9 +684,11 @@ const BasicBookingStep: React.FC = () => {
             </select>
           </div>
 
-          {/* Equipment */}
-          <div className="space-y-2">
-            <label className={labelClasses}>Equipment</label>
+          {/* Equipment - COMMENTED OUT */}
+          {/* <div className="space-y-2">
+            <label className={labelClasses}>
+              <FaTools className="inline mr-1 text-gray-600" /> Equipment
+            </label>
             <select
               value={selectedEquipmentId}
               onChange={(e) => setSelectedEquipmentId(e.target.value)}
@@ -734,11 +703,14 @@ const BasicBookingStep: React.FC = () => {
                 </option>
               ))}
             </select>
-          </div>
+          </div> */}
 
           {/* Booking Date & Time */}
           <div className="space-y-2">
-            <label className={labelClasses}>Booking Date & Time</label>
+            <label className={labelClasses}>
+              <FaCalendarAlt className="inline mr-1 text-pink-600" /> Booking
+              Date & Time
+            </label>
             <input
               type="datetime-local"
               value={bookingDate}
@@ -754,7 +726,8 @@ const BasicBookingStep: React.FC = () => {
         <div className="flex justify-between items-center pt-6 border-t border-gray-200">
           {/* Emergency Override Toggle */}
           <div className="flex items-center space-x-3">
-            <label className="text-sm font-medium text-gray-700">
+            <label className="text-sm font-medium text-gray-700 flex items-center">
+              <FaExclamationTriangle className="mr-1 text-amber-500" />
               Emergency Override:
             </label>
             <button
@@ -765,7 +738,6 @@ const BasicBookingStep: React.FC = () => {
                   return;
                 }
                 setIsOverrideMode(!isOverrideMode);
-                // Reset states when toggling
                 setOverrideVerified(false);
                 setPatientConsentVerified(false);
                 setGeneratedOverrideOtp(null);
@@ -808,26 +780,7 @@ const BasicBookingStep: React.FC = () => {
             >
               {buttonConfig.loading ? (
                 <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
+                  <FaSyncAlt className="animate-spin -ml-1 mr-2 h-4 w-4 text-current" />
                   {buttonConfig.loadingText}
                 </>
               ) : (

@@ -23,6 +23,11 @@ function Sidebar() {
     { href: "/facilities", label: "Facilities", icon: <HiOutlineUsers /> },
     { href: "/bookings", label: "Services", icon: <HiOutlineUsers /> },
     {
+      href: "/payments",
+      label: "Payments Report",
+      icon: <HiOutlineUsers />,
+    },
+    {
       label: "Reports",
       icon: <HiOutlineUsers />,
       children: [

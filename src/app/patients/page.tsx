@@ -361,6 +361,9 @@ function Patients() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Patient ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Patient Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -368,9 +371,6 @@ function Patients() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date of Birth
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Patient ID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Created Date
@@ -387,6 +387,9 @@ function Patients() {
                   className="hover:bg-gray-50 cursor-pointer transition-colors"
                   onClick={() => handlePatientClick(patient)}
                 >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {patient.patientId}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {patient.patientName}
                   </td>
@@ -400,9 +403,7 @@ function Patients() {
                       day: "numeric",
                     })}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {patient.patientId}
-                  </td>
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {new Date(patient.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",

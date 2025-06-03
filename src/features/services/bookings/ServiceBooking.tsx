@@ -46,7 +46,7 @@ const ServiceBooking: React.FC = () => {
       facility_id: selectedFacility.facilityId,
       payment_mode_id: data.payment_mode_id,
       booking_date: new Date(data.booking_date),
-      status: "Pending",
+      status: "pending",
       notes: data.notes || "",
       cost: selectedService.shaRate,
     };

@@ -1,6 +1,10 @@
 "use client";
 
-import { completeService, goToPreviousStep } from "@/context/workflowSlice";
+import {
+  completeService,
+  goToPreviousStep,
+  setBooking,
+} from "@/context/workflowSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -65,6 +69,7 @@ const ServiceFulfillment: React.FC = () => {
       { data: { booking_id: bookingId, otp_code: otp } },
       {
         onSuccess: () => {
+          dispatch(setBooking({ ...booking, serviceCompletion: "completed" }));
           setFulfillmentStatus("completed");
           setShowOTP(false);
           dispatch(completeService(true));
