@@ -438,7 +438,7 @@ const PaymentReport: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+              <div className="overflow-x-auto shadow md:rounded-lg">
                 <table className="min-w-full divide-y divide-gray-300">
                   <thead className="bg-gray-50">
                     <tr>
@@ -471,11 +471,11 @@ const PaymentReport: React.FC = () => {
                         key={`approved-${item.facilityId}-${item.serviceCategory}`}
                         className="hover:bg-gray-50"
                       >
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-normal">
                           <div className="flex items-center">
                             <Building className="h-4 w-4 text-blue-600 mr-2 flex-shrink-0" />
                             <div
-                              className="text-sm font-medium text-gray-900 truncate max-w-[140px]"
+                              className="text-sm font-medium text-gray-900 "
                               title={item.facilityName}
                             >
                               {item.facilityName}
@@ -499,7 +499,7 @@ const PaymentReport: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="flex justify-between">
+                          <div className="flex justify-between flex-col">
                             {formatRateWithLabel(
                               item.shaRate,
                               item.patientCount,
