@@ -24,7 +24,6 @@ interface PaymentSummaryItem {
   totalFacilityAmount: number;
   totalVendorAmount: number;
   bookingIds: string[];
-  paymentMode: string;
 }
 
 const PaymentReport: React.FC = () => {
@@ -75,7 +74,6 @@ const PaymentReport: React.FC = () => {
           totalFacilityAmount: facilityShare,
           totalVendorAmount: vendorShare,
           bookingIds: [booking.bookingId],
-          paymentMode: booking.paymentMode.paymentModeName,
         });
       }
     });
@@ -119,7 +117,6 @@ const PaymentReport: React.FC = () => {
           totalFacilityAmount: facilityShare,
           totalVendorAmount: vendorShare,
           bookingIds: [booking.bookingId],
-          paymentMode: booking.paymentMode.paymentModeName,
         });
       }
     });
@@ -131,36 +128,14 @@ const PaymentReport: React.FC = () => {
     return new Intl.NumberFormat("en-KE", {
       style: "currency",
       currency: "KES",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(typeof amount === "string" ? parseFloat(amount) : amount);
   };
 
-  const formatRateWithLabel = (
-    rate: number,
-    patientCount: number,
-    label: string
-  ) => {
+  const formatRateWithLabel = (rate: number, patientCount: number) => {
     const formattedRate = formatCurrency(rate);
-    const displayRate =
-      patientCount > 1 ? `${formattedRate} /patient` : formattedRate;
-    return (
-      <div className="text-sm">
-        <span className="text-gray-700">{label}: </span>
-        <span className="font-bold text-gray-900">{displayRate}</span>
-      </div>
-    );
-  };
-
-  const formatTotalWithLabel = (amount: number, label: string) => {
-    return (
-      <div className="text-sm">
-        <span className="text-gray-700">{label}: </span>
-        <span className="font-bold text-gray-900">
-          {formatCurrency(amount)}
-        </span>
-      </div>
-    );
+    return patientCount > 1 ? `${formattedRate} /patient` : formattedRate;
   };
 
   const handleSelectAll = () => {
@@ -294,14 +269,23 @@ const PaymentReport: React.FC = () => {
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
                         Total Patients
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
-                        Cost Breakdown
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
-                        Totals
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        SHA Rate
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
-                        Payment Mode
+                        Total SHA Amount
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Facility Share
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Total Facility Amount
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Vendor Share
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Total Vendor Amount
                       </th>
                     </tr>
                   </thead>
@@ -333,43 +317,42 @@ const PaymentReport: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="space-y-1">
+                          <div className="text-sm font-medium text-blue-600">
                             {formatRateWithLabel(
                               item.shaRate,
-                              item.patientCount,
-                              "SHA Rate"
+                              item.patientCount
                             )}
-                            {formatRateWithLabel(
-                              item.vendorShare,
-                              item.patientCount,
-                              "Vendor Share"
-                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-blue-700">
+                            {formatCurrency(item.totalShaAmount)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-green-600">
                             {formatRateWithLabel(
                               item.facilityShare,
-                              item.patientCount,
-                              "Facility Share"
+                              item.patientCount
                             )}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="space-y-1">
-                            {formatTotalWithLabel(
-                              item.totalShaAmount,
-                              "SHA Total"
-                            )}
-                            {formatTotalWithLabel(
-                              item.totalVendorAmount,
-                              "Vendor Total"
-                            )}
-                            {formatTotalWithLabel(
-                              item.totalFacilityAmount,
-                              "Facility Total"
+                          <div className="text-sm font-bold text-green-700">
+                            {formatCurrency(item.totalFacilityAmount)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-purple-600">
+                            {formatRateWithLabel(
+                              item.vendorShare,
+                              item.patientCount
                             )}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">
-                            {item.paymentMode}
+                          <div className="text-sm font-bold text-purple-700">
+                            {formatCurrency(item.totalVendorAmount)}
                           </div>
                         </td>
                       </tr>
@@ -390,26 +373,24 @@ const PaymentReport: React.FC = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-500 text-center">
-                        -
-                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">-</td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="space-y-1">
-                          {formatTotalWithLabel(
-                            pendingTotals.shaAmount,
-                            "SHA Total"
-                          )}
-                          {formatTotalWithLabel(
-                            pendingTotals.vendorAmount,
-                            "Vendor Total"
-                          )}
-                          {formatTotalWithLabel(
-                            pendingTotals.facilityAmount,
-                            "Facility Total"
-                          )}
+                        <div className="text-sm font-bold text-blue-800">
+                          {formatCurrency(pendingTotals.shaAmount)}
                         </div>
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-500">-</td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-green-800">
+                          {formatCurrency(pendingTotals.facilityAmount)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">-</td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-purple-800">
+                          {formatCurrency(pendingTotals.vendorAmount)}
+                        </div>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -451,14 +432,23 @@ const PaymentReport: React.FC = () => {
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
                         Total Patients
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
-                        Cost Breakdown
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
-                        Totals
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        SHA Rate
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
-                        Payment Mode
+                        Total SHA Amount
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Facility Share
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Total Facility Amount
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Vendor Share
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                        Total Vendor Amount
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
                         Status
@@ -499,43 +489,42 @@ const PaymentReport: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="flex justify-between">
+                          <div className="text-sm font-medium text-blue-600">
                             {formatRateWithLabel(
                               item.shaRate,
-                              item.patientCount,
-                              "SHA Rate"
+                              item.patientCount
                             )}
-                            {formatRateWithLabel(
-                              item.vendorShare,
-                              item.patientCount,
-                              "Vendor Share"
-                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-blue-700">
+                            {formatCurrency(item.totalShaAmount)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-green-600">
                             {formatRateWithLabel(
                               item.facilityShare,
-                              item.patientCount,
-                              "Facility Share"
+                              item.patientCount
                             )}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="space-y-1">
-                            {formatTotalWithLabel(
-                              item.totalShaAmount,
-                              "SHA Total"
-                            )}
-                            {formatTotalWithLabel(
-                              item.totalVendorAmount,
-                              "Vendor Total"
-                            )}
-                            {formatTotalWithLabel(
-                              item.totalFacilityAmount,
-                              "Facility Total"
+                          <div className="text-sm font-bold text-green-700">
+                            {formatCurrency(item.totalFacilityAmount)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-purple-600">
+                            {formatRateWithLabel(
+                              item.vendorShare,
+                              item.patientCount
                             )}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">
-                            {item.paymentMode}
+                          <div className="text-sm font-bold text-purple-700">
+                            {formatCurrency(item.totalVendorAmount)}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
@@ -562,26 +551,24 @@ const PaymentReport: React.FC = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-500 text-center">
-                        -
-                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">-</td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="space-y-1">
-                          {formatTotalWithLabel(
-                            approvedTotals.shaAmount,
-                            "SHA Total"
-                          )}
-                          {formatTotalWithLabel(
-                            approvedTotals.vendorAmount,
-                            "Vendor Total"
-                          )}
-                          {formatTotalWithLabel(
-                            approvedTotals.facilityAmount,
-                            "Facility Total"
-                          )}
+                        <div className="text-sm font-bold text-blue-800">
+                          {formatCurrency(approvedTotals.shaAmount)}
                         </div>
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-500">-</td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-green-800">
+                          {formatCurrency(approvedTotals.facilityAmount)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">-</td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-purple-800">
+                          {formatCurrency(approvedTotals.vendorAmount)}
+                        </div>
+                      </td>
                       <td className="px-4 py-4 text-sm text-gray-500">-</td>
                     </tr>
                   </tbody>
