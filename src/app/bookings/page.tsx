@@ -269,15 +269,15 @@ const BookingReport: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-normal break-words">
                         <div className="text-sm text-gray-900">
-                          <div className="font-medium">
+                          <div className="font-medium break-words">
                             {booking.service.serviceName}
                           </div>
-                          <div className="text-gray-500">
+                          <div className="text-gray-500 break-words">
                             {booking.service.category.categoryName}
                           </div>
-                          <div className="text-xs text-gray-400 mt-1">
+                          <div className="text-xs text-gray-400 mt-1 break-words">
                             <Building className="inline h-3 w-3 mr-1" />
                             {booking.facility.facilityName}
                           </div>
