@@ -7,14 +7,18 @@ import {
   Building,
   Calendar,
   Check,
+  CheckSquare,
   Clock,
   CreditCard,
   DollarSign,
   Eye,
+  MinusSquare,
+  Square,
   User,
   X,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
+import toast from "react-hot-toast";
 
 const BookingReport: React.FC = () => {
   const { isLoading, bookings, error, refetchBookings } = useBookings();
@@ -23,6 +27,10 @@ const BookingReport: React.FC = () => {
   const { approve, isApproving } = useApproveBooking();
   const { reject, isRejecting } = useRejectBooking();
   const [approvingIds, setApprovingIds] = useState<Set<string>>(new Set());
+  const [rejectingIds, setRejectingIds] = useState<Set<string>>(new Set());
+  const [selectedBookings, setSelectedBookings] = useState<Set<string>>(
+    new Set()
+  );
 
   // Filter bookings based on active tab
   const filteredBookings = useMemo(() => {
@@ -30,6 +38,11 @@ const BookingReport: React.FC = () => {
     if (activeTab === "all") return bookings;
     return bookings.filter((booking) => booking.approval === activeTab);
   }, [bookings, activeTab]);
+
+  // Get pending bookings from filtered bookings for selection
+  const pendingBookings = useMemo(() => {
+    return filteredBookings.filter((booking) => booking.approval === "pending");
+  }, [filteredBookings]);
 
   // Count bookings by status
   const statusCounts = useMemo(() => {
@@ -53,6 +66,76 @@ const BookingReport: React.FC = () => {
     { id: "approved", label: "Approved", count: statusCounts.approved },
     { id: "rejected", label: "Rejected", count: statusCounts.rejected },
   ];
+
+  // Selection handlers
+  const handleSelectAll = () => {
+    if (selectedBookings.size === pendingBookings.length) {
+      // If all are selected, deselect all
+      setSelectedBookings(new Set());
+    } else {
+      // Select all pending bookings
+      setSelectedBookings(new Set(pendingBookings.map((b) => b.bookingId)));
+    }
+  };
+
+  const handleSelectBooking = (bookingId: string) => {
+    setSelectedBookings((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(bookingId)) {
+        newSet.delete(bookingId);
+      } else {
+        newSet.add(bookingId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleBulkApprove = async () => {
+    const selectedIds = Array.from(selectedBookings);
+    setApprovingIds((prev) => new Set([...prev, ...selectedIds]));
+
+    try {
+      for (const bookingId of selectedIds) {
+        await new Promise<void>((resolve) => {
+          approve(bookingId, {
+            onSettled: () => resolve(),
+          });
+        });
+      }
+      toast.success(`${selectedIds.length} booking(s) approved successfully!`);
+      setSelectedBookings(new Set());
+      refetchBookings();
+    } finally {
+      setApprovingIds((prev) => {
+        const newSet = new Set(prev);
+        selectedIds.forEach((id) => newSet.delete(id));
+        return newSet;
+      });
+    }
+  };
+
+  const handleBulkReject = async () => {
+    const selectedIds = Array.from(selectedBookings);
+    setRejectingIds((prev) => new Set([...prev, ...selectedIds]));
+
+    try {
+      for (const bookingId of selectedIds) {
+        await new Promise<void>((resolve) => {
+          reject(bookingId, {
+            onSettled: () => resolve(),
+          });
+        });
+      }
+      setSelectedBookings(new Set());
+      refetchBookings();
+    } finally {
+      setRejectingIds((prev) => {
+        const newSet = new Set(prev);
+        selectedIds.forEach((id) => newSet.delete(id));
+        return newSet;
+      });
+    }
+  };
 
   const handleApproval = (bookingId: string) => {
     setApprovingIds((prev) => new Set(prev).add(bookingId));
@@ -133,6 +216,15 @@ const BookingReport: React.FC = () => {
     }).format(typeof amount === "string" ? parseFloat(amount) : amount);
   };
 
+  // Get the appropriate icon for select all checkbox
+  const getSelectAllIcon = () => {
+    if (selectedBookings.size === 0) return Square;
+    if (selectedBookings.size === pendingBookings.length) return CheckSquare;
+    return MinusSquare; // Partial selection
+  };
+
+  const SelectAllIcon = getSelectAllIcon();
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -189,7 +281,10 @@ const BookingReport: React.FC = () => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setSelectedBookings(new Set()); // Clear selection when switching tabs
+                }}
                 className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? "border-blue-500 text-blue-600"
@@ -211,6 +306,88 @@ const BookingReport: React.FC = () => {
           </nav>
         </div>
 
+        {/* Bulk Actions Bar */}
+        {pendingBookings.length > 0 && (
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 outline-hidden">
+                <button
+                  onClick={handleSelectAll}
+                  className="flex items-center text-sm text-gray-600 hover:text-gray-900"
+                >
+                  <SelectAllIcon className="h-4 w-4 mr-2" />
+                  {selectedBookings.size === 0
+                    ? "Select All"
+                    : selectedBookings.size === pendingBookings.length
+                    ? "Deselect All"
+                    : `Select All (${selectedBookings.size} selected)`}
+                </button>
+                {selectedBookings.size > 0 && (
+                  <span className="text-sm text-gray-500">
+                    {selectedBookings.size} of {pendingBookings.length} pending
+                    bookings selected
+                  </span>
+                )}
+              </div>
+
+              {selectedBookings.size > 0 && (
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleBulkApprove}
+                    disabled={
+                      isApproving ||
+                      Array.from(selectedBookings).some((id) =>
+                        approvingIds.has(id)
+                      )
+                    }
+                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded text-sm inline-flex items-center"
+                  >
+                    {isApproving ||
+                    Array.from(selectedBookings).some((id) =>
+                      approvingIds.has(id)
+                    ) ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
+                        Approving...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4 mr-2" />
+                        Approve Selected ({selectedBookings.size})
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleBulkReject}
+                    disabled={
+                      isRejecting ||
+                      Array.from(selectedBookings).some((id) =>
+                        rejectingIds.has(id)
+                      )
+                    }
+                    className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 py-2 rounded text-sm inline-flex items-center"
+                  >
+                    {isRejecting ||
+                    Array.from(selectedBookings).some((id) =>
+                      approvingIds.has(id)
+                    ) ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
+                        Rejecting...
+                      </>
+                    ) : (
+                      <>
+                        <X className="h-4 w-4 mr-2" />
+                        Reject Selected ({selectedBookings.size})
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {filteredBookings.length === 0 ? (
           <div className="text-center py-12">
             <Calendar className="mx-auto h-12 w-12 text-gray-400" />
@@ -228,6 +405,16 @@ const BookingReport: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-300">
               <thead className="bg-gray-50">
                 <tr>
+                  {pendingBookings.length > 0 && (
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <button
+                        onClick={handleSelectAll}
+                        className="flex items-center hover:text-gray-700"
+                      >
+                        <SelectAllIcon className="h-4 w-4" />
+                      </button>
+                    </th>
+                  )}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Patient & Booking
                   </th>
@@ -249,6 +436,26 @@ const BookingReport: React.FC = () => {
                 {filteredBookings.map((booking) => (
                   <React.Fragment key={booking.bookingId}>
                     <tr className="hover:bg-gray-50">
+                      {pendingBookings.length > 0 && (
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {booking.approval === "pending" ? (
+                            <button
+                              onClick={() =>
+                                handleSelectBooking(booking.bookingId)
+                              }
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              {selectedBookings.has(booking.bookingId) ? (
+                                <CheckSquare className="h-4 w-4" />
+                              ) : (
+                                <Square className="h-4 w-4" />
+                              )}
+                            </button>
+                          ) : (
+                            <div className="w-4 h-4"></div>
+                          )}
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
@@ -382,7 +589,10 @@ const BookingReport: React.FC = () => {
 
                     {expandedRows.has(booking.bookingId) && (
                       <tr>
-                        <td colSpan={5} className="px-6 py-4 bg-gray-50">
+                        <td
+                          colSpan={pendingBookings.length > 0 ? 6 : 5}
+                          className="px-6 py-4 bg-gray-50"
+                        >
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div className="bg-white p-4 rounded-lg shadow-sm">
                               <h4 className="font-medium text-gray-900 mb-2 flex items-center">

@@ -5,12 +5,12 @@ import toast from "react-hot-toast";
 export function useApproveBooking() {
   const { mutate: approve, isPending: isApproving } = useMutation({
     mutationFn: (bookingId: string) => approveBooking(bookingId),
-    onSuccess: (data) => {
-      toast.success("Booking approved successfully!");
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to approve booking");
-    },
+    // onSuccess: (data) => {
+    //   toast.success("Booking approved successfully!");
+    // },
+    // onError: (error) => {
+    //   toast.error(error.message || "Failed to approve booking");
+    // },
   });
 
   return { approve, isApproving };
