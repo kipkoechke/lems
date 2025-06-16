@@ -1,15 +1,15 @@
-import { getBookings } from "@/services/apiBooking";
+import { BookingFilters, getBookings } from "@/services/apiBooking";
 import { useQuery } from "@tanstack/react-query";
 
-export function useBookings() {
+export function useBookings(filters: BookingFilters = {}) {
   const {
     isPending: isLoading,
     data: bookings = [],
     error,
     refetch: refetchBookings,
   } = useQuery({
-    queryKey: ["bookings"],
-    queryFn: getBookings,
+    queryKey: ["bookings", filters],
+    queryFn: () => getBookings(filters),
   });
 
   return { isLoading, bookings, error, refetchBookings };

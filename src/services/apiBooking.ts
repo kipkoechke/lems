@@ -97,6 +97,15 @@ export interface ValidateOtpResponse {
   bookingConsent: any;
 }
 
+export interface BookingFilters {
+  facility_id?: string;
+  service_id?: string;
+  county_id?: string;
+  sub_county_id?: string;
+  start_date?: string; // "YYYY-MM-DD HH:mm:ss"
+  end_date?: string; // "YYYY-MM-DD HH:mm:ss"
+}
+
 export const createServiceBooking = async (
   data: ServiceBookingForm
 ): Promise<Bookings> => {
@@ -158,8 +167,10 @@ export const getServiceBookingPatient = async (
   return response.data.data;
 };
 
-export const getBookings = async (): Promise<Bookings[]> => {
-  const response = await axios.get("/bookings");
+export const getBookings = async (
+  filters: BookingFilters = {}
+): Promise<Bookings[]> => {
+  const response = await axios.get("/bookings", { params: filters });
   return response.data.data;
 };
 

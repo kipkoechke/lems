@@ -546,14 +546,10 @@ const BookingReport: React.FC = () => {
                           <div className="flex flex-col gap-2">
                             <button
                               onClick={() => handleApproval(booking.bookingId)}
-                              disabled={
-                                approvingIds.has(booking.bookingId) ||
-                                isApproving
-                              }
+                              disabled={approvingIds.has(booking.bookingId)}
                               className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-3 py-1 rounded text-sm inline-flex items-center"
                             >
-                              {approvingIds.has(booking.bookingId) ||
-                              isApproving ? (
+                              {approvingIds.has(booking.bookingId) ? (
                                 <>
                                   <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
                                   Approving...
