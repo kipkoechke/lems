@@ -10,7 +10,7 @@ import {
 } from "@/features/trends/useBookingsTrend";
 import { useVendors } from "@/features/vendors/useVendors";
 import { BookingFilters } from "@/services/apiBooking";
-import { Building, Check, DollarSign, Users, X } from "lucide-react";
+import { Building, Check, Users, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import {
   Bar,
@@ -802,7 +802,7 @@ const PaymentReport: React.FC = () => {
       {/* )} */}
 
       {/* Summary Statistics */}
-      <div className="mt-8 mx-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      {/* <div className="mt-8 mx-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
@@ -862,7 +862,7 @@ const PaymentReport: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
