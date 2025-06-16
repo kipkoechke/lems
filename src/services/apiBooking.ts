@@ -98,10 +98,13 @@ export interface ValidateOtpResponse {
 }
 
 export interface BookingFilters {
+  vendor_id?: string;
   facility_id?: string;
-  service_id?: string;
+  category_id?: string;
   county_id?: string;
   sub_county_id?: string;
+  service_completion?: string;
+  approval?: string;
   start_date?: string; // "YYYY-MM-DD HH:mm:ss"
   end_date?: string; // "YYYY-MM-DD HH:mm:ss"
 }
