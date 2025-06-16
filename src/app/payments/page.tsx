@@ -309,7 +309,7 @@ const PaymentReport: React.FC = () => {
         </div>
         <div className="flex flex-col">
           <label className="text-xs text-gray-600 mb-1" htmlFor="service">
-            Service
+            LOT
           </label>
           <select
             id="service"
