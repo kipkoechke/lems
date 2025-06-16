@@ -4,6 +4,10 @@ import { useCounties } from "@/features/counties/useCounties";
 import { useFacilities } from "@/features/facilities/useFacilities";
 import { useBookings } from "@/features/services/bookings/useBookings";
 import { useServiceInfos } from "@/features/services/useServiceInfo";
+import {
+  useBookingsTrend,
+  usePaymentModeDistribution,
+} from "@/features/trends/useBookingsTrend";
 import { BookingFilters } from "@/services/apiBooking";
 import {
   Building,
@@ -14,6 +18,22 @@ import {
   X,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  Legend as PieLegend,
+  ResponsiveContainer as PieResponsiveContainer,
+  Tooltip as PieTooltip,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 interface PaymentSummaryItem {
   facilityName: string;
@@ -37,8 +57,22 @@ const PaymentReport: React.FC = () => {
   const { facilities } = useFacilities();
   const { counties } = useCounties();
   const { serviceInfos } = useServiceInfos();
+  const { data: bookingsTrend = [], isLoading: trendLoading } =
+    useBookingsTrend(filters);
+  const { data: paymentModeData = [], isLoading: paymentModeLoading } =
+    usePaymentModeDistribution(filters);
+
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<"summary" | "approved">("summary");
+
+  const COLORS = [
+    "#2563eb",
+    "#10b981",
+    "#f59e42",
+    "#f43f5e",
+    "#a21caf",
+    "#eab308",
+  ];
 
   // Filter bookings by status for different tabs
   const pendingBookings =
@@ -168,28 +202,6 @@ const PaymentReport: React.FC = () => {
         </span>
       </div>
     );
-  };
-
-  const handleSelectAll = () => {
-    if (selectedItems.size === paymentSummary.length) {
-      setSelectedItems(new Set());
-    } else {
-      setSelectedItems(
-        new Set(paymentSummary.map((_, index) => index.toString()))
-      );
-    }
-  };
-
-  const handleSelectItem = (index: string) => {
-    setSelectedItems((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
-      return newSet;
-    });
   };
 
   // Calculate totals
@@ -772,6 +784,104 @@ const PaymentReport: React.FC = () => {
                 </dl>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="my-10 mx-4 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        {/* Bookings Trend Bar Chart */}
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Bookings Trend</h3>
+          <div className="bg-white p-4 rounded shadow">
+            {trendLoading ? (
+              <div className="text-center py-8">Loading chart...</div>
+            ) : bookingsTrend.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No trend data available.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart
+                  data={bookingsTrend.sort(
+                    (a, b) =>
+                      new Date(a.date).getTime() - new Date(b.date).getTime()
+                  )}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(d) => d.slice(0, 10)}
+                    tick={{ fontSize: 12 }}
+                    minTickGap={10}
+                  />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip
+                    formatter={(value: any, name: string) =>
+                      name === "total_amount"
+                        ? new Intl.NumberFormat("en-KE", {
+                            style: "currency",
+                            currency: "KES",
+                          }).format(Number(value))
+                        : value
+                    }
+                    labelFormatter={(label) => `Date: ${label.slice(0, 10)}`}
+                  />
+                  <Legend />
+                  <Bar dataKey="count" name="Bookings" fill="#2563eb" />
+                  <Bar
+                    dataKey="total_amount"
+                    name="Total Amount"
+                    fill="#10b981"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+        {/* Payment Mode Donut Chart */}
+        <div>
+          <h3 className="text-lg font-semibold mb-2">
+            Payment Mode Distribution
+          </h3>
+          <div className="bg-white p-4 rounded shadow flex items-center justify-center min-h-[350px]">
+            {paymentModeLoading ? (
+              <div className="text-center py-8">Loading chart...</div>
+            ) : paymentModeData.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No payment mode data available.
+              </div>
+            ) : (
+              <PieResponsiveContainer width="100%" height={320}>
+                <PieChart>
+                  <Pie
+                    data={paymentModeData}
+                    dataKey="count"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={110}
+                    fill="#2563eb"
+                    label={({ name, percent }) =>
+                      `${name} (${(percent * 100).toFixed(0)}%)`
+                    }
+                  >
+                    {paymentModeData.map((entry, idx) => (
+                      <Cell
+                        key={entry.payment_mode_id}
+                        fill={COLORS[idx % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <PieTooltip
+                    formatter={(value: any, name: string, props: any) =>
+                      name === "count" ? `${value} payments` : value
+                    }
+                  />
+                  <PieLegend />
+                </PieChart>
+              </PieResponsiveContainer>
+            )}
           </div>
         </div>
       </div>
