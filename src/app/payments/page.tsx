@@ -712,9 +712,9 @@ const PaymentReport: React.FC = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-normal">
                       <div
-                        className="text-sm text-gray-900 truncate max-w-[100px]"
+                        className="text-sm text-gray-900 "
                         title={item.serviceCategory}
                       >
                         {item.serviceCategory}
