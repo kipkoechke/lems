@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useAppDispatch } from "@/hooks/hooks";
 import { goToNextStep } from "@/context/workflowSlice";
+import { useAppDispatch } from "@/hooks/hooks";
+import React, { useEffect, useState } from "react";
 
 const ServiceInProgress: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -34,7 +34,9 @@ const ServiceInProgress: React.FC = () => {
           />
         </svg>
       </div>
-      <h2 className="text-xl font-semibold mb-2">Service In Progress</h2>
+      <h2 className="text-xl font-semibold mb-2">
+        Service Is Being Carried Out
+      </h2>
       <p className="text-gray-600 mb-6">
         The service is being rendered. Please wait...
       </p>
@@ -43,7 +45,7 @@ const ServiceInProgress: React.FC = () => {
           className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           onClick={() => dispatch(goToNextStep())}
         >
-          Proceed to Service Fulfillment
+          Proceed to Diagnostic Service Completion
         </button>
       )}
     </div>

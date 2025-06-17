@@ -3,9 +3,11 @@
 import {
   completeService,
   goToPreviousStep,
+  resetWorkflow,
   setBooking,
 } from "@/context/workflowSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import OTPValidation from "../../../components/OTPValidation";
@@ -25,6 +27,7 @@ const ServiceFulfillment: React.FC = () => {
     useValidateServiceFulfillmentOtp();
 
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const [showOTP, setShowOTP] = useState(false);
   const [fulfillmentStatus, setFulfillmentStatus] = useState<
     "pending" | "completed" | "failed"
@@ -54,6 +57,7 @@ const ServiceFulfillment: React.FC = () => {
       },
     });
   };
+
   useEffect(() => {
     handleSendOTP();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -93,6 +97,17 @@ const ServiceFulfillment: React.FC = () => {
     handleSendOTP();
   };
 
+  // Reset workflow and redirect after completion
+  useEffect(() => {
+    if (fulfillmentStatus === "completed") {
+      const timer = setTimeout(() => {
+        dispatch(resetWorkflow());
+        router.push("/bookings");
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [fulfillmentStatus, dispatch, router]);
+
   if (!patient || !selectedService || !consentObtained) {
     return (
       <div className="max-w-2xl mx-auto">
@@ -117,7 +132,7 @@ const ServiceFulfillment: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Service Fulfillment</h2>
+        <h2 className="text-xl font-bold">Service Completion</h2>
         <div>
           <span className="text-gray-600 mr-2">Service:</span>
           <span className="font-medium">{selectedService.description}</span>
