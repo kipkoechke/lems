@@ -608,10 +608,27 @@ const PaymentReport: React.FC = () => {
                           "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
                         backdropFilter: "blur(10px)",
                       }}
-                      formatter={(value, name, props) => [
-                        `${value} payments`,
-                        props.payload.name,
-                      ]}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-gray-800 border-none rounded-xl p-4 text-white shadow-2xl min-w-[180px]">
+                              <p className="font-semibold mb-2">{data.name}</p>
+                              <p className="text-blue-300">{`Payments: ${data.count}`}</p>
+                              {data.total_amount && (
+                                <p className="text-green-300">{`Total Amount: ${new Intl.NumberFormat(
+                                  "en-KE",
+                                  {
+                                    style: "currency",
+                                    currency: "KES",
+                                  }
+                                ).format(Number(data.total_amount))}`}</p>
+                              )}
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
                     />
                     <Legend
                       verticalAlign="bottom"
