@@ -126,7 +126,7 @@ const BasicBookingStep: React.FC = () => {
       !paymentMode ||
       !bookingDate
     ) {
-      toast.error("Please fill in all required fields");
+      // toast.error("Please fill in all required fields");
       return null;
     }
 
