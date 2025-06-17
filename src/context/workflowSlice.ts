@@ -16,6 +16,7 @@ export interface WorkflowState {
     // | "recommendation"
     // | "booking"
     | "consent"
+    |"proceedToTests"
     | "serviceInProgress"
     // | "serviceValidation"
     | "service"
@@ -53,6 +54,7 @@ export const stepOrder: WorkflowState["currentStep"][] = [
   // "recommendation",
   // "booking",
   "consent",
+  "proceedToTests",
   "serviceInProgress",
   // "serviceValidation",
   "fulfillment",

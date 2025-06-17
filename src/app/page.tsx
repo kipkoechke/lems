@@ -1,6 +1,7 @@
 "use client";
 
 import BasicBookingStep from "@/components/BasicBooking";
+import ProceedToTests from "@/components/ProceedToTests";
 import ServiceInProgress from "@/components/ServiceInProgress";
 import PatientConsent from "@/features/patients/PatientConsent";
 import ServiceFulfillment from "@/features/services/fulfillments/ServiceFulfillment";
@@ -26,6 +27,8 @@ function Clinicians() {
       //   return <ServiceBooking />;
       case "consent":
         return <PatientConsent />;
+      case "proceedToTests":
+        return <ProceedToTests />;
       case "serviceInProgress":
         return <ServiceInProgress />;
       // case "serviceValidation":
