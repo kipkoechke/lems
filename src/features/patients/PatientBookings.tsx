@@ -17,17 +17,15 @@ function PatientBreadcrumb({ patient }: { patient: any }) {
       <div className="flex items-center space-x-4 text-sm">
         <div className="flex items-center gap-2">
           <FaUser className="w-4 h-4 text-blue-600" />
-          <span className="font-medium text-gray-900">
-            {patient.patientName}
-          </span>
+          <span className="font-medium text-gray-900">{patient.name}</span>
         </div>
         <FaChevronRight className="w-4 h-4 text-gray-400" />
         <div className="flex items-center gap-2">
           <FaPhone className="w-4 h-4 text-green-600" />
-          <span className="text-gray-600">{patient.mobileNumber}</span>
+          <span className="text-gray-600">{patient.phone}</span>
         </div>
         <FaChevronRight className="w-4 h-4 text-gray-400" />
-        <div className="text-gray-600">ID: {patient.patientId.slice(-8)}</div>
+        <div className="text-gray-600">ID: {patient.id.slice(-8)}</div>
       </div>
     </div>
   );
@@ -36,10 +34,10 @@ function PatientBreadcrumb({ patient }: { patient: any }) {
 function PatientBookings() {
   const params = useParams();
   const router = useRouter();
-  const patientId = params.patientId as string;
+  const id = params.id as string;
 
-  const { patient, isLoading: patientLoading } = usePatient(patientId);
-  const { bookings, bookingsLoading, isError } = usePatientBookings(patientId);
+  const { patient, isLoading: patientLoading } = usePatient(id);
+  const { bookings, bookingsLoading, isError } = usePatientBookings(id);
 
   // Mock data for now
   //   const bookings = mockBookingData;
@@ -122,7 +120,7 @@ function PatientBookings() {
                           {booking.service.serviceName}
                         </div>
                         <div className="text-gray-500 text-xs">
-                          {booking.service.category.categoryName}
+                          {booking.service.category.name}
                         </div>
                         <div className="text-gray-400 text-xs">
                           {booking.service.description}
@@ -132,13 +130,10 @@ function PatientBookings() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div>
                         <div className="font-medium">
-                          {booking.facility.facilityName}
+                          {booking.facility.name}
                         </div>
                         <div className="text-gray-500 text-xs">
-                          Code: {booking.facility.facilityCode}
-                        </div>
-                        <div className="text-gray-400 text-xs">
-                          {booking.facility.contactInfo}
+                          Code: {booking.facility.code}
                         </div>
                       </div>
                     </td>
@@ -191,7 +186,7 @@ function PatientBookings() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                        {booking.paymentMode.paymentModeName}
+                        {booking.paymentMode?.paymentModeName || "N/A"}
                       </span>
                     </td>
                     {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

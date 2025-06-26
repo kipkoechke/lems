@@ -3,7 +3,7 @@ export interface Invoice {
   dateGenerated: string;
   totalCost: number;
   status: "Pending" | "Approved" | "Rejected" | "Paid";
-  facilityID: string;
+  id: string;
 }
 
 export interface ValidationReport {

@@ -7,16 +7,22 @@ import toast from "react-hot-toast";
 import OTPValidation from "../../components/OTPValidation";
 import StatusCard from "../../components/StatusCard";
 import { usePatientConsentOverride } from "./useConsentOverride";
-import { usePatientConsent } from "./usePatientConsent";
 import { useOtpValidation } from "./useValidateOtp";
 import { useOtpValidationOverride } from "./useValidateOverride";
 
 const PatientConsent: React.FC = () => {
-  const { patient, selectedService, booking } = useAppSelector(
+  const { patient, selectedService, booking, otp_code } = useAppSelector(
     (store) => store.workflow
   );
+
+  console.log("PatientConsent - Workflow state:", {
+    patient: patient?.name,
+    booking: booking?.bookingId,
+    otp_code,
+    fullWorkflow: useAppSelector((store) => store.workflow),
+  });
+
   const dispatch = useAppDispatch();
-  const { requestPatientConsentOtp, isRegistering } = usePatientConsent();
   const { requestConsentOtpOverride, isRegistering: isOverrideRegistering } =
     usePatientConsentOverride();
   const { validateConsentOverrideOtp, isValidating: isOverrideValidating } =
@@ -39,6 +45,13 @@ const PatientConsent: React.FC = () => {
   const isBookingOverridden = booking?.otpOverridden || false;
 
   const handleSendOTP = () => {
+    console.log("handleSendOTP called", {
+      booking,
+      patient,
+      otp_code,
+      isBookingOverridden,
+    });
+
     if (!booking || !patient) {
       toast.error("Booking or patient information is missing.");
       return;
@@ -57,27 +70,18 @@ const PatientConsent: React.FC = () => {
       return;
     }
 
-    setOtpSent(true);
-    requestPatientConsentOtp(
-      { booking_id: booking.bookingId },
-      {
-        onSuccess: (data) => {
-          if (data.otp_code) {
-            setGeneratedOtp(data.otp_code);
-            toast.success(`Patient Consent OTP: ${data.otp_code}`);
-            setTimeout(() => setShowOTP(true), 1000);
-          } else {
-            toast.error("No OTP code returned from server.");
-            setOtpSent(false);
-          }
-        },
-        onError: (error) => {
-          console.error("Failed to send patient consent OTP:", error);
-          toast.error("Failed to send patient consent OTP");
-          setOtpSent(false);
-        },
-      }
-    );
+    // OTP should already be available from booking creation
+    if (otp_code) {
+      console.log("OTP found:", otp_code);
+      setGeneratedOtp(otp_code);
+      toast.success(`Patient Consent OTP: ${otp_code}`);
+      setTimeout(() => setShowOTP(true), 1000);
+      setOtpSent(true);
+    } else {
+      console.log("No OTP available in workflow state");
+      toast.error("No OTP available. Please contact support.");
+      setOtpSent(false);
+    }
   };
 
   const handleSendOverrideOTP = () => {
@@ -111,19 +115,69 @@ const PatientConsent: React.FC = () => {
   };
 
   const handleValidatePatientOTP = (otp: string) => {
+    console.log("PatientConsent - handleValidatePatientOTP called");
+    console.log("PatientConsent - booking object:", booking);
+    console.log("PatientConsent - booking type:", typeof booking);
+
     if (!booking) {
+      console.log("PatientConsent - No booking object found");
       toast.error("Booking information is missing.");
       return;
     }
 
+    console.log("PatientConsent - Validating OTP with booking:", booking);
+    console.log(
+      "PatientConsent - Available booking fields:",
+      Object.keys(booking)
+    );
+    console.log(
+      "PatientConsent - All booking data:",
+      JSON.stringify(booking, null, 2)
+    );
+
+    // Try different possible fields for booking number
+    const bookingAny = booking as any;
+    const bookingNumber =
+      booking.booking_number ||
+      booking.bookingId ||
+      bookingAny.booking_id ||
+      bookingAny.id ||
+      bookingAny.number;
+    console.log("=== BOOKING NUMBER DETECTION ===");
+    console.log("PatientConsent - Trying these fields for booking number:");
+    console.log("  booking.booking_number:", booking.booking_number);
+    console.log("  booking.bookingId:", booking.bookingId);
+    console.log("  booking.booking_id:", bookingAny.booking_id);
+    console.log("  booking.id:", bookingAny.id);
+    console.log("  booking.number:", bookingAny.number);
+    console.log("PatientConsent - Selected booking number:", bookingNumber);
+
+    if (!bookingNumber) {
+      console.log(
+        "PatientConsent - No booking identifier found in booking object"
+      );
+      console.log(
+        "PatientConsent - Available booking fields:",
+        Object.keys(booking)
+      );
+      toast.error("Booking ID is missing from booking data.");
+      return;
+    }
+
+    const requestPayload = {
+      otp_code: otp,
+      booking_number: bookingNumber, // Use booking_number for verifyPatientConsent API
+    };
+    console.log(
+      "PatientConsent - Sending validation request with booking_number:",
+      requestPayload
+    );
+
     validateOtpMutation(
-      {
-        booking_id: booking.bookingId,
-        otp_code: otp,
-      },
+      requestPayload, // Use the requestPayload object
       {
         onSuccess: (data) => {
-          console.log("Patient OTP validation successful:", data);
+          console.log("Patient consent verification successful:", data);
           setConsentStatus("approved");
           toast.success("Patient consent verified successfully!");
           setShowOTP(false);
@@ -134,7 +188,11 @@ const PatientConsent: React.FC = () => {
           }, 1000);
         },
         onError: (error) => {
-          console.error("Patient OTP validation failed:", error);
+          console.error("=== PATIENT CONSENT VALIDATION ERROR ===");
+          console.error("Patient consent verification failed:", error);
+          console.error("Error details:", (error as any).response?.data);
+          console.error("Request payload that failed:", requestPayload);
+          console.error("Full error object:", error);
           toast.error("Invalid OTP. Please try again.");
         },
       }
@@ -194,10 +252,28 @@ const PatientConsent: React.FC = () => {
   };
 
   useEffect(() => {
+    console.log("PatientConsent useEffect triggered", {
+      booking,
+      patient,
+      otp_code,
+      otpSent,
+    });
+
     if (booking && patient && !otpSent) {
-      handleSendOTP();
+      // Check if OTP is available from booking creation (stored in workflow state)
+      if (otp_code) {
+        console.log("OTP found in workflow state:", otp_code);
+        setGeneratedOtp(otp_code);
+        toast.success(`Patient Consent OTP: ${otp_code}`);
+        setTimeout(() => setShowOTP(true), 1000);
+        setOtpSent(true);
+      } else {
+        console.log("No OTP in workflow state, trying fallback");
+        // Fallback: if no OTP in workflow state, request one (shouldn't happen in new flow)
+        handleSendOTP();
+      }
     }
-  }, [booking, patient]);
+  }, [booking, patient, otp_code]);
 
   if (!patient || !selectedService) {
     return (
@@ -240,7 +316,7 @@ const PatientConsent: React.FC = () => {
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <OTPValidation
               title="Patient Consent Verification"
-              description={`Enter the OTP sent to ${patient.patientName} (${patient.mobileNumber}) to confirm consent for ${selectedService.serviceName}.`}
+              description={`Enter the OTP sent to ${patient.name} (${patient.phone}) to confirm consent for ${selectedService.serviceName}.`}
               onValidate={handleValidatePatientOTP}
               onCancel={handleCancelOTP}
               processingLabel={isValidating ? "Verifying..." : "Verify Consent"}
@@ -311,13 +387,13 @@ const PatientConsent: React.FC = () => {
               Patient Details
             </h3>
             <p>
-              <span className="font-medium">Name:</span> {patient.patientName}
+              <span className="font-medium">Name:</span> {patient.name}
             </p>
             <p>
-              <span className="font-medium">Phone:</span> {patient.mobileNumber}
+              <span className="font-medium">Phone:</span> {patient.phone}
             </p>
             <p>
-              <span className="font-medium">ID:</span> {patient.patientId}
+              <span className="font-medium">ID:</span> {patient.id}
             </p>
           </div>
 
@@ -398,10 +474,10 @@ const PatientConsent: React.FC = () => {
             <div className="flex space-x-3">
               <button
                 onClick={handleSendOTP}
-                disabled={isRegistering || otpSent}
+                disabled={otpSent}
                 className={`${buttonClasses} bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500 disabled:bg-gray-400`}
               >
-                {isRegistering ? (
+                {otpSent ? (
                   <>
                     <svg
                       className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
@@ -423,12 +499,10 @@ const PatientConsent: React.FC = () => {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    Sending OTP...
+                    OTP Already Sent
                   </>
-                ) : otpSent ? (
-                  "OTP Sent"
                 ) : (
-                  "Resend OTP"
+                  "Get OTP"
                 )}
               </button>
 

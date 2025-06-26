@@ -5,7 +5,7 @@ export interface Vendor {
   vendorName: string;
   vendorCode: string;
   contactInfo: string;
-  createdAt: string;
+  created_at: string;
   updatedAt: string;
   deleteddAt: string | null;
 }

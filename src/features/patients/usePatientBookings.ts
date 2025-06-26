@@ -2,7 +2,7 @@ import { Bookings } from "@/services/apiBooking";
 import { getPatientByBooking } from "@/services/apiPatient";
 import { useQuery } from "@tanstack/react-query";
 
-export function usePatientBookings(patientId: string) {
+export function usePatientBookings(id: string) {
   const {
     data: bookings = [],
     isLoading: bookingsLoading,
@@ -10,9 +10,9 @@ export function usePatientBookings(patientId: string) {
     error,
     refetch,
   } = useQuery<Bookings[], Error>({
-    queryKey: ["patientBookings", patientId],
-    queryFn: () => getPatientByBooking(patientId),
-    enabled: !!patientId,
+    queryKey: ["patientBookings", id],
+    queryFn: () => getPatientByBooking(id),
+    enabled: !!id,
   });
 
   return {

@@ -40,10 +40,10 @@ const ServiceBooking: React.FC = () => {
     }
 
     const bookingData: ServiceBookingForm = {
-      patient_id: patient.patientId,
+      patient_id: patient.id,
       service_id: selectedService.serviceId,
       equipment_id: selectedEquipment.equipmentId,
-      facility_id: selectedFacility.facilityId,
+      facility_id: selectedFacility.id,
       payment_mode_id: data.payment_mode_id,
       booking_date: new Date(data.booking_date),
       status: "pending",
@@ -86,7 +86,7 @@ const ServiceBooking: React.FC = () => {
         <h2 className="text-2xl font-bold">Service Booking</h2>
         <div>
           <span className="text-gray-600 mr-2">Patient:</span>
-          <span className="font-medium">{patient?.patientName}</span>
+          <span className="font-medium">{patient?.name}</span>
         </div>
       </div>
 
@@ -112,7 +112,7 @@ const ServiceBooking: React.FC = () => {
           <div>
             <p className="text-sm text-gray-500">Facility</p>
             <p className="font-medium">
-              {selectedFacility?.facilityName || "Not specified"}
+              {selectedFacility?.name || "Not specified"}
             </p>
           </div>
           <div className="md:col-span-2">

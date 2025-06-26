@@ -1,48 +1,85 @@
 "use client";
 
-import BasicBookingStep from "@/components/BasicBooking";
 import ProceedToTests from "@/components/ProceedToTests";
 import ServiceInProgress from "@/components/ServiceInProgress";
+import {
+  goToNextStep,
+  selectFacility,
+  selectPaymentMode,
+  setPatient,
+} from "@/context/workflowSlice";
 import PatientConsent from "@/features/patients/PatientConsent";
+import PatientRegistration from "@/features/patients/PatientRegistration";
 import ServiceFulfillment from "@/features/services/fulfillments/ServiceFulfillment";
-import { useAppSelector } from "@/hooks/hooks";
+import ServiceRecommendation from "@/features/services/recommendations/ServiceRecommendation";
+import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
+import { Facility } from "@/services/apiFacility";
+import { Patient } from "@/services/apiPatient";
 import { useEffect } from "react";
 
 function Clinicians() {
   const { currentStep } = useAppSelector((store) => store.workflow);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     console.log("Current workflow step:", currentStep);
   }, [currentStep]);
 
+  // Handler for PatientRegistration step completion
+  const handleStepOneComplete = (
+    patient: Patient,
+    paymentModeId: string,
+    facility: Facility
+  ) => {
+    console.log("handleStepOneComplete called with:", {
+      patient,
+      paymentModeId,
+      facility,
+    });
+
+    // Dispatch all the data to workflow state
+    dispatch(setPatient(patient));
+
+    // Create hardcoded payment mode object
+    const paymentModeMap: Record<string, any> = {
+      sha: { paymentModeId: "sha", paymentModeName: "SHA" },
+      cash: { paymentModeId: "cash", paymentModeName: "CASH" },
+      other_insurances: {
+        paymentModeId: "other_insurances",
+        paymentModeName: "OTHER INSURANCES",
+      },
+    };
+    const paymentMode = paymentModeMap[paymentModeId];
+
+    console.log("Dispatching:", { paymentMode, facility });
+
+    dispatch(selectPaymentMode(paymentMode));
+    dispatch(selectFacility(facility)); // This will now set state.facility
+    dispatch(goToNextStep()); // This should now work to go to ServiceRecommendation
+  };
+
   const renderStepComponent = () => {
     switch (currentStep) {
-      case "basicBooking":
-        return <BasicBookingStep />;
-      // case "registration":
-      //   return <PatientRegistration />;
-      // case "recommendation":
-      //   return <ServiceRecommendation />;
-      // case "booking":
-      //   return <ServiceBooking />;
+      case "registration":
+        return (
+          <PatientRegistration onStepOneComplete={handleStepOneComplete} />
+        );
+      case "recommendation":
+        return <ServiceRecommendation />;
       case "consent":
         return <PatientConsent />;
       case "proceedToTests":
         return <ProceedToTests />;
       case "serviceInProgress":
         return <ServiceInProgress />;
-      // case "serviceValidation":
-      //   return <ServiceValidation />;
       case "fulfillment":
         return <ServiceFulfillment />;
-      // case "report":
-      //   return <FacilityReport />;
       default:
         return <div>Step not implemented.</div>;
     }
   };
 
-  return <div className="max-w-4xl mx-auto mt-2">{renderStepComponent()}</div>;
+  return <div className="container mx-auto p-6">{renderStepComponent()}</div>;
 }
 
 export default Clinicians;

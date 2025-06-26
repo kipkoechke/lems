@@ -20,7 +20,14 @@ const ServiceFulfillment: React.FC = () => {
     (store) => store.workflow
   );
   const { booking } = useAppSelector((store) => store.workflow);
-  const bookingId = booking?.bookingId;
+  const bookingNumber = booking?.booking_number;
+
+  // Debug logging
+  console.log("=== SERVICE FULFILLMENT DEBUG ===");
+  console.log("Full booking object:", booking);
+  console.log("Booking number for fulfillment:", bookingNumber);
+  console.log("Booking ID (should not be used):", booking?.bookingId);
+
   const [generatedOtp, setGeneratedOtp] = useState<string | null>(null);
   const { isRequesting, requestFulfillmentOtp } = useFulfillmentOtp();
   const { validateOtpMutation, isValidating } =
@@ -36,13 +43,20 @@ const ServiceFulfillment: React.FC = () => {
 
   // Send fulfillment OTP via API
   const handleSendOTP = () => {
-    if (!bookingId) {
+    console.log("=== REQUESTING SERVICE FULFILLMENT OTP ===");
+    console.log("Booking number:", bookingNumber);
+
+    if (!bookingNumber) {
+      console.error("No booking number available for OTP request");
       setFulfillmentStatus("failed");
       return;
     }
     setOtpSent(true);
-    requestFulfillmentOtp(bookingId, {
+    requestFulfillmentOtp(bookingNumber, {
       onSuccess: (data: { otp_code?: string }) => {
+        console.log("=== OTP REQUEST SUCCESS ===");
+        console.log("Response data:", data);
+
         if (data?.otp_code) {
           setGeneratedOtp(data.otp_code);
           toast.success(`Fulfillment OTP: ${data.otp_code}`);
@@ -51,7 +65,9 @@ const ServiceFulfillment: React.FC = () => {
           setShowOTP(true);
         }, 500);
       },
-      onError: () => {
+      onError: (error) => {
+        console.error("=== OTP REQUEST ERROR ===");
+        console.error("Error:", error);
         setOtpSent(false);
         setFulfillmentStatus("failed");
       },
@@ -65,20 +81,30 @@ const ServiceFulfillment: React.FC = () => {
 
   // Validate OTP via API
   const handleValidateOTP = (otp: string) => {
-    if (!bookingId) {
+    console.log("=== VALIDATING SERVICE FULFILLMENT OTP ===");
+    console.log("Booking number:", bookingNumber);
+    console.log("OTP code:", otp);
+
+    if (!bookingNumber) {
+      console.error("No booking number available for OTP validation");
       setFulfillmentStatus("failed");
       return;
     }
     validateOtpMutation(
-      { data: { booking_id: bookingId, otp_code: otp } },
+      { data: { booking_number: bookingNumber, otp_code: otp } },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
+          console.log("=== OTP VALIDATION SUCCESS ===");
+          console.log("Response:", response);
+
           dispatch(setBooking({ ...booking, serviceCompletion: "completed" }));
           setFulfillmentStatus("completed");
           setShowOTP(false);
           dispatch(completeService(true));
         },
-        onError: () => {
+        onError: (error) => {
+          console.error("=== OTP VALIDATION ERROR ===");
+          console.error("Error:", error);
           setFulfillmentStatus("failed");
         },
       }
@@ -132,7 +158,7 @@ const ServiceFulfillment: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold">Service Completion</h2>
+        <h2 className="text-xl font-bold">Service Fulfillment</h2>
         <div>
           <span className="text-gray-600 mr-2">Service:</span>
           <span className="font-medium">{selectedService.description}</span>
@@ -141,9 +167,9 @@ const ServiceFulfillment: React.FC = () => {
 
       {fulfillmentStatus === "completed" ? (
         <StatusCard
-          title="Service Completed"
+          title="Service Fulfilled"
           status="success"
-          message="The diagnostic service has been successfully completed."
+          message="The diagnostic service has been successfully fulfilled."
           details="The results will be available shortly."
         />
       ) : fulfillmentStatus === "failed" ? (
@@ -165,12 +191,12 @@ const ServiceFulfillment: React.FC = () => {
         </div>
       ) : showOTP ? (
         <OTPValidation
-          title="Confirm Service Completion"
-          description={`Please enter the 6-digit OTP sent to the technician to confirm that the service ${selectedService.description} has been completed.`}
+          title="Confirm Service Fulfillment"
+          description={`Please enter the 6-digit OTP sent to the technician to confirm that the service ${selectedService.description} has been fulfilled.`}
           onValidate={handleValidateOTP}
           onCancel={handleCancelFulfillment}
           processingLabel={
-            isValidating ? "Confirming..." : "Confirm Completion"
+            isValidating ? "Confirming..." : "Confirm Fulfillment"
           }
           initialOtp={generatedOtp ?? ""}
         />

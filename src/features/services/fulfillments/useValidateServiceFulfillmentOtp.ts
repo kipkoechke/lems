@@ -15,12 +15,29 @@ export function useValidateServiceFulfillmentOtp() {
     mutationFn: ({ data }: { data: ValidateOtp }) =>
       validateServiceFulfillmentOtp(data),
     onSuccess: (data: ValidateOtpResponse) => {
-      if (data.message === "Service completed successfully") {
-        toast.success("Service completed successfully!");
+      console.log("=== SERVICE FULFILLMENT OTP VALIDATION RESPONSE ===");
+      console.log("Full response:", data);
+      console.log("Response keys:", Object.keys(data));
+      console.log("Message:", data.message);
+      console.log("Success field (if exists):", (data as any).success);
+      console.log("Status field (if exists):", (data as any).status);
+
+      // Check for various success indicators
+      const isSuccess =
+        data.message === "Service fulfilled successfully" ||
+        data.message === "Service completed successfully" ||
+        data.message === "OTP verified successfully" ||
+        data.message?.toLowerCase().includes("success") ||
+        (data as any).success === true ||
+        (data as any).status === "success";
+
+      if (isSuccess) {
+        toast.success("Service fulfilled successfully!");
         dispatch(completeService(true));
         // dispatch(goToNextStep());
       } else {
-        toast.error("Service not completed. Please try again.");
+        console.log("Success condition not met. Response:", data);
+        toast.error("Service not fulfilled. Please try again.");
       }
     },
     onError: (error) => {

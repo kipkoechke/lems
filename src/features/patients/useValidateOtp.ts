@@ -1,26 +1,21 @@
-import { goToNextStep, setConsent } from "@/context/workflowSlice";
+import { setConsent } from "@/context/workflowSlice";
 import { useAppDispatch } from "@/hooks/hooks";
-import { validateOtp, ValidateOtpResponse } from "@/services/apiBooking";
+import {
+  ValidateOtpResponse,
+  verifyPatientConsent,
+} from "@/services/apiBooking";
 import { useMutation } from "@tanstack/react-query";
-import toast from "react-hot-toast";
 
 export function useOtpValidation() {
   const dispatch = useAppDispatch();
 
   const { mutate: validateOtpMutation, isPending: isValidating } = useMutation({
-    mutationFn: validateOtp,
+    mutationFn: verifyPatientConsent,
     onSuccess: (data: ValidateOtpResponse) => {
-      if (data.message === "OTP validated and consent granted successfully") {
-        toast.success("OTP validated and consent granted!");
-        dispatch(setConsent(true));
-        dispatch(goToNextStep());
-      } else {
-        toast.error("Consent not granted. Please try again.");
-      }
+      // Only set consent in Redux, let the component handle toasts and navigation
+      dispatch(setConsent(true));
     },
-    onError: (error) => {
-      toast.error(error.message || "OTP validation failed");
-    },
+    // Remove automatic error handling, let the component handle it
   });
 
   return { validateOtpMutation, isValidating };

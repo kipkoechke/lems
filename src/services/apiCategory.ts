@@ -1,25 +1,36 @@
 import axios from "../lib/axios";
 
 export interface ServiceCategory {
-  categoryId: string;
-  lotNumber: string;
-  categoryName: string;
-  createdAt: string;
+  id: string;
+  number: string;
+  name: string;
+  is_active: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+// Legacy interface for backward compatibility
+export interface LegacyServiceCategory {
+  id: string;
+  number: string;
+  name: string;
+  created_at: string;
   updatedAt: string;
   deletedAt: string | null;
 }
 
-export type ServiceCategoryForm = Omit<ServiceCategory, "categoryId">;
+export type ServiceCategoryForm = Omit<ServiceCategory, "id">;
 
 export const getServiceCategories = async (): Promise<ServiceCategory[]> => {
-  const response = await axios.get("/categories");
-  return response.data.data;
+  const response = await axios.get("/lots");
+  return response.data.lots;
 };
 
 export const getServiceCategoryById = async (
-  categoryId: string
+  id: string
 ): Promise<ServiceCategory> => {
-  const response = await axios.get(`/ServiceCategory/${categoryId}`);
+  const response = await axios.get(`/ServiceCategory/${id}`);
   return response.data.data;
 };
 

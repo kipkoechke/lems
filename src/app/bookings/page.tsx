@@ -36,12 +36,16 @@ const BookingReport: React.FC = () => {
   const filteredBookings = useMemo(() => {
     if (!bookings) return [];
     if (activeTab === "all") return bookings;
-    return bookings.filter((booking) => booking.approval === activeTab);
+    return bookings.filter(
+      (booking) => (booking.approval_status || booking.approval) === activeTab
+    );
   }, [bookings, activeTab]);
 
   // Get pending bookings from filtered bookings for selection
   const pendingBookings = useMemo(() => {
-    return filteredBookings.filter((booking) => booking.approval === "pending");
+    return filteredBookings.filter(
+      (booking) => (booking.approval_status || booking.approval) === "pending"
+    );
   }, [filteredBookings]);
 
   // Count bookings by status
@@ -50,7 +54,9 @@ const BookingReport: React.FC = () => {
 
     const counts = bookings.reduce(
       (acc, booking) => {
-        acc[booking.approval as keyof typeof acc]++;
+        const approvalStatus =
+          booking.approval_status || booking.approval || "pending";
+        acc[approvalStatus as keyof typeof acc]++;
         acc.all++;
         return acc;
       },
@@ -74,7 +80,7 @@ const BookingReport: React.FC = () => {
       setSelectedBookings(new Set());
     } else {
       // Select all pending bookings
-      setSelectedBookings(new Set(pendingBookings.map((b) => b.bookingId)));
+      setSelectedBookings(new Set(pendingBookings.map((b) => b.id)));
     }
   };
 
@@ -434,18 +440,17 @@ const BookingReport: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredBookings.map((booking) => (
-                  <React.Fragment key={booking.bookingId}>
+                  <React.Fragment key={booking.id}>
                     <tr className="hover:bg-gray-50">
                       {pendingBookings.length > 0 && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {booking.approval === "pending" ? (
+                          {(booking.approval_status || booking.approval) ===
+                          "pending" ? (
                             <button
-                              onClick={() =>
-                                handleSelectBooking(booking.bookingId)
-                              }
+                              onClick={() => handleSelectBooking(booking.id)}
                               className="text-blue-600 hover:text-blue-800"
                             >
-                              {selectedBookings.has(booking.bookingId) ? (
+                              {selectedBookings.has(booking.id) ? (
                                 <CheckSquare className="h-4 w-4" />
                               ) : (
                                 <Square className="h-4 w-4" />
@@ -465,13 +470,13 @@ const BookingReport: React.FC = () => {
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">
-                              {booking.patient.patientName}
+                              {booking.patient.name}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {booking.patient.mobileNumber}
+                              {booking.patient.phone}
                             </div>
                             <div className="text-xs text-gray-400">
-                              {formatDate(booking.bookingDate)}
+                              {formatDate(booking.booking_date)}
                             </div>
                           </div>
                         </div>
@@ -479,14 +484,16 @@ const BookingReport: React.FC = () => {
                       <td className="px-6 py-4 whitespace-normal break-words">
                         <div className="text-sm text-gray-900">
                           <div className="font-medium break-words">
-                            {booking.service.serviceName}
+                            {booking.service?.service?.name || "N/A"}
                           </div>
                           <div className="text-gray-500 break-words">
-                            {booking.service.category.categoryName}
+                            {booking.service?.service?.code || "N/A"}
                           </div>
                           <div className="text-xs text-gray-400 mt-1 break-words">
                             <Building className="inline h-3 w-3 mr-1" />
-                            {booking.facility.facilityName}
+                            {booking.service?.contract?.facility?.name ||
+                              booking.facility?.name ||
+                              "N/A"}
                           </div>
                         </div>
                       </td>
@@ -497,7 +504,9 @@ const BookingReport: React.FC = () => {
                               <span className="text-blue-600">SHA Rate:</span>
                               <span className="font-medium">
                                 {formatCurrency(
-                                  booking.service.shaRate || booking.cost
+                                  booking.service?.service?.sha_rate ||
+                                    booking.amount ||
+                                    "0"
                                 )}
                               </span>
                             </div>
@@ -507,7 +516,9 @@ const BookingReport: React.FC = () => {
                               </span>
                               <span className="font-medium">
                                 {formatCurrency(
-                                  booking.service.vendorShare || "0"
+                                  booking.service?.service?.vendor_share ||
+                                    booking.vendor_share ||
+                                    "0"
                                 )}
                               </span>
                             </div>
@@ -517,39 +528,44 @@ const BookingReport: React.FC = () => {
                               </span>
                               <span className="font-medium">
                                 {formatCurrency(
-                                  booking.service.facilityShare || "0"
+                                  booking.service?.service?.facility_share ||
+                                    booking.facility_share ||
+                                    "0"
                                 )}
                               </span>
                             </div>
                           </div>
                           <div className="text-xs text-gray-500 mt-2">
                             <CreditCard className="inline h-3 w-3 mr-1" />
-                            Payment Mode: {booking.paymentMode.paymentModeName}
+                            Payment Mode: {booking.payment_mode || "N/A"}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(booking.approval)}
+                        {getStatusBadge(
+                          booking.approval_status ||
+                            booking.approval ||
+                            "pending"
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <button
-                          onClick={() => toggleExpandRow(booking.bookingId)}
+                          onClick={() => toggleExpandRow(booking.id)}
                           className="text-blue-600 hover:text-blue-900 inline-flex items-center"
                         >
                           <Eye className="h-4 w-4 mr-1" />
-                          {expandedRows.has(booking.bookingId)
-                            ? "Hide"
-                            : "Details"}
+                          {expandedRows.has(booking.id) ? "Hide" : "Details"}
                         </button>
 
-                        {booking.approval === "pending" && (
+                        {(booking.approval_status || booking.approval) ===
+                          "pending" && (
                           <div className="flex flex-col gap-2">
                             <button
-                              onClick={() => handleApproval(booking.bookingId)}
-                              disabled={approvingIds.has(booking.bookingId)}
+                              onClick={() => handleApproval(booking.id)}
+                              disabled={approvingIds.has(booking.id)}
                               className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-3 py-1 rounded text-sm inline-flex items-center"
                             >
-                              {approvingIds.has(booking.bookingId) ? (
+                              {approvingIds.has(booking.id) ? (
                                 <>
                                   <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
                                   Approving...
@@ -562,7 +578,7 @@ const BookingReport: React.FC = () => {
                               )}
                             </button>
                             <button
-                              onClick={() => handleRejection(booking.bookingId)}
+                              onClick={() => handleRejection(booking.id)}
                               disabled={isRejecting}
                               className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-3 py-1 rounded text-sm inline-flex items-center"
                             >
@@ -583,7 +599,7 @@ const BookingReport: React.FC = () => {
                       </td>
                     </tr>
 
-                    {expandedRows.has(booking.bookingId) && (
+                    {expandedRows.has(booking.id) && (
                       <tr>
                         <td
                           colSpan={pendingBookings.length > 0 ? 6 : 5}
@@ -599,14 +615,14 @@ const BookingReport: React.FC = () => {
                                 <p>
                                   <span className="text-gray-500">DOB:</span>
                                   {new Date(
-                                    booking.patient.dateOfBirth
+                                    booking.patient.date_of_birth
                                   ).toLocaleDateString()}
                                 </p>
                                 <p>
                                   <span className="text-gray-500">
                                     Patient ID:
                                   </span>
-                                  {booking.patient.patientId.slice(-8)}
+                                  {booking.patient.id.slice(-8)}
                                 </p>
                               </div>
                             </div>
@@ -619,13 +635,8 @@ const BookingReport: React.FC = () => {
                               <div className="text-sm space-y-1">
                                 <p>
                                   <span className="text-gray-500">Code:</span>
-                                  {booking.facility.facilityCode}
-                                </p>
-                                <p>
-                                  <span className="text-gray-500">
-                                    Contact:
-                                  </span>
-                                  {booking.facility.contactInfo}
+                                  {booking.service?.contract?.facility?.code ||
+                                    "N/A"}
                                 </p>
                               </div>
                             </div>
@@ -641,7 +652,9 @@ const BookingReport: React.FC = () => {
                                     SHA Rate:
                                   </span>
                                   <span className="font-semibold">
-                                    {formatCurrency(booking.service.shaRate)}
+                                    {formatCurrency(
+                                      booking.service?.service?.sha_rate || "0"
+                                    )}
                                   </span>
                                 </div>
                                 <div className="flex justify-between">
@@ -649,7 +662,11 @@ const BookingReport: React.FC = () => {
                                     Vendor Share:
                                   </span>
                                   <span className="font-semibold">
-                                    {booking.service.vendorShare}
+                                    {formatCurrency(
+                                      booking.service?.service?.vendor_share ||
+                                        booking.vendor_share ||
+                                        "0"
+                                    )}
                                   </span>
                                 </div>
                                 <div className="flex justify-between">
@@ -658,7 +675,10 @@ const BookingReport: React.FC = () => {
                                   </span>
                                   <span className="font-semibold">
                                     {formatCurrency(
-                                      booking.service.facilityShare
+                                      booking.service?.service
+                                        ?.facility_share ||
+                                        booking.facility_share ||
+                                        "0"
                                     )}
                                   </span>
                                 </div>
@@ -668,7 +688,7 @@ const BookingReport: React.FC = () => {
                                       Total Cost:
                                     </span>
                                     <span className="font-bold text-lg">
-                                      {formatCurrency(booking.cost)}
+                                      {formatCurrency(booking.amount || "0")}
                                     </span>
                                   </div>
                                 </div>

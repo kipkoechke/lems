@@ -4,18 +4,11 @@ import { Patient } from "./apiPatient";
 import { PaymentMode } from "./apiPaymentMode";
 
 export type ServiceBookingForm = {
-  patient_id: string;
   service_id: string;
-  equipment_id?: string;
-  facility_id: string;
-  payment_mode_id: string;
-  booking_date: Date;
-  cost: string;
-  notes?: string;
-  otp_overriden?: boolean;
-  status: "pending" | "confirmed" | "completed" | "cancelled";
-  service_completion?: "pending" | "completed";
-  approval?: "pending" | "approved" | "rejected";
+  patient_id: string;
+  payment_mode: string;
+  booking_date: string;
+  override?: boolean;
 };
 
 export interface PatientConsent {
@@ -23,66 +16,90 @@ export interface PatientConsent {
 }
 
 export interface Bookings {
-  bookingId: string;
-  cost: string;
-  bookingDate: string;
-  status: "pending" | "confirmed" | "completed" | "cancelled";
-  serviceCompletion: "pending" | "completed";
-  approval: "pending" | "approved" | "rejected";
-  notes: string | null;
-  otpOverridden: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
+  id: string;
+  booking_number: string; // The actual booking number used for OTP verification
+  patient_id: string;
+  vendor_facility_lot_service_pivot_id: string;
+  amount: string;
+  facility_share: string;
+  vendor_share: string;
+  booking_status: "pending" | "confirmed" | "completed" | "cancelled";
+  service_status: "not_started" | "completed";
+  approval_status: "pending" | "approved" | "rejected";
+  payment_mode: string;
+  booked_by: string | null;
+  service_completion_by: string | null;
+  approved_by: string | null;
+  booking_date: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  override: string;
+  otp_code?: string; // OTP code sent directly with booking creation
   patient: Patient;
-  facility: Facility & {
-    deleteddAt: string | null;
-  };
   service: {
-    serviceId: string;
-    serviceName: string;
-    description: string;
-    shaRate: string;
-    vendorShare: string;
-    facilityShare: string;
-    capitated: string;
-    createdAt: string;
-    updatedAt: string;
-    deletedAt: string | null;
-    category: {
-      categoryId: string;
-      lotNumber: string;
-      categoryName: string;
-      createdAt: string;
-      updatedAt: string;
-      deletedAt: string | null;
+    id: string;
+    ven_flty_lot_pivot_id: string;
+    service_id: string;
+    is_active: string;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    contract: {
+      id: string;
+      vendor_id: string;
+      facility_id: string;
+      lot_id: string;
+      is_active: string;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+      facility: Facility & {
+        regulatory_status: string;
+        facility_type: string;
+        owner: string;
+        operation_status: string;
+        keph_level: string;
+      };
+    };
+    service: {
+      id: string;
+      name: string;
+      code: string;
+      sha_rate: string;
+      facility_share: string;
+      vendor_share: string;
+      is_capitated: string;
+      lot_id: string;
+      is_active: string;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
     };
   };
-  // equipment: {
-  //   equipmentId: string;
-  //   equipmentName: string;
-  //   serialNumber: string;
-  //   status: string;
-  //   createdAt: string;
-  //   updatedAt: string;
-  //   deleteddAt: string | null;
-  //   category: {
-  //     vendorId: string;
-  //     vendorName: string;
-  //     vendorCode: string;
-  //     contactInfo: string;
-  //     createdAt: string;
-  //     updatedAt: string;
-  //     deleteddAt: string | null;
-  //   };
-  //   serviceIds: string;
-  // };
-  paymentMode: PaymentMode;
+  // Legacy properties for backward compatibility
+  bookingId?: string;
+  cost?: string;
+  bookingDate?: string;
+  status?: "pending" | "confirmed" | "completed" | "cancelled";
+  serviceCompletion?: "pending" | "completed";
+  approval?: "pending" | "approved" | "rejected";
+  notes?: string | null;
+  otpOverridden?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+  facility?: Facility;
+  paymentMode?: PaymentMode;
 }
 
 export interface ValidateOtp {
-  booking_id: string;
+  booking_number: string;
   otp_code: string;
+}
+
+export interface ValidateConsentRequest {
+  otp_code: string;
+  booking_number: string;
 }
 
 export interface RequestConsentResponse {
@@ -94,7 +111,10 @@ export interface RequestConsentResponse {
 
 export interface ValidateOtpResponse {
   message: string;
-  bookingConsent: any;
+  bookingConsent?: any;
+  success?: boolean;
+  status?: string;
+  [key: string]: any; // Allow additional fields
 }
 
 export interface BookingFilters {
@@ -109,17 +129,18 @@ export interface BookingFilters {
   end_date?: string; // "YYYY-MM-DD HH:mm:ss"
 }
 
+export interface BookingCreationResponse {
+  message: string;
+  otp_message: string;
+  otp_code: string;
+  expires_at: string;
+  booking: Bookings;
+}
+
 export const createServiceBooking = async (
   data: ServiceBookingForm
-): Promise<Bookings> => {
-  const response = await axios.post("/create-booking", data);
-  return response.data.booking;
-};
-
-export const requestPatientConsent = async (
-  data: PatientConsent
-): Promise<RequestConsentResponse> => {
-  const response = await axios.post("/request-consent", data);
+): Promise<BookingCreationResponse> => {
+  const response = await axios.post("/booking/create", data);
   return response.data;
 };
 
@@ -127,6 +148,13 @@ export const validateOtp = async (
   data: ValidateOtp
 ): Promise<ValidateOtpResponse> => {
   const response = await axios.put("/validate_otp", data);
+  return response.data;
+};
+
+export const verifyPatientConsent = async (
+  data: ValidateConsentRequest
+): Promise<ValidateOtpResponse> => {
+  const response = await axios.post("/booking/verify/consent", data);
   return response.data;
 };
 
@@ -145,28 +173,28 @@ export const validateOverrideOtp = async (
 };
 
 export const requestServiceFulfillmentOtp = async (
-  bookingId: string
+  booking_number: string
 ): Promise<RequestConsentResponse> => {
-  const response = await axios.post(
-    `/initiate-service-completion/${bookingId}`
-  );
+  const response = await axios.post(`/booking/serviceCompletion/request/OTP`, {
+    booking_number,
+  });
   return response.data;
 };
 
 export const validateServiceFulfillmentOtp = async (
   data: ValidateOtp
 ): Promise<ValidateOtpResponse> => {
-  const response = await axios.put(
-    `/service-completion/${data.booking_id}`,
+  const response = await axios.post(
+    `/booking/serviceCompletion/verify/OTP`,
     data
   );
   return response.data;
 };
 
 export const getServiceBookingPatient = async (
-  patientId: string
+  id: string
 ): Promise<Bookings[]> => {
-  const response = await axios.get(`/ServiceBooking/patient/${patientId}`);
+  const response = await axios.get(`/ServiceBooking/patient/${id}`);
   return response.data.data;
 };
 
@@ -174,23 +202,29 @@ export const getBookings = async (
   filters: BookingFilters = {}
 ): Promise<Bookings[]> => {
   const response = await axios.get("/bookings", { params: filters });
-  return response.data.data;
+  return response.data.bookings.data;
 };
 
 export const approveBooking = async (bookingId: string): Promise<Bookings> => {
-  const response = await axios.put(`/approve-booking/${bookingId}`);
+  const response = await axios.post("/booking/approval", {
+    booking_number: bookingId, // Use the booking ID directly
+    decision: "approve",
+  });
   return response.data.data;
 };
 
 export const rejectBooking = async (bookingId: string): Promise<Bookings> => {
-  const response = await axios.put(`/reject-booking/${bookingId}`);
+  const response = await axios.post("/booking/approval", {
+    booking_number: bookingId, // Use the booking ID directly
+    decision: "reject",
+  });
   return response.data.data;
 };
 
 export const getServiceBookingFacility = async (
-  facilityId: string
+  id: string
 ): Promise<Bookings[]> => {
-  const response = await axios.get(`/ServiceBooking/facility/${facilityId}`);
+  const response = await axios.get(`/ServiceBooking/facility/${id}`);
   return response.data.data;
 };
 

@@ -1,15 +1,15 @@
 import { getPatientById } from "@/services/apiPatient";
 import { useQuery } from "@tanstack/react-query";
 
-export function usePatient(patientId: string) {
+export function usePatient(id: string) {
   const {
     isLoading,
     data: patient,
     error,
   } = useQuery({
-    queryKey: ["patient", patientId],
-    queryFn: () => getPatientById(patientId as string),
-    enabled: !!patientId,
+    queryKey: ["patient", id],
+    queryFn: () => getPatientById(id as string),
+    enabled: !!id,
     retry: false,
   });
 

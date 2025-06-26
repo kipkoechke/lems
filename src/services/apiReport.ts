@@ -66,11 +66,11 @@ export const getFacilitiesReport = async () => {
 };
 
 export const getFacilityReport = async (
-  facilityId: string,
+  id: string,
   startDate: Date,
   endDate: Date
 ) => {
-  const response = await axios.get(`/Report/facilities/${facilityId}`, {
+  const response = await axios.get(`/Report/facilities/${id}`, {
     params: {
       startDate: formatDateForApi(startDate),
       endDate: formatDateForApi(endDate),
@@ -95,13 +95,13 @@ export const getFacilitiesSummaryReport = async (
 };
 
 export const getFacilityVendorReport = async (
-  facilityId: string,
+  id: string,
   vendorId: string,
   startDate: Date,
   endDate: Date
 ) => {
   const response = await axios.get(
-    `/Report/facilities/${facilityId}/vendors/${vendorId}`,
+    `/Report/facilities/${id}/vendors/${vendorId}`,
     {
       params: {
         startDate: formatDateForApi(startDate),
@@ -112,9 +112,7 @@ export const getFacilityVendorReport = async (
   return response.data.data;
 };
 
-export const getFacilityTrend = async (facilityId: string, year: number) => {
-  const response = await axios.get(
-    `/Report/facilities/${facilityId}/trend/${year}`
-  );
+export const getFacilityTrend = async (id: string, year: number) => {
+  const response = await axios.get(`/Report/facilities/${id}/trend/${year}`);
   return response.data.data;
 };

@@ -2,12 +2,12 @@ import axios from "../lib/axios";
 export interface Equipment {
   equipmentId: string;
   equipmentName: string;
-  categoryId: string;
-  facilityId: string;
+  id: string;
+  id: string;
   serialNumber: string;
   installationDate: Date;
   status: string;
-  createdAt: string;
+  created_at: string;
   updatedAt: string;
   lastMaintenanceDate: Date;
 }
@@ -17,7 +17,7 @@ export interface ServiceCategory {
   vendorName: string;
   vendorCode: string;
   contactInfo: string;
-  createdAt: string;
+  created_at: string;
   updatedAt: string;
   deletedAt: string | null;
 }
@@ -30,7 +30,7 @@ export interface EquipmentWithService {
   vendorShare: string;
   facilityShare: string;
   capitated: string;
-  createdAt: string;
+  created_at: string;
   updatedAt: string;
   deletedAt: string | null;
   category: ServiceCategory;
@@ -59,16 +59,16 @@ export const getEquipmentByService = async (
 };
 
 export const getEquipmentByCategory = async (
-  categoryId: string
+  id: string
 ): Promise<Equipment[]> => {
-  const response = await axios.get(`/Equipment/category/${categoryId}`);
+  const response = await axios.get(`/Equipment/category/${id}`);
   return response.data.data;
 };
 
 export const getEquipmentByFacility = async (
-  facilityId: string
+  id: string
 ): Promise<Equipment[]> => {
-  const response = await axios.get(`/Equipment/facility/${facilityId}`);
+  const response = await axios.get(`/Equipment/facility/${id}`);
   return response.data.data;
 };
 

@@ -1,90 +1,11 @@
 "use client";
 import { usePatients } from "@/features/patients/usePatients";
+import { useBookings } from "@/features/services/bookings/useBookings";
 import { Patient } from "@/services/apiPatient";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FaCalendar, FaChevronRight, FaPhone, FaUser } from "react-icons/fa";
 import { FiMoreVertical } from "react-icons/fi";
-
-// Mock booking data based on your API response structure
-const mockBookingData = [
-  {
-    bookingId: "019716cf-671a-726b-aa16-55d84fa71ebf",
-    cost: "11000",
-    bookingDate: "2025-05-21 12:06:00",
-    status: "Pending",
-    notes: null,
-    otpOverridden: "0",
-    createdAt: "2025-05-28T12:13:00.000000Z",
-    updatedAt: "2025-05-28T12:13:00.000000Z",
-    deletedAt: null,
-    patient: {
-      patientId: "019714ab-7bd5-73e9-9d6c-0bfcf809440e",
-      patientName: "Jane Doe",
-      mobileNumber: "0782680815",
-      dateOfBirth: "2025-05-28",
-      createdAt: "2025-05-28T02:14:32.000000Z",
-      updatedAt: "2025-05-28T02:14:32.000000Z",
-      deletedAt: null,
-    },
-    facility: {
-      facilityId: "01971667-41de-7034-b0eb-f920e2899518",
-      facilityName: "South B Hospital",
-      facilityCode: "47006",
-      contactInfo: "Nairobi, kenya",
-      createdAt: "2025-05-28T10:19:15.000000Z",
-      updatedAt: "2025-05-28T10:19:15.000000Z",
-      deleteddAt: null,
-    },
-    service: {
-      serviceId: "0197167f-d5e3-71d0-99b6-a2f1840884cc",
-      serviceName: "Radionucleide scan",
-      description: "Nuclear Medicine",
-      shaRate: "11000",
-      vendorShare: "8000",
-      facilityShare: "3000",
-      capitated: "0",
-      createdAt: "2025-05-28T10:46:06.000000Z",
-      updatedAt: "2025-05-28T10:46:06.000000Z",
-      deletedAt: null,
-      category: {
-        categoryId: "01971675-9c2e-7231-9eb7-37117c5366c7",
-        lotNumber: "LOT 8",
-        categoryName: "Nuclear Medicine",
-        createdAt: "2025-05-28T10:34:55.000000Z",
-        updatedAt: "2025-05-28T10:34:55.000000Z",
-        deletedAt: null,
-      },
-    },
-    equipment: {
-      equipmentId: "01971695-e12d-722f-8aac-6c53161e92f3",
-      equipmentName: "Nuclear Medicine Machine",
-      serialNumber: "EQ5GVC9",
-      status: "available",
-      createdAt: "2025-05-28T11:10:10.000000Z",
-      updatedAt: "2025-05-28T11:10:10.000000Z",
-      deleteddAt: null,
-      category: {
-        vendorId: "0197166c-3402-7198-ba71-70d8a693eb5c",
-        vendorName: "Megascope Healthcare Limited",
-        vendorCode: "VEN002",
-        contactInfo: "Nairobi, Kenya",
-        createdAt: "2025-05-28T10:24:39.000000Z",
-        updatedAt: "2025-05-28T10:24:39.000000Z",
-        deleteddAt: null,
-      },
-      serviceIds:
-        "0197167d-d706-70d2-b6b7-f77219d96f1b,0197167f-d5e3-71d0-99b6-a2f1840884cc",
-    },
-    paymentMode: {
-      paymentModeId: "01971688-3b5d-73e2-a957-963328ecd81e",
-      paymentModeName: "SHA",
-      createdAt: "2025-05-28T10:55:16.000000Z",
-      updatedAt: "2025-05-28T10:55:16.000000Z",
-      deletedAt: null,
-    },
-  },
-];
 
 // Dropdown Menu Component
 function ActionsDropdown({
@@ -140,17 +61,15 @@ function PatientBreadcrumb({ patient }: { patient: Patient }) {
       <div className="flex items-center space-x-4 text-sm">
         <div className="flex items-center gap-2">
           <FaUser className="w-4 h-4 text-blue-600" />
-          <span className="font-medium text-gray-900">
-            {patient.patientName}
-          </span>
+          <span className="font-medium text-gray-900">{patient.name}</span>
         </div>
         <FaChevronRight className="w-4 h-4 text-gray-400" />
         <div className="flex items-center gap-2">
           <FaPhone className="w-4 h-4 text-green-600" />
-          <span className="text-gray-600">{patient.mobileNumber}</span>
+          <span className="text-gray-600">{patient.phone}</span>
         </div>
         <FaChevronRight className="w-4 h-4 text-gray-400" />
-        <div className="text-gray-600">ID: {patient.patientId.slice(-8)}</div>
+        <div className="text-gray-600">ID: {patient.id.slice(-8)}</div>
       </div>
     </div>
   );
@@ -168,8 +87,7 @@ function BookingDetailsModal({
 }) {
   if (!isOpen || !patient) return null;
 
-  // In real implementation, you would fetch bookings based on patient ID
-  const bookings = mockBookingData;
+  const { bookings, isLoading: bookingsLoading } = useBookings();
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -230,17 +148,17 @@ function BookingDetailsModal({
                           {booking.service.serviceName}
                         </div>
                         <div className="text-gray-500 text-xs">
-                          {booking.service.category.categoryName}
+                          {booking.service.category.name}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b">
                       <div>
                         <div className="font-medium">
-                          {booking.facility.facilityName}
+                          {booking.facility.name}
                         </div>
                         <div className="text-gray-500 text-xs">
-                          Code: {booking.facility.facilityCode}
+                          Code: {booking.facility.code}
                         </div>
                       </div>
                     </td>
@@ -256,21 +174,26 @@ function BookingDetailsModal({
                     <td className="px-6 py-4 whitespace-nowrap border-b">
                       <span
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          booking.status === "Pending"
+                          booking.status === "pending"
                             ? "bg-yellow-100 text-yellow-800"
-                            : booking.status === "Confirmed"
+                            : booking.status === "confirmed"
                             ? "bg-green-100 text-green-800"
+                            : booking.status === "completed"
+                            ? "bg-blue-100 text-blue-800"
+                            : booking.status === "cancelled"
+                            ? "bg-red-100 text-red-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {booking.status}
+                        {booking.status.charAt(0).toUpperCase() +
+                          booking.status.slice(1)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b">
                       KES {parseInt(booking.cost).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b">
-                      {booking.paymentMode.paymentModeName}
+                      {booking.paymentMode?.paymentModeName || "N/A"}
                     </td>
                   </tr>
                 ))}
@@ -309,11 +232,11 @@ function Patients() {
   // };
 
   const handlePatientClick = (patient: Patient) => {
-    router.push(`/patients/${patient.patientId}/bookings`);
+    router.push(`/patients/${patient.id}/bookings`);
   };
 
   const handleViewBookings = (patient: Patient) => {
-    router.push(`/patients/${patient.patientId}/bookings`);
+    router.push(`/patients/${patient.id}/bookings`);
   };
 
   if (isLoading) {
@@ -388,24 +311,27 @@ function Patients() {
                   onClick={() => handlePatientClick(patient)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {patient.patientId}
+                    {patient.id}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {patient.patientName}
+                    {patient.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {patient.mobileNumber}
+                    {patient.phone}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(patient.dateOfBirth).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {new Date(patient.date_of_birth).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      }
+                    )}
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(patient.createdAt).toLocaleDateString("en-US", {
+                    {new Date(patient.created_at).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",

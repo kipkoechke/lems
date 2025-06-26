@@ -1,149 +1,502 @@
 "use client";
 
-import { Patient, PatientRegistrationForm } from "@/services/apiPatient";
-import React from "react";
+import Modal from "@/components/Modal";
+import { useFacilities } from "@/features/facilities/useFacilities";
+import { Facility } from "@/services/apiFacility";
+import { Patient } from "@/services/apiPatient";
+import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import {
+  FaArrowRight,
+  FaChevronDown,
+  FaHospital,
+  FaSearch,
+  FaTimes,
+  FaUser,
+  FaUserPlus,
+} from "react-icons/fa";
+import { usePatients } from "./usePatients";
 import { useRegisterPatient } from "./useRegisterPatient";
 
 interface PatientRegistrationProps {
-  onPatientAdded?: (patient: Patient) => void;
+  onStepOneComplete?: (
+    patient: Patient,
+    paymentModeId: string,
+    facility: Facility
+  ) => void;
   onCloseModal?: () => void;
 }
 
+// Payment modes
+const PAYMENT_MODES = [
+  {
+    paymentModeId: "sha",
+    paymentModeName: "SHA",
+    description: "Social Health Authority",
+    icon: "🏥",
+  },
+  {
+    paymentModeId: "cash",
+    paymentModeName: "CASH",
+    description: "Direct cash payment",
+    icon: "💵",
+  },
+  {
+    paymentModeId: "other_insurances",
+    paymentModeName: "OTHER INSURANCES",
+    description: "Third-party insurance coverage",
+    icon: "🛡️",
+  },
+];
+
 const PatientRegistration: React.FC<PatientRegistrationProps> = ({
-  onPatientAdded,
+  onStepOneComplete,
   onCloseModal,
 }) => {
-  const { registerPatients, isRegistering } = useRegisterPatient();
+  const { patients } = usePatients();
+  const { facilities } = useFacilities();
 
+  const [selectedid, setSelectedid] = useState<string>("");
+  const [selectedPaymentModeId, setSelectedPaymentModeId] =
+    useState<string>("");
+  const [selectedFacilityId, setSelectedFacilityId] = useState<string>("");
+
+  // Facility dropdown state
+  const [facilitySearch, setFacilitySearch] = useState<string>("");
+  const [isFacilityDropdownOpen, setIsFacilityDropdownOpen] =
+    useState<boolean>(false);
+  const facilityDropdownRef = useRef<HTMLDivElement>(null);
+  const facilitySearchRef = useRef<HTMLInputElement>(null);
+
+  // For registering a new patient
+  const { registerPatients, isRegistering } = useRegisterPatient();
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<PatientRegistrationForm>();
+  } = useForm<{ name: string; phone: string; date_of_birth: string }>();
 
-  const onSubmit = (data: PatientRegistrationForm) => {
+  // Filter facilities based on search
+  const filteredFacilities = facilities
+    ?.filter(
+      (facility) =>
+        facility.name?.toLowerCase().includes(facilitySearch.toLowerCase()) ||
+        facility.code?.toLowerCase().includes(facilitySearch.toLowerCase())
+    )
+    .slice(0, 50);
+
+  // Get selected items
+  const selectedFacility = facilities?.find((f) => f.id === selectedFacilityId);
+  const selectedPatient = patients?.find((p) => p.id === selectedid);
+
+  // Check if all fields are completed
+  const isComplete = selectedFacilityId && selectedid && selectedPaymentModeId;
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        facilityDropdownRef.current &&
+        !facilityDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsFacilityDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isFacilityDropdownOpen && facilitySearchRef.current) {
+      facilitySearchRef.current.focus();
+    }
+  }, [isFacilityDropdownOpen]);
+
+  const handleFacilitySelect = (facility: Facility) => {
+    setSelectedFacilityId(facility.id);
+    setIsFacilityDropdownOpen(false);
+    setFacilitySearch("");
+  };
+
+  const clearFacilitySelection = () => {
+    setSelectedFacilityId("");
+    setFacilitySearch("");
+  };
+
+  const handleAddPatient = (data: {
+    name: string;
+    phone: string;
+    date_of_birth: string;
+  }) => {
     registerPatients(data, {
       onSuccess: (newPatient: Patient) => {
-        if (onPatientAdded) onPatientAdded(newPatient);
+        setSelectedid(newPatient.id);
         reset();
         onCloseModal?.();
       },
     });
   };
 
+  const handleProceed = (e: React.FormEvent) => {
+    e.preventDefault();
+    const patient = patients?.find((p) => p.id === selectedid);
+    const facility = facilities?.find((f) => f.id === selectedFacilityId);
+
+    if (!patient || !selectedPaymentModeId || !selectedFacilityId || !facility)
+      return;
+
+    onStepOneComplete?.(patient, selectedPaymentModeId, facility);
+  };
+
   return (
-    <div className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Patient Registration</h2>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg ">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="mb-4">
-            <label
-              htmlFor="name"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Full Name
-            </label>
-            <input
-              {...register("name", { required: "Name is required" })}
-              id="name"
-              type="text"
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter full name"
-            />
-            {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-            )}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-4">
+            <FaUser className="w-4 h-4" />
+            Registration
           </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="mobileNumber"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Contact Number
-            </label>
-            <input
-              {...register("phone", {
-                required: "Contact number is required",
-                pattern: {
-                  value: /^\d{10}$/,
-                  message: "Please enter a valid 10-digit phone number",
-                },
-              })}
-              id="phone"
-              type="text"
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="10-digit phone number"
-            />
-            {errors.phone && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.phone.message}
-              </p>
-            )}
-          </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="date_of_birth"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Date of Birth
-            </label>
-            <input
-              {...register("date_of_birth", {
-                required: "Date of birth is required",
-              })}
-              id="date_of_birth"
-              type="date"
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {errors.date_of_birth && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.date_of_birth.message}
-              </p>
-            )}
-          </div>
-
-          {/* <div className="mb-4">
-            <label
-              htmlFor="paymentMode"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Payment Mode
-            </label>
-            <select
-              {...register("paymentMode", {
-                required: "Payment mode is required",
-              })}
-              id="paymentMode"
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select payment mode</option>
-              <option value="Cash">Cash</option>
-              <option value="SHA">SHA</option>
-              <option value="Insurance">Insurance</option>
-            </select>
-            {errors.paymentMode && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.paymentMode.message}
-              </p>
-            )}
-          </div> */}
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+            Patient Registration
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Complete your registration to access our healthcare services
+          </p>
         </div>
 
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={isRegistering}
-            className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300"
-          >
-            {isRegistering ? "Registering..." : "Register Patient"}
-          </button>
-        </div>
-      </form>
+        <form onSubmit={handleProceed} className="space-y-8">
+          {/* Facility and Patient - Same Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Medical Facility */}
+            <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-blue-100 rounded-xl">
+                  <FaHospital className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Medical Facility
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Select your healthcare provider
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative" ref={facilityDropdownRef}>
+                <div
+                  className="w-full p-4 bg-gray-50 rounded-xl cursor-pointer flex items-center justify-between hover:bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200"
+                  onClick={() =>
+                    setIsFacilityDropdownOpen(!isFacilityDropdownOpen)
+                  }
+                >
+                  <span
+                    className={
+                      selectedFacility
+                        ? "text-gray-900 font-medium"
+                        : "text-gray-500"
+                    }
+                  >
+                    {selectedFacility
+                      ? selectedFacility.name
+                      : "Choose medical facility"}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {selectedFacility && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearFacilitySelection();
+                        }}
+                        className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-all"
+                      >
+                        <FaTimes className="w-4 h-4" />
+                      </button>
+                    )}
+                    <FaChevronDown
+                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                        isFacilityDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {isFacilityDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                    <div className="p-4 border-b border-gray-100">
+                      <div className="relative">
+                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                          ref={facilitySearchRef}
+                          type="text"
+                          placeholder="Search facilities..."
+                          value={facilitySearch}
+                          onChange={(e) => setFacilitySearch(e.target.value)}
+                          className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {filteredFacilities && filteredFacilities.length > 0 ? (
+                        filteredFacilities.map((facility) => (
+                          <div
+                            key={facility.id}
+                            className="px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors"
+                            onClick={() => handleFacilitySelect(facility)}
+                          >
+                            <div className="font-semibold text-gray-900">
+                              {facility.name}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Code: {facility.code}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-8 text-center text-gray-500">
+                          <FaHospital className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                          <div>No facilities found</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Patient Details */}
+            <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-green-100 rounded-xl">
+                    <FaUser className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Patient</h3>
+                    <p className="text-sm text-gray-500">
+                      Select or add patient
+                    </p>
+                  </div>
+                </div>
+
+                <Modal>
+                  <Modal.Open opens="patient-form">
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl"
+                    >
+                      <FaUserPlus className="w-4 h-4" />
+                      Add New
+                    </button>
+                  </Modal.Open>
+                  <Modal.Window name="patient-form">
+                    <div className="p-8 max-w-lg mx-auto">
+                      <div className="text-center mb-8">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <FaUserPlus className="w-8 h-8 text-green-600" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                          Register New Patient
+                        </h3>
+                        <p className="text-gray-600">
+                          Fill in the patient details
+                        </p>
+                      </div>
+
+                      <form
+                        onSubmit={handleSubmit(handleAddPatient)}
+                        className="space-y-6"
+                      >
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Full Name *
+                          </label>
+                          <input
+                            {...register("name", {
+                              required: "Name is required",
+                            })}
+                            className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+                            placeholder="Enter patient's full name"
+                          />
+                          {errors.name && (
+                            <p className="text-red-500 text-sm mt-2 flex items-center gap-2">
+                              <span>⚠️</span> {errors.name.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Phone Number *
+                          </label>
+                          <input
+                            {...register("phone", {
+                              required: "Phone number is required",
+                              pattern: {
+                                value: /^\d{10}$/,
+                                message:
+                                  "Please enter a valid 10-digit phone number",
+                              },
+                            })}
+                            className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+                            placeholder="10-digit phone number"
+                          />
+                          {errors.phone && (
+                            <p className="text-red-500 text-sm mt-2 flex items-center gap-2">
+                              <span>⚠️</span> {errors.phone.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Date of Birth *
+                          </label>
+                          <input
+                            {...register("date_of_birth", {
+                              required: "Date of birth is required",
+                            })}
+                            type="date"
+                            className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+                          />
+                          {errors.date_of_birth && (
+                            <p className="text-red-500 text-sm mt-2 flex items-center gap-2">
+                              <span>⚠️</span> {errors.date_of_birth.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex justify-end pt-4">
+                          <button
+                            type="submit"
+                            disabled={isRegistering}
+                            className="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+                          >
+                            {isRegistering ? (
+                              <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Registering...
+                              </div>
+                            ) : (
+                              "Register Patient"
+                            )}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </Modal.Window>
+                </Modal>
+              </div>
+
+              <select
+                value={selectedid}
+                onChange={(e) => setSelectedid(e.target.value)}
+                className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-gray-900"
+                required
+              >
+                <option value="">Choose a patient</option>
+                {patients?.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Payment Method */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="p-3 bg-purple-100 rounded-xl">
+                <span className="text-2xl">💳</span>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">
+                  Payment Method
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Select your payment option
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {PAYMENT_MODES.map((paymentMode) => (
+                <label
+                  key={paymentMode.paymentModeId}
+                  className={`relative p-6 rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                    selectedPaymentModeId === paymentMode.paymentModeId
+                      ? "bg-blue-50 ring-2 ring-blue-500 shadow-lg"
+                      : "bg-gray-50 hover:bg-gray-100"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMode"
+                    value={paymentMode.paymentModeId}
+                    checked={
+                      selectedPaymentModeId === paymentMode.paymentModeId
+                    }
+                    onChange={(e) => setSelectedPaymentModeId(e.target.value)}
+                    className="sr-only"
+                  />
+
+                  <div className="text-center">
+                    <div className="text-4xl mb-4">{paymentMode.icon}</div>
+                    <div className="font-bold text-gray-900 mb-2 text-lg">
+                      {paymentMode.paymentModeName}
+                    </div>
+                    <div className="text-sm text-gray-600 leading-relaxed">
+                      {paymentMode.description}
+                    </div>
+                  </div>
+
+                  {selectedPaymentModeId === paymentMode.paymentModeId && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs">✓</span>
+                    </div>
+                  )}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-center pt-4">
+            <button
+              type="submit"
+              disabled={!isComplete}
+              className={`inline-flex items-center gap-3 px-12 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl ${
+                isComplete
+                  ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transform hover:scale-105"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              {isComplete ? (
+                <>
+                  Continue to Services
+                  <FaArrowRight className="w-5 h-5" />
+                </>
+              ) : (
+                <>
+                  Complete All Fields
+                  <span className="w-5 h-5 flex items-center justify-center">
+                    ⚠️
+                  </span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

@@ -142,11 +142,11 @@ const ServiceValidation: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Patient</p>
-                  <p className="font-medium">{patient.patientName}</p>
+                  <p className="font-medium">{patient.name}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Patient ID</p>
-                  <p className="font-medium">{patient.patientId}</p>
+                  <p className="font-medium">{patient.id}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Service</p>

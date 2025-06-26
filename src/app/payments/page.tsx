@@ -27,8 +27,8 @@ import {
 } from "recharts";
 
 interface PaymentSummaryItem {
-  facilityName: string;
-  facilityId: string;
+  name: string;
+  id: string;
   serviceCategory: string;
   patientCount: number;
   shaRate: number;
@@ -92,7 +92,7 @@ const PaymentReport: React.FC = () => {
     const summaryMap = new Map<string, PaymentSummaryItem>();
 
     pendingBookings.forEach((booking) => {
-      const key = `${booking.facility.facilityId}-${booking.service.category.categoryName}`;
+      const key = `${booking.facility.id}-${booking.service.category.name}`;
 
       if (summaryMap.has(key)) {
         const existing = summaryMap.get(key)!;
@@ -110,9 +110,9 @@ const PaymentReport: React.FC = () => {
         const vendorShare = parseFloat(booking.service.vendorShare || "0");
 
         summaryMap.set(key, {
-          facilityName: booking.facility.facilityName,
-          facilityId: booking.facility.facilityId,
-          serviceCategory: booking.service.category.categoryName,
+          name: booking.facility.name,
+          id: booking.facility.id,
+          serviceCategory: booking.service.category.name,
           patientCount: 1,
           shaRate: shaRate,
           facilityShare: facilityShare,
@@ -121,7 +121,7 @@ const PaymentReport: React.FC = () => {
           totalFacilityAmount: facilityShare,
           totalVendorAmount: vendorShare,
           bookingIds: [booking.bookingId],
-          paymentMode: booking.paymentMode.paymentModeName,
+          paymentMode: booking.paymentMode?.paymentModeName || "N/A",
         });
       }
     });
@@ -136,7 +136,7 @@ const PaymentReport: React.FC = () => {
     const summaryMap = new Map<string, PaymentSummaryItem>();
 
     approvedBookings.forEach((booking) => {
-      const key = `${booking.facility.facilityId}-${booking.service.category.categoryName}`;
+      const key = `${booking.facility.id}-${booking.service.category.name}`;
 
       if (summaryMap.has(key)) {
         const existing = summaryMap.get(key)!;
@@ -154,9 +154,9 @@ const PaymentReport: React.FC = () => {
         const vendorShare = parseFloat(booking.service.vendorShare || "0");
 
         summaryMap.set(key, {
-          facilityName: booking.facility.facilityName,
-          facilityId: booking.facility.facilityId,
-          serviceCategory: booking.service.category.categoryName,
+          name: booking.facility.name,
+          id: booking.facility.id,
+          serviceCategory: booking.service.category.name,
           patientCount: 1,
           shaRate: shaRate,
           facilityShare: facilityShare,
@@ -165,7 +165,7 @@ const PaymentReport: React.FC = () => {
           totalFacilityAmount: facilityShare,
           totalVendorAmount: vendorShare,
           bookingIds: [booking.bookingId],
-          paymentMode: booking.paymentMode.paymentModeName,
+          paymentMode: booking.paymentMode?.paymentModeName || "N/A",
         });
       }
     });
@@ -325,15 +325,13 @@ const PaymentReport: React.FC = () => {
             <option value="">All LOTs</option>
             {categories?.map((s) => (
               <option
-                key={s.categoryId}
-                value={s.categoryId}
-                title={s.categoryName}
+                key={s.id}
+                value={s.id}
+                title={s.name}
                 className="truncate"
               >
-                {s.lotNumber} -
-                {s.categoryName.length > 20
-                  ? s.categoryName.slice(0, 20) + "…"
-                  : s.categoryName}
+                {s.number} -
+                {s.name.length > 20 ? s.name.slice(0, 20) + "…" : s.name}
               </option>
             ))}
           </select>
@@ -355,8 +353,8 @@ const PaymentReport: React.FC = () => {
           >
             <option value="">All Facilities</option>
             {facilities?.map((f) => (
-              <option key={f.facilityId} value={f.facilityId}>
-                {f.facilityName}
+              <option key={f.id} value={f.id}>
+                {f.name}
               </option>
             ))}
           </select>
@@ -698,7 +696,7 @@ const PaymentReport: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {approvedSummary.map((item, index) => (
                   <tr
-                    key={`approved-${item.facilityId}-${item.serviceCategory}`}
+                    key={`approved-${item.id}-${item.serviceCategory}`}
                     className="hover:bg-gray-50"
                   >
                     <td className="px-4 py-4 whitespace-normal">
@@ -706,9 +704,9 @@ const PaymentReport: React.FC = () => {
                         <Building className="h-4 w-4 text-blue-600 mr-2 flex-shrink-0" />
                         <div
                           className="text-sm font-medium text-gray-900 "
-                          title={item.facilityName}
+                          title={item.name}
                         >
-                          {item.facilityName}
+                          {item.name}
                         </div>
                       </div>
                     </td>

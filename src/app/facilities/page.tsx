@@ -1,9 +1,80 @@
 "use client";
-import { useFacilities } from "@/features/facilities/useFacilities";
-import { Facility } from "@/services/apiFacility";
+import Modal from "@/components/Modal";
+import {
+  useFacilities,
+  useUpdateFacility,
+} from "@/features/facilities/useFacilities";
+import {
+  EditFacilityForm as EditFacility,
+  Facility,
+} from "@/services/apiFacility";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+
+function EditFacilityForm({
+  facility,
+  onSuccess,
+}: {
+  facility: Facility;
+  onSuccess: () => void;
+}) {
+  const { register, handleSubmit, reset } = useForm<EditFacility>({
+    defaultValues: {
+      name: facility.name,
+      code: facility.code,
+    },
+  });
+
+  const { editFacility, isEditing } = useUpdateFacility();
+
+  const onSubmit = (data: EditFacility) => {
+    editFacility({ id: facility.id, data });
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-2">
+      <div>
+        <label className="block text-gray-700 font-medium mb-1">
+          Facility Name
+        </label>
+        <input
+          {...register("name", { required: true })}
+          className="w-full border border-gray-300 rounded px-3 py-2"
+        />
+      </div>
+      <div>
+        <label className="block text-gray-700 font-medium mb-1">
+          Facility Code
+        </label>
+        <input
+          {...register("code", { required: true })}
+          className="w-full border border-gray-300 rounded px-3 py-2"
+        />
+      </div>
+
+      {/* {updateFacilityMutation.isError && (
+        <div className="text-red-600 text-sm mb-2">
+          {updateFacilityMutation.error instanceof Error
+            ? updateFacilityMutation.error.message
+            : "Failed to update facility"}
+        </div>
+      )} */}
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          disabled={isEditing}
+          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-300"
+        >
+          {isEditing ? "Updating..." : "Update Facility"}
+        </button>
+      </div>
+    </form>
+  );
+}
 
 function Facilities() {
   const { isLoading, facilities, error } = useFacilities();
+  const [editFacility, setEditFacility] = useState<Facility | null>(null);
 
   if (isLoading) {
     return (
@@ -54,42 +125,51 @@ function Facilities() {
                   Facility Name
                 </th>
                 <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
-                  Contact Info
-                </th>
-                {/* <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
-                  Facility ID
-                </th> */}
-                <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
                   Created Date
+                </th>
+                <th className="px-4 py-3 border-b border-gray-200 text-left font-semibold text-gray-700">
+                  Actions
                 </th>
               </tr>
             </thead>
             <tbody>
               {facilityData.map((facility: Facility, index: number) => (
                 <tr
-                  key={facility.facilityId}
+                  key={facility.id}
                   className={`border-b border-gray-200 hover:bg-gray-50 ${
                     index % 2 === 0 ? "bg-white" : "bg-gray-25"
                   }`}
                 >
-                  <td className="px-4 py-3 text-gray-700">
-                    {facility.facilityCode}
-                  </td>
+                  <td className="px-4 py-3 text-gray-700">{facility.code}</td>
                   <td className="px-4 py-3 font-medium text-gray-900">
-                    {facility.facilityName}
+                    {facility.name}
                   </td>
-                  <td className="px-4 py-3 text-gray-700">
-                    {facility.contactInfo}
-                  </td>
-                  {/* <td className="px-4 py-3 text-xs text-gray-500 font-mono">
-                    {facility.facilityId}
-                  </td> */}
                   <td className="px-4 py-3 text-gray-600">
-                    {new Date(facility.createdAt).toLocaleDateString("en-US", {
+                    {new Date(facility.created_at).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
                     })}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Modal>
+                      <Modal.Open opens={`edit-facility-${facility.id}`}>
+                        <button
+                          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                          onClick={() => setEditFacility(facility)}
+                        >
+                          Edit
+                        </button>
+                      </Modal.Open>
+                      <Modal.Window name={`edit-facility-${facility.id}`}>
+                        <EditFacilityForm
+                          facility={facility}
+                          onSuccess={() => {
+                            setEditFacility(null);
+                          }}
+                        />
+                      </Modal.Window>
+                    </Modal>
                   </td>
                 </tr>
               ))}

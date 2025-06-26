@@ -1,4 +1,4 @@
-import { setPatient } from "@/context/workflowSlice";
+import { goToNextStep, setPatient } from "@/context/workflowSlice";
 import { useAppDispatch } from "@/hooks/hooks";
 import { Patient, registerPatient } from "@/services/apiPatient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -16,6 +16,7 @@ export function useRegisterPatient() {
       });
       queryClient.invalidateQueries({ queryKey: ["patients"] });
       dispatch(setPatient(data));
+      // dispatch(goToNextStep());
       // Only call custom onSuccess if provided
       if (context && typeof context.onSuccess === "function") {
         context.onSuccess(data);

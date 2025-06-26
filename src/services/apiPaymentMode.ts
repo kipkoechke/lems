@@ -21,21 +21,19 @@ export const getPaymentModes = async (): Promise<PaymentMode[]> => {
   return response.data.data;
 };
 
-export const getPaymentModeById = async (
-  patientID: string
-): Promise<PaymentMode> => {
-  const response = await axios.get(`/patient/${patientID}`);
+export const getPaymentModeById = async (id: string): Promise<PaymentMode> => {
+  const response = await axios.get(`/patient/${id}`);
   return response.data.data;
 };
 
 export const updatePatient = async (
-  patientID: string,
+  id: string,
   data: Partial<PaymentMode>
 ): Promise<PaymentMode> => {
-  const response = await axios.patch(`/Patient/${patientID}`, data);
+  const response = await axios.patch(`/Patient/${id}`, data);
   return response.data.data;
 };
 
-export const deletePatient = async (patientID: string): Promise<void> => {
-  await axios.delete<void>(`/Patient/${patientID}`);
+export const deletePatient = async (id: string): Promise<void> => {
+  await axios.delete<void>(`/Patient/${id}`);
 };

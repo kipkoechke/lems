@@ -7,7 +7,7 @@ import { Equipment } from "@/services/apiEquipment";
 //   equipmentName: string;
 //   serialNumber: string;
 // status: string;
-// createdAt: string;
+// created_at: string;
 // updatedAt: string;
 //   deleteddAt?: string | null;
 // };
@@ -121,11 +121,14 @@ function Equipments() {
                     {getStatusBadge(equipment.status)}
                   </td>
                   <td className="px-4 py-3 text-gray-600">
-                    {new Date(equipment.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {new Date(equipment.created_at).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      }
+                    )}
                   </td>
                   <td className="px-4 py-3 text-gray-600">
                     {new Date(equipment.updatedAt).toLocaleDateString("en-US", {

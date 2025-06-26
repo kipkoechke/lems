@@ -4,8 +4,8 @@ import { useMutation } from "@tanstack/react-query";
 export function useFulfillmentOtp() {
   const { mutate: requestFulfillmentOtp, isPending: isRequesting } =
     useMutation({
-      mutationFn: (bookingId: string) =>
-        requestServiceFulfillmentOtp(bookingId),
+      mutationFn: (booking_number: string) =>
+        requestServiceFulfillmentOtp(booking_number),
     });
   return { isRequesting, requestFulfillmentOtp };
 }

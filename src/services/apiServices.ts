@@ -8,7 +8,7 @@ export interface ServiceInfo {
   shaRate: number;
   vendorShare: number;
   facilityShare: number;
-  categoryId: string;
+  id: string;
   capitated: number;
   category: any;
 }
@@ -21,10 +21,27 @@ export interface ServiceWithCategory {
   vendorShare: string;
   facilityShare: string;
   capitated: string;
-  createdAt: string;
+  created_at: string;
   updatedAt: string;
   deletedAt: string | null;
   category: ServiceCategory;
+}
+
+interface FacilityContract {
+  id: string;
+  vendor_code: string;
+  vendor_name: string;
+  facility_code: string;
+  facility_name: string;
+  lot_number: string;
+  lot_name: string;
+  is_active: string;
+  services: Array<{
+    service_id: string;
+    service_code: string;
+    service_name: string;
+    is_active: string;
+  }>;
 }
 
 export type ServiceInfoForm = Omit<ServiceInfo, "serviceId">;
@@ -36,15 +53,25 @@ export const createServiceInfo = async (
   return response.data.data;
 };
 
+// New function to get services by facility code
+export const getServicesByFacilityCode = async (
+  facilityCode: string
+): Promise<FacilityContract[]> => {
+  const response = await axios.get(
+    `/vendor/facility/contracts?facility_code=${facilityCode}`
+  );
+  return response.data;
+};
+
 export const getServiceInfo = async (): Promise<ServiceInfo[]> => {
-  const response = await axios.get(`/services`);
-  return response.data.data;
+  const response = await axios.get(`/lots`);
+  return response.data.lots;
 };
 
 export const getServiceByCategory = async (
-  categoryId: string
+  id: string
 ): Promise<ServiceWithCategory[]> => {
-  const response = await axios.get(`/category/services/${categoryId}`);
+  const response = await axios.get(`/category/services/${id}`);
   return response.data.data;
 };
 

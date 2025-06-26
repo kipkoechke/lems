@@ -10,13 +10,11 @@ import { ServiceWithCategory } from "@/services/apiServices";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface WorkflowState {
-  currentStep:
-    | "basicBooking"
-    // | "registration"
-    // | "recommendation"
-    // | "booking"
+  currentStep: // | "basicBooking"
+  | "registration"
+    | "recommendation"
     | "consent"
-    |"proceedToTests"
+    | "proceedToTests"
     | "serviceInProgress"
     // | "serviceValidation"
     | "service"
@@ -34,6 +32,7 @@ export interface WorkflowState {
   selectedFacility?: Facility;
   selectedPaymentMode?: PaymentMode;
   booking?: Bookings;
+  otp_code?: string; // OTP from booking creation
   consentObtained?: boolean;
   serviceValidated?: boolean;
   serviceCompleted?: boolean;
@@ -44,15 +43,14 @@ export interface WorkflowState {
 }
 
 const initialState: WorkflowState = {
-  currentStep: "basicBooking",
+  currentStep: "registration",
 };
 
 // Update the step order to match our workflow
 export const stepOrder: WorkflowState["currentStep"][] = [
-  "basicBooking",
-  // "registration",
-  // "recommendation",
-  // "booking",
+  // "basicBooking",
+  "registration",
+  "recommendation",
   "consent",
   "proceedToTests",
   "serviceInProgress",
@@ -115,6 +113,9 @@ export const workflowSlice = createSlice({
     setBooking: (state, action: PayloadAction<Bookings>) => {
       state.booking = action.payload;
     },
+    setOtpCode: (state, action: PayloadAction<string>) => {
+      state.otp_code = action.payload;
+    },
     resetWorkflow: () => initialState,
     goToNextStep: (state) => {
       const currentIndex = stepOrder.indexOf(state.currentStep);
@@ -148,6 +149,7 @@ export const {
   approvePayment,
   completeDisbursement,
   setBooking,
+  setOtpCode,
   resetWorkflow,
   goToNextStep,
   goToPreviousStep,
