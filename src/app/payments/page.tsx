@@ -92,12 +92,17 @@ const PaymentReport: React.FC = () => {
     const summaryMap = new Map<string, PaymentSummaryItem>();
 
     pendingBookings.forEach((booking) => {
-      const key = `${booking.facility.id}-${booking.service.category.name}`;
+      const facility = booking.service?.contract?.facility || booking.facility;
+      const serviceName = booking.service?.service?.name || "Unknown Service";
+
+      if (!facility) return; // Skip if no facility data
+
+      const key = `${facility.id}-${serviceName}`;
 
       if (summaryMap.has(key)) {
         const existing = summaryMap.get(key)!;
         existing.patientCount += 1;
-        existing.bookingIds.push(booking.bookingId);
+        existing.bookingIds.push(booking.id || booking.bookingId || "");
         // Recalculate totals
         existing.totalShaAmount = existing.shaRate * existing.patientCount;
         existing.totalFacilityAmount =
@@ -105,14 +110,22 @@ const PaymentReport: React.FC = () => {
         existing.totalVendorAmount =
           existing.vendorShare * existing.patientCount;
       } else {
-        const shaRate = parseFloat(booking.service.shaRate || booking.cost);
-        const facilityShare = parseFloat(booking.service.facilityShare || "0");
-        const vendorShare = parseFloat(booking.service.vendorShare || "0");
+        const shaRate = parseFloat(
+          booking.service?.service?.sha_rate || booking.vendor_share || "0"
+        );
+        const facilityShare = parseFloat(
+          booking.service?.service?.facility_share ||
+            booking.facility_share ||
+            "0"
+        );
+        const vendorShare = parseFloat(
+          booking.service?.service?.vendor_share || booking.vendor_share || "0"
+        );
 
         summaryMap.set(key, {
-          name: booking.facility.name,
-          id: booking.facility.id,
-          serviceCategory: booking.service.category.name,
+          name: facility.name,
+          id: facility.id,
+          serviceCategory: serviceName,
           patientCount: 1,
           shaRate: shaRate,
           facilityShare: facilityShare,
@@ -120,8 +133,8 @@ const PaymentReport: React.FC = () => {
           totalShaAmount: shaRate,
           totalFacilityAmount: facilityShare,
           totalVendorAmount: vendorShare,
-          bookingIds: [booking.bookingId],
-          paymentMode: booking.paymentMode?.paymentModeName || "N/A",
+          bookingIds: [booking.id || booking.bookingId || ""],
+          paymentMode: booking.payment_mode || "N/A",
         });
       }
     });
@@ -136,12 +149,17 @@ const PaymentReport: React.FC = () => {
     const summaryMap = new Map<string, PaymentSummaryItem>();
 
     approvedBookings.forEach((booking) => {
-      const key = `${booking.facility.id}-${booking.service.category.name}`;
+      const facility = booking.service?.contract?.facility || booking.facility;
+      const serviceName = booking.service?.service?.name || "Unknown Service";
+
+      if (!facility) return; // Skip if no facility data
+
+      const key = `${facility.id}-${serviceName}`;
 
       if (summaryMap.has(key)) {
         const existing = summaryMap.get(key)!;
         existing.patientCount += 1;
-        existing.bookingIds.push(booking.bookingId);
+        existing.bookingIds.push(booking.id || booking.bookingId || "");
         // Recalculate totals
         existing.totalShaAmount = existing.shaRate * existing.patientCount;
         existing.totalFacilityAmount =
@@ -149,14 +167,22 @@ const PaymentReport: React.FC = () => {
         existing.totalVendorAmount =
           existing.vendorShare * existing.patientCount;
       } else {
-        const shaRate = parseFloat(booking.service.shaRate || booking.cost);
-        const facilityShare = parseFloat(booking.service.facilityShare || "0");
-        const vendorShare = parseFloat(booking.service.vendorShare || "0");
+        const shaRate = parseFloat(
+          booking.service?.service?.sha_rate || booking.vendor_share || "0"
+        );
+        const facilityShare = parseFloat(
+          booking.service?.service?.facility_share ||
+            booking.facility_share ||
+            "0"
+        );
+        const vendorShare = parseFloat(
+          booking.service?.service?.vendor_share || booking.vendor_share || "0"
+        );
 
         summaryMap.set(key, {
-          name: booking.facility.name,
-          id: booking.facility.id,
-          serviceCategory: booking.service.category.name,
+          name: facility.name,
+          id: facility.id,
+          serviceCategory: serviceName,
           patientCount: 1,
           shaRate: shaRate,
           facilityShare: facilityShare,
@@ -164,8 +190,8 @@ const PaymentReport: React.FC = () => {
           totalShaAmount: shaRate,
           totalFacilityAmount: facilityShare,
           totalVendorAmount: vendorShare,
-          bookingIds: [booking.bookingId],
-          paymentMode: booking.paymentMode?.paymentModeName || "N/A",
+          bookingIds: [booking.id || booking.bookingId || ""],
+          paymentMode: booking.payment_mode || "N/A",
         });
       }
     });

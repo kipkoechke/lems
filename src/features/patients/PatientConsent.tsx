@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 "use client";
 import { goToNextStep, goToPreviousStep } from "@/context/workflowSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
@@ -6,9 +5,7 @@ import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import OTPValidation from "../../components/OTPValidation";
 import StatusCard from "../../components/StatusCard";
-import { usePatientConsentOverride } from "./useConsentOverride";
 import { useOtpValidation } from "./useValidateOtp";
-import { useOtpValidationOverride } from "./useValidateOverride";
 
 const PatientConsent: React.FC = () => {
   const { patient, selectedService, booking, otp_code } = useAppSelector(
@@ -17,32 +14,23 @@ const PatientConsent: React.FC = () => {
 
   console.log("PatientConsent - Workflow state:", {
     patient: patient?.name,
-    booking: booking?.bookingId,
+    booking: booking?.id,
     otp_code,
-    fullWorkflow: useAppSelector((store) => store.workflow),
   });
 
   const dispatch = useAppDispatch();
-  const { requestConsentOtpOverride, isRegistering: isOverrideRegistering } =
-    usePatientConsentOverride();
-  const { validateConsentOverrideOtp, isValidating: isOverrideValidating } =
-    useOtpValidationOverride();
   const { validateOtpMutation, isValidating } = useOtpValidation();
 
   const [showOTP, setShowOTP] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState<string | null>(null);
-  const [generatedOverrideOtp, setGeneratedOverrideOtp] = useState<
-    string | null
-  >(null);
-  const [showOverrideOTP, setShowOverrideOTP] = useState(false);
   const [consentStatus, setConsentStatus] = useState<
     "pending" | "approved" | "rejected"
   >("pending");
   const [otpSent, setOtpSent] = useState(false);
-  const [overrideSent, setOverrideSent] = useState(false);
 
   // Check if booking was created with override
-  const isBookingOverridden = booking?.otpOverridden || false;
+  const isBookingOverridden =
+    booking?.override === "1" || booking?.override === "true";
 
   const handleSendOTP = () => {
     console.log("handleSendOTP called", {
@@ -57,24 +45,17 @@ const PatientConsent: React.FC = () => {
       return;
     }
 
-    // If booking was created with override, skip normal OTP and go to next step
-    if (isBookingOverridden) {
-      console.log(
-        "Booking was created with override, skipping patient consent..."
-      );
-      setConsentStatus("approved");
-      toast.success("Booking was approved via emergency override");
-      setTimeout(() => {
-        dispatch(goToNextStep());
-      }, 1000);
-      return;
-    }
-
-    // OTP should already be available from booking creation
+    // OTP should already be available from booking creation (both normal and override)
     if (otp_code) {
       console.log("OTP found:", otp_code);
       setGeneratedOtp(otp_code);
-      toast.success(`Patient Consent OTP: ${otp_code}`);
+
+      if (isBookingOverridden) {
+        toast.success(`Emergency Override OTP: ${otp_code}`);
+      } else {
+        toast.success(`Patient Consent OTP: ${otp_code}`);
+      }
+
       setTimeout(() => setShowOTP(true), 1000);
       setOtpSent(true);
     } else {
@@ -84,40 +65,9 @@ const PatientConsent: React.FC = () => {
     }
   };
 
-  const handleSendOverrideOTP = () => {
-    if (!booking || !patient) {
-      toast.error("Booking or patient information is missing.");
-      return;
-    }
-
-    setOverrideSent(true);
-    requestConsentOtpOverride(
-      { booking_id: booking.bookingId },
-      {
-        onSuccess: (data) => {
-          if (data.otp_code) {
-            setGeneratedOverrideOtp(data.otp_code);
-            toast.success(`Manager Override OTP: ${data.otp_code}`);
-            setTimeout(() => setShowOverrideOTP(true), 1000);
-            setOverrideSent(false);
-          } else {
-            toast.error("No override OTP code returned from server.");
-            setOverrideSent(false);
-          }
-        },
-        onError: (error) => {
-          console.error("Failed to send override OTP:", error);
-          toast.error("Failed to send override OTP");
-          setOverrideSent(false);
-        },
-      }
-    );
-  };
-
-  const handleValidatePatientOTP = (otp: string) => {
-    console.log("PatientConsent - handleValidatePatientOTP called");
+  const handleValidateOTP = (otp: string) => {
+    console.log("PatientConsent - handleValidateOTP called");
     console.log("PatientConsent - booking object:", booking);
-    console.log("PatientConsent - booking type:", typeof booking);
 
     if (!booking) {
       console.log("PatientConsent - No booking object found");
@@ -125,17 +75,7 @@ const PatientConsent: React.FC = () => {
       return;
     }
 
-    console.log("PatientConsent - Validating OTP with booking:", booking);
-    console.log(
-      "PatientConsent - Available booking fields:",
-      Object.keys(booking)
-    );
-    console.log(
-      "PatientConsent - All booking data:",
-      JSON.stringify(booking, null, 2)
-    );
-
-    // Try different possible fields for booking number
+    // Use the booking number for OTP validation
     const bookingAny = booking as any;
     const bookingNumber =
       booking.booking_number ||
@@ -143,22 +83,12 @@ const PatientConsent: React.FC = () => {
       bookingAny.booking_id ||
       bookingAny.id ||
       bookingAny.number;
-    console.log("=== BOOKING NUMBER DETECTION ===");
-    console.log("PatientConsent - Trying these fields for booking number:");
-    console.log("  booking.booking_number:", booking.booking_number);
-    console.log("  booking.bookingId:", booking.bookingId);
-    console.log("  booking.booking_id:", bookingAny.booking_id);
-    console.log("  booking.id:", bookingAny.id);
-    console.log("  booking.number:", bookingAny.number);
+
     console.log("PatientConsent - Selected booking number:", bookingNumber);
 
     if (!bookingNumber) {
       console.log(
         "PatientConsent - No booking identifier found in booking object"
-      );
-      console.log(
-        "PatientConsent - Available booking fields:",
-        Object.keys(booking)
       );
       toast.error("Booking ID is missing from booking data.");
       return;
@@ -166,80 +96,44 @@ const PatientConsent: React.FC = () => {
 
     const requestPayload = {
       otp_code: otp,
-      booking_number: bookingNumber, // Use booking_number for verifyPatientConsent API
+      booking_number: bookingNumber,
     };
-    console.log(
-      "PatientConsent - Sending validation request with booking_number:",
-      requestPayload
-    );
+    console.log("PatientConsent - Sending validation request:", requestPayload);
 
-    validateOtpMutation(
-      requestPayload, // Use the requestPayload object
-      {
-        onSuccess: (data) => {
-          console.log("Patient consent verification successful:", data);
-          setConsentStatus("approved");
+    validateOtpMutation(requestPayload, {
+      onSuccess: (data) => {
+        console.log("OTP verification successful:", data);
+        setConsentStatus("approved");
+
+        if (isBookingOverridden) {
+          toast.success("Emergency override approved successfully!");
+        } else {
           toast.success("Patient consent verified successfully!");
-          setShowOTP(false);
+        }
 
-          // Proceed to next step
-          setTimeout(() => {
-            dispatch(goToNextStep());
-          }, 1000);
-        },
-        onError: (error) => {
-          console.error("=== PATIENT CONSENT VALIDATION ERROR ===");
-          console.error("Patient consent verification failed:", error);
-          console.error("Error details:", (error as any).response?.data);
-          console.error("Request payload that failed:", requestPayload);
-          console.error("Full error object:", error);
-          toast.error("Invalid OTP. Please try again.");
-        },
-      }
-    );
-  };
+        setShowOTP(false);
 
-  const handleValidateOverrideOTP = (otp: string) => {
-    if (!booking) {
-      toast.error("Booking information is missing.");
-      return;
-    }
-
-    validateConsentOverrideOtp(
-      {
-        booking_id: booking.bookingId,
-        otp_code: otp,
+        // Proceed to next step
+        setTimeout(() => {
+          dispatch(goToNextStep());
+        }, 1000);
       },
-      {
-        onSuccess: (data) => {
-          console.log("Override OTP validation successful:", data);
-          setConsentStatus("approved");
-          toast.success("Manager override approved successfully!");
-          setShowOverrideOTP(false);
-
-          // Proceed to next step
-          setTimeout(() => {
-            dispatch(goToNextStep());
-          }, 1000);
-        },
-        onError: (error) => {
-          console.error("Override OTP validation failed:", error);
-          toast.error("Invalid override OTP. Please try again.");
-        },
-      }
-    );
+      onError: (error) => {
+        console.error("OTP verification failed:", error);
+        toast.error("Invalid OTP. Please try again.");
+      },
+    });
   };
 
   const handleCancelOTP = () => {
     setShowOTP(false);
     setGeneratedOtp(null);
-    toast("Patient consent cancelled");
-  };
 
-  const handleCancelOverrideOTP = () => {
-    setShowOverrideOTP(false);
-    setGeneratedOverrideOtp(null);
-    toast("Override OTP cancelled");
+    if (isBookingOverridden) {
+      toast("Emergency override cancelled");
+    } else {
+      toast("Patient consent cancelled");
+    }
   };
 
   const handleRejectConsent = () => {
@@ -317,28 +211,10 @@ const PatientConsent: React.FC = () => {
             <OTPValidation
               title="Patient Consent Verification"
               description={`Enter the OTP sent to ${patient.name} (${patient.phone}) to confirm consent for ${selectedService.serviceName}.`}
-              onValidate={handleValidatePatientOTP}
+              onValidate={handleValidateOTP}
               onCancel={handleCancelOTP}
               processingLabel={isValidating ? "Verifying..." : "Verify Consent"}
               initialOtp={generatedOtp ?? ""}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Override OTP Modal */}
-      {showOverrideOTP && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <OTPValidation
-              title="Manager Override OTP"
-              description="Enter the override OTP sent to the facility manager to approve this booking without patient consent."
-              onValidate={handleValidateOverrideOTP}
-              onCancel={handleCancelOverrideOTP}
-              processingLabel={
-                isOverrideValidating ? "Verifying..." : "Verify Override"
-              }
-              initialOtp={generatedOverrideOtp ?? ""}
             />
           </div>
         </div>
@@ -499,57 +375,12 @@ const PatientConsent: React.FC = () => {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    OTP Already Sent
+                    OTP Ready
                   </>
+                ) : isBookingOverridden ? (
+                  "Get Override OTP"
                 ) : (
-                  "Get OTP"
-                )}
-              </button>
-
-              <button
-                onClick={handleSendOverrideOTP}
-                disabled={isOverrideRegistering || overrideSent}
-                className={`${buttonClasses} bg-amber-600 hover:bg-amber-700 text-white focus:ring-amber-500 disabled:bg-gray-400`}
-              >
-                {isOverrideRegistering || overrideSent ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Requesting Override...
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Manager Override
-                  </>
+                  "Get Consent OTP"
                 )}
               </button>
             </div>

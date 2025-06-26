@@ -3,7 +3,6 @@ export interface Equipment {
   equipmentId: string;
   equipmentName: string;
   id: string;
-  id: string;
   serialNumber: string;
   installationDate: Date;
   status: string;

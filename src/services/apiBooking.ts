@@ -205,17 +205,21 @@ export const getBookings = async (
   return response.data.bookings.data;
 };
 
-export const approveBooking = async (bookingId: string): Promise<Bookings> => {
+export const approveBooking = async (
+  booking_number: string
+): Promise<Bookings> => {
   const response = await axios.post("/booking/approval", {
-    booking_number: bookingId, // Use the booking ID directly
+    booking_number: booking_number,
     decision: "approve",
   });
   return response.data.data;
 };
 
-export const rejectBooking = async (bookingId: string): Promise<Bookings> => {
+export const rejectBooking = async (
+  booking_number: string
+): Promise<Bookings> => {
   const response = await axios.post("/booking/approval", {
-    booking_number: bookingId, // Use the booking ID directly
+    booking_number: booking_number,
     decision: "reject",
   });
   return response.data.data;

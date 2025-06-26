@@ -108,7 +108,7 @@ function PatientBookings() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {bookings.map((booking) => (
-                  <tr key={booking.bookingId} className="hover:bg-gray-50">
+                  <tr key={booking.id} className="hover:bg-gray-50">
                     {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
                         {booking.bookingId.slice(-8)}
@@ -117,76 +117,93 @@ function PatientBookings() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div>
                         <div className="font-medium">
-                          {booking.service.serviceName}
+                          {booking.service?.service?.name || "N/A"}
                         </div>
                         <div className="text-gray-500 text-xs">
-                          {booking.service.category.name}
+                          {booking.service?.service?.code || "N/A"}
                         </div>
                         <div className="text-gray-400 text-xs">
-                          {booking.service.description}
+                          Service ID: {booking.service?.service?.id || "N/A"}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div>
                         <div className="font-medium">
-                          {booking.facility.name}
+                          {booking.service?.contract?.facility?.name || "N/A"}
                         </div>
                         <div className="text-gray-500 text-xs">
-                          Code: {booking.facility.code}
+                          Code:{" "}
+                          {booking.service?.contract?.facility?.code || "N/A"}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div>
                         <div className="font-medium">
-                          {new Date(booking.bookingDate).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )}
+                          {booking.booking_date
+                            ? new Date(booking.booking_date).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )
+                            : "N/A"}
                         </div>
                         <div className="text-gray-500 text-xs">
-                          {new Date(booking.bookingDate).toLocaleTimeString(
-                            "en-US",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
+                          {booking.booking_date
+                            ? new Date(booking.booking_date).toLocaleTimeString(
+                                "en-US",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )
+                            : "N/A"}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          booking.approval === "pending"
+                          (booking.approval_status || booking.approval) ===
+                          "pending"
                             ? "bg-yellow-100 text-yellow-800"
-                            : booking.approval === "approved"
+                            : (booking.approval_status || booking.approval) ===
+                              "approved"
                             ? "bg-green-100 text-green-800"
-                            : booking.approval === "rejected"
+                            : (booking.approval_status || booking.approval) ===
+                              "rejected"
                             ? "bg-red-100 text-red-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {booking.approval}
+                        {booking.approval_status ||
+                          booking.approval ||
+                          "pending"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="font-medium">
-                        KES {parseInt(booking.cost).toLocaleString()}
+                        KES{" "}
+                        {booking.vendor_share
+                          ? parseInt(booking.vendor_share).toLocaleString()
+                          : "0"}
                       </div>
                       <div className="text-xs text-gray-500">
                         SHA Rate:{" "}
-                        {parseInt(booking.service.shaRate).toLocaleString()}
+                        {booking.service?.service?.sha_rate
+                          ? parseInt(
+                              booking.service.service.sha_rate
+                            ).toLocaleString()
+                          : "0"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                        {booking.paymentMode?.paymentModeName || "N/A"}
+                        {booking.payment_mode || "N/A"}
                       </span>
                     </td>
                     {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

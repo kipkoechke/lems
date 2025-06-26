@@ -102,8 +102,15 @@ const BookingReport: React.FC = () => {
 
     try {
       for (const bookingId of selectedIds) {
+        // Find the booking to get the booking_number
+        const booking = bookings?.find((b) => b.id === bookingId);
+        if (!booking) {
+          toast.error(`Booking ${bookingId} not found`);
+          continue;
+        }
+
         await new Promise<void>((resolve) => {
-          approve(bookingId, {
+          approve(booking.booking_number, {
             onSettled: () => resolve(),
           });
         });
@@ -126,8 +133,15 @@ const BookingReport: React.FC = () => {
 
     try {
       for (const bookingId of selectedIds) {
+        // Find the booking to get the booking_number
+        const booking = bookings?.find((b) => b.id === bookingId);
+        if (!booking) {
+          toast.error(`Booking ${bookingId} not found`);
+          continue;
+        }
+
         await new Promise<void>((resolve) => {
-          reject(bookingId, {
+          reject(booking.booking_number, {
             onSettled: () => resolve(),
           });
         });
@@ -144,8 +158,15 @@ const BookingReport: React.FC = () => {
   };
 
   const handleApproval = (bookingId: string) => {
+    // Find the booking to get the booking_number
+    const booking = bookings?.find((b) => b.id === bookingId);
+    if (!booking) {
+      toast.error("Booking not found");
+      return;
+    }
+
     setApprovingIds((prev) => new Set(prev).add(bookingId));
-    approve(bookingId, {
+    approve(booking.booking_number, {
       onSettled: () => {
         setApprovingIds((prev) => {
           const newSet = new Set(prev);
@@ -158,8 +179,15 @@ const BookingReport: React.FC = () => {
   };
 
   const handleRejection = (bookingId: string) => {
+    // Find the booking to get the booking_number
+    const booking = bookings?.find((b) => b.id === bookingId);
+    if (!booking) {
+      toast.error("Booking not found");
+      return;
+    }
+
     setApprovingIds((prev) => new Set(prev).add(bookingId));
-    reject(bookingId, {
+    reject(booking.booking_number, {
       onSettled: () => {
         setApprovingIds((prev) => {
           const newSet = new Set(prev);
