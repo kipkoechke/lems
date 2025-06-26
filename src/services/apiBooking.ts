@@ -212,7 +212,7 @@ export const approveBooking = async (
     booking_number: booking_number,
     decision: "approve",
   });
-  return response.data.data;
+  return response.data.booking;
 };
 
 export const rejectBooking = async (
@@ -222,7 +222,7 @@ export const rejectBooking = async (
     booking_number: booking_number,
     decision: "reject",
   });
-  return response.data.data;
+  return response.data.booking;
 };
 
 export const getServiceBookingFacility = async (
