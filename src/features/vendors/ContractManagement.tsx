@@ -2,6 +2,7 @@
 
 import { useFacilities } from "@/features/facilities/useFacilities";
 import { useLots } from "@/features/lots/useLots";
+import { useLotWithServices } from "@/features/lots/useLotWithServices";
 import { Contract, ContractFilterParams } from "@/services/apiVendors";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -62,6 +63,12 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
     null
   );
+
+  // Get lot services when a contract is selected for services management
+  const selectedLotNumber = selectedContract?.lot_number || "";
+  const { services: lotServices, isLoading: lotServicesLoading } =
+    useLotWithServices(selectedLotNumber);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
@@ -72,14 +79,17 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   const [vendorSearch, setVendorSearch] = useState<string>("");
   const [facilitySearch, setFacilitySearch] = useState<string>("");
   const [lotSearch, setLotSearch] = useState<string>("");
+  const [serviceSearch, setServiceSearch] = useState<string>("");
   const [isVendorDropdownOpen, setIsVendorDropdownOpen] = useState(false);
   const [isFacilityDropdownOpen, setIsFacilityDropdownOpen] = useState(false);
   const [isLotDropdownOpen, setIsLotDropdownOpen] = useState(false);
+  const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
 
   // Search refs
   const vendorSearchRef = useRef<HTMLInputElement>(null);
   const facilitySearchRef = useRef<HTMLInputElement>(null);
   const lotSearchRef = useRef<HTMLInputElement>(null);
+  const serviceSearchRef = useRef<HTMLInputElement>(null);
 
   // Form state
   const [contractFormData, setContractFormData] = useState<ContractFormData>({
@@ -135,10 +145,29 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     )
     .slice(0, 50);
 
+  // Filter services based on search term
+  const filteredServices = lotServices
+    ?.filter(
+      (service) =>
+        service.name
+          ?.toLowerCase()
+          .includes(serviceSearch.toLowerCase()) ||
+        service.code
+          ?.toLowerCase()
+          .includes(serviceSearch.toLowerCase())
+    )
+    .slice(0, 50);
+
   // Get selected items
-  const selectedVendor = vendors?.find((v) => v.code === contractFormData.vendor_code);
-  const selectedFacilityDropdown = facilities?.find((f) => f.code === contractFormData.facility_code);
-  const selectedLot = lots?.find((l) => l.number === contractFormData.lot_number);
+  const selectedVendor = vendors?.find(
+    (v) => v.code === contractFormData.vendor_code
+  );
+  const selectedFacilityDropdown = facilities?.find(
+    (f) => f.code === contractFormData.facility_code
+  );
+  const selectedLot = lots?.find(
+    (l) => l.number === contractFormData.lot_number
+  );
 
   // Form handlers
   const resetForm = () => {
@@ -157,9 +186,11 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     setVendorSearch("");
     setFacilitySearch("");
     setLotSearch("");
+    setServiceSearch("");
     setIsVendorDropdownOpen(false);
     setIsFacilityDropdownOpen(false);
     setIsLotDropdownOpen(false);
+    setIsServiceDropdownOpen(false);
   };
 
   const openModal = (
@@ -177,7 +208,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
       });
       setServicesFormData({
         contract_id: contract.id,
-        services: contract.services.map((s) => s.service_code),
+        services: [], // Start with empty array for adding new services
       });
     } else {
       resetForm();
@@ -227,19 +258,19 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
   // Dropdown handlers
   const handleVendorSelect = (vendor: any) => {
-    setContractFormData(prev => ({...prev, vendor_code: vendor.code}));
+    setContractFormData((prev) => ({ ...prev, vendor_code: vendor.code }));
     setIsVendorDropdownOpen(false);
     setVendorSearch("");
   };
 
   const handleFacilitySelectDropdown = (facility: any) => {
-    setContractFormData(prev => ({...prev, facility_code: facility.code}));
+    setContractFormData((prev) => ({ ...prev, facility_code: facility.code }));
     setIsFacilityDropdownOpen(false);
     setFacilitySearch("");
   };
 
   const handleLotSelect = (lot: any) => {
-    setContractFormData(prev => ({...prev, lot_number: lot.number}));
+    setContractFormData((prev) => ({ ...prev, lot_number: lot.number }));
     setIsLotDropdownOpen(false);
     setLotSearch("");
   };
@@ -271,20 +302,42 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     }
   };
 
+  const toggleServiceDropdown = () => {
+    setIsServiceDropdownOpen(!isServiceDropdownOpen);
+    if (!isServiceDropdownOpen && serviceSearchRef.current) {
+      setTimeout(() => serviceSearchRef.current?.focus(), 100);
+    }
+  };
+
+  const handleServiceToggle = (serviceCode: string) => {
+    setServicesFormData((prev) => {
+      const isSelected = prev.services.includes(serviceCode);
+      const newServices = isSelected
+        ? prev.services.filter((code) => code !== serviceCode)
+        : [...prev.services, serviceCode];
+
+      return {
+        ...prev,
+        services: newServices,
+      };
+    });
+  };
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      if (!target.closest('.dropdown-container')) {
+      if (!target.closest(".dropdown-container")) {
         setIsVendorDropdownOpen(false);
         setIsFacilityDropdownOpen(false);
         setIsLotDropdownOpen(false);
+        setIsServiceDropdownOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -576,7 +629,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                   >
                                     <FaStethoscope className="text-green-500" />{" "}
-                                    Manage Services
+                                    Add Services
                                   </button>
                                 </div>
                               </div>
@@ -646,14 +699,22 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                     disabled={!!vendorCode || vendorsLoading}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
                   >
-                    <span className={selectedVendor ? "text-gray-900" : "text-gray-500"}>
+                    <span
+                      className={
+                        selectedVendor ? "text-gray-900" : "text-gray-500"
+                      }
+                    >
                       {vendorsLoading
                         ? "Loading vendors..."
                         : selectedVendor
                         ? `${selectedVendor.name} (${selectedVendor.code})`
                         : "Select a vendor"}
                     </span>
-                    <FaChevronDown className={`text-gray-400 transition-transform ${isVendorDropdownOpen ? "rotate-180" : ""}`} />
+                    <FaChevronDown
+                      className={`text-gray-400 transition-transform ${
+                        isVendorDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
                   </button>
 
                   {isVendorDropdownOpen && (
@@ -710,14 +771,24 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                     disabled={facilitiesLoading}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
                   >
-                    <span className={selectedFacilityDropdown ? "text-gray-900" : "text-gray-500"}>
+                    <span
+                      className={
+                        selectedFacilityDropdown
+                          ? "text-gray-900"
+                          : "text-gray-500"
+                      }
+                    >
                       {facilitiesLoading
                         ? "Loading facilities..."
                         : selectedFacilityDropdown
                         ? `${selectedFacilityDropdown.name} (${selectedFacilityDropdown.code})`
                         : "Select a facility"}
                     </span>
-                    <FaChevronDown className={`text-gray-400 transition-transform ${isFacilityDropdownOpen ? "rotate-180" : ""}`} />
+                    <FaChevronDown
+                      className={`text-gray-400 transition-transform ${
+                        isFacilityDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
                   </button>
 
                   {isFacilityDropdownOpen && (
@@ -737,12 +808,15 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                         </div>
                       </div>
                       <div className="max-h-60 overflow-y-auto">
-                        {filteredFacilitiesDropdown && filteredFacilitiesDropdown.length > 0 ? (
+                        {filteredFacilitiesDropdown &&
+                        filteredFacilitiesDropdown.length > 0 ? (
                           filteredFacilitiesDropdown.map((facility) => (
                             <div
                               key={facility.id}
                               className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
-                              onClick={() => handleFacilitySelectDropdown(facility)}
+                              onClick={() =>
+                                handleFacilitySelectDropdown(facility)
+                              }
                             >
                               <div className="font-semibold text-gray-900">
                                 {facility.name}
@@ -774,14 +848,22 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                     disabled={lotsLoading}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
                   >
-                    <span className={selectedLot ? "text-gray-900" : "text-gray-500"}>
+                    <span
+                      className={
+                        selectedLot ? "text-gray-900" : "text-gray-500"
+                      }
+                    >
                       {lotsLoading
                         ? "Loading lots..."
                         : selectedLot
                         ? `${selectedLot.name} (Lot ${selectedLot.number})`
                         : "Select a lot"}
                     </span>
-                    <FaChevronDown className={`text-gray-400 transition-transform ${isLotDropdownOpen ? "rotate-180" : ""}`} />
+                    <FaChevronDown
+                      className={`text-gray-400 transition-transform ${
+                        isLotDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
                   </button>
 
                   {isLotDropdownOpen && (
@@ -874,70 +956,223 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-gradient-to-r from-green-600 to-blue-600 px-6 py-4">
               <h2 className="text-xl font-bold text-white">
-                Manage Contract Services
+                Add Services to Contract
               </h2>
               <p className="text-green-100 text-sm">
                 {selectedContract.vendor_name} -{" "}
-                {selectedContract.facility_name}
+                {selectedContract.facility_name} (Lot{" "}
+                {selectedContract.lot_number})
               </p>
             </div>
 
             <form onSubmit={handleServicesSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Current Services
+                  Contract ID
                 </label>
-                <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
-                  {selectedContract.services.map((service) => (
-                    <div
-                      key={service.service_id}
-                      className="flex items-center justify-between bg-gray-50 p-2 rounded"
-                    >
-                      <div>
-                        <span className="font-medium">
-                          {service.service_name}
-                        </span>
-                        <span className="text-sm text-gray-500 ml-2">
-                          ({service.service_code})
-                        </span>
-                      </div>
-                      <span
-                        className={`text-xs px-2 py-1 rounded ${
-                          service.is_active === "1"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {service.is_active === "1" ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                  ))}
+                <input
+                  type="text"
+                  value={selectedContract.id}
+                  disabled
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                />
+                <div className="text-sm text-gray-500 mt-1">
+                  This is the contract ID that services will be added to
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Update Service Codes
+                  Current Services ({selectedContract.services.length})
                 </label>
-                <textarea
-                  value={servicesFormData.services.join("\n")}
-                  onChange={(e) =>
-                    setServicesFormData({
-                      ...servicesFormData,
-                      services: e.target.value
-                        .split("\n")
-                        .filter((s) => s.trim()),
-                    })
-                  }
-                  placeholder="Enter service codes, one per line..."
-                  rows={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-                <div className="text-sm text-gray-500 mt-1">
-                  Enter one service code per line. This will replace all current
-                  services.
+                <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                  {selectedContract.services.length > 0 ? (
+                    selectedContract.services.map((service) => (
+                      <div
+                        key={service.service_id}
+                        className="flex items-center justify-between bg-white p-2 rounded shadow-sm"
+                      >
+                        <div>
+                          <span className="font-medium text-gray-900">
+                            {service.service_name}
+                          </span>
+                          <span className="text-sm text-gray-500 ml-2">
+                            ({service.service_code})
+                          </span>
+                        </div>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            service.is_active === "1"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {service.is_active === "1" ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center text-gray-500 py-4">
+                      No services currently assigned to this contract
+                    </div>
+                  )}
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Services to Add
+                </label>
+                <div className="relative dropdown-container">
+                  <button
+                    type="button"
+                    onClick={toggleServiceDropdown}
+                    disabled={lotServicesLoading}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <span
+                      className={
+                        servicesFormData.services.length > 0
+                          ? "text-gray-900"
+                          : "text-gray-500"
+                      }
+                    >
+                      {lotServicesLoading
+                        ? "Loading available services..."
+                        : servicesFormData.services.length > 0
+                        ? `${servicesFormData.services.length} service(s) selected`
+                        : "Select services to add"}
+                    </span>
+                    <FaChevronDown
+                      className={`text-gray-400 transition-transform ${
+                        isServiceDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {isServiceDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                      <div className="p-4 border-b border-gray-100">
+                        <div className="relative">
+                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <input
+                            ref={serviceSearchRef}
+                            type="text"
+                            placeholder="Search services..."
+                            value={serviceSearch}
+                            onChange={(e) => setServiceSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {filteredServices && filteredServices.length > 0 ? (
+                          filteredServices.map((service) => {
+                            const isSelected =
+                              servicesFormData.services.includes(
+                                service.code
+                              );
+                            const isCurrentlyInContract =
+                              selectedContract.services.some(
+                                (s) => s.service_code === service.code
+                              );
+
+                            return (
+                              <div
+                                key={service.id}
+                                className={`px-4 py-3 cursor-pointer transition-colors ${
+                                  isCurrentlyInContract
+                                    ? "bg-gray-100 cursor-not-allowed opacity-50"
+                                    : isSelected
+                                    ? "bg-green-50 hover:bg-green-100"
+                                    : "hover:bg-gray-50"
+                                }`}
+                                onClick={() =>
+                                  !isCurrentlyInContract &&
+                                  handleServiceToggle(service.code)
+                                }
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="font-semibold text-gray-900">
+                                      {service.name}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                      Code: {service.code}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {isCurrentlyInContract && (
+                                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                        Already Added
+                                      </span>
+                                    )}
+                                    {isSelected && !isCurrentlyInContract && (
+                                      <FaCheck className="text-green-600" />
+                                    )}
+                                    <span
+                                      className={`text-xs px-2 py-1 rounded ${
+                                        service.is_active === "1"
+                                          ? "bg-green-100 text-green-800"
+                                          : "bg-red-100 text-red-800"
+                                      }`}
+                                    >
+                                      {service.is_active === "1"
+                                        ? "Active"
+                                        : "Inactive"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="px-4 py-8 text-center text-gray-500">
+                            {lotServicesLoading
+                              ? "Loading services..."
+                              : "No services found for this lot"}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="text-sm text-gray-500 mt-1">
+                  Services are loaded based on the contract's lot number (
+                  {selectedContract.lot_number})
+                </div>
+              </div>
+
+              {servicesFormData.services.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Selected Services ({servicesFormData.services.length})
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {servicesFormData.services.map((serviceCode) => {
+                      const service = filteredServices?.find(
+                        (s) => s.code === serviceCode
+                      );
+                      return (
+                        <span
+                          key={serviceCode}
+                          className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
+                        >
+                          {service?.name || serviceCode}
+                          <button
+                            type="button"
+                            onClick={() => handleServiceToggle(serviceCode)}
+                            className="ml-1 hover:text-green-600"
+                          >
+                            <FaTimes className="w-3 h-3" />
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-6">
                 <button
@@ -949,10 +1184,14 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                 </button>
                 <button
                   type="submit"
-                  disabled={isUpdating}
+                  disabled={
+                    isUpdating || servicesFormData.services.length === 0
+                  }
                   className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:from-green-700 hover:to-blue-700 transition-all disabled:opacity-50"
                 >
-                  {isUpdating ? "Updating..." : "Update Services"}
+                  {isUpdating
+                    ? "Adding Services..."
+                    : `Add ${servicesFormData.services.length} Service(s)`}
                 </button>
               </div>
             </form>
