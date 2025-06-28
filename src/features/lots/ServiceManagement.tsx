@@ -15,7 +15,7 @@ import {
 } from "react-icons/fa";
 import { useCreateService } from "./useCreateService";
 import { useDeleteService } from "./useDeleteService";
-import { useServices } from "./useServices";
+import { useLotWithServices } from "./useLotWithServices";
 import { useUpdateService } from "./useUpdateService";
 
 interface ServiceFormData {
@@ -32,10 +32,10 @@ const ServiceManagement: React.FC = () => {
   const params = useParams();
   const searchParams = useSearchParams();
 
-  const lotId = params.lotId as string;
+  const lotNumber = params.lotNumber as string;
   const lotName = searchParams.get("name") || "Unknown Lot";
 
-  const { services, isLoading, error, refetch } = useServices();
+  const { lot, services, isLoading, error, refetch } = useLotWithServices(lotNumber);
   const createServiceMutation = useCreateService();
   const updateServiceMutation = useUpdateService();
   const deleteServiceMutation = useDeleteService();
@@ -68,7 +68,6 @@ const ServiceManagement: React.FC = () => {
   // Filter services based on search and status for this lot
   const filteredServices =
     services?.filter((service) => {
-      const belongsToLot = service.lot_id === lotId;
       const matchesSearch =
         service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.code.toLowerCase().includes(searchTerm.toLowerCase());
@@ -76,7 +75,7 @@ const ServiceManagement: React.FC = () => {
         statusFilter === "all" ||
         (statusFilter === "active" && service.is_active === "1") ||
         (statusFilter === "inactive" && service.is_active === "0");
-      return belongsToLot && matchesSearch && matchesStatus;
+      return matchesSearch && matchesStatus;
     }) || [];
 
   // Modal handlers
@@ -126,13 +125,13 @@ const ServiceManagement: React.FC = () => {
     try {
       if (modalType === "create") {
         await createServiceMutation.mutateAsync({
-          lot_id: lotId,
+          lot_id: lot?.id || "",
           ...formData,
         });
       } else if (modalType === "edit" && selectedService) {
         await updateServiceMutation.mutateAsync({
           id: selectedService.id,
-          lot_id: lotId,
+          lot_id: lot?.id || "",
           ...formData,
         });
       }
@@ -229,7 +228,7 @@ const ServiceManagement: React.FC = () => {
                 </h1>
                 <p className="text-gray-600 mt-1">
                   Managing services for lot:{" "}
-                  <span className="font-semibold">{lotName}</span>
+                  <span className="font-semibold">{lot?.name || lotName}</span>
                 </p>
               </div>
             </div>

@@ -51,9 +51,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
   // State management
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState<
-    "create" | "edit" | "view" | "services"
-  >("create");
+  const [modalType, setModalType] = useState<"create" | "edit" | "services">(
+    "create"
+  );
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
     null
   );
@@ -108,7 +108,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   };
 
   const openModal = (
-    type: "create" | "edit" | "view" | "services",
+    type: "create" | "edit" | "services",
     contract?: Contract
   ) => {
     setModalType(type);
@@ -443,7 +443,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                               <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
                                 <div className="p-1">
                                   <button
-                                    onClick={() => openModal("view", contract)}
+                                    onClick={() =>
+                                      router.push(`/contracts/${contract.id}`)
+                                    }
                                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                   >
                                     <FaEye className="text-blue-500" /> View
@@ -530,7 +532,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   required
-                  disabled={modalType === "view" || !!vendorCode}
+                  disabled={!!vendorCode}
                 />
               </div>
 
@@ -548,7 +550,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   required
-                  disabled={modalType === "view"}
+                  disabled={false}
                 >
                   <option value="">Select a facility</option>
                   {facilities?.map((facility) => (
@@ -574,7 +576,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   required
-                  disabled={modalType === "view"}
+                  disabled={false}
                 />
               </div>
 
@@ -591,43 +593,12 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                     })
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  disabled={modalType === "view"}
+                  disabled={false}
                 >
                   <option value="1">Active</option>
                   <option value="0">Inactive</option>
                 </select>
               </div>
-
-              {modalType === "view" && selectedContract && (
-                <div className="space-y-4 pt-4 border-t border-gray-200">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Services
-                    </label>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {selectedContract.services.map((service) => (
-                        <div
-                          key={service.service_id}
-                          className="flex items-center justify-between bg-gray-50 p-2 rounded"
-                        >
-                          <span className="text-sm">
-                            {service.service_name}
-                          </span>
-                          <span
-                            className={`text-xs px-2 py-1 rounded ${
-                              service.is_active === "1"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {service.is_active === "1" ? "Active" : "Inactive"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <div className="flex gap-3 pt-6">
                 <button
@@ -635,17 +606,15 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                   onClick={closeModal}
                   className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
                 >
-                  {modalType === "view" ? "Close" : "Cancel"}
+                  Cancel
+                </button>{" "}
+                <button
+                  type="submit"
+                  disabled={isCreating}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50"
+                >
+                  {isCreating ? "Creating..." : "Create Contract"}
                 </button>
-                {modalType !== "view" && (
-                  <button
-                    type="submit"
-                    disabled={isCreating}
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50"
-                  >
-                    {isCreating ? "Creating..." : "Create Contract"}
-                  </button>
-                )}
               </div>
             </form>
           </div>

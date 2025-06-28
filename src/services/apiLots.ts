@@ -67,6 +67,11 @@ export interface ServicesResponse {
   services: Service[];
 }
 
+export interface LotWithServicesResponse {
+  lot: Lot;
+  services: Service[];
+}
+
 // Lot CRUD operations
 export const getLots = async (): Promise<Lot[]> => {
   const response = await axios.get<LotsResponse>("/lots");
@@ -109,4 +114,10 @@ export const updateService = async (
 
 export const deleteService = async (serviceCode: string): Promise<void> => {
   await axios.post("/services/delete", { service_code: serviceCode });
+};
+
+// Get lot with its services
+export const getLotWithServices = async (lotNumber: string): Promise<LotWithServicesResponse> => {
+  const response = await axios.get<LotWithServicesResponse>(`/lots?lot_number=${lotNumber}`);
+  return response.data;
 };

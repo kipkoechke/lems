@@ -142,8 +142,8 @@ const LotManagement: React.FC = () => {
     });
   };
 
-  const navigateToServices = (lotId: string, lotName: string) => {
-    router.push(`/lots/${lotId}/services?name=${encodeURIComponent(lotName)}`);
+  const navigateToServices = (lotNumber: string, lotName: string) => {
+    router.push(`/lots/${lotNumber}/services?name=${encodeURIComponent(lotName)}`);
   };
 
   if (isLoading) {
@@ -352,7 +352,7 @@ const LotManagement: React.FC = () => {
                                   </button>
                                   <button
                                     onClick={() =>
-                                      navigateToServices(lot.id, lot.name)
+                                      navigateToServices(lot.number, lot.name)
                                     }
                                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                   >
