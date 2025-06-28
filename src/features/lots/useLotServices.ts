@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
 import axios from "@/lib/axios";
+import { useQuery } from "@tanstack/react-query";
 
 interface LotService {
   id: string;

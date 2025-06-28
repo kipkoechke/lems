@@ -149,12 +149,8 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   const filteredServices = lotServices
     ?.filter(
       (service) =>
-        service.name
-          ?.toLowerCase()
-          .includes(serviceSearch.toLowerCase()) ||
-        service.code
-          ?.toLowerCase()
-          .includes(serviceSearch.toLowerCase())
+        service.name?.toLowerCase().includes(serviceSearch.toLowerCase()) ||
+        service.code?.toLowerCase().includes(serviceSearch.toLowerCase())
     )
     .slice(0, 50);
 
@@ -1070,9 +1066,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                         {filteredServices && filteredServices.length > 0 ? (
                           filteredServices.map((service) => {
                             const isSelected =
-                              servicesFormData.services.includes(
-                                service.code
-                              );
+                              servicesFormData.services.includes(service.code);
                             const isCurrentlyInContract =
                               selectedContract.services.some(
                                 (s) => s.service_code === service.code
