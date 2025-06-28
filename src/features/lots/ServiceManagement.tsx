@@ -35,7 +35,8 @@ const ServiceManagement: React.FC = () => {
   const lotNumber = params.lotNumber as string;
   const lotName = searchParams.get("name") || "Unknown Lot";
 
-  const { lot, services, isLoading, error, refetch } = useLotWithServices(lotNumber);
+  const { lot, services, isLoading, error, refetch } =
+    useLotWithServices(lotNumber);
   const createServiceMutation = useCreateService();
   const updateServiceMutation = useUpdateService();
   const deleteServiceMutation = useDeleteService();
@@ -94,7 +95,7 @@ const ServiceManagement: React.FC = () => {
     } else {
       setSelectedService(null);
       setFormData({
-        name: "",
+        name: lot?.name || "",
         code: "",
         is_capitated: false,
         sha_rate: 0,

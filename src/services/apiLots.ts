@@ -117,7 +117,11 @@ export const deleteService = async (serviceCode: string): Promise<void> => {
 };
 
 // Get lot with its services
-export const getLotWithServices = async (lotNumber: string): Promise<LotWithServicesResponse> => {
-  const response = await axios.get<LotWithServicesResponse>(`/lots?lot_number=${lotNumber}`);
+export const getLotWithServices = async (
+  lotNumber: string
+): Promise<LotWithServicesResponse> => {
+  const response = await axios.get<LotWithServicesResponse>(
+    `/lots?lot_number=${lotNumber}`
+  );
   return response.data;
 };

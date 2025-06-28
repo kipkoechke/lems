@@ -143,7 +143,9 @@ const LotManagement: React.FC = () => {
   };
 
   const navigateToServices = (lotNumber: string, lotName: string) => {
-    router.push(`/lots/${lotNumber}/services?name=${encodeURIComponent(lotName)}`);
+    router.push(
+      `/lots/${lotNumber}?name=${encodeURIComponent(lotName)}`
+    );
   };
 
   if (isLoading) {
