@@ -21,6 +21,8 @@ function Sidebar() {
     { href: "/patients", label: "Patients", icon: <HiOutlineUser /> },
     { href: "/equipments", label: "Equipments", icon: <HiOutlineUsers /> },
     { href: "/facilities", label: "Facilities", icon: <HiOutlineUsers /> },
+    { href: "/vendors", label: "Vendors", icon: <HiOutlineUsers /> },
+    { href: "/contracts", label: "Contracts", icon: <HiOutlineUsers /> },
     { href: "/bookings", label: "Services", icon: <HiOutlineUsers /> },
     {
       href: "/payments",
