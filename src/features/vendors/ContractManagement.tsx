@@ -1133,7 +1133,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                   )}
                 </div>
                 <div className="text-sm text-gray-500 mt-1">
-                  Services are loaded based on the contract's lot number (
+                  Services are loaded based on the contract&apos;s lot number (
                   {selectedContract.lot_number})
                 </div>
               </div>
