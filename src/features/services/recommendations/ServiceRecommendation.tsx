@@ -2,7 +2,6 @@
 
 import {
   goToNextStep,
-  goToPreviousStep,
   selectService,
   setBooking,
   setOtpCode,
@@ -14,10 +13,11 @@ import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import {
+  FaArrowRight,
   FaCalendarAlt,
   FaCheckCircle,
   FaExclamationTriangle,
-  FaSyncAlt,
+  FaHospital,
 } from "react-icons/fa";
 import { FaStethoscope } from "react-icons/fa6";
 
@@ -258,327 +258,418 @@ const ServiceRecommendation: React.FC = () => {
   `;
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <form
-        className="bg-white shadow-xl rounded-2xl px-8 py-6 border border-gray-100"
-        onSubmit={handleSubmitBooking}
-      >
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <FaStethoscope className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">
+                  Healthcare Service Booking
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Service Selection & Booking
+                </p>
+              </div>
+            </div>
+            <div className="hidden md:flex items-center gap-2 text-sm text-gray-600">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span>Step 2 of 4</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Progress Indicator */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FaStethoscope className="text-blue-600 text-xl" />
-            </div>
-            Book a Medical Service
-          </h2>
-          <p className="text-gray-600">
-            Complete the form below to schedule your appointment
-          </p>
-
-          {/* Show selected facility info */}
-          {workflow.selectedFacility && (
-            <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-              <p className="text-sm text-purple-800">
-                <strong>Selected Facility:</strong>{" "}
-                {workflow.selectedFacility.name} (
-                {workflow.selectedFacility.code})
-              </p>
-            </div>
-          )}
-
-          {/* Show available categories from contracts */}
-          {contracts.length > 0 && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800 font-semibold mb-2">
-                Available Service Categories:
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {contracts.map((contract) => (
-                  <span
-                    key={contract.id}
-                    className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
-                  >
-                    LOT {contract.lot_number} - {contract.lot_name} (
-                    {
-                      contract.services.filter((s) => s.is_active === "1")
-                        .length
-                    }{" "}
-                    services)
-                  </span>
-                ))}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-gray-400">
+              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                ✓
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Status Indicators */}
-        {bookingCreated && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
-            <div className="flex items-center">
-              <div className="p-1 bg-green-100 rounded-full mr-3">
-                <FaCheckCircle className="w-4 h-4 text-green-600" />
-              </div>
-              <span className="text-green-800 font-semibold">
-                Booking Created Successfully
+              <span className="text-green-600 font-medium">
+                Patient Registered
               </span>
             </div>
-            <p className="text-green-700 text-sm mt-2 ml-8">
-              Booking ID:{" "}
-              <span className="font-mono bg-green-100 px-2 py-1 rounded">
-                {booking?.bookingId || "Generated"}
-              </span>
-              {isOverrideMode
-                ? " - Ready for emergency override verification"
-                : " - Ready for patient consent verification"}
-            </p>
-          </div>
-        )}
-
-        {isOverrideMode && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
-            <div className="flex items-center">
-              <div className="p-1 bg-amber-100 rounded-full mr-3">
-                <FaExclamationTriangle className="w-4 h-4 text-amber-600" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                2
               </div>
-              <span className="text-amber-800 font-semibold">
-                Emergency Override Mode Active
+              <span className="font-semibold text-blue-600">
+                Service Selection
               </span>
             </div>
-            <p className="text-amber-700 text-sm mt-2 ml-8">
-              This booking will bypass patient consent verification and require
-              manager approval.
-            </p>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* 1. Diagnostic Service Selection (Categories) */}
-          <div className="space-y-2">
-            <label className={labelClasses}>
-              <div className="flex items-center gap-2">
-                <FaStethoscope className="text-green-600" />
-                Diagnostic Service
-                {contracts.length > 0 && (
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                    {contracts.length} categories
-                  </span>
-                )}
+            <div className="flex items-center gap-2 text-gray-400">
+              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center font-bold text-sm">
+                3
               </div>
-            </label>
-            <select
-              value={selectedContractId}
-              onChange={(e) => handleContractChange(e.target.value)}
-              className={inputClasses}
-              required
-              disabled={bookingCreated || isServicesLoading || !facilityCode}
-            >
-              <option value="">
-                {isServicesLoading
-                  ? "Loading categories..."
-                  : !facilityCode
-                  ? "Please select a facility first"
-                  : "Select diagnostic service"}
-              </option>
-              {contracts.map((contract) => (
-                <option key={contract.id} value={contract.id}>
-                  LOT {contract.lot_number} - {contract.lot_name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 2. Service Name Selection */}
-          <div className="space-y-2">
-            <label className={labelClasses}>
-              <div className="flex items-center gap-2">
-                <FaStethoscope className="text-blue-600" />
-                Service Name
-                {availableServices.length > 0 && (
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                    {availableServices.length} services
-                  </span>
-                )}
+              <span className="hidden sm:inline">Consent Verification</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-400">
+              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center font-bold text-sm">
+                4
               </div>
-            </label>
-            <select
-              value={selectedServiceId}
-              onChange={(e) => setSelectedServiceId(e.target.value)}
-              className={inputClasses}
-              required
-              disabled={
-                bookingCreated || isServicesLoading || !selectedContractId
-              }
-            >
-              <option value="">
-                {!selectedContractId
-                  ? "Select diagnostic service first"
-                  : availableServices.length === 0
-                  ? "No services available"
-                  : "Select service"}
-              </option>
-              {availableServices.map((service) => (
-                <option key={service.service_code} value={service.service_code}>
-                  {service.service_name} ({service.service_code})
-                </option>
-              ))}
-            </select>
+              <span className="hidden sm:inline">Service Fulfillment</span>
+            </div>
           </div>
-
-          {/* 3. Booking Date & Time */}
-          <div className="space-y-2">
-            <label className={labelClasses}>
-              <div className="flex items-center gap-2">
-                <FaCalendarAlt className="text-pink-600" />
-                Appointment Date & Time
-              </div>
-            </label>
-            <input
-              type="datetime-local"
-              value={bookingDate}
-              onChange={(e) => setBookingDate(e.target.value)}
-              className={inputClasses}
-              required
-              disabled={bookingCreated}
-              min={new Date().toISOString().slice(0, 16)}
-            />
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full w-2/4 transition-all duration-500"></div>
           </div>
         </div>
 
-        {/* Selected Service Details */}
-        {selectedServiceId && selectedContract && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl">
-            {(() => {
-              const selectedService = availableServices.find(
-                (s) => s.service_code === selectedServiceId
-              );
-              return selectedService ? (
+        <form onSubmit={handleSubmitBooking} className="space-y-8">
+          {/* Main Card */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+            {/* Card Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <FaStethoscope className="w-6 h-6 text-white" />
+                </div>
                 <div>
-                  <h4 className="font-semibold text-green-800 mb-2">
-                    Selected Service Details:
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium text-gray-700">
-                        Category:
-                      </span>
-                      <p className="text-gray-600">
-                        LOT {selectedContract.lot_number} -{" "}
-                        {selectedContract.lot_name}
-                      </p>
+                  <h2 className="text-2xl font-bold text-white mb-1">
+                    Service Selection & Booking
+                  </h2>
+                  <p className="text-blue-100">
+                    Choose your medical service and schedule your appointment
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8">
+              {/* Patient & Facility Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                {workflow.patient && (
+                  <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">
+                          {workflow.patient.name.charAt(0)}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-green-800">
+                          Patient: {workflow.patient.name}
+                        </div>
+                        <div className="text-sm text-green-700">
+                          Phone: {workflow.patient.phone}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {workflow.selectedFacility && (
+                  <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+                        <FaHospital className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-purple-800">
+                          Facility: {workflow.selectedFacility.name}
+                        </div>
+                        <div className="text-sm text-purple-700">
+                          Code: {workflow.selectedFacility.code}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Status Indicators */}
+              {bookingCreated && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-green-500 rounded-full mr-3">
+                      <FaCheckCircle className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">
-                        Service:
+                      <span className="text-green-800 font-bold text-lg">
+                        Booking Created Successfully!
                       </span>
-                      <p className="text-gray-600">
-                        {selectedService.service_name}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">
-                        Service Code:
-                      </span>
-                      <p className="text-gray-600">
-                        {selectedService.service_code}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Vendor:</span>
-                      <p className="text-gray-600">
-                        {selectedContract.vendor_name}
+                      <p className="text-green-700 text-sm mt-1">
+                        Booking ID:{" "}
+                        <span className="font-mono bg-green-100 px-2 py-1 rounded text-xs">
+                          {booking?.bookingId || "Generated"}
+                        </span>
+                        {isOverrideMode
+                          ? " - Emergency override mode active"
+                          : " - Ready for patient consent"}
                       </p>
                     </div>
                   </div>
                 </div>
-              ) : null;
-            })()}
-          </div>
-        )}
+              )}
 
-        {/* Emergency Override Toggle & Action Buttons */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-6 border-t border-gray-200">
-          <div className="flex items-center space-x-4">
-            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <FaExclamationTriangle className="text-amber-500" />
-              Emergency Override
-            </label>
-            <button
-              type="button"
-              onClick={() => {
-                if (bookingCreated) {
-                  toast("Cannot change override mode after booking is created");
-                  return;
-                }
-                setIsOverrideMode(!isOverrideMode);
-              }}
-              disabled={bookingCreated}
-              className={`
-                relative inline-flex h-7 w-12 items-center rounded-full
-                transition-all duration-200 ease-in-out
-                focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2
-                ${
-                  bookingCreated
-                    ? "opacity-50 cursor-not-allowed"
-                    : "cursor-pointer"
-                }
-                ${isOverrideMode ? "bg-amber-500 shadow-md" : "bg-gray-300"}
-              `}
-            >
-              <span
-                className={`
-                  inline-block h-5 w-5 transform rounded-full bg-white shadow-sm
-                  transition-transform duration-200 ease-in-out
-                  ${isOverrideMode ? "translate-x-6" : "translate-x-1"}
-                `}
-              />
-            </button>
-            {isOverrideMode && (
-              <span className="text-xs text-amber-600 font-medium">ACTIVE</span>
-            )}
+              {isOverrideMode && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-amber-500 rounded-full mr-3">
+                      <FaExclamationTriangle className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <span className="text-amber-800 font-bold text-lg">
+                        🚨 Emergency Override Mode
+                      </span>
+                      <p className="text-amber-700 text-sm mt-1">
+                        This booking will bypass patient consent and require
+                        manager approval.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Service Selection */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Diagnostic Service Category */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <FaStethoscope className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">
+                        Diagnostic Service
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Select a service category
+                      </p>
+                    </div>
+                  </div>
+
+                  <select
+                    value={selectedContractId}
+                    onChange={(e) => handleContractChange(e.target.value)}
+                    className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all border-2 border-gray-200 hover:border-gray-300"
+                    required
+                    disabled={bookingCreated}
+                  >
+                    <option value="">Select a diagnostic service</option>
+                    {contracts?.map((contract) => (
+                      <option key={contract.id} value={contract.id}>
+                        LOT {contract.lot_number} - {contract.lot_name}(
+                        {
+                          contract.services.filter((s) => s.is_active === "1")
+                            .length
+                        }{" "}
+                        services)
+                      </option>
+                    ))}
+                  </select>
+
+                  {selectedContract && (
+                    <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                      <div className="font-semibold text-blue-800 mb-2">
+                        {selectedContract.lot_name}
+                      </div>
+                      <div className="text-sm text-blue-700">
+                        {
+                          selectedContract.services.filter(
+                            (s) => s.is_active === "1"
+                          ).length
+                        }{" "}
+                        available services
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Individual Service */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <FaStethoscope className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">
+                        Specific Service
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Choose the exact service needed
+                      </p>
+                    </div>
+                  </div>
+
+                  <select
+                    value={selectedServiceId}
+                    onChange={(e) => setSelectedServiceId(e.target.value)}
+                    className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border-2 border-gray-200 hover:border-gray-300"
+                    required
+                    disabled={bookingCreated || !selectedContractId}
+                  >
+                    <option value="">
+                      {selectedContractId
+                        ? "Select a specific service"
+                        : "First select a diagnostic service"}
+                    </option>
+                    {availableServices.map((service) => (
+                      <option
+                        key={service.service_code}
+                        value={service.service_code}
+                      >
+                        {service.service_name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {selectedServiceId &&
+                    availableServices.find(
+                      (s) => s.service_code === selectedServiceId
+                    ) && (
+                      <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+                        <div className="font-semibold text-green-800 mb-1">
+                          {
+                            availableServices.find(
+                              (s) => s.service_code === selectedServiceId
+                            )?.service_name
+                          }
+                        </div>
+                        <div className="text-sm text-green-700">
+                          Code: {selectedServiceId}
+                        </div>
+                      </div>
+                    )}
+                </div>
+              </div>
+
+              {/* Booking Date */}
+              <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <FaCalendarAlt className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">
+                        Appointment Date & Time
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Schedule your service
+                      </p>
+                    </div>
+                  </div>
+
+                  <input
+                    type="datetime-local"
+                    value={bookingDate}
+                    onChange={(e) => setBookingDate(e.target.value)}
+                    className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all border-2 border-gray-200 hover:border-gray-300"
+                    required
+                    disabled={bookingCreated}
+                    min={new Date().toISOString().slice(0, 16)}
+                  />
+                </div>
+
+                {/* Emergency Override Toggle */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                      <FaExclamationTriangle className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">
+                        Emergency Options
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        For urgent medical situations
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4">
+                    <label className="flex items-center justify-between cursor-pointer">
+                      <div>
+                        <div className="font-semibold text-amber-800">
+                          Emergency Override
+                        </div>
+                        <div className="text-sm text-amber-700">
+                          Bypass patient consent for urgent cases
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (bookingCreated) {
+                            toast.error(
+                              "Cannot change override mode after booking is created"
+                            );
+                            return;
+                          }
+                          setIsOverrideMode(!isOverrideMode);
+                        }}
+                        disabled={bookingCreated}
+                        className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 ${
+                          bookingCreated ? "opacity-50 cursor-not-allowed" : ""
+                        } ${isOverrideMode ? "bg-amber-500" : "bg-gray-300"}`}
+                      >
+                        <span
+                          className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform duration-200 ease-in-out ${
+                            isOverrideMode ? "translate-x-7" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() => dispatch(goToPreviousStep())}
-              className={`${buttonClasses} border-2 border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 focus:ring-gray-400`}
-              disabled={bookingCreated}
-            >
-              <span>← Back</span>
-            </button>
+          {/* Submit Button */}
+          <div className="flex justify-center">
             <button
               type="submit"
-              disabled={isCreating}
-              className={`
-                ${buttonClasses}
-                ${
-                  isOverrideMode
-                    ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 focus:ring-amber-500 disabled:from-amber-300 disabled:to-orange-300"
-                    : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-blue-500 disabled:from-gray-400 disabled:to-gray-500"
-                }
-                text-white shadow-lg hover:shadow-xl
-                disabled:text-gray-200 disabled:shadow-none
-                transform hover:scale-105 disabled:hover:scale-100
-                transition-all duration-200
-              `}
+              disabled={isCreating || !selectedServiceId || !bookingDate}
+              className={`inline-flex items-center gap-3 px-12 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl ${
+                !isCreating && selectedServiceId && bookingDate
+                  ? bookingCreated
+                    ? "bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 transform hover:scale-105"
+                    : isOverrideMode
+                    ? "bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700 transform hover:scale-105"
+                    : "bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-white hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 transform hover:scale-105"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
               {isCreating ? (
                 <>
-                  <FaSyncAlt className="animate-spin -ml-1 mr-2 h-4 w-4 text-current" />
-                  Creating...
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Creating Booking...
                 </>
               ) : bookingCreated ? (
-                isOverrideMode ? (
-                  "Go to Override Verification →"
-                ) : (
-                  "Go to Patient Consent →"
-                )
+                <>
+                  <FaCheckCircle className="w-5 h-5" />
+                  Continue to Consent Verification
+                  <FaArrowRight className="w-5 h-5" />
+                </>
               ) : (
-                "Create Booking"
+                <>
+                  {isOverrideMode ? (
+                    <>
+                      <FaExclamationTriangle className="w-5 h-5" />
+                      Create Emergency Booking
+                    </>
+                  ) : (
+                    <>
+                      <FaStethoscope className="w-5 h-5" />
+                      Create Booking
+                    </>
+                  )}
+                  <FaArrowRight className="w-5 h-5" />
+                </>
               )}
             </button>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

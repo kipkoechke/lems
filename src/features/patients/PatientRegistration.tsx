@@ -27,25 +27,34 @@ interface PatientRegistrationProps {
   onCloseModal?: () => void;
 }
 
-// Payment modes
+// Enhanced payment modes with better UI
 const PAYMENT_MODES = [
   {
     paymentModeId: "sha",
     paymentModeName: "SHA",
     description: "Social Health Authority",
     icon: "🏥",
+    color: "from-blue-500 to-blue-600",
+    bgColor: "bg-blue-50 border-blue-200",
+    textColor: "text-blue-800",
   },
   {
     paymentModeId: "cash",
     paymentModeName: "CASH",
     description: "Direct cash payment",
     icon: "💵",
+    color: "from-green-500 to-green-600",
+    bgColor: "bg-green-50 border-green-200",
+    textColor: "text-green-800",
   },
   {
     paymentModeId: "other_insurances",
     paymentModeName: "OTHER INSURANCES",
     description: "Third-party insurance coverage",
     icon: "🛡️",
+    color: "from-purple-500 to-purple-600",
+    bgColor: "bg-purple-50 border-purple-200",
+    textColor: "text-purple-800",
   },
 ];
 
