@@ -1,6 +1,6 @@
+import { LotUpdateRequest, updateLot } from "@/services/apiLots";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { updateLot, LotUpdateRequest } from "@/services/apiLots";
 
 export const useUpdateLot = () => {
   const queryClient = useQueryClient();

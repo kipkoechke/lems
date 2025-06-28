@@ -1,24 +1,22 @@
 "use client";
 
+import { Service } from "@/services/apiLots";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 import {
-  FaPlus,
-  FaEdit,
-  FaTrash,
-  FaEye,
-  FaEllipsisV,
-  FaCheck,
-  FaTimes,
-  FaSearch,
-  FaFilter,
   FaArrowLeft,
+  FaEdit,
+  FaEllipsisV,
+  FaEye,
+  FaPlus,
+  FaSearch,
+  FaTimes,
+  FaTrash,
 } from "react-icons/fa";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { useServices } from "./useServices";
 import { useCreateService } from "./useCreateService";
-import { useUpdateService } from "./useUpdateService";
 import { useDeleteService } from "./useDeleteService";
-import { Service } from "@/services/apiLots";
+import { useServices } from "./useServices";
+import { useUpdateService } from "./useUpdateService";
 
 interface ServiceFormData {
   name: string;
@@ -33,7 +31,7 @@ const ServiceManagement: React.FC = () => {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  
+
   const lotId = params.lotId as string;
   const lotName = searchParams.get("name") || "Unknown Lot";
 
@@ -44,12 +42,18 @@ const ServiceManagement: React.FC = () => {
 
   // State management
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState<"create" | "edit" | "view">("create");
+  const [modalType, setModalType] = useState<"create" | "edit" | "view">(
+    "create"
+  );
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "inactive"
+  >("all");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
+    null
+  );
 
   // Form state
   const [formData, setFormData] = useState<ServiceFormData>({
@@ -62,15 +66,18 @@ const ServiceManagement: React.FC = () => {
   });
 
   // Filter services based on search and status for this lot
-  const filteredServices = services?.filter((service) => {
-    const belongsToLot = service.lot_id === lotId;
-    const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         service.code.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || 
-                         (statusFilter === "active" && service.is_active === "1") ||
-                         (statusFilter === "inactive" && service.is_active === "0");
-    return belongsToLot && matchesSearch && matchesStatus;
-  }) || [];
+  const filteredServices =
+    services?.filter((service) => {
+      const belongsToLot = service.lot_id === lotId;
+      const matchesSearch =
+        service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.code.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && service.is_active === "1") ||
+        (statusFilter === "inactive" && service.is_active === "0");
+      return belongsToLot && matchesSearch && matchesStatus;
+    }) || [];
 
   // Modal handlers
   const openModal = (type: "create" | "edit" | "view", service?: Service) => {
@@ -115,7 +122,7 @@ const ServiceManagement: React.FC = () => {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (modalType === "create") {
         await createServiceMutation.mutateAsync({
@@ -150,7 +157,10 @@ const ServiceManagement: React.FC = () => {
   // Close dropdown when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (activeDropdown && !(event.target as Element).closest(".dropdown-container")) {
+      if (
+        activeDropdown &&
+        !(event.target as Element).closest(".dropdown-container")
+      ) {
         setActiveDropdown(null);
       }
     };
@@ -183,7 +193,9 @@ const ServiceManagement: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="text-center text-red-600">
-              <h2 className="text-xl font-semibold mb-2">Error Loading Services</h2>
+              <h2 className="text-xl font-semibold mb-2">
+                Error Loading Services
+              </h2>
               <p>{error?.message || "Failed to load services"}</p>
               <button
                 onClick={() => refetch()}
@@ -216,7 +228,8 @@ const ServiceManagement: React.FC = () => {
                   Service Management
                 </h1>
                 <p className="text-gray-600 mt-1">
-                  Managing services for lot: <span className="font-semibold">{lotName}</span>
+                  Managing services for lot:{" "}
+                  <span className="font-semibold">{lotName}</span>
                 </p>
               </div>
             </div>
@@ -246,7 +259,11 @@ const ServiceManagement: React.FC = () => {
             <div className="flex gap-4">
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
+                onChange={(e) =>
+                  setStatusFilter(
+                    e.target.value as "all" | "active" | "inactive"
+                  )
+                }
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Status</option>
@@ -289,17 +306,25 @@ const ServiceManagement: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredServices.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                      {searchTerm || statusFilter !== "all" 
+                    <td
+                      colSpan={7}
+                      className="px-6 py-8 text-center text-gray-500"
+                    >
+                      {searchTerm || statusFilter !== "all"
                         ? "No services found matching your criteria"
                         : "No services available. Create your first service to get started."}
                     </td>
                   </tr>
                 ) : (
                   filteredServices.map((service) => (
-                    <tr key={service.id} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={service.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{service.name}</div>
+                        <div className="font-medium text-gray-900">
+                          {service.name}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
@@ -336,7 +361,11 @@ const ServiceManagement: React.FC = () => {
                         <div className="relative dropdown-container">
                           <button
                             onClick={() =>
-                              setActiveDropdown(activeDropdown === service.id ? null : service.id)
+                              setActiveDropdown(
+                                activeDropdown === service.id
+                                  ? null
+                                  : service.id
+                              )
                             }
                             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                           >
@@ -344,14 +373,18 @@ const ServiceManagement: React.FC = () => {
                           </button>
                           {activeDropdown === service.id && (
                             <>
-                              <div className="fixed inset-0 z-30" onClick={() => setActiveDropdown(null)} />
+                              <div
+                                className="fixed inset-0 z-30"
+                                onClick={() => setActiveDropdown(null)}
+                              />
                               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-40 border border-gray-200">
                                 <div className="py-1">
                                   <button
                                     onClick={() => openModal("view", service)}
                                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                   >
-                                    <FaEye className="text-blue-500" /> View Details
+                                    <FaEye className="text-blue-500" /> View
+                                    Details
                                   </button>
                                   <button
                                     onClick={() => openModal("edit", service)}
@@ -360,7 +393,9 @@ const ServiceManagement: React.FC = () => {
                                     <FaEdit className="text-yellow-500" /> Edit
                                   </button>
                                   <button
-                                    onClick={() => setShowDeleteConfirm(service.id)}
+                                    onClick={() =>
+                                      setShowDeleteConfirm(service.id)
+                                    }
                                     className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded flex items-center gap-2"
                                   >
                                     <FaTrash className="text-red-500" /> Delete
@@ -387,8 +422,11 @@ const ServiceManagement: React.FC = () => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold text-gray-900">
-                  {modalType === "create" ? "Add New Service" : 
-                   modalType === "edit" ? "Edit Service" : "Service Details"}
+                  {modalType === "create"
+                    ? "Add New Service"
+                    : modalType === "edit"
+                    ? "Edit Service"
+                    : "Service Details"}
                 </h3>
                 <button
                   onClick={closeModal}
@@ -430,19 +468,25 @@ const ServiceManagement: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       SHA Rate
                     </label>
-                    <p className="text-gray-900">{selectedService?.sha_rate}%</p>
+                    <p className="text-gray-900">
+                      {selectedService?.sha_rate}%
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Vendor Share
                     </label>
-                    <p className="text-gray-900">{selectedService?.vendor_share}%</p>
+                    <p className="text-gray-900">
+                      {selectedService?.vendor_share}%
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Facility Share
                     </label>
-                    <p className="text-gray-900">{selectedService?.facility_share}%</p>
+                    <p className="text-gray-900">
+                      {selectedService?.facility_share}%
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -455,7 +499,9 @@ const ServiceManagement: React.FC = () => {
                           : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {selectedService?.is_active === "1" ? "Active" : "Inactive"}
+                      {selectedService?.is_active === "1"
+                        ? "Active"
+                        : "Inactive"}
                     </span>
                   </div>
                 </div>
@@ -469,7 +515,9 @@ const ServiceManagement: React.FC = () => {
                       type="text"
                       required
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter service name"
                     />
@@ -483,7 +531,9 @@ const ServiceManagement: React.FC = () => {
                       type="text"
                       required
                       value={formData.code}
-                      onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, code: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter service code"
                     />
@@ -500,7 +550,12 @@ const ServiceManagement: React.FC = () => {
                       max="100"
                       required
                       value={formData.sha_rate}
-                      onChange={(e) => setFormData({ ...formData, sha_rate: parseFloat(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          sha_rate: parseFloat(e.target.value) || 0,
+                        })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter SHA rate"
                     />
@@ -517,7 +572,12 @@ const ServiceManagement: React.FC = () => {
                       max="100"
                       required
                       value={formData.vendor_share}
-                      onChange={(e) => setFormData({ ...formData, vendor_share: parseFloat(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          vendor_share: parseFloat(e.target.value) || 0,
+                        })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter vendor share"
                     />
@@ -534,7 +594,12 @@ const ServiceManagement: React.FC = () => {
                       max="100"
                       required
                       value={formData.facility_share}
-                      onChange={(e) => setFormData({ ...formData, facility_share: parseFloat(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          facility_share: parseFloat(e.target.value) || 0,
+                        })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter facility share"
                     />
@@ -545,10 +610,18 @@ const ServiceManagement: React.FC = () => {
                       type="checkbox"
                       id="is_capitated"
                       checked={formData.is_capitated}
-                      onChange={(e) => setFormData({ ...formData, is_capitated: e.target.checked })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          is_capitated: e.target.checked,
+                        })
+                      }
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <label htmlFor="is_capitated" className="text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="is_capitated"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       Capitated Service
                     </label>
                   </div>
@@ -563,10 +636,18 @@ const ServiceManagement: React.FC = () => {
                     </button>
                     <button
                       type="submit"
-                      disabled={createServiceMutation.isPending || updateServiceMutation.isPending}
+                      disabled={
+                        createServiceMutation.isPending ||
+                        updateServiceMutation.isPending
+                      }
                       className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {createServiceMutation.isPending || updateServiceMutation.isPending ? "Saving..." : modalType === "create" ? "Create Service" : "Update Service"}
+                      {createServiceMutation.isPending ||
+                      updateServiceMutation.isPending
+                        ? "Saving..."
+                        : modalType === "create"
+                        ? "Create Service"
+                        : "Update Service"}
                     </button>
                   </div>
                 </form>
@@ -581,7 +662,9 @@ const ServiceManagement: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[100]">
           <div className="bg-white rounded-2xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900">Confirm Delete</h3>
+              <h3 className="text-xl font-semibold text-gray-900">
+                Confirm Delete
+              </h3>
               <button
                 onClick={() => setShowDeleteConfirm(null)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -590,7 +673,8 @@ const ServiceManagement: React.FC = () => {
               </button>
             </div>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this service? This action cannot be undone.
+              Are you sure you want to delete this service? This action cannot
+              be undone.
             </p>
             <div className="flex gap-3">
               <button

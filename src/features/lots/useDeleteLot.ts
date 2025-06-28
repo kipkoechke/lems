@@ -1,6 +1,6 @@
+import { deleteLot } from "@/services/apiLots";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { deleteLot } from "@/services/apiLots";
 
 export const useDeleteLot = () => {
   const queryClient = useQueryClient();

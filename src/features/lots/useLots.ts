@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
 import { getLots } from "@/services/apiLots";
+import { useQuery } from "@tanstack/react-query";
 
 export const useLots = () => {
   const {

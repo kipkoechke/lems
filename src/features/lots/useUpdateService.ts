@@ -1,5 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateService, type ServiceUpdateRequest } from "@/services/apiLots";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useUpdateService = () => {
   const queryClient = useQueryClient();

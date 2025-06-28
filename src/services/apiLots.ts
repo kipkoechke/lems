@@ -93,12 +93,16 @@ export const getServices = async (): Promise<Service[]> => {
   return response.data.services;
 };
 
-export const createService = async (data: ServiceCreateRequest): Promise<Service> => {
+export const createService = async (
+  data: ServiceCreateRequest
+): Promise<Service> => {
   const response = await axios.post<Service>("/services/upsert", data);
   return response.data;
 };
 
-export const updateService = async (data: ServiceUpdateRequest): Promise<Service> => {
+export const updateService = async (
+  data: ServiceUpdateRequest
+): Promise<Service> => {
   const response = await axios.post<Service>("/services/upsert", data);
   return response.data;
 };
