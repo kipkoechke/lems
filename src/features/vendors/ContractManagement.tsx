@@ -4,10 +4,11 @@ import { useFacilities } from "@/features/facilities/useFacilities";
 import { useLots } from "@/features/lots/useLots";
 import { Contract, ContractFilterParams } from "@/services/apiVendors";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   FaArrowLeft,
   FaCheck,
+  FaChevronDown,
   FaEllipsisV,
   FaEye,
   FaFileContract,
@@ -67,6 +68,19 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   >("all");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
+  // Searchable dropdown states
+  const [vendorSearch, setVendorSearch] = useState<string>("");
+  const [facilitySearch, setFacilitySearch] = useState<string>("");
+  const [lotSearch, setLotSearch] = useState<string>("");
+  const [isVendorDropdownOpen, setIsVendorDropdownOpen] = useState(false);
+  const [isFacilityDropdownOpen, setIsFacilityDropdownOpen] = useState(false);
+  const [isLotDropdownOpen, setIsLotDropdownOpen] = useState(false);
+
+  // Search refs
+  const vendorSearchRef = useRef<HTMLInputElement>(null);
+  const facilitySearchRef = useRef<HTMLInputElement>(null);
+  const lotSearchRef = useRef<HTMLInputElement>(null);
+
   // Form state
   const [contractFormData, setContractFormData] = useState<ContractFormData>({
     vendor_code: vendorCode || "",
@@ -96,6 +110,36 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     return matchesSearch && matchesStatus;
   });
 
+  // Filter data based on search terms
+  const filteredVendors = vendors
+    ?.filter(
+      (vendor) =>
+        vendor.name?.toLowerCase().includes(vendorSearch.toLowerCase()) ||
+        vendor.code?.toLowerCase().includes(vendorSearch.toLowerCase())
+    )
+    .slice(0, 50);
+
+  const filteredFacilitiesDropdown = facilities
+    ?.filter(
+      (facility) =>
+        facility.name?.toLowerCase().includes(facilitySearch.toLowerCase()) ||
+        facility.code?.toLowerCase().includes(facilitySearch.toLowerCase())
+    )
+    .slice(0, 50);
+
+  const filteredLots = lots
+    ?.filter(
+      (lot) =>
+        lot.name?.toLowerCase().includes(lotSearch.toLowerCase()) ||
+        lot.number?.toLowerCase().includes(lotSearch.toLowerCase())
+    )
+    .slice(0, 50);
+
+  // Get selected items
+  const selectedVendor = vendors?.find((v) => v.code === contractFormData.vendor_code);
+  const selectedFacilityDropdown = facilities?.find((f) => f.code === contractFormData.facility_code);
+  const selectedLot = lots?.find((l) => l.number === contractFormData.lot_number);
+
   // Form handlers
   const resetForm = () => {
     setContractFormData({
@@ -109,6 +153,13 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
       services: [],
     });
     setSelectedContract(null);
+    // Clear search states
+    setVendorSearch("");
+    setFacilitySearch("");
+    setLotSearch("");
+    setIsVendorDropdownOpen(false);
+    setIsFacilityDropdownOpen(false);
+    setIsLotDropdownOpen(false);
   };
 
   const openModal = (
@@ -173,6 +224,69 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
       [key]: value || undefined,
     }));
   };
+
+  // Dropdown handlers
+  const handleVendorSelect = (vendor: any) => {
+    setContractFormData(prev => ({...prev, vendor_code: vendor.code}));
+    setIsVendorDropdownOpen(false);
+    setVendorSearch("");
+  };
+
+  const handleFacilitySelectDropdown = (facility: any) => {
+    setContractFormData(prev => ({...prev, facility_code: facility.code}));
+    setIsFacilityDropdownOpen(false);
+    setFacilitySearch("");
+  };
+
+  const handleLotSelect = (lot: any) => {
+    setContractFormData(prev => ({...prev, lot_number: lot.number}));
+    setIsLotDropdownOpen(false);
+    setLotSearch("");
+  };
+
+  const toggleVendorDropdown = () => {
+    setIsVendorDropdownOpen(!isVendorDropdownOpen);
+    setIsFacilityDropdownOpen(false);
+    setIsLotDropdownOpen(false);
+    if (!isVendorDropdownOpen && vendorSearchRef.current) {
+      setTimeout(() => vendorSearchRef.current?.focus(), 100);
+    }
+  };
+
+  const toggleFacilityDropdown = () => {
+    setIsFacilityDropdownOpen(!isFacilityDropdownOpen);
+    setIsVendorDropdownOpen(false);
+    setIsLotDropdownOpen(false);
+    if (!isFacilityDropdownOpen && facilitySearchRef.current) {
+      setTimeout(() => facilitySearchRef.current?.focus(), 100);
+    }
+  };
+
+  const toggleLotDropdown = () => {
+    setIsLotDropdownOpen(!isLotDropdownOpen);
+    setIsVendorDropdownOpen(false);
+    setIsFacilityDropdownOpen(false);
+    if (!isLotDropdownOpen && lotSearchRef.current) {
+      setTimeout(() => lotSearchRef.current?.focus(), 100);
+    }
+  };
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.dropdown-container')) {
+        setIsVendorDropdownOpen(false);
+        setIsFacilityDropdownOpen(false);
+        setIsLotDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -525,81 +639,192 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Vendor
                 </label>
-                <select
-                  value={contractFormData.vendor_code}
-                  onChange={(e) =>
-                    setContractFormData({
-                      ...contractFormData,
-                      vendor_code: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  required
-                  disabled={!!vendorCode || vendorsLoading}
-                >
-                  <option value="">
-                    {vendorsLoading ? "Loading vendors..." : "Select a vendor"}
-                  </option>
-                  {vendors?.map((vendor) => (
-                    <option key={vendor.id} value={vendor.code}>
-                      {vendor.name} ({vendor.code})
-                    </option>
-                  ))}
-                </select>
+                <div className="relative dropdown-container">
+                  <button
+                    type="button"
+                    onClick={toggleVendorDropdown}
+                    disabled={!!vendorCode || vendorsLoading}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <span className={selectedVendor ? "text-gray-900" : "text-gray-500"}>
+                      {vendorsLoading
+                        ? "Loading vendors..."
+                        : selectedVendor
+                        ? `${selectedVendor.name} (${selectedVendor.code})`
+                        : "Select a vendor"}
+                    </span>
+                    <FaChevronDown className={`text-gray-400 transition-transform ${isVendorDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {isVendorDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                      <div className="p-4 border-b border-gray-100">
+                        <div className="relative">
+                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <input
+                            ref={vendorSearchRef}
+                            type="text"
+                            placeholder="Search vendors..."
+                            value={vendorSearch}
+                            onChange={(e) => setVendorSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {filteredVendors && filteredVendors.length > 0 ? (
+                          filteredVendors.map((vendor) => (
+                            <div
+                              key={vendor.id}
+                              className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                              onClick={() => handleVendorSelect(vendor)}
+                            >
+                              <div className="font-semibold text-gray-900">
+                                {vendor.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                Code: {vendor.code}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-8 text-center text-gray-500">
+                            No vendors found
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Facility
                 </label>
-                <select
-                  value={contractFormData.facility_code}
-                  onChange={(e) =>
-                    setContractFormData({
-                      ...contractFormData,
-                      facility_code: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  required
-                  disabled={facilitiesLoading}
-                >
-                  <option value="">
-                    {facilitiesLoading ? "Loading facilities..." : "Select a facility"}
-                  </option>
-                  {facilities?.map((facility) => (
-                    <option key={facility.id} value={facility.code}>
-                      {facility.name} ({facility.code})
-                    </option>
-                  ))}
-                </select>
+                <div className="relative dropdown-container">
+                  <button
+                    type="button"
+                    onClick={toggleFacilityDropdown}
+                    disabled={facilitiesLoading}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <span className={selectedFacilityDropdown ? "text-gray-900" : "text-gray-500"}>
+                      {facilitiesLoading
+                        ? "Loading facilities..."
+                        : selectedFacilityDropdown
+                        ? `${selectedFacilityDropdown.name} (${selectedFacilityDropdown.code})`
+                        : "Select a facility"}
+                    </span>
+                    <FaChevronDown className={`text-gray-400 transition-transform ${isFacilityDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {isFacilityDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                      <div className="p-4 border-b border-gray-100">
+                        <div className="relative">
+                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <input
+                            ref={facilitySearchRef}
+                            type="text"
+                            placeholder="Search facilities..."
+                            value={facilitySearch}
+                            onChange={(e) => setFacilitySearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {filteredFacilitiesDropdown && filteredFacilitiesDropdown.length > 0 ? (
+                          filteredFacilitiesDropdown.map((facility) => (
+                            <div
+                              key={facility.id}
+                              className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                              onClick={() => handleFacilitySelectDropdown(facility)}
+                            >
+                              <div className="font-semibold text-gray-900">
+                                {facility.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                Code: {facility.code}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-8 text-center text-gray-500">
+                            No facilities found
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Lot
                 </label>
-                <select
-                  value={contractFormData.lot_number}
-                  onChange={(e) =>
-                    setContractFormData({
-                      ...contractFormData,
-                      lot_number: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  required
-                  disabled={lotsLoading}
-                >
-                  <option value="">
-                    {lotsLoading ? "Loading lots..." : "Select a lot"}
-                  </option>
-                  {lots?.map((lot) => (
-                    <option key={lot.id} value={lot.number}>
-                      {lot.name} (Lot {lot.number})
-                    </option>
-                  ))}
-                </select>
+                <div className="relative dropdown-container">
+                  <button
+                    type="button"
+                    onClick={toggleLotDropdown}
+                    disabled={lotsLoading}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <span className={selectedLot ? "text-gray-900" : "text-gray-500"}>
+                      {lotsLoading
+                        ? "Loading lots..."
+                        : selectedLot
+                        ? `${selectedLot.name} (Lot ${selectedLot.number})`
+                        : "Select a lot"}
+                    </span>
+                    <FaChevronDown className={`text-gray-400 transition-transform ${isLotDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {isLotDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                      <div className="p-4 border-b border-gray-100">
+                        <div className="relative">
+                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <input
+                            ref={lotSearchRef}
+                            type="text"
+                            placeholder="Search lots..."
+                            value={lotSearch}
+                            onChange={(e) => setLotSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {filteredLots && filteredLots.length > 0 ? (
+                          filteredLots.map((lot) => (
+                            <div
+                              key={lot.id}
+                              className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                              onClick={() => handleLotSelect(lot)}
+                            >
+                              <div className="font-semibold text-gray-900">
+                                {lot.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                Lot Number: {lot.number}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-8 text-center text-gray-500">
+                            No lots found
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
