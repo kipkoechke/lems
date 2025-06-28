@@ -1,7 +1,7 @@
 "use client";
 
 import { Service } from "@/services/apiLots";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import {
   FaArrowLeft,
@@ -30,10 +30,8 @@ interface ServiceFormData {
 const ServiceManagement: React.FC = () => {
   const router = useRouter();
   const params = useParams();
-  const searchParams = useSearchParams();
 
   const lotNumber = params.lotNumber as string;
-  const lotName = searchParams.get("name") || "Unknown Lot";
 
   const { lot, services, isLoading, error, refetch } =
     useLotWithServices(lotNumber);
@@ -229,7 +227,9 @@ const ServiceManagement: React.FC = () => {
                 </h1>
                 <p className="text-gray-600 mt-1">
                   Managing services for lot:{" "}
-                  <span className="font-semibold">{lot?.name || lotName}</span>
+                  <span className="font-semibold">
+                    {lot?.name || "Loading..."}
+                  </span>
                 </p>
               </div>
             </div>
@@ -333,17 +333,17 @@ const ServiceManagement: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {service.sha_rate}%
+                          {service.sha_rate}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {service.vendor_share}%
+                          {service.vendor_share}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {service.facility_share}%
+                          {service.facility_share}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -468,16 +468,14 @@ const ServiceManagement: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       SHA Rate
                     </label>
-                    <p className="text-gray-900">
-                      {selectedService?.sha_rate}%
-                    </p>
+                    <p className="text-gray-900">{selectedService?.sha_rate}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Vendor Share
                     </label>
                     <p className="text-gray-900">
-                      {selectedService?.vendor_share}%
+                      {selectedService?.vendor_share}
                     </p>
                   </div>
                   <div>
@@ -485,7 +483,7 @@ const ServiceManagement: React.FC = () => {
                       Facility Share
                     </label>
                     <p className="text-gray-900">
-                      {selectedService?.facility_share}%
+                      {selectedService?.facility_share}
                     </p>
                   </div>
                   <div>
@@ -541,7 +539,7 @@ const ServiceManagement: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      SHA Rate (%) <span className="text-red-500">*</span>
+                      SHA Rate <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -563,7 +561,7 @@ const ServiceManagement: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Vendor Share (%) <span className="text-red-500">*</span>
+                      Vendor Share <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -585,7 +583,7 @@ const ServiceManagement: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Facility Share (%) <span className="text-red-500">*</span>
+                      Facility Share <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useFacilities } from "@/features/facilities/useFacilities";
+import { useLots } from "@/features/lots/useLots";
 import { Contract, ContractFilterParams } from "@/services/apiVendors";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -19,6 +20,7 @@ import {
 import { useContracts } from "./useContracts";
 import { useCreateContract } from "./useCreateContract";
 import { useUpdateContractServices } from "./useUpdateContractServices";
+import { useVendors } from "./useVendors";
 
 interface ContractFormData {
   vendor_code: string;
@@ -47,7 +49,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   const { contracts, isLoading, error, refetch } = useContracts(filters);
   const { createContract, isCreating } = useCreateContract();
   const { updateContractServices, isUpdating } = useUpdateContractServices();
-  const { facilities } = useFacilities();
+  const { facilities, isLoading: facilitiesLoading } = useFacilities();
+  const { vendors, isLoading: vendorsLoading } = useVendors();
+  const { lots, isLoading: lotsLoading } = useLots();
 
   // State management
   const [showModal, setShowModal] = useState(false);
@@ -519,10 +523,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
             <form onSubmit={handleContractSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vendor Code
+                  Vendor
                 </label>
-                <input
-                  type="text"
+                <select
                   value={contractFormData.vendor_code}
                   onChange={(e) =>
                     setContractFormData({
@@ -532,8 +535,17 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   required
-                  disabled={!!vendorCode}
-                />
+                  disabled={!!vendorCode || vendorsLoading}
+                >
+                  <option value="">
+                    {vendorsLoading ? "Loading vendors..." : "Select a vendor"}
+                  </option>
+                  {vendors?.map((vendor) => (
+                    <option key={vendor.id} value={vendor.code}>
+                      {vendor.name} ({vendor.code})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -550,9 +562,11 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   required
-                  disabled={false}
+                  disabled={facilitiesLoading}
                 >
-                  <option value="">Select a facility</option>
+                  <option value="">
+                    {facilitiesLoading ? "Loading facilities..." : "Select a facility"}
+                  </option>
                   {facilities?.map((facility) => (
                     <option key={facility.id} value={facility.code}>
                       {facility.name} ({facility.code})
@@ -563,10 +577,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Lot Number
+                  Lot
                 </label>
-                <input
-                  type="text"
+                <select
                   value={contractFormData.lot_number}
                   onChange={(e) =>
                     setContractFormData({
@@ -576,8 +589,17 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   required
-                  disabled={false}
-                />
+                  disabled={lotsLoading}
+                >
+                  <option value="">
+                    {lotsLoading ? "Loading lots..." : "Select a lot"}
+                  </option>
+                  {lots?.map((lot) => (
+                    <option key={lot.id} value={lot.number}>
+                      {lot.name} (Lot {lot.number})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
