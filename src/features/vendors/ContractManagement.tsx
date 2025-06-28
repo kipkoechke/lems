@@ -160,14 +160,6 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     });
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   const handleFilterChange = (
     key: keyof ContractFilterParams,
     value: string

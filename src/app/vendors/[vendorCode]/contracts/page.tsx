@@ -1,13 +1,14 @@
 import ContractManagement from "@/features/vendors/ContractManagement";
 
 interface VendorContractsPageProps {
-  params: {
+  params: Promise<{
     vendorCode: string;
-  };
+  }>;
 }
 
-export default function VendorContractsPage({
+export default async function VendorContractsPage({
   params,
 }: VendorContractsPageProps) {
-  return <ContractManagement vendorCode={params.vendorCode} />;
+  const { vendorCode } = await params;
+  return <ContractManagement vendorCode={vendorCode} />;
 }

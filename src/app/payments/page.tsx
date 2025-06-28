@@ -53,7 +53,7 @@ const PaymentReport: React.FC = () => {
   const { counties } = useCounties();
   // const { serviceInfos } = useServiceInfos();
   const { categories } = useCategories();
-  const { data: vendors = [], isLoading: vendorsLoading } = useVendors();
+  const { vendors, isLoading: vendorsLoading } = useVendors();
   const { data: bookingsTrend = [], isLoading: trendLoading } =
     useBookingsTrend({
       ...filters,
@@ -327,8 +327,8 @@ const PaymentReport: React.FC = () => {
           >
             <option value="">All Vendors</option>
             {vendors?.map((v) => (
-              <option key={v.vendorId} value={v.vendorId}>
-                {v.vendorName}
+              <option key={v.id} value={v.code}>
+                {v.name}
               </option>
             ))}
           </select>
