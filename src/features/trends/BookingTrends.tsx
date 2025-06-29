@@ -30,12 +30,46 @@ import {
 import { useBookingTrends } from "./useBookingTrends";
 
 const BookingTrends: React.FC = () => {
-  const [dateRange, setDateRange] = useState({
-    startDate: "",
-    endDate: "",
-  });
+  const { trends, isLoading, error } = useBookingTrends();
 
-  const { trends, isLoading, error } = useBookingTrends(dateRange);
+  // Export functions
+  const exportToCSV = () => {
+    if (!trends.length) return;
+
+    const csvData = trends.map(item => ({
+      Date: item.date,
+      'Payment Mode': item.payment_mode,
+      'Total Bookings': item.total,
+      'Total Amount (KES)': item.total_amount,
+      'Vendor Share (KES)': item.total_vendor_share,
+      'Facility Share (KES)': item.total_facility_share,
+    }));
+
+    const headers = Object.keys(csvData[0]).join(',');
+    const rows = csvData.map(row => Object.values(row).join(',')).join('\n');
+    const csvContent = `${headers}\n${rows}`;
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `booking-trends-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const exportToJSON = () => {
+    if (!trends.length) return;
+
+    const jsonContent = JSON.stringify(trends, null, 2);
+    const blob = new Blob([jsonContent], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `booking-trends-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   // Process data for different chart types
   const chartData = useMemo(() => {
@@ -198,48 +232,33 @@ const BookingTrends: React.FC = () => {
             </div>
           </div>
 
-          {/* Filters */}
+          {/* Export Actions */}
           <div className="p-6 bg-gray-50 border-b">
-            <div className="flex items-center gap-4">
-              <FaFilter className="text-gray-500" />
-              <div className="flex items-center gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={dateRange.startDate}
-                    onChange={(e) =>
-                      setDateRange((prev) => ({
-                        ...prev,
-                        startDate: e.target.value,
-                      }))
-                    }
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={dateRange.endDate}
-                    onChange={(e) =>
-                      setDateRange((prev) => ({
-                        ...prev,
-                        endDate: e.target.value,
-                      }))
-                    }
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FaFilter className="text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">Export Data</span>
+              </div>
+              <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setDateRange({ startDate: "", endDate: "" })}
-                  className="mt-6 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  onClick={exportToCSV}
+                  disabled={!trends.length}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Clear
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                  Export CSV
+                </button>
+                <button
+                  onClick={exportToJSON}
+                  disabled={!trends.length}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                  Export JSON
                 </button>
               </div>
             </div>

@@ -1,7 +1,7 @@
 "use client";
 import { goToNextStep, goToPreviousStep } from "@/context/workflowSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import OTPValidation from "../../components/OTPValidation";
 import StatusCard from "../../components/StatusCard";
@@ -34,7 +34,7 @@ const PatientConsent: React.FC = () => {
   const isBookingOverridden =
     booking?.override === "1" || booking?.override === "true";
 
-  const handleSendOTP = () => {
+  const handleSendOTP = useCallback(() => {
     console.log("handleSendOTP called", {
       booking,
       patient,
@@ -65,7 +65,7 @@ const PatientConsent: React.FC = () => {
       toast.error("No OTP available. Please contact support.");
       setOtpSent(false);
     }
-  };
+  }, [booking, patient, otp_code, isBookingOverridden]);
 
   const handleValidateOTP = (otp: string) => {
     console.log("PatientConsent - handleValidateOTP called");
@@ -119,7 +119,7 @@ const PatientConsent: React.FC = () => {
         setShowOTP(false);
 
         // Start countdown and redirect after 3 seconds
-        setCountdown(10);
+        setCountdown(30);
         const countdownInterval = setInterval(() => {
           setCountdown((prev) => {
             if (prev === null || prev <= 1) {
@@ -181,7 +181,7 @@ const PatientConsent: React.FC = () => {
         handleSendOTP();
       }
     }
-  }, [booking, patient, otp_code]);
+  }, [booking, patient, otp_code, handleSendOTP, otpSent]);
 
   if (!patient || !selectedService) {
     return (
