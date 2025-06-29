@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
+  HiOutlineChartBarSquare,
   HiOutlineChevronDown,
   HiOutlineChevronRight,
   HiOutlineHome,
@@ -25,6 +26,7 @@ function Sidebar() {
     { href: "/contracts", label: "Contracts", icon: <HiOutlineUsers /> },
     { href: "/lots", label: "Lots", icon: <HiOutlineUsers /> },
     { href: "/bookings", label: "Services", icon: <HiOutlineUsers /> },
+    { href: "/trends", label: "Analytics", icon: <HiOutlineChartBarSquare /> },
     {
       href: "/payments",
       label: "Payments Report",

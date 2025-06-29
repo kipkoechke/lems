@@ -19,7 +19,8 @@ const PatientConsent: React.FC = () => {
   });
 
   const dispatch = useAppDispatch();
-  const { validateOtpMutation, isValidating } = useOtpValidation();
+  const { validateOtpMutation, isValidating, setConsentApproved } =
+    useOtpValidation();
 
   const [showOTP, setShowOTP] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState<string | null>(null);
@@ -27,6 +28,7 @@ const PatientConsent: React.FC = () => {
     "pending" | "approved" | "rejected"
   >("pending");
   const [otpSent, setOtpSent] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   // Check if booking was created with override
   const isBookingOverridden =
@@ -105,6 +107,9 @@ const PatientConsent: React.FC = () => {
         console.log("OTP verification successful:", data);
         setConsentStatus("approved");
 
+        // Set consent in Redux
+        setConsentApproved();
+
         if (isBookingOverridden) {
           toast.success("Emergency override approved successfully!");
         } else {
@@ -113,9 +118,17 @@ const PatientConsent: React.FC = () => {
 
         setShowOTP(false);
 
-        // Proceed to next step
-        setTimeout(() => {
-          dispatch(goToNextStep());
+        // Start countdown and redirect after 3 seconds
+        setCountdown(10);
+        const countdownInterval = setInterval(() => {
+          setCountdown((prev) => {
+            if (prev === null || prev <= 1) {
+              clearInterval(countdownInterval);
+              dispatch(goToNextStep());
+              return null;
+            }
+            return prev - 1;
+          });
         }, 1000);
       },
       onError: (error) => {
@@ -142,6 +155,7 @@ const PatientConsent: React.FC = () => {
   };
 
   const handlePreviousStep = () => {
+    setCountdown(null); // Clear countdown if going back
     dispatch(goToPreviousStep());
   };
 
@@ -313,7 +327,9 @@ const PatientConsent: React.FC = () => {
                   ? "Waiting for patient consent verification..."
                   : "Sending consent verification..."
                 : consentStatus === "approved"
-                ? "Patient consent has been verified successfully"
+                ? countdown
+                  ? `Patient consent verified successfully! Proceeding to tests in ${countdown} seconds...`
+                  : "Patient consent has been verified successfully"
                 : "Patient consent has been rejected"
             }
             details={
@@ -322,7 +338,9 @@ const PatientConsent: React.FC = () => {
                   ? "This booking was processed as an emergency case"
                   : "An OTP has been sent to the patient's phone number for verification"
                 : consentStatus === "approved"
-                ? "The patient has successfully confirmed their consent for this service"
+                ? countdown
+                  ? "You will be automatically redirected to proceed with the tests"
+                  : "The patient has successfully confirmed their consent for this service"
                 : "The booking cannot proceed without patient consent"
             }
           />
@@ -402,9 +420,12 @@ const PatientConsent: React.FC = () => {
             {(consentStatus === "approved" || isBookingOverridden) && (
               <button
                 onClick={() => dispatch(goToNextStep())}
-                className={`${buttonClasses} bg-green-600 hover:bg-green-700 text-white focus:ring-green-500`}
+                disabled={countdown !== null}
+                className={`${buttonClasses} bg-green-600 hover:bg-green-700 text-white focus:ring-green-500 disabled:bg-green-400 disabled:cursor-not-allowed`}
               >
-                Continue to Next Step
+                {countdown
+                  ? `Auto-continuing in ${countdown}s...`
+                  : "Continue to Next Step"}
               </button>
             )}
           </div>

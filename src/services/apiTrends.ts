@@ -14,6 +14,20 @@ export interface PaymentModeDistributionItem {
   name: string;
 }
 
+// New interface for the booking trends API
+export interface BookingTrendData {
+  date: string;
+  payment_mode: string;
+  total: string;
+  total_amount: string;
+  total_vendor_share: string;
+  total_facility_share: string;
+}
+
+export interface BookingTrendsResponse {
+  trends: BookingTrendData[];
+}
+
 export const getBookingsTrend = async (
   filters: BookingFilters = {}
 ): Promise<BookingsTrendItem[]> => {
@@ -32,4 +46,14 @@ export const getPaymentModeDistribution = async (
     params: filters,
   });
   return response.data.payment_mode_data;
+};
+
+// New function for the booking trends endpoint
+export const getBookingTrends = async (
+  filters: BookingFilters = {}
+): Promise<BookingTrendsResponse> => {
+  const response = await axios.get("bookings/trends", {
+    params: filters,
+  });
+  return response.data;
 };
