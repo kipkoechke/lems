@@ -84,7 +84,12 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<{ name: string; phone: string; date_of_birth: string; sha_number?: string }>();
+  } = useForm<{
+    name: string;
+    phone: string;
+    date_of_birth: string;
+    sha_number?: string;
+  }>();
 
   // Filter facilities based on search
   const filteredFacilities = facilities
@@ -389,7 +394,10 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
 
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
-                              SHA Number <span className="text-gray-400 text-xs">(Optional)</span>
+                              SHA Number{" "}
+                              <span className="text-gray-400 text-xs">
+                                (Optional)
+                              </span>
                             </label>
                             <input
                               {...register("sha_number")}

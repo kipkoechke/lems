@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { FaShieldAlt, FaLock, FaArrowRight } from "react-icons/fa";
+import React, { useEffect, useRef, useState } from "react";
+import { FaArrowRight, FaLock, FaShieldAlt } from "react-icons/fa";
 
 interface OTPValidationProps {
   title: string;
@@ -62,7 +62,7 @@ const OTPValidation: React.FC<OTPValidationProps> = ({
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const otpValue = otp.join("");
-    
+
     if (otpValue.length !== 6) {
       return;
     }
@@ -72,7 +72,8 @@ const OTPValidation: React.FC<OTPValidationProps> = ({
     setIsProcessing(false);
   };
 
-  const isOtpComplete = otp.every(digit => digit !== "") && otp.join("").length === 6;
+  const isOtpComplete =
+    otp.every((digit) => digit !== "") && otp.join("").length === 6;
 
   return (
     <div className="fixed inset-0 bg-white/40 backdrop-blur-lg flex items-center justify-center z-[100] p-4 transition-all duration-300">
@@ -91,9 +92,11 @@ const OTPValidation: React.FC<OTPValidationProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-2 mb-2">
               <FaLock className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-700">Enter 6-digit code</span>
+              <span className="text-sm font-medium text-gray-700">
+                Enter 6-digit code
+              </span>
             </div>
-            
+
             <div className="flex justify-center gap-3">
               {otp.map((_, index) => (
                 <div key={index} className="relative">
@@ -101,8 +104,8 @@ const OTPValidation: React.FC<OTPValidationProps> = ({
                     ref={index === activeOTPIndex ? inputRef : null}
                     type="number"
                     className={`w-12 h-14 text-center text-xl font-bold border-2 rounded-xl transition-all duration-200 focus:outline-none ${
-                      otp[index] 
-                        ? "border-blue-500 bg-blue-50 text-blue-600" 
+                      otp[index]
+                        ? "border-blue-500 bg-blue-50 text-blue-600"
                         : activeOTPIndex === index
                         ? "border-purple-500 bg-purple-50"
                         : "border-gray-300 bg-gray-50 hover:border-gray-400"

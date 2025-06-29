@@ -11,15 +11,15 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { 
-  FaBuilding, 
-  FaEdit, 
-  FaEllipsisV, 
-  FaEye, 
-  FaFileContract, 
-  FaSearch, 
-  FaStethoscope, 
-  FaUsers
+import {
+  FaBuilding,
+  FaEdit,
+  FaEllipsisV,
+  FaEye,
+  FaFileContract,
+  FaSearch,
+  FaStethoscope,
+  FaUsers,
 } from "react-icons/fa";
 
 function EditFacilityForm({
@@ -48,7 +48,7 @@ function EditFacilityForm({
         <h2 className="text-xl font-bold text-gray-900 mb-2">Edit Facility</h2>
         <p className="text-gray-600">Update facility information</p>
       </div>
-      
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -101,9 +101,10 @@ function Facilities() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   // Filter facilities based on search term
-  const filteredFacilities = facilities?.filter((facility) =>
-    facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    facility.code.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredFacilities = facilities?.filter(
+    (facility) =>
+      facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      facility.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (isLoading) {
@@ -229,10 +230,14 @@ function Facilities() {
           {filteredFacilities && filteredFacilities.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-gray-500 text-xl mb-4">
-                {searchTerm ? "No facilities match your search" : "No facilities found"}
+                {searchTerm
+                  ? "No facilities match your search"
+                  : "No facilities found"}
               </div>
               <p className="text-gray-400">
-                {searchTerm ? "Try adjusting your search terms" : "Facilities will appear here once they are added to the system"}
+                {searchTerm
+                  ? "Try adjusting your search terms"
+                  : "Facilities will appear here once they are added to the system"}
               </p>
             </div>
           ) : (
@@ -278,11 +283,14 @@ function Facilities() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-600">
-                        {new Date(facility.created_at).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        {new Date(facility.created_at).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="relative">
@@ -312,25 +320,33 @@ function Facilities() {
                                 <div className="p-1">
                                   <button
                                     onClick={() => {
-                                      router.push(`/facilities/${facility.code}`);
+                                      router.push(
+                                        `/facilities/${facility.code}`
+                                      );
                                       setActiveDropdown(null);
                                     }}
                                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                   >
-                                    <FaEye className="text-blue-500" /> View Details
+                                    <FaEye className="text-blue-500" /> View
+                                    Details
                                   </button>
                                   <Modal>
-                                    <Modal.Open opens={`edit-facility-${facility.id}`}>
+                                    <Modal.Open
+                                      opens={`edit-facility-${facility.id}`}
+                                    >
                                       <button
                                         onClick={() => {
                                           setActiveDropdown(null);
                                         }}
                                         className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                       >
-                                        <FaEdit className="text-green-500" /> Edit Facility
+                                        <FaEdit className="text-green-500" />{" "}
+                                        Edit Facility
                                       </button>
                                     </Modal.Open>
-                                    <Modal.Window name={`edit-facility-${facility.id}`}>
+                                    <Modal.Window
+                                      name={`edit-facility-${facility.id}`}
+                                    >
                                       <EditFacilityForm
                                         facility={facility}
                                         onSuccess={() => {
@@ -341,30 +357,39 @@ function Facilities() {
                                   </Modal>
                                   <button
                                     onClick={() => {
-                                      router.push(`/contracts?facility_code=${facility.code}`);
+                                      router.push(
+                                        `/contracts?facility_code=${facility.code}`
+                                      );
                                       setActiveDropdown(null);
                                     }}
                                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                   >
-                                    <FaFileContract className="text-purple-500" /> View Contracts
+                                    <FaFileContract className="text-purple-500" />{" "}
+                                    View Contracts
                                   </button>
                                   <button
                                     onClick={() => {
-                                      router.push(`/patients?facility_code=${facility.code}`);
+                                      router.push(
+                                        `/patients?facility_code=${facility.code}`
+                                      );
                                       setActiveDropdown(null);
                                     }}
                                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                   >
-                                    <FaUsers className="text-indigo-500" /> View Patients
+                                    <FaUsers className="text-indigo-500" /> View
+                                    Patients
                                   </button>
                                   <button
                                     onClick={() => {
-                                      router.push(`/services?facility_code=${facility.code}`);
+                                      router.push(
+                                        `/services?facility_code=${facility.code}`
+                                      );
                                       setActiveDropdown(null);
                                     }}
                                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                   >
-                                    <FaStethoscope className="text-orange-500" /> View Services
+                                    <FaStethoscope className="text-orange-500" />{" "}
+                                    View Services
                                   </button>
                                 </div>
                               </div>

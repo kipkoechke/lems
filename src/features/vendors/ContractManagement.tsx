@@ -440,10 +440,19 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                     }}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between"
                   >
-                    <span className={filters.vendor_code ? "text-gray-900" : "text-gray-500"}>
-                      {vendors?.find(v => v.code === filters.vendor_code)?.name || "All Vendors"}
+                    <span
+                      className={
+                        filters.vendor_code ? "text-gray-900" : "text-gray-500"
+                      }
+                    >
+                      {vendors?.find((v) => v.code === filters.vendor_code)
+                        ?.name || "All Vendors"}
                     </span>
-                    <FaChevronDown className={`text-gray-400 transition-transform ${isVendorDropdownOpen ? "rotate-180" : ""}`} />
+                    <FaChevronDown
+                      className={`text-gray-400 transition-transform ${
+                        isVendorDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
                   </button>
 
                   {isVendorDropdownOpen && (
@@ -470,7 +479,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                             setVendorSearch("");
                           }}
                         >
-                          <div className="font-semibold text-gray-900">All Vendors</div>
+                          <div className="font-semibold text-gray-900">
+                            All Vendors
+                          </div>
                         </div>
                         {filteredVendors && filteredVendors.length > 0 ? (
                           filteredVendors.map((vendor) => (
@@ -483,8 +494,12 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                                 setVendorSearch("");
                               }}
                             >
-                              <div className="font-semibold text-gray-900">{vendor.name}</div>
-                              <div className="text-sm text-gray-500">Code: {vendor.code}</div>
+                              <div className="font-semibold text-gray-900">
+                                {vendor.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                Code: {vendor.code}
+                              </div>
                             </div>
                           ))
                         ) : (
@@ -508,10 +523,19 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                   }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between"
                 >
-                  <span className={filters.facility_code ? "text-gray-900" : "text-gray-500"}>
-                    {facilities?.find(f => f.code === filters.facility_code)?.name || "All Facilities"}
+                  <span
+                    className={
+                      filters.facility_code ? "text-gray-900" : "text-gray-500"
+                    }
+                  >
+                    {facilities?.find((f) => f.code === filters.facility_code)
+                      ?.name || "All Facilities"}
                   </span>
-                  <FaChevronDown className={`text-gray-400 transition-transform ${isFacilityDropdownOpen ? "rotate-180" : ""}`} />
+                  <FaChevronDown
+                    className={`text-gray-400 transition-transform ${
+                      isFacilityDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
 
                 {isFacilityDropdownOpen && (
@@ -538,21 +562,31 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                           setFacilitySearch("");
                         }}
                       >
-                        <div className="font-semibold text-gray-900">All Facilities</div>
+                        <div className="font-semibold text-gray-900">
+                          All Facilities
+                        </div>
                       </div>
-                      {filteredFacilitiesDropdown && filteredFacilitiesDropdown.length > 0 ? (
+                      {filteredFacilitiesDropdown &&
+                      filteredFacilitiesDropdown.length > 0 ? (
                         filteredFacilitiesDropdown.map((facility) => (
                           <div
                             key={facility.id}
                             className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
                             onClick={() => {
-                              handleFilterChange("facility_code", facility.code);
+                              handleFilterChange(
+                                "facility_code",
+                                facility.code
+                              );
                               setIsFacilityDropdownOpen(false);
                               setFacilitySearch("");
                             }}
                           >
-                            <div className="font-semibold text-gray-900">{facility.name}</div>
-                            <div className="text-sm text-gray-500">Code: {facility.code}</div>
+                            <div className="font-semibold text-gray-900">
+                              {facility.name}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Code: {facility.code}
+                            </div>
                           </div>
                         ))
                       ) : (
@@ -575,10 +609,19 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                   }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between"
                 >
-                  <span className={filters.lot_number ? "text-gray-900" : "text-gray-500"}>
-                    {lots?.find(l => l.number === filters.lot_number)?.name || "All Lots"}
+                  <span
+                    className={
+                      filters.lot_number ? "text-gray-900" : "text-gray-500"
+                    }
+                  >
+                    {lots?.find((l) => l.number === filters.lot_number)?.name ||
+                      "All Lots"}
                   </span>
-                  <FaChevronDown className={`text-gray-400 transition-transform ${isLotDropdownOpen ? "rotate-180" : ""}`} />
+                  <FaChevronDown
+                    className={`text-gray-400 transition-transform ${
+                      isLotDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
 
                 {isLotDropdownOpen && (
@@ -605,7 +648,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                           setLotSearch("");
                         }}
                       >
-                        <div className="font-semibold text-gray-900">All Lots</div>
+                        <div className="font-semibold text-gray-900">
+                          All Lots
+                        </div>
                       </div>
                       {filteredLots && filteredLots.length > 0 ? (
                         filteredLots.map((lot) => (
@@ -618,8 +663,12 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                               setLotSearch("");
                             }}
                           >
-                            <div className="font-semibold text-gray-900">{lot.name}</div>
-                            <div className="text-sm text-gray-500">Lot Number: {lot.number}</div>
+                            <div className="font-semibold text-gray-900">
+                              {lot.name}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Lot Number: {lot.number}
+                            </div>
                           </div>
                         ))
                       ) : (
@@ -800,27 +849,36 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                                   </button>
                                   <button
                                     onClick={() =>
-                                      router.push(`/vendors/${contract.vendor_code}`)
+                                      router.push(
+                                        `/vendors/${contract.vendor_code}`
+                                      )
                                     }
                                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                   >
-                                    <FaArrowLeft className="text-purple-500" /> View Vendor
+                                    <FaArrowLeft className="text-purple-500" />{" "}
+                                    View Vendor
                                   </button>
                                   <button
                                     onClick={() =>
-                                      router.push(`/facilities/${contract.facility_code}`)
+                                      router.push(
+                                        `/facilities/${contract.facility_code}`
+                                      )
                                     }
                                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                   >
-                                    <FaArrowLeft className="text-indigo-500" /> View Facility
+                                    <FaArrowLeft className="text-indigo-500" />{" "}
+                                    View Facility
                                   </button>
                                   <button
                                     onClick={() =>
-                                      router.push(`/lots/${contract.lot_number}`)
+                                      router.push(
+                                        `/lots/${contract.lot_number}`
+                                      )
                                     }
                                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                   >
-                                    <FaArrowLeft className="text-orange-500" /> View Lot
+                                    <FaArrowLeft className="text-orange-500" />{" "}
+                                    View Lot
                                   </button>
                                 </div>
                               </div>
