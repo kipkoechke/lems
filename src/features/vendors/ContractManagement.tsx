@@ -417,7 +417,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
           {/* Filters */}
           <div className="p-6 bg-gray-50 border-b">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
@@ -430,36 +430,207 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
               </div>
 
               {!vendorCode && (
-                <input
-                  type="text"
-                  placeholder="Vendor Code"
-                  value={filters.vendor_code || ""}
-                  onChange={(e) =>
-                    handleFilterChange("vendor_code", e.target.value)
-                  }
-                  className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
+                <div className="relative dropdown-container">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsVendorDropdownOpen(!isVendorDropdownOpen);
+                      setIsFacilityDropdownOpen(false);
+                      setIsLotDropdownOpen(false);
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between"
+                  >
+                    <span className={filters.vendor_code ? "text-gray-900" : "text-gray-500"}>
+                      {vendors?.find(v => v.code === filters.vendor_code)?.name || "All Vendors"}
+                    </span>
+                    <FaChevronDown className={`text-gray-400 transition-transform ${isVendorDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {isVendorDropdownOpen && (
+                    <div className="absolute z-[60] w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                      <div className="p-4 border-b border-gray-100">
+                        <div className="relative">
+                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <input
+                            type="text"
+                            placeholder="Search vendors..."
+                            value={vendorSearch}
+                            onChange={(e) => setVendorSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        <div
+                          className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                          onClick={() => {
+                            handleFilterChange("vendor_code", "");
+                            setIsVendorDropdownOpen(false);
+                            setVendorSearch("");
+                          }}
+                        >
+                          <div className="font-semibold text-gray-900">All Vendors</div>
+                        </div>
+                        {filteredVendors && filteredVendors.length > 0 ? (
+                          filteredVendors.map((vendor) => (
+                            <div
+                              key={vendor.id}
+                              className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                              onClick={() => {
+                                handleFilterChange("vendor_code", vendor.code);
+                                setIsVendorDropdownOpen(false);
+                                setVendorSearch("");
+                              }}
+                            >
+                              <div className="font-semibold text-gray-900">{vendor.name}</div>
+                              <div className="text-sm text-gray-500">Code: {vendor.code}</div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-8 text-center text-gray-500">
+                            No vendors found
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
 
-              <input
-                type="text"
-                placeholder="Facility Code"
-                value={filters.facility_code || ""}
-                onChange={(e) =>
-                  handleFilterChange("facility_code", e.target.value)
-                }
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
+              <div className="relative dropdown-container">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsFacilityDropdownOpen(!isFacilityDropdownOpen);
+                    setIsVendorDropdownOpen(false);
+                    setIsLotDropdownOpen(false);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between"
+                >
+                  <span className={filters.facility_code ? "text-gray-900" : "text-gray-500"}>
+                    {facilities?.find(f => f.code === filters.facility_code)?.name || "All Facilities"}
+                  </span>
+                  <FaChevronDown className={`text-gray-400 transition-transform ${isFacilityDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
 
-              <input
-                type="text"
-                placeholder="Lot Number"
-                value={filters.lot_number || ""}
-                onChange={(e) =>
-                  handleFilterChange("lot_number", e.target.value)
-                }
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
+                {isFacilityDropdownOpen && (
+                  <div className="absolute z-[60] w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                    <div className="p-4 border-b border-gray-100">
+                      <div className="relative">
+                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                          type="text"
+                          placeholder="Search facilities..."
+                          value={facilitySearch}
+                          onChange={(e) => setFacilitySearch(e.target.value)}
+                          className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      <div
+                        className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          handleFilterChange("facility_code", "");
+                          setIsFacilityDropdownOpen(false);
+                          setFacilitySearch("");
+                        }}
+                      >
+                        <div className="font-semibold text-gray-900">All Facilities</div>
+                      </div>
+                      {filteredFacilitiesDropdown && filteredFacilitiesDropdown.length > 0 ? (
+                        filteredFacilitiesDropdown.map((facility) => (
+                          <div
+                            key={facility.id}
+                            className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                            onClick={() => {
+                              handleFilterChange("facility_code", facility.code);
+                              setIsFacilityDropdownOpen(false);
+                              setFacilitySearch("");
+                            }}
+                          >
+                            <div className="font-semibold text-gray-900">{facility.name}</div>
+                            <div className="text-sm text-gray-500">Code: {facility.code}</div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-8 text-center text-gray-500">
+                          No facilities found
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="relative dropdown-container">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLotDropdownOpen(!isLotDropdownOpen);
+                    setIsVendorDropdownOpen(false);
+                    setIsFacilityDropdownOpen(false);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between"
+                >
+                  <span className={filters.lot_number ? "text-gray-900" : "text-gray-500"}>
+                    {lots?.find(l => l.number === filters.lot_number)?.name || "All Lots"}
+                  </span>
+                  <FaChevronDown className={`text-gray-400 transition-transform ${isLotDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {isLotDropdownOpen && (
+                  <div className="absolute z-[60] w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                    <div className="p-4 border-b border-gray-100">
+                      <div className="relative">
+                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                          type="text"
+                          placeholder="Search lots..."
+                          value={lotSearch}
+                          onChange={(e) => setLotSearch(e.target.value)}
+                          className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      <div
+                        className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          handleFilterChange("lot_number", "");
+                          setIsLotDropdownOpen(false);
+                          setLotSearch("");
+                        }}
+                      >
+                        <div className="font-semibold text-gray-900">All Lots</div>
+                      </div>
+                      {filteredLots && filteredLots.length > 0 ? (
+                        filteredLots.map((lot) => (
+                          <div
+                            key={lot.id}
+                            className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                            onClick={() => {
+                              handleFilterChange("lot_number", lot.number);
+                              setIsLotDropdownOpen(false);
+                              setLotSearch("");
+                            }}
+                          >
+                            <div className="font-semibold text-gray-900">{lot.name}</div>
+                            <div className="text-sm text-gray-500">Lot Number: {lot.number}</div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-8 text-center text-gray-500">
+                          No lots found
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -607,7 +778,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                               ></div>
 
                               {/* Dropdown menu */}
-                              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
+                              <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
                                 <div className="p-1">
                                   <button
                                     onClick={() =>
@@ -626,6 +797,30 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                                   >
                                     <FaStethoscope className="text-green-500" />{" "}
                                     Add Services
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      router.push(`/vendors/${contract.vendor_code}`)
+                                    }
+                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                                  >
+                                    <FaArrowLeft className="text-purple-500" /> View Vendor
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      router.push(`/facilities/${contract.facility_code}`)
+                                    }
+                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                                  >
+                                    <FaArrowLeft className="text-indigo-500" /> View Facility
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      router.push(`/lots/${contract.lot_number}`)
+                                    }
+                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                                  >
+                                    <FaArrowLeft className="text-orange-500" /> View Lot
                                   </button>
                                 </div>
                               </div>
@@ -673,7 +868,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
       {/* Modal for Create/View */}
       {showModal && modalType !== "services" && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-4 transition-all duration-300">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4">
               <h2 className="text-xl font-bold text-white">
@@ -683,76 +878,98 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
               </h2>
             </div>
 
-            <form onSubmit={handleContractSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vendor
-                </label>
-                <div className="relative dropdown-container">
-                  <button
-                    type="button"
-                    onClick={toggleVendorDropdown}
-                    disabled={!!vendorCode || vendorsLoading}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  >
-                    <span
-                      className={
-                        selectedVendor ? "text-gray-900" : "text-gray-500"
-                      }
+            <form onSubmit={handleContractSubmit} className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Vendor
+                  </label>
+                  <div className="relative dropdown-container">
+                    <button
+                      type="button"
+                      onClick={toggleVendorDropdown}
+                      disabled={!!vendorCode || vendorsLoading}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
-                      {vendorsLoading
-                        ? "Loading vendors..."
-                        : selectedVendor
-                        ? `${selectedVendor.name} (${selectedVendor.code})`
-                        : "Select a vendor"}
-                    </span>
-                    <FaChevronDown
-                      className={`text-gray-400 transition-transform ${
-                        isVendorDropdownOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
+                      <span
+                        className={
+                          selectedVendor ? "text-gray-900" : "text-gray-500"
+                        }
+                      >
+                        {vendorsLoading
+                          ? "Loading vendors..."
+                          : selectedVendor
+                          ? `${selectedVendor.name} (${selectedVendor.code})`
+                          : "Select a vendor"}
+                      </span>
+                      <FaChevronDown
+                        className={`text-gray-400 transition-transform ${
+                          isVendorDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
 
-                  {isVendorDropdownOpen && (
-                    <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
-                      <div className="p-4 border-b border-gray-100">
-                        <div className="relative">
-                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                          <input
-                            ref={vendorSearchRef}
-                            type="text"
-                            placeholder="Search vendors..."
-                            value={vendorSearch}
-                            onChange={(e) => setVendorSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
-                            onClick={(e) => e.stopPropagation()}
-                          />
+                    {isVendorDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                        <div className="p-4 border-b border-gray-100">
+                          <div className="relative">
+                            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <input
+                              ref={vendorSearchRef}
+                              type="text"
+                              placeholder="Search vendors..."
+                              value={vendorSearch}
+                              onChange={(e) => setVendorSearch(e.target.value)}
+                              className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </div>
+                        <div className="max-h-60 overflow-y-auto">
+                          {filteredVendors && filteredVendors.length > 0 ? (
+                            filteredVendors.map((vendor) => (
+                              <div
+                                key={vendor.id}
+                                className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                                onClick={() => handleVendorSelect(vendor)}
+                              >
+                                <div className="font-semibold text-gray-900">
+                                  {vendor.name}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  Code: {vendor.code}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-4 py-8 text-center text-gray-500">
+                              No vendors found
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="max-h-60 overflow-y-auto">
-                        {filteredVendors && filteredVendors.length > 0 ? (
-                          filteredVendors.map((vendor) => (
-                            <div
-                              key={vendor.id}
-                              className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
-                              onClick={() => handleVendorSelect(vendor)}
-                            >
-                              <div className="font-semibold text-gray-900">
-                                {vendor.name}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                Code: {vendor.code}
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="px-4 py-8 text-center text-gray-500">
-                            No vendors found
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={contractFormData.is_active}
+                    onChange={(e) =>
+                      setContractFormData({
+                        ...contractFormData,
+                        is_active: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    disabled={false}
+                  >
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                  </select>
                 </div>
               </div>
 
@@ -905,26 +1122,6 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <select
-                  value={contractFormData.is_active}
-                  onChange={(e) =>
-                    setContractFormData({
-                      ...contractFormData,
-                      is_active: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  disabled={false}
-                >
-                  <option value="1">Active</option>
-                  <option value="0">Inactive</option>
-                </select>
-              </div>
-
               <div className="flex gap-3 pt-6">
                 <button
                   type="button"
@@ -948,7 +1145,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
       {/* Services Management Modal */}
       {showModal && modalType === "services" && selectedContract && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-4 transition-all duration-300">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-gradient-to-r from-green-600 to-blue-600 px-6 py-4">
               <h2 className="text-xl font-bold text-white">

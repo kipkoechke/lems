@@ -410,7 +410,7 @@ const LotManagement: React.FC = () => {
 
       {/* Modal for Create/Edit/View */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-4 transition-all duration-300">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
               <h2 className="text-xl font-bold text-white">
@@ -422,21 +422,44 @@ const LotManagement: React.FC = () => {
               </h2>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Lot Number
-                </label>
-                <input
-                  type="text"
-                  value={formData.number}
-                  onChange={(e) =>
-                    setFormData({ ...formData, number: e.target.value })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                  disabled={modalType === "view"}
-                />
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Lot Number
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.number}
+                    onChange={(e) =>
+                      setFormData({ ...formData, number: e.target.value })
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                    disabled={modalType === "view"}
+                    placeholder="Enter lot number"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={formData.is_active ? "1" : "0"}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        is_active: e.target.value === "1",
+                      })
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    disabled={modalType === "view"}
+                  >
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -452,45 +475,28 @@ const LotManagement: React.FC = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
                   disabled={modalType === "view"}
+                  placeholder="Enter lot name"
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <select
-                  value={formData.is_active ? "1" : "0"}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      is_active: e.target.value === "1",
-                    })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  disabled={modalType === "view"}
-                >
-                  <option value="1">Active</option>
-                  <option value="0">Inactive</option>
-                </select>
               </div>
 
               {modalType === "view" && selectedLot && (
                 <div className="space-y-4 pt-4 border-t border-gray-200">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Created At
-                    </label>
-                    <div className="text-sm text-gray-600">
-                      {formatDate(selectedLot.created_at)}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Created At
+                      </label>
+                      <div className="text-sm text-gray-600">
+                        {formatDate(selectedLot.created_at)}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Updated At
-                    </label>
-                    <div className="text-sm text-gray-600">
-                      {formatDate(selectedLot.updated_at)}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Updated At
+                      </label>
+                      <div className="text-sm text-gray-600">
+                        {formatDate(selectedLot.updated_at)}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -525,7 +531,7 @@ const LotManagement: React.FC = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-4 transition-all duration-300">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
             <div className="p-6">
               <div className="text-center">

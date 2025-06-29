@@ -72,16 +72,16 @@ function Window({ children, name }: WindowProps) {
   if (name !== openName) return null;
 
   return createPortal(
-    <div className="fixed top-0 left-0 w-full h-screen bg-black/50 backdrop-blur-sm z-50 transition-all duration-500">
+    <div className="fixed top-0 left-0 w-full h-screen bg-white/30 backdrop-blur-md z-50 transition-all duration-500">
       <div
         ref={ref}
-        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-8 transition-all duration-500"
+        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-8 transition-all duration-500 border border-gray-100 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
       >
         <button
           onClick={close}
-          className="absolute top-3 right-5 p-1 rounded hover:bg-gray-100 transition-all duration-200"
+          className="absolute top-4 right-4 p-2 rounded-xl hover:bg-gray-100 transition-all duration-200 z-10"
         >
-          <HiXMark className="w-6 h-6 text-gray-500" />
+          <HiXMark className="w-5 h-5 text-gray-500" />
         </button>
 
         <div>{cloneElement(children, { onCloseModal: close } as any)}</div>

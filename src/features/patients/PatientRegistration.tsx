@@ -84,7 +84,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<{ name: string; phone: string; date_of_birth: string }>();
+  } = useForm<{ name: string; phone: string; date_of_birth: string; sha_number?: string }>();
 
   // Filter facilities based on search
   const filteredFacilities = facilities
@@ -141,6 +141,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     name: string;
     phone: string;
     date_of_birth: string;
+    sha_number?: string;
   }) => {
     registerPatients(data, {
       onSuccess: (newPatient: Patient) => {
@@ -324,70 +325,88 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                         onSubmit={handleSubmit(handleAddPatient)}
                         className="space-y-6"
                       >
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Full Name *
-                          </label>
-                          <input
-                            {...register("name", {
-                              required: "Name is required",
-                            })}
-                            className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
-                            placeholder="Enter patient's full name"
-                          />
-                          {errors.name && (
-                            <p className="text-red-500 text-sm mt-2 flex items-center gap-2">
-                              <span>⚠️</span> {errors.name.message}
-                            </p>
-                          )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Full Name *
+                            </label>
+                            <input
+                              {...register("name", {
+                                required: "Name is required",
+                              })}
+                              className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200"
+                              placeholder="Enter patient's full name"
+                            />
+                            {errors.name && (
+                              <p className="text-red-500 text-sm mt-2 flex items-center gap-2">
+                                <span>⚠️</span> {errors.name.message}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Phone Number *
+                            </label>
+                            <input
+                              {...register("phone", {
+                                required: "Phone number is required",
+                                pattern: {
+                                  value: /^\d{10}$/,
+                                  message:
+                                    "Please enter a valid 10-digit phone number",
+                                },
+                              })}
+                              className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200"
+                              placeholder="10-digit phone number"
+                            />
+                            {errors.phone && (
+                              <p className="text-red-500 text-sm mt-2 flex items-center gap-2">
+                                <span>⚠️</span> {errors.phone.message}
+                              </p>
+                            )}
+                          </div>
                         </div>
 
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Phone Number *
-                          </label>
-                          <input
-                            {...register("phone", {
-                              required: "Phone number is required",
-                              pattern: {
-                                value: /^\d{10}$/,
-                                message:
-                                  "Please enter a valid 10-digit phone number",
-                              },
-                            })}
-                            className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
-                            placeholder="10-digit phone number"
-                          />
-                          {errors.phone && (
-                            <p className="text-red-500 text-sm mt-2 flex items-center gap-2">
-                              <span>⚠️</span> {errors.phone.message}
-                            </p>
-                          )}
-                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Date of Birth *
+                            </label>
+                            <input
+                              {...register("date_of_birth", {
+                                required: "Date of birth is required",
+                              })}
+                              type="date"
+                              className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200"
+                            />
+                            {errors.date_of_birth && (
+                              <p className="text-red-500 text-sm mt-2 flex items-center gap-2">
+                                <span>⚠️</span> {errors.date_of_birth.message}
+                              </p>
+                            )}
+                          </div>
 
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Date of Birth *
-                          </label>
-                          <input
-                            {...register("date_of_birth", {
-                              required: "Date of birth is required",
-                            })}
-                            type="date"
-                            className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
-                          />
-                          {errors.date_of_birth && (
-                            <p className="text-red-500 text-sm mt-2 flex items-center gap-2">
-                              <span>⚠️</span> {errors.date_of_birth.message}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              SHA Number <span className="text-gray-400 text-xs">(Optional)</span>
+                            </label>
+                            <input
+                              {...register("sha_number")}
+                              className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200"
+                              placeholder="Enter SHA number if available"
+                            />
+                            <p className="text-gray-500 text-xs mt-1">
+                              Social Health Authority membership number
                             </p>
-                          )}
+                          </div>
                         </div>
 
                         <div className="flex justify-end pt-4">
                           <button
                             type="submit"
                             disabled={isRegistering}
-                            className="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+                            className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                           >
                             {isRegistering ? (
                               <div className="flex items-center gap-2">
