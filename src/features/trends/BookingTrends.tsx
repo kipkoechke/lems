@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   FaArrowUp,
   FaBuilding,
@@ -36,24 +36,26 @@ const BookingTrends: React.FC = () => {
   const exportToCSV = () => {
     if (!trends.length) return;
 
-    const csvData = trends.map(item => ({
+    const csvData = trends.map((item) => ({
       Date: item.date,
-      'Payment Mode': item.payment_mode,
-      'Total Bookings': item.total,
-      'Total Amount (KES)': item.total_amount,
-      'Vendor Share (KES)': item.total_vendor_share,
-      'Facility Share (KES)': item.total_facility_share,
+      "Payment Mode": item.payment_mode,
+      "Total Bookings": item.total,
+      "Total Amount (KES)": item.total_amount,
+      "Vendor Share (KES)": item.total_vendor_share,
+      "Facility Share (KES)": item.total_facility_share,
     }));
 
-    const headers = Object.keys(csvData[0]).join(',');
-    const rows = csvData.map(row => Object.values(row).join(',')).join('\n');
+    const headers = Object.keys(csvData[0]).join(",");
+    const rows = csvData.map((row) => Object.values(row).join(",")).join("\n");
     const csvContent = `${headers}\n${rows}`;
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = `booking-trends-${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `booking-trends-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
     link.click();
     window.URL.revokeObjectURL(url);
   };
@@ -62,11 +64,13 @@ const BookingTrends: React.FC = () => {
     if (!trends.length) return;
 
     const jsonContent = JSON.stringify(trends, null, 2);
-    const blob = new Blob([jsonContent], { type: 'application/json' });
+    const blob = new Blob([jsonContent], { type: "application/json" });
     const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = `booking-trends-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `booking-trends-${
+      new Date().toISOString().split("T")[0]
+    }.json`;
     link.click();
     window.URL.revokeObjectURL(url);
   };
@@ -237,7 +241,9 @@ const BookingTrends: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FaFilter className="text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">Export Data</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Export Data
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <button
@@ -245,8 +251,16 @@ const BookingTrends: React.FC = () => {
                   disabled={!trends.length}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   Export CSV
                 </button>
@@ -255,8 +269,16 @@ const BookingTrends: React.FC = () => {
                   disabled={!trends.length}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   Export JSON
                 </button>
