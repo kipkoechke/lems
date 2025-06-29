@@ -313,44 +313,41 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                     </button>
                   </Modal.Open>
                   <Modal.Window name="patient-form">
-                    <div className="p-8 max-w-lg mx-auto">
-                      <div className="text-center mb-8">
-                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <FaUserPlus className="w-8 h-8 text-green-600" />
+                    <div className="p-6 max-w-md mx-auto">
+                      <div className="text-center mb-6">
+                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <FaUserPlus className="w-6 h-6 text-green-600" />
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                        <h3 className="text-xl font-bold text-gray-900 mb-1">
                           Register New Patient
                         </h3>
-                        <p className="text-gray-600">
-                          Fill in the patient details
-                        </p>
                       </div>
 
                       <form
                         onSubmit={handleSubmit(handleAddPatient)}
-                        className="space-y-6"
+                        className="space-y-4"
                       >
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
                               Full Name *
                             </label>
                             <input
                               {...register("name", {
                                 required: "Name is required",
                               })}
-                              className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200"
+                              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
                               placeholder="Enter patient's full name"
                             />
                             {errors.name && (
-                              <p className="text-red-500 text-sm mt-2 flex items-center gap-2">
+                              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
                                 <span>⚠️</span> {errors.name.message}
                               </p>
                             )}
                           </div>
 
                           <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
                               Phone Number *
                             </label>
                             <input
@@ -362,20 +359,20 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                                     "Please enter a valid 10-digit phone number",
                                 },
                               })}
-                              className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200"
+                              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
                               placeholder="10-digit phone number"
                             />
                             {errors.phone && (
-                              <p className="text-red-500 text-sm mt-2 flex items-center gap-2">
+                              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
                                 <span>⚠️</span> {errors.phone.message}
                               </p>
                             )}
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
                               Date of Birth *
                             </label>
                             <input
@@ -383,17 +380,17 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                                 required: "Date of birth is required",
                               })}
                               type="date"
-                              className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200"
+                              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
                             />
                             {errors.date_of_birth && (
-                              <p className="text-red-500 text-sm mt-2 flex items-center gap-2">
+                              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
                                 <span>⚠️</span> {errors.date_of_birth.message}
                               </p>
                             )}
                           </div>
 
                           <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
                               SHA Number{" "}
                               <span className="text-gray-400 text-xs">
                                 (Optional)
@@ -401,12 +398,9 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                             </label>
                             <input
                               {...register("sha_number")}
-                              className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200"
+                              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
                               placeholder="Enter SHA number if available"
                             />
-                            <p className="text-gray-500 text-xs mt-1">
-                              Social Health Authority membership number
-                            </p>
                           </div>
                         </div>
 
@@ -414,7 +408,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                           <button
                             type="submit"
                             disabled={isRegistering}
-                            className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                            className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg text-sm"
                           >
                             {isRegistering ? (
                               <div className="flex items-center gap-2">
