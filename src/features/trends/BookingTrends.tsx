@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   FaArrowUp,
   FaBuilding,
   FaChartLine,
+  FaDownload,
+  FaFileExport,
   FaFileInvoiceDollar,
   FaFilter,
   FaMoneyBillWave,
@@ -27,10 +29,77 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useCounties, useSubCounties } from "../counties/useCounties";
+import { useLots } from "../lots/useLots";
+import { useVendors } from "../vendors/useVendors";
 import { useBookingTrends } from "./useBookingTrends";
 
 const BookingTrends: React.FC = () => {
-  const { trends, isLoading, error } = useBookingTrends();
+  // Filter states - initially empty to load all data
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [tempFilters, setTempFilters] = useState({
+    payment_mode: "",
+    vendor_code: "",
+    lot_number: "",
+    county_code: "",
+    sub_county_code: "",
+    start_date: "",
+    end_date: "",
+  });
+
+  // Load data - initially without filters to get all data
+  const { trends, isLoading, error } = useBookingTrends(filters);
+
+  // Data for filter dropdowns
+  const { vendors } = useVendors();
+  const { lots } = useLots();
+  const { counties } = useCounties();
+  const { subCounties } = useSubCounties(tempFilters.county_code);
+
+  // Filter handlers
+  const handleFilterChange = (key: string, value: string) => {
+    // Special handling for county change - reset sub_county when county changes
+    const newTempFilters = {
+      ...tempFilters,
+      [key]: value,
+      ...(key === "county_code" ? { sub_county_code: "" } : {}),
+    };
+    setTempFilters(newTempFilters);
+
+    // Apply filter immediately - only include non-empty values
+    const activeFilters: Record<string, string> = {};
+    Object.entries(newTempFilters).forEach(([filterKey, filterValue]) => {
+      if (filterValue && filterValue.trim() !== "") {
+        activeFilters[filterKey] = filterValue;
+      }
+    });
+
+    setFilters(activeFilters);
+  };
+
+  const clearFilters = () => {
+    setTempFilters({
+      payment_mode: "",
+      vendor_code: "",
+      lot_number: "",
+      county_code: "",
+      sub_county_code: "",
+      start_date: "",
+      end_date: "",
+    });
+    setFilters({}); // Clear all filters to show all data
+  };
+
+  const applyFilters = () => {
+    // Convert temp filters to active filters, excluding empty values
+    const activeFilters: Record<string, string> = {};
+    Object.entries(tempFilters).forEach(([key, value]) => {
+      if (value && value.trim() !== "") {
+        activeFilters[key] = value;
+      }
+    });
+    setFilters(activeFilters);
+  };
 
   // Export functions
   const exportToCSV = () => {
@@ -236,11 +305,180 @@ const BookingTrends: React.FC = () => {
             </div>
           </div>
 
-          {/* Export Actions */}
+          {/* Filters */}
           <div className="p-6 bg-gray-50 border-b">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
                 <FaFilter className="text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">
+                  Filter Analytics Data
+                </span>
+                {Object.keys(filters).length > 0 && (
+                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                    {Object.keys(filters).length} filter
+                    {Object.keys(filters).length !== 1 ? "s" : ""} active
+                  </span>
+                )}
+              </div>
+              {Object.keys(filters).length > 0 && (
+                <span className="text-xs text-gray-600">
+                  Showing filtered results
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+              {/* Payment Mode Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Payment Mode
+                </label>
+                <select
+                  value={tempFilters.payment_mode}
+                  onChange={(e) =>
+                    handleFilterChange("payment_mode", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">All Payment Modes</option>
+                  <option value="cash">Cash</option>
+                  <option value="sha">SHA</option>
+                </select>
+              </div>
+
+              {/* Vendor Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Vendor
+                </label>
+                <select
+                  value={tempFilters.vendor_code}
+                  onChange={(e) =>
+                    handleFilterChange("vendor_code", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">All Vendors</option>
+                  {vendors?.map((vendor) => (
+                    <option key={vendor.id} value={vendor.code}>
+                      {vendor.name} ({vendor.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Lot Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Lot Number
+                </label>
+                <select
+                  value={tempFilters.lot_number}
+                  onChange={(e) =>
+                    handleFilterChange("lot_number", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">All Lots</option>
+                  {lots?.map((lot) => (
+                    <option key={lot.id} value={lot.number}>
+                      {lot.number} - {lot.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* County Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  County
+                </label>
+                <select
+                  value={tempFilters.county_code}
+                  onChange={(e) =>
+                    handleFilterChange("county_code", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">All Counties</option>
+                  {counties?.map((county) => (
+                    <option key={county.id} value={county.code}>
+                      {county.name} ({county.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Date Range Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={tempFilters.start_date}
+                  onChange={(e) =>
+                    handleFilterChange("start_date", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={tempFilters.end_date}
+                  onChange={(e) =>
+                    handleFilterChange("end_date", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sub County
+                </label>
+                <select
+                  value={tempFilters.sub_county_code}
+                  onChange={(e) =>
+                    handleFilterChange("sub_county_code", e.target.value)
+                  }
+                  disabled={!tempFilters.county_code}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    {!tempFilters.county_code
+                      ? "Select county first"
+                      : "All Sub Counties"}
+                  </option>
+                  {subCounties?.map((subCounty) => (
+                    <option key={subCounty.id} value={subCounty.code}>
+                      {subCounty.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-end gap-2">
+                <button
+                  onClick={clearFilters}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+
+            {/* Export Actions */}
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-2">
+                <FaFileExport className="text-gray-500" />
                 <span className="text-sm font-medium text-gray-700">
                   Export Data
                 </span>
@@ -251,17 +489,7 @@ const BookingTrends: React.FC = () => {
                   disabled={!trends.length}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <FaDownload className="w-4 h-4" />
                   Export CSV
                 </button>
                 <button
@@ -269,17 +497,7 @@ const BookingTrends: React.FC = () => {
                   disabled={!trends.length}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <FaFileExport className="w-4 h-4" />
                   Export JSON
                 </button>
               </div>
