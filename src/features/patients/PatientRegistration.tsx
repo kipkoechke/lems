@@ -70,6 +70,9 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   const [selectedPaymentModeId, setSelectedPaymentModeId] =
     useState<string>("");
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>("");
+  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
+    null
+  );
 
   // Ref to track newly registered patient ID
   const newlyRegisteredPatientId = useRef<string | null>(null);
@@ -87,18 +90,19 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     searchQuery ? { search: searchQuery } : undefined
   );
 
-  // Simple facility filtering - no complex search
-  const filteredFacilities = facilities?.slice(0, 50);
-
   // Handle facility search with API request - simplified
   const handleFacilitySearch = () => {
     if (facilitySearch.trim()) {
       setSearchQuery(facilitySearch.trim());
+    } else {
+      // If search is empty, clear search query to show all facilities
+      setSearchQuery("");
     }
   };
 
-  // Get selected items
-  const selectedFacility = facilities?.find((f) => f.id === selectedFacilityId);
+  // Use the searched facilities or show first 50 if no search
+  const filteredFacilities = facilities?.slice(0, 50);
+
   const _selectedPatient = patients?.find((p) => p.id === selectedid);
 
   // Check if all fields are completed
@@ -128,6 +132,18 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     }
   }, [isFacilityDropdownOpen]);
 
+  // Load initial facilities when dropdown opens for the first time
+  useEffect(() => {
+    if (
+      isFacilityDropdownOpen &&
+      !searchQuery &&
+      (!facilities || facilities.length === 0)
+    ) {
+      // Trigger initial load of facilities if none are loaded
+      setSearchQuery(""); // This will trigger the API call with no search param
+    }
+  }, [isFacilityDropdownOpen, searchQuery, facilities]);
+
   // Auto-select newly registered patient when patients list updates
   useEffect(() => {
     if (newlyRegisteredPatientId.current && patients) {
@@ -142,14 +158,21 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   }, [patients]);
 
   const handleFacilitySelect = (facility: Facility) => {
+    console.log("Selecting facility:", facility);
     setSelectedFacilityId(facility.id);
+    setSelectedFacility(facility); // Store the full facility object
     setIsFacilityDropdownOpen(false);
-    setFacilitySearch("");
-    setSearchQuery("");
+    // Don't clear the search immediately to allow user to see what they selected
+    // Clear it after a short delay
+    setTimeout(() => {
+      setFacilitySearch("");
+      setSearchQuery("");
+    }, 100);
   };
 
   const clearFacilitySelection = () => {
     setSelectedFacilityId("");
+    setSelectedFacility(null);
     setFacilitySearch("");
     setSearchQuery("");
   };
@@ -157,12 +180,16 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   const handleProceed = (e: React.FormEvent) => {
     e.preventDefault();
     const patient = patients?.find((p) => p.id === selectedid);
-    const facility = facilities?.find((f) => f.id === selectedFacilityId);
 
-    if (!patient || !selectedPaymentModeId || !selectedFacilityId || !facility)
+    if (
+      !patient ||
+      !selectedPaymentModeId ||
+      !selectedFacilityId ||
+      !selectedFacility
+    )
       return;
 
-    onStepOneComplete?.(patient, selectedPaymentModeId, facility);
+    onStepOneComplete?.(patient, selectedPaymentModeId, selectedFacility);
   };
 
   return (

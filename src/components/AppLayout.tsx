@@ -9,7 +9,7 @@ type AppLayoutProps = {
 
 const AppLayout = ({ children }: AppLayoutProps) => {
   return (
-    <div className="h-screen grid grid-cols-[1fr_5fr] grid-rows-[auto_1fr]">
+    <div className="h-screen grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
       <Header />
       <Sidebar />
       <main className="overflow-auto bg-gray-100">
