@@ -124,7 +124,7 @@ export interface BookingFilters {
   county_id?: string;
   sub_county_id?: string;
   service_completion?: string;
-  approval?: string;
+  approval_status?: string; // Updated from 'approval' to 'approval_status'
   start_date?: string; // "YYYY-MM-DD HH:mm:ss"
   end_date?: string; // "YYYY-MM-DD HH:mm:ss"
 }

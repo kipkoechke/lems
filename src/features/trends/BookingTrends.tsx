@@ -35,8 +35,10 @@ import { useVendors } from "../vendors/useVendors";
 import { useBookingTrends } from "./useBookingTrends";
 
 const BookingTrends: React.FC = () => {
-  // Filter states - initially empty to load all data
-  const [filters, setFilters] = useState<Record<string, string>>({});
+  // Filter states - initially with approval_status=approved to load approved data
+  const [filters, setFilters] = useState<Record<string, string>>({
+    approval_status: "approved", // Default to approved bookings
+  });
   const [tempFilters, setTempFilters] = useState({
     payment_mode: "",
     vendor_code: "",
@@ -45,6 +47,7 @@ const BookingTrends: React.FC = () => {
     sub_county_code: "",
     start_date: "",
     end_date: "",
+    approval_status: "approved", // Default to approved
   });
 
   // Load data - initially without filters to get all data
@@ -86,8 +89,9 @@ const BookingTrends: React.FC = () => {
       sub_county_code: "",
       start_date: "",
       end_date: "",
+      approval_status: "approved", // Maintain approved status as default
     });
-    setFilters({}); // Clear all filters to show all data
+    setFilters({ approval_status: "approved" }); // Keep approval_status=approved even when clearing other filters
   };
 
   const applyFilters = () => {
@@ -343,6 +347,25 @@ const BookingTrends: React.FC = () => {
                   <option value="">All Payment Modes</option>
                   <option value="cash">Cash</option>
                   <option value="sha">SHA</option>
+                </select>
+              </div>
+
+              {/* Approval Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Approval Status
+                </label>
+                <select
+                  value={tempFilters.approval_status}
+                  onChange={(e) =>
+                    handleFilterChange("approval_status", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
                 </select>
               </div>
 

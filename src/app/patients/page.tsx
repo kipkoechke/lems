@@ -245,7 +245,9 @@ function PatientBreadcrumb({ patient }: { patient: Patient }) {
 function Patients() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [_selectedPatient, _setSelectedPatient] = useState<Patient | null>(null);
+  const [_selectedPatient, _setSelectedPatient] = useState<Patient | null>(
+    null
+  );
   const [_showBookingsModal, _setShowBookingsModal] = useState(false);
   const router = useRouter();
 

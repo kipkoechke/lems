@@ -46,7 +46,7 @@ const PaymentReport: React.FC = () => {
   const { isLoading, bookings, error } = useBookings({
     ...filters,
     service_completion: "completed",
-    approval: "approved",
+    approval_status: "approved",
   });
 
   const { facilities } = useFacilities();
@@ -58,13 +58,13 @@ const PaymentReport: React.FC = () => {
     useBookingsTrend({
       ...filters,
       service_completion: "completed",
-      approval: "approved",
+      approval_status: "approved",
     });
   const { data: paymentModeData = [], isLoading: paymentModeLoading } =
     usePaymentModeDistribution({
       ...filters,
       service_completion: "completed",
-      approval: "approved",
+      approval_status: "approved",
     });
 
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
