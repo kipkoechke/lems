@@ -1,4 +1,4 @@
-import { goToNextStep, setPatient } from "@/context/workflowSlice";
+import { setPatient } from "@/context/workflowSlice";
 import { useAppDispatch } from "@/hooks/hooks";
 import { Patient, registerPatient } from "@/services/apiPatient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

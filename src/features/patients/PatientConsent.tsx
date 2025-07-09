@@ -119,7 +119,7 @@ const PatientConsent: React.FC = () => {
         setShowOTP(false);
 
         // Start countdown and redirect after 3 seconds
-        setCountdown(30);
+        setCountdown(10);
         const countdownInterval = setInterval(() => {
           setCountdown((prev) => {
             if (prev === null || prev <= 1) {
@@ -291,10 +291,6 @@ const PatientConsent: React.FC = () => {
             <p>
               <span className="font-medium">Service:</span>{" "}
               {selectedService.serviceName}
-            </p>
-            <p>
-              <span className="font-medium">Cost:</span> KSh{" "}
-              {selectedService.shaRate?.toLocaleString()}
             </p>
             {booking && (
               <>

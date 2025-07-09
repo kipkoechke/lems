@@ -131,7 +131,9 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   // Auto-select newly registered patient when patients list updates
   useEffect(() => {
     if (newlyRegisteredPatientId.current && patients) {
-      const patientExists = patients.find(p => p.id === newlyRegisteredPatientId.current);
+      const patientExists = patients.find(
+        (p) => p.id === newlyRegisteredPatientId.current
+      );
       if (patientExists) {
         setSelectedid(newlyRegisteredPatientId.current);
         newlyRegisteredPatientId.current = null; // Clear the ref
@@ -339,7 +341,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                     </button>
                   </Modal.Open>
                   <Modal.Window name="patient-form">
-                    <PatientRegistrationForm 
+                    <PatientRegistrationForm
                       newlyRegisteredPatientId={newlyRegisteredPatientId}
                     />
                   </Modal.Window>
@@ -495,7 +497,7 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
       onError: (error: any) => {
         console.error("Patient registration failed:", error);
         toast.error(error.message || "Failed to register patient");
-      }
+      },
     });
   };
 
@@ -510,10 +512,7 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
         </h3>
       </div>
 
-      <form
-        onSubmit={handleSubmit(handleAddPatient)}
-        className="space-y-4"
-      >
+      <form onSubmit={handleSubmit(handleAddPatient)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -542,8 +541,7 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
                 required: "Phone number is required",
                 pattern: {
                   value: /^\d{10}$/,
-                  message:
-                    "Please enter a valid 10-digit phone number",
+                  message: "Please enter a valid 10-digit phone number",
                 },
               })}
               className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
@@ -579,9 +577,7 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               SHA Number{" "}
-              <span className="text-gray-400 text-xs">
-                (Optional)
-              </span>
+              <span className="text-gray-400 text-xs">(Optional)</span>
             </label>
             <input
               {...register("sha_number")}
