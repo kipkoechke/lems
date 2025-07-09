@@ -11,6 +11,7 @@ import {
   FaChevronDown,
   FaHospital,
   FaSearch,
+  FaSpinner,
   FaTimes,
   FaUser,
   FaUserPlus,
@@ -63,7 +64,6 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   onCloseModal,
 }) => {
   const { patients } = usePatients();
-  const { facilities } = useFacilities();
 
   const [selectedid, setSelectedid] = useState<string>("");
   const [selectedPaymentModeId, setSelectedPaymentModeId] =
@@ -72,10 +72,16 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
 
   // Facility dropdown state
   const [facilitySearch, setFacilitySearch] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>(""); // Actual search query for API
   const [isFacilityDropdownOpen, setIsFacilityDropdownOpen] =
     useState<boolean>(false);
   const facilityDropdownRef = useRef<HTMLDivElement>(null);
   const facilitySearchRef = useRef<HTMLInputElement>(null);
+
+  // Get facilities with search parameters - simplified without debounce
+  const { facilities, isLoading: isFacilitiesLoading } = useFacilities(
+    searchQuery ? { search: searchQuery } : undefined
+  );
 
   // For registering a new patient
   const { registerPatients, isRegistering } = useRegisterPatient();
@@ -91,18 +97,19 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     sha_number?: string;
   }>();
 
-  // Filter facilities based on search
-  const filteredFacilities = facilities
-    ?.filter(
-      (facility) =>
-        facility.name?.toLowerCase().includes(facilitySearch.toLowerCase()) ||
-        facility.code?.toLowerCase().includes(facilitySearch.toLowerCase())
-    )
-    .slice(0, 50);
+  // Simple facility filtering - no complex search
+  const filteredFacilities = facilities?.slice(0, 50);
+
+  // Handle facility search with API request - simplified
+  const handleFacilitySearch = () => {
+    if (facilitySearch.trim()) {
+      setSearchQuery(facilitySearch.trim());
+    }
+  };
 
   // Get selected items
   const selectedFacility = facilities?.find((f) => f.id === selectedFacilityId);
-  const selectedPatient = patients?.find((p) => p.id === selectedid);
+  const _selectedPatient = patients?.find((p) => p.id === selectedid);
 
   // Check if all fields are completed
   const isComplete = selectedFacilityId && selectedid && selectedPaymentModeId;
@@ -135,11 +142,13 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     setSelectedFacilityId(facility.id);
     setIsFacilityDropdownOpen(false);
     setFacilitySearch("");
+    setSearchQuery("");
   };
 
   const clearFacilitySelection = () => {
     setSelectedFacilityId("");
     setFacilitySearch("");
+    setSearchQuery("");
   };
 
   const handleAddPatient = (data: {
@@ -254,13 +263,32 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                           placeholder="Search facilities..."
                           value={facilitySearch}
                           onChange={(e) => setFacilitySearch(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                          className="w-full pl-10 pr-20 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                           onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleFacilitySearch();
+                            }
+                          }}
                         />
+                        <button
+                          type="button"
+                          onClick={handleFacilitySearch}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs font-medium"
+                        >
+                          Search
+                        </button>
                       </div>
                     </div>
                     <div className="max-h-60 overflow-y-auto">
-                      {filteredFacilities && filteredFacilities.length > 0 ? (
+                      {isFacilitiesLoading ? (
+                        <div className="px-4 py-8 text-center text-gray-500">
+                          <FaSpinner className="w-6 h-6 mx-auto mb-2 text-blue-500 animate-spin" />
+                          <div>Loading facilities...</div>
+                        </div>
+                      ) : filteredFacilities &&
+                        filteredFacilities.length > 0 ? (
                         filteredFacilities.map((facility) => (
                           <div
                             key={facility.id}
@@ -279,6 +307,18 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                         <div className="px-4 py-8 text-center text-gray-500">
                           <FaHospital className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                           <div>No facilities found</div>
+                          {searchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSearchQuery("");
+                                setFacilitySearch("");
+                              }}
+                              className="mt-2 text-blue-600 hover:text-blue-800 text-sm underline"
+                            >
+                              Clear search
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

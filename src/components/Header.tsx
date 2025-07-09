@@ -6,7 +6,7 @@ const Header = () => {
       <Image
         src="/assets/logo.png"
         alt="Logo"
-        width={150}
+        width={600}
         height={100}
         className="mb-4"
       />

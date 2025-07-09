@@ -1,10 +1,18 @@
 "use client";
-import { usePatients } from "@/features/patients/usePatients";
+import Pagination from "@/components/Pagination";
+import { usePatientsPaginated } from "@/features/patients/usePatients";
 import { useBookings } from "@/features/services/bookings/useBookings";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Patient } from "@/services/apiPatient";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { FaCalendar, FaChevronRight, FaPhone, FaUser } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import {
+  FaCalendar,
+  FaChevronRight,
+  FaPhone,
+  FaSearch,
+  FaUser,
+} from "react-icons/fa";
 import { FiMoreVertical } from "react-icons/fi";
 
 function PatientBookingsModal({
@@ -16,7 +24,7 @@ function PatientBookingsModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const { bookings, isLoading: bookingsLoading } = useBookings();
+  const { bookings, isLoading: _bookingsLoading } = useBookings();
 
   if (!isOpen || !patient) return null;
 
@@ -168,7 +176,7 @@ function PatientBookingsModal({
 
 // Dropdown Menu Component
 function ActionsDropdown({
-  patient,
+  patient: _patient,
   onViewBookings,
 }: {
   patient: Patient;
@@ -235,10 +243,40 @@ function PatientBreadcrumb({ patient }: { patient: Patient }) {
 }
 
 function Patients() {
-  const { isLoading, patients, error } = usePatients();
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [showBookingsModal, setShowBookingsModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [_selectedPatient, _setSelectedPatient] = useState<Patient | null>(null);
+  const [_showBookingsModal, _setShowBookingsModal] = useState(false);
   const router = useRouter();
+
+  // Debounce search term to avoid too many API calls
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    if (debouncedSearchTerm !== searchTerm) {
+      setCurrentPage(1);
+    }
+  }, [debouncedSearchTerm, searchTerm]);
+
+  // Use paginated patients hook with search
+  const { isLoading, patients, pagination, error } = usePatientsPaginated({
+    page: currentPage,
+    per_page: 100, // Match the API response
+    search: debouncedSearchTerm || undefined, // Only include search if there's a term
+  });
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    // Reset to page 1 immediately when user starts typing
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  };
 
   // const handlePatientClick = (patient: Patient) => {
   //   setSelectedPatient(patient);
@@ -283,100 +321,218 @@ function Patients() {
   }
 
   const patientData = patients ?? [];
+  const totalPatients = pagination?.total ?? patientData.length;
+
+  // Show loading state or search results info
+  const showEmptyState = !isLoading && patientData.length === 0;
+  const isSearching = debouncedSearchTerm.length > 0;
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Patients</h1>
-        <p className="text-gray-600 mt-1">
-          Total: {patientData.length} patients
-        </p>
-      </div>
-
-      {patientData.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No patients found</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Patient ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Patient Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Mobile Number
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date of Birth
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {patientData.map((patient: Patient, index: number) => (
-                <tr
-                  key={index}
-                  className="hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => handlePatientClick(patient)}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {patient.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {patient.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {patient.phone}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(patient.date_of_birth).toLocaleDateString(
-                      "en-US",
-                      {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      }
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white rounded-2xl shadow-xl mb-6 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <FaUser className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-white mb-1">
+                    Patient Management
+                  </h1>
+                  <p className="text-blue-100">
+                    Manage patient records and information
+                    {pagination && (
+                      <span className="ml-2">
+                        • Page {pagination.currentPage} of {pagination.lastPage}
+                      </span>
                     )}
-                  </td>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(patient.created_at).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <ActionsDropdown
-                      patient={patient}
-                      onViewBookings={() => handleViewBookings(patient)}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {/* Search */}
+          <div className="p-6 bg-gray-50 border-b">
+            <div className="relative max-w-md">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search patients by name, phone..."
+                value={searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
         </div>
-      )}
 
-      {/* <BookingDetailsModal
-        patient={selectedPatient}
-        isOpen={showBookingsModal}
-        onClose={() => {
-          setShowBookingsModal(false);
-          setSelectedPatient(null);
-        }}
-      /> */}
+        {/* Stats Card */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="bg-white rounded-2xl shadow-xl p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <FaUser className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {totalPatients}
+                </div>
+                <div className="text-sm text-gray-600">Total Patients</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-xl p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <FaCalendar className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-900">--</div>
+                <div className="text-sm text-gray-600">Active Bookings</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-xl p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                <FaPhone className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-900">--</div>
+                <div className="text-sm text-gray-600">Recent Contacts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-2xl shadow-xl">
+          {showEmptyState ? (
+            <div className="p-12 text-center">
+              <div className="text-gray-500 text-xl mb-4">
+                {isSearching
+                  ? "No patients match your search"
+                  : "No patients found"}
+              </div>
+              <p className="text-gray-400">
+                {isSearching
+                  ? "Try adjusting your search terms"
+                  : "Patients will appear here once they are registered"}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto overflow-y-visible">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                      Patient
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                      Contact Info
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                      Date of Birth
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                      SHA Number
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                      Registration Date
+                    </th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {patientData.map((patient: Patient) => (
+                    <tr
+                      key={patient.id}
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => handlePatientClick(patient)}
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <FaUser className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {patient.name}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              ID: {patient.id.slice(-8)}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <FaPhone className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-900">{patient.phone}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-gray-600">
+                        {new Date(patient.date_of_birth).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {patient.sha_number ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {patient.sha_number}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-sm">No SHA</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-gray-600">
+                        {new Date(patient.created_at).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <ActionsDropdown
+                          patient={patient}
+                          onViewBookings={() => handleViewBookings(patient)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {pagination && pagination.lastPage > 1 && (
+            <Pagination
+              currentPage={pagination.currentPage}
+              lastPage={pagination.lastPage}
+              total={pagination.total}
+              from={pagination.from}
+              to={pagination.to}
+              links={pagination.links}
+              onPageChange={handlePageChange}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

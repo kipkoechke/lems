@@ -1,7 +1,8 @@
 "use client";
 import Modal from "@/components/Modal";
+import Pagination from "@/components/Pagination";
 import {
-  useFacilities,
+  useFacilitiesPaginated,
   useUpdateFacility,
 } from "@/features/facilities/useFacilities";
 import {
@@ -9,7 +10,7 @@ import {
   Facility,
 } from "@/services/apiFacility";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   FaBuilding,
@@ -94,18 +95,33 @@ function EditFacilityForm({
   );
 }
 
-function Facilities() {
+function FacilitiesContent() {
   const router = useRouter();
-  const { isLoading, facilities, error } = useFacilities();
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-  // Filter facilities based on search term
-  const filteredFacilities = facilities?.filter(
-    (facility) =>
-      facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      facility.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Use simple paginated facilities hook
+  const { isLoading, facilities, pagination, error } = useFacilitiesPaginated({
+    page: currentPage,
+    per_page: 100,
+    search: searchTerm || undefined,
+  });
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setActiveDropdown(null);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
 
   if (isLoading) {
     return (
@@ -147,6 +163,11 @@ function Facilities() {
   }
 
   const facilityData = facilities ?? [];
+  const totalFacilities = pagination?.total ?? facilityData.length;
+
+  // Show loading state or search results info
+  const showEmptyState = !isLoading && facilityData.length === 0;
+  const isSearching = searchTerm.length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
@@ -165,6 +186,11 @@ function Facilities() {
                   </h1>
                   <p className="text-blue-100">
                     Manage healthcare facilities and their services
+                    {pagination && (
+                      <span className="ml-2">
+                        • Page {pagination.currentPage} of {pagination.lastPage}
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>
@@ -173,16 +199,52 @@ function Facilities() {
 
           {/* Search */}
           <div className="p-6 bg-gray-50 border-b">
-            <div className="relative max-w-md">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search facilities..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            <form
+              onSubmit={handleSearchSubmit}
+              className="flex items-center gap-4"
+            >
+              <div className="relative flex-1 max-w-md">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search facilities by name, code, or type..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Search
+              </button>
+
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="px-4 py-3 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </form>
+
+            {isSearching && (
+              <div className="mt-3 text-sm text-gray-600">
+                <div className="flex items-center justify-between">
+                  <span>Searching for &quot;{searchTerm}&quot;...</span>
+                  {totalFacilities > 0 && (
+                    <span className="text-blue-600 font-medium">
+                      {totalFacilities} result{totalFacilities !== 1 ? "s" : ""}{" "}
+                      found
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -195,9 +257,11 @@ function Facilities() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {facilityData.length}
+                  {totalFacilities}
                 </div>
-                <div className="text-sm text-gray-600">Total Facilities</div>
+                <div className="text-sm text-gray-600">
+                  {isSearching ? "Search Results" : "Total Facilities"}
+                </div>
               </div>
             </div>
           </div>
@@ -227,15 +291,15 @@ function Facilities() {
 
         {/* Table */}
         <div className="bg-white rounded-2xl shadow-xl">
-          {filteredFacilities && filteredFacilities.length === 0 ? (
+          {showEmptyState ? (
             <div className="p-12 text-center">
               <div className="text-gray-500 text-xl mb-4">
-                {searchTerm
+                {isSearching
                   ? "No facilities match your search"
                   : "No facilities found"}
               </div>
               <p className="text-gray-400">
-                {searchTerm
+                {isSearching
                   ? "Try adjusting your search terms"
                   : "Facilities will appear here once they are added to the system"}
               </p>
@@ -260,7 +324,7 @@ function Facilities() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {filteredFacilities?.map((facility: Facility) => (
+                  {facilityData?.map((facility: Facility) => (
                     <tr
                       key={facility.id}
                       className="hover:bg-gray-50 transition-colors"
@@ -403,9 +467,47 @@ function Facilities() {
               </table>
             </div>
           )}
+
+          {/* Pagination */}
+          {pagination && pagination.lastPage > 1 && (
+            <Pagination
+              currentPage={pagination.currentPage}
+              lastPage={pagination.lastPage}
+              total={pagination.total}
+              from={pagination.from}
+              to={pagination.to}
+              links={pagination.links}
+              onPageChange={handlePageChange}
+            />
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+function Facilities() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <div className="animate-pulse space-y-6">
+                <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+                <div className="space-y-4">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="h-16 bg-gray-100 rounded"></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <FacilitiesContent />
+    </Suspense>
   );
 }
 

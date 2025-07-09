@@ -2,7 +2,6 @@
 
 import React from "react";
 import {
-  FaArrowRight,
   FaCheckCircle,
   FaCreditCard,
   FaHeartbeat,
@@ -10,7 +9,6 @@ import {
   FaPlay,
   FaStethoscope,
   FaUser,
-  FaUserCheck,
   FaUserShield,
 } from "react-icons/fa";
 
