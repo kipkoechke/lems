@@ -6,6 +6,7 @@ import { Facility } from "@/services/apiFacility";
 import { Patient } from "@/services/apiPatient";
 import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import {
   FaArrowRight,
   FaChevronDown,
@@ -70,6 +71,9 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     useState<string>("");
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>("");
 
+  // Ref to track newly registered patient ID
+  const newlyRegisteredPatientId = useRef<string | null>(null);
+
   // Facility dropdown state
   const [facilitySearch, setFacilitySearch] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>(""); // Actual search query for API
@@ -82,20 +86,6 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   const { facilities, isLoading: isFacilitiesLoading } = useFacilities(
     searchQuery ? { search: searchQuery } : undefined
   );
-
-  // For registering a new patient
-  const { registerPatients, isRegistering } = useRegisterPatient();
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<{
-    name: string;
-    phone: string;
-    date_of_birth: string;
-    sha_number?: string;
-  }>();
 
   // Simple facility filtering - no complex search
   const filteredFacilities = facilities?.slice(0, 50);
@@ -138,6 +128,17 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     }
   }, [isFacilityDropdownOpen]);
 
+  // Auto-select newly registered patient when patients list updates
+  useEffect(() => {
+    if (newlyRegisteredPatientId.current && patients) {
+      const patientExists = patients.find(p => p.id === newlyRegisteredPatientId.current);
+      if (patientExists) {
+        setSelectedid(newlyRegisteredPatientId.current);
+        newlyRegisteredPatientId.current = null; // Clear the ref
+      }
+    }
+  }, [patients]);
+
   const handleFacilitySelect = (facility: Facility) => {
     setSelectedFacilityId(facility.id);
     setIsFacilityDropdownOpen(false);
@@ -149,21 +150,6 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     setSelectedFacilityId("");
     setFacilitySearch("");
     setSearchQuery("");
-  };
-
-  const handleAddPatient = (data: {
-    name: string;
-    phone: string;
-    date_of_birth: string;
-    sha_number?: string;
-  }) => {
-    registerPatients(data, {
-      onSuccess: (newPatient: Patient) => {
-        setSelectedid(newPatient.id);
-        reset();
-        onCloseModal?.();
-      },
-    });
   };
 
   const handleProceed = (e: React.FormEvent) => {
@@ -353,115 +339,9 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                     </button>
                   </Modal.Open>
                   <Modal.Window name="patient-form">
-                    <div className="p-6 max-w-md mx-auto">
-                      <div className="text-center mb-6">
-                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <FaUserPlus className="w-6 h-6 text-green-600" />
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-1">
-                          Register New Patient
-                        </h3>
-                      </div>
-
-                      <form
-                        onSubmit={handleSubmit(handleAddPatient)}
-                        className="space-y-4"
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Full Name *
-                            </label>
-                            <input
-                              {...register("name", {
-                                required: "Name is required",
-                              })}
-                              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
-                              placeholder="Enter patient's full name"
-                            />
-                            {errors.name && (
-                              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                <span>⚠️</span> {errors.name.message}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Phone Number *
-                            </label>
-                            <input
-                              {...register("phone", {
-                                required: "Phone number is required",
-                                pattern: {
-                                  value: /^\d{10}$/,
-                                  message:
-                                    "Please enter a valid 10-digit phone number",
-                                },
-                              })}
-                              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
-                              placeholder="10-digit phone number"
-                            />
-                            {errors.phone && (
-                              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                <span>⚠️</span> {errors.phone.message}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Date of Birth *
-                            </label>
-                            <input
-                              {...register("date_of_birth", {
-                                required: "Date of birth is required",
-                              })}
-                              type="date"
-                              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
-                            />
-                            {errors.date_of_birth && (
-                              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                <span>⚠️</span> {errors.date_of_birth.message}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              SHA Number{" "}
-                              <span className="text-gray-400 text-xs">
-                                (Optional)
-                              </span>
-                            </label>
-                            <input
-                              {...register("sha_number")}
-                              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
-                              placeholder="Enter SHA number if available"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex justify-end pt-4">
-                          <button
-                            type="submit"
-                            disabled={isRegistering}
-                            className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg text-sm"
-                          >
-                            {isRegistering ? (
-                              <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                Registering...
-                              </div>
-                            ) : (
-                              "Register Patient"
-                            )}
-                          </button>
-                        </div>
-                      </form>
-                    </div>
+                    <PatientRegistrationForm 
+                      newlyRegisteredPatientId={newlyRegisteredPatientId}
+                    />
                   </Modal.Window>
                 </Modal>
               </div>
@@ -567,6 +447,167 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
           </div>
         </form>
       </div>
+    </div>
+  );
+};
+
+// Separate component for the patient registration form inside the modal
+interface PatientRegistrationFormProps {
+  newlyRegisteredPatientId: React.MutableRefObject<string | null>;
+  onCloseModal?: () => void;
+}
+
+const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
+  newlyRegisteredPatientId,
+  onCloseModal,
+}) => {
+  const { registerPatients, isRegistering } = useRegisterPatient();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<{
+    name: string;
+    phone: string;
+    date_of_birth: string;
+    sha_number?: string;
+  }>();
+
+  const handleAddPatient = (data: {
+    name: string;
+    phone: string;
+    date_of_birth: string;
+    sha_number?: string;
+  }) => {
+    registerPatients(data, {
+      onSuccess: (newPatient: Patient) => {
+        console.log("Patient registration successful:", newPatient);
+        // Store the new patient ID in ref for auto-selection
+        newlyRegisteredPatientId.current = newPatient.id;
+        // Reset the form
+        reset();
+        // Show success message
+        toast.success("Patient registered successfully!");
+        // Close the modal
+        onCloseModal?.();
+      },
+      onError: (error: any) => {
+        console.error("Patient registration failed:", error);
+        toast.error(error.message || "Failed to register patient");
+      }
+    });
+  };
+
+  return (
+    <div className="p-6 max-w-md mx-auto">
+      <div className="text-center mb-6">
+        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+          <FaUserPlus className="w-6 h-6 text-green-600" />
+        </div>
+        <h3 className="text-xl font-bold text-gray-900 mb-1">
+          Register New Patient
+        </h3>
+      </div>
+
+      <form
+        onSubmit={handleSubmit(handleAddPatient)}
+        className="space-y-4"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Full Name *
+            </label>
+            <input
+              {...register("name", {
+                required: "Name is required",
+              })}
+              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
+              placeholder="Enter patient's full name"
+            />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <span>⚠️</span> {errors.name.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Phone Number *
+            </label>
+            <input
+              {...register("phone", {
+                required: "Phone number is required",
+                pattern: {
+                  value: /^\d{10}$/,
+                  message:
+                    "Please enter a valid 10-digit phone number",
+                },
+              })}
+              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
+              placeholder="10-digit phone number"
+            />
+            {errors.phone && (
+              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <span>⚠️</span> {errors.phone.message}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date of Birth *
+            </label>
+            <input
+              {...register("date_of_birth", {
+                required: "Date of birth is required",
+              })}
+              type="date"
+              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
+            />
+            {errors.date_of_birth && (
+              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <span>⚠️</span> {errors.date_of_birth.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              SHA Number{" "}
+              <span className="text-gray-400 text-xs">
+                (Optional)
+              </span>
+            </label>
+            <input
+              {...register("sha_number")}
+              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
+              placeholder="Enter SHA number if available"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-4">
+          <button
+            type="submit"
+            disabled={isRegistering}
+            className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg text-sm"
+          >
+            {isRegistering ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Registering...
+              </div>
+            ) : (
+              "Register Patient"
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

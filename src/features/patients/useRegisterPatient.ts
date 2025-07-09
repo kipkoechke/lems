@@ -10,17 +10,10 @@ export function useRegisterPatient() {
 
   const { mutate: registerPatients, isPending: isRegistering } = useMutation({
     mutationFn: registerPatient,
-    onSuccess: (data: Patient, _variables, context: any) => {
-      toast.success("Patient registered successfully!", {
-        id: "registerPatient",
-      });
+    onSuccess: (data: Patient) => {
+      // Always invalidate queries and update Redux
       queryClient.invalidateQueries({ queryKey: ["patients"] });
       dispatch(setPatient(data));
-      // dispatch(goToNextStep());
-      // Only call custom onSuccess if provided
-      if (context && typeof context.onSuccess === "function") {
-        context.onSuccess(data);
-      }
     },
     onError: (error) => {
       toast.error(error.message || "Something went wrong", {

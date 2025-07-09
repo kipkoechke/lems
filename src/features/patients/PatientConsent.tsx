@@ -282,9 +282,6 @@ const PatientConsent: React.FC = () => {
             <p>
               <span className="font-medium">Phone:</span> {patient.phone}
             </p>
-            <p>
-              <span className="font-medium">ID:</span> {patient.id}
-            </p>
           </div>
 
           <div className="bg-gray-50 p-4 rounded-lg">
@@ -300,10 +297,20 @@ const PatientConsent: React.FC = () => {
               {selectedService.shaRate?.toLocaleString()}
             </p>
             {booking && (
-              <p>
-                <span className="font-medium">Booking ID:</span>{" "}
-                {booking.bookingId}
-              </p>
+              <>
+                <p>
+                  <span className="font-medium">Booking Number:</span>{" "}
+                  {booking.booking_number || booking.bookingId}
+                </p>
+                <p>
+                  <span className="font-medium">Vendor Share:</span> KSh{" "}
+                  {parseFloat(booking.vendor_share || "0").toLocaleString()}
+                </p>
+                <p>
+                  <span className="font-medium">Facility Share:</span> KSh{" "}
+                  {parseFloat(booking.facility_share || "0").toLocaleString()}
+                </p>
+              </>
             )}
           </div>
         </div>
