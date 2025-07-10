@@ -338,7 +338,7 @@ const LotManagement: React.FC = () => {
                               <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
                                 <div className="p-1">
                                   <button
-                                    onClick={() => openModal("view", lot)}
+                                    onClick={() => router.push(`/lots/${lot.number}`)}
                                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                   >
                                     <FaEye className="text-blue-500" /> View
