@@ -1,49 +1,44 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useLotWithServices } from "@/features/lots/useLotWithServices";
+import { useVendor } from "@/features/vendors/useVendor";
 import { getContracts } from "@/services/apiVendors";
 import { useQuery } from "@tanstack/react-query";
 
-export default function LotDetailPage() {
+export default function VendorDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const lotNumber = params.lotNumber as string;
+  const vendorCode = params.vendorCode as string;
 
-  const { 
-    lot, 
-    services = [], 
-    isLoading: lotLoading, 
-    error: lotError 
-  } = useLotWithServices(lotNumber);
+  const { vendor, isLoading: vendorLoading, error: vendorError } = useVendor(vendorCode);
   
   const { 
     data: contracts = [], 
     isLoading: contractsLoading, 
     error: contractsError 
   } = useQuery({
-    queryKey: ["contracts", lotNumber],
-    queryFn: () => getContracts({ lot_number: lotNumber }),
-    enabled: !!lotNumber,
+    queryKey: ["contracts", vendorCode],
+    queryFn: () => getContracts({ vendor_code: vendorCode }),
+    enabled: !!vendorCode,
   });
 
-  if (lotLoading || contractsLoading) {
+  if (vendorLoading || contractsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading lot details...</p>
+          <p className="mt-2 text-gray-600">Loading vendor details...</p>
         </div>
       </div>
     );
   }
 
-  if (lotError || contractsError) {
+  if (vendorError || contractsError) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="text-red-500 text-xl mb-2">⚠️</div>
-          <p className="text-red-600">Failed to load lot details</p>
+          <p className="text-red-600">Failed to load vendor details</p>
           <button
             onClick={() => router.back()}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -55,12 +50,12 @@ export default function LotDetailPage() {
     );
   }
 
-  if (!lot) {
+  if (!vendor) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="text-yellow-500 text-xl mb-2">🔍</div>
-          <p className="text-gray-600">Lot not found</p>
+          <p className="text-gray-600">Vendor not found</p>
           <button
             onClick={() => router.back()}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -71,8 +66,6 @@ export default function LotDetailPage() {
       </div>
     );
   }
-
-  const activeServices = services.filter(s => s.is_active === "1");
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
@@ -89,47 +82,47 @@ export default function LotDetailPage() {
               </svg>
               Back
             </button>
-            <h1 className="text-3xl font-bold text-gray-900">{lot.name}</h1>
-            <p className="text-gray-600 mt-1">Lot Number: {lot.number}</p>
+            <h1 className="text-3xl font-bold text-gray-900">{vendor.name}</h1>
+            <p className="text-gray-600 mt-1">Vendor Code: {vendor.code}</p>
           </div>
           <div className="text-right">
             <span 
               className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                lot.is_active === "1" 
+                vendor.is_active === "1" 
                   ? "bg-green-100 text-green-800" 
                   : "bg-red-100 text-red-800"
               }`}
             >
-              {lot.is_active === "1" ? "Active" : "Inactive"}
+              {vendor.is_active === "1" ? "Active" : "Inactive"}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Lot Information and Stats */}
+      {/* Vendor Information */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Lot Information</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Vendor Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Lot Name</label>
-                <p className="text-gray-900">{lot.name}</p>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Vendor Name</label>
+                <p className="text-gray-900">{vendor.name}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Lot Number</label>
-                <p className="text-gray-900">{lot.number}</p>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Vendor Code</label>
+                <p className="text-gray-900">{vendor.code}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <p className={lot.is_active === "1" ? "text-green-600" : "text-red-600"}>
-                  {lot.is_active === "1" ? "Active" : "Inactive"}
+                <p className={vendor.is_active === "1" ? "text-green-600" : "text-red-600"}>
+                  {vendor.is_active === "1" ? "Active" : "Inactive"}
                 </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Created Date</label>
                 <p className="text-gray-900">
-                  {new Date(lot.created_at).toLocaleDateString()}
+                  {new Date(vendor.created_at).toLocaleDateString()}
                 </p>
               </div>
             </div>
@@ -141,116 +134,23 @@ export default function LotDetailPage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
             <div className="space-y-4">
               <div>
-                <p className="text-2xl font-bold text-blue-600">{services.length}</p>
-                <p className="text-sm text-gray-600">Total Services</p>
+                <p className="text-2xl font-bold text-blue-600">{contracts.length}</p>
+                <p className="text-sm text-gray-600">Total Contracts</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-green-600">{activeServices.length}</p>
-                <p className="text-sm text-gray-600">Active Services</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-purple-600">{contracts.length}</p>
-                <p className="text-sm text-gray-600">Contracts</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {contracts.filter(c => c.is_active === "1").length}
+                </p>
+                <p className="text-sm text-gray-600">Active Contracts</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-orange-600">
-                  {new Set(contracts.map(c => c.vendor_code)).size}
+                  {new Set(contracts.map(c => c.facility_code)).size}
                 </p>
-                <p className="text-sm text-gray-600">Vendors</p>
+                <p className="text-sm text-gray-600">Facilities</p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Services */}
-      <div className="bg-white rounded-lg shadow-sm border mb-8">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Services</h2>
-        </div>
-        <div className="p-6">
-          {services.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-gray-400 text-4xl mb-2">🔧</div>
-              <p className="text-gray-600">No services found for this lot</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Service
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      SHA Rate
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Vendor Share
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Facility Share
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {services.map((service) => (
-                    <tr key={service.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{service.name}</p>
-                          <p className="text-sm text-gray-500">Code: {service.code}</p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span 
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            service.is_capitated 
-                              ? "bg-blue-100 text-blue-800" 
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {service.is_capitated ? "Capitated" : "Fee-for-Service"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className="text-sm font-medium text-gray-900">
-                          KES {service.sha_rate.toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className="text-sm text-gray-900">
-                          {service.vendor_share}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className="text-sm text-gray-900">
-                          {service.facility_share}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span 
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            service.is_active === "1" 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {service.is_active === "1" ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
       </div>
 
@@ -263,7 +163,7 @@ export default function LotDetailPage() {
           {contracts.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-gray-400 text-4xl mb-2">📄</div>
-              <p className="text-gray-600">No contracts found for this lot</p>
+              <p className="text-gray-600">No contracts found for this vendor</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -271,10 +171,10 @@ export default function LotDetailPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Vendor
+                      Facility
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Facility
+                      Lot
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Services
@@ -292,14 +192,14 @@ export default function LotDetailPage() {
                     <tr key={contract.id} className="hover:bg-gray-50">
                       <td className="px-4 py-4">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{contract.vendor_name}</p>
-                          <p className="text-sm text-gray-500">Code: {contract.vendor_code}</p>
+                          <p className="text-sm font-medium text-gray-900">{contract.facility_name}</p>
+                          <p className="text-sm text-gray-500">Code: {contract.facility_code}</p>
                         </div>
                       </td>
                       <td className="px-4 py-4">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{contract.facility_name}</p>
-                          <p className="text-sm text-gray-500">Code: {contract.facility_code}</p>
+                          <p className="text-sm font-medium text-gray-900">{contract.lot_name}</p>
+                          <p className="text-sm text-gray-500">Number: {contract.lot_number}</p>
                         </div>
                       </td>
                       <td className="px-4 py-4">
@@ -338,16 +238,16 @@ export default function LotDetailPage() {
                       <td className="px-4 py-4">
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => router.push(`/vendors/${contract.vendor_code}`)}
+                            onClick={() => router.push(`/facilities/${contract.facility_code}`)}
                             className="text-blue-600 hover:text-blue-800 text-sm"
                           >
-                            View Vendor
+                            View Facility
                           </button>
                           <button
-                            onClick={() => router.push(`/facilities/${contract.facility_code}`)}
+                            onClick={() => router.push(`/lots/${contract.lot_number}`)}
                             className="text-green-600 hover:text-green-800 text-sm"
                           >
-                            View Facility
+                            View Lot
                           </button>
                         </div>
                       </td>

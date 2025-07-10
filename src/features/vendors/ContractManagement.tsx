@@ -10,7 +10,6 @@ import {
   FaArrowLeft,
   FaCheck,
   FaChevronDown,
-  FaEllipsisV,
   FaEye,
   FaFileContract,
   FaFilter,
@@ -813,9 +812,16 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                                   : contract.id
                               )
                             }
-                            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                            className="inline-flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                            title="Actions"
                           >
-                            <FaEllipsisV />
+                            <svg
+                              className="w-4 h-4"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                            </svg>
                           </button>
 
                           {activeDropdown === contract.id && (
@@ -827,58 +833,116 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                               ></div>
 
                               {/* Dropdown menu */}
-                              <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
-                                <div className="p-1">
+                              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-40 overflow-hidden">
+                                <div className="py-2">
                                   <button
-                                    onClick={() =>
-                                      router.push(`/contracts/${contract.id}`)
-                                    }
-                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                                    onClick={() => {
+                                      setActiveDropdown(null);
+                                      router.push(`/contracts/${contract.id}`);
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-3"
                                   >
-                                    <FaEye className="text-blue-500" /> View
-                                    Details
+                                    <div className="w-5 h-5 flex items-center justify-center">
+                                      <FaEye className="text-blue-500" />
+                                    </div>
+                                    <span className="font-medium">
+                                      View Details
+                                    </span>
                                   </button>
                                   <button
-                                    onClick={() =>
-                                      openModal("services", contract)
-                                    }
-                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                                    onClick={() => {
+                                      setActiveDropdown(null);
+                                      openModal("services", contract);
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors flex items-center gap-3"
                                   >
-                                    <FaStethoscope className="text-green-500" />{" "}
-                                    Add Services
+                                    <div className="w-5 h-5 flex items-center justify-center">
+                                      <FaStethoscope className="text-green-500" />
+                                    </div>
+                                    <span className="font-medium">
+                                      Manage Services
+                                    </span>
                                   </button>
+
+                                  <div className="border-t border-gray-100 my-2"></div>
+
                                   <button
-                                    onClick={() =>
+                                    onClick={() => {
+                                      setActiveDropdown(null);
                                       router.push(
                                         `/vendors/${contract.vendor_code}`
-                                      )
-                                    }
-                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                                      );
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center gap-3"
                                   >
-                                    <FaArrowLeft className="text-purple-500" />{" "}
-                                    View Vendor
+                                    <div className="w-5 h-5 flex items-center justify-center">
+                                      <svg
+                                        className="w-4 h-4 text-purple-500"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                    </div>
+                                    <span className="font-medium">
+                                      View Vendor
+                                    </span>
                                   </button>
                                   <button
-                                    onClick={() =>
+                                    onClick={() => {
+                                      setActiveDropdown(null);
                                       router.push(
                                         `/facilities/${contract.facility_code}`
-                                      )
-                                    }
-                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                                      );
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors flex items-center gap-3"
                                   >
-                                    <FaArrowLeft className="text-indigo-500" />{" "}
-                                    View Facility
+                                    <div className="w-5 h-5 flex items-center justify-center">
+                                      <svg
+                                        className="w-4 h-4 text-indigo-500"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                    </div>
+                                    <span className="font-medium">
+                                      View Facility
+                                    </span>
                                   </button>
                                   <button
-                                    onClick={() =>
+                                    onClick={() => {
+                                      setActiveDropdown(null);
                                       router.push(
                                         `/lots/${contract.lot_number}`
-                                      )
-                                    }
-                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                                      );
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors flex items-center gap-3"
                                   >
-                                    <FaArrowLeft className="text-orange-500" />{" "}
-                                    View Lot
+                                    <div className="w-5 h-5 flex items-center justify-center">
+                                      <svg
+                                        className="w-4 h-4 text-orange-500"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                    </div>
+                                    <span className="font-medium">
+                                      View Lot
+                                    </span>
                                   </button>
                                 </div>
                               </div>

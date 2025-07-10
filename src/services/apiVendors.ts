@@ -66,6 +66,15 @@ export const getVendors = async (): Promise<Vendor[]> => {
   return response.data;
 };
 
+export const getVendor = async (vendorCode: string): Promise<Vendor> => {
+  const response = await axios.get<Vendor[]>("/vendors");
+  const vendor = response.data.find(v => v.code === vendorCode);
+  if (!vendor) {
+    throw new Error(`Vendor with code ${vendorCode} not found`);
+  }
+  return vendor;
+};
+
 export const createVendor = async (
   data: VendorCreateRequest
 ): Promise<Vendor> => {
