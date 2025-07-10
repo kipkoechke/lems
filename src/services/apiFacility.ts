@@ -210,6 +210,15 @@ export const getFacilityById = async (id: string): Promise<Facility> => {
   return response.data.data;
 };
 
+export const getFacilityByCode = async (code: string): Promise<Facility> => {
+  const facilities = await getFacilities({ code });
+  const facility = facilities.find((f: Facility) => f.code === code);
+  if (!facility) {
+    throw new Error(`Facility with code ${code} not found`);
+  }
+  return facility;
+};
+
 export const createFacility = async (data: FacilityForm): Promise<Facility> => {
   const response = await axios.post("/create-facility", data);
   return response.data.data;
