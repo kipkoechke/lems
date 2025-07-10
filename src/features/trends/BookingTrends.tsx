@@ -310,133 +310,145 @@ const BookingTrends: React.FC = () => {
           </div>
 
           {/* Filters */}
-          <div className="p-6 bg-gray-50 border-b">
-            <div className="flex items-center justify-between mb-4">
+          <div className="p-8 bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
-                <FaFilter className="text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">
-                  Filter Analytics Data
-                </span>
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <FaFilter className="text-blue-600 w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Filter Analytics Data</h3>
+                  <p className="text-sm text-gray-600">Customize your data view with advanced filters</p>
+                </div>
                 {Object.keys(filters).length > 0 && (
-                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                  <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full border border-blue-200">
                     {Object.keys(filters).length} filter
                     {Object.keys(filters).length !== 1 ? "s" : ""} active
                   </span>
                 )}
               </div>
               {Object.keys(filters).length > 0 && (
-                <span className="text-xs text-gray-600">
-                  Showing filtered results
-                </span>
+                <div className="text-right">
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                    Showing filtered results
+                  </span>
+                </div>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
               {/* Payment Mode Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
                   Payment Mode
                 </label>
-                <select
-                  value={tempFilters.payment_mode}
-                  onChange={(e) =>
-                    handleFilterChange("payment_mode", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  <option value="">All Payment Modes</option>
-                  <option value="cash">Cash</option>
-                  <option value="sha">SHA</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={tempFilters.payment_mode}
+                    onChange={(e) =>
+                      handleFilterChange("payment_mode", e.target.value)
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm transition-all duration-200 appearance-none"
+                  >
+                    <option value="">All Payment Modes</option>
+                    <option value="cash">Cash</option>
+                    <option value="sha">SHA</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
               {/* Approval Status Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
                   Approval Status
                 </label>
-                <select
-                  value={tempFilters.approval_status}
-                  onChange={(e) =>
-                    handleFilterChange("approval_status", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  <option value="">All Statuses</option>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={tempFilters.approval_status}
+                    onChange={(e) =>
+                      handleFilterChange("approval_status", e.target.value)
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm transition-all duration-200 appearance-none"
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
               {/* Vendor Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
                   Vendor
                 </label>
-                <select
-                  value={tempFilters.vendor_code}
-                  onChange={(e) =>
-                    handleFilterChange("vendor_code", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  <option value="">All Vendors</option>
-                  {vendors?.map((vendor) => (
-                    <option key={vendor.id} value={vendor.code}>
-                      {vendor.name} ({vendor.code})
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={tempFilters.vendor_code}
+                    onChange={(e) =>
+                      handleFilterChange("vendor_code", e.target.value)
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm transition-all duration-200 appearance-none"
+                  >
+                    <option value="">All Vendors</option>
+                    {vendors?.map((vendor) => (
+                      <option key={vendor.id} value={vendor.code}>
+                        {vendor.name} ({vendor.code})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
               {/* Lot Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
                   Lot Number
                 </label>
-                <select
-                  value={tempFilters.lot_number}
-                  onChange={(e) =>
-                    handleFilterChange("lot_number", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  <option value="">All Lots</option>
-                  {lots?.map((lot) => (
-                    <option key={lot.id} value={lot.number}>
-                      {lot.number} - {lot.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* County Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  County
-                </label>
-                <select
-                  value={tempFilters.county_code}
-                  onChange={(e) =>
-                    handleFilterChange("county_code", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  <option value="">All Counties</option>
-                  {counties?.map((county) => (
-                    <option key={county.id} value={county.code}>
-                      {county.name} ({county.code})
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={tempFilters.lot_number}
+                    onChange={(e) =>
+                      handleFilterChange("lot_number", e.target.value)
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm transition-all duration-200 appearance-none"
+                  >
+                    <option value="">All Lots</option>
+                    {lots?.map((lot) => (
+                      <option key={lot.id} value={lot.number}>
+                        {lot.number} - {lot.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Date Range Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+            {/* Second Row - Date Range and Location Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
                   Start Date
                 </label>
                 <input
@@ -445,12 +457,12 @@ const BookingTrends: React.FC = () => {
                   onChange={(e) =>
                     handleFilterChange("start_date", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all duration-200"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
                   End Date
                 </label>
                 <input
@@ -459,44 +471,106 @@ const BookingTrends: React.FC = () => {
                   onChange={(e) =>
                     handleFilterChange("end_date", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all duration-200"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sub County
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  County
                 </label>
-                <select
-                  value={tempFilters.sub_county_code}
-                  onChange={(e) =>
-                    handleFilterChange("sub_county_code", e.target.value)
-                  }
-                  disabled={!tempFilters.county_code}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                >
-                  <option value="">
-                    {!tempFilters.county_code
-                      ? "Select county first"
-                      : "All Sub Counties"}
-                  </option>
-                  {subCounties?.map((subCounty) => (
-                    <option key={subCounty.id} value={subCounty.code}>
-                      {subCounty.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={tempFilters.county_code}
+                    onChange={(e) =>
+                      handleFilterChange("county_code", e.target.value)
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm transition-all duration-200 appearance-none"
+                  >
+                    <option value="">All Counties</option>
+                    {counties?.map((county) => (
+                      <option key={county.id} value={county.code}>
+                        {county.name} ({county.code})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-end gap-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Sub County
+                </label>
+                <div className="relative">
+                  <select
+                    value={tempFilters.sub_county_code}
+                    onChange={(e) =>
+                      handleFilterChange("sub_county_code", e.target.value)
+                    }
+                    disabled={!tempFilters.county_code}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500 bg-white shadow-sm transition-all duration-200 appearance-none"
+                  >
+                    <option value="">
+                      {!tempFilters.county_code
+                        ? "Select county first"
+                        : "All Sub Counties"}
+                    </option>
+                    {subCounties?.map((subCounty) => (
+                      <option key={subCounty.id} value={subCounty.code}>
+                        {subCounty.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-end">
                 <button
                   onClick={clearFilters}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  className="w-full px-6 py-3 bg-gradient-to-r from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-700 font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
                 >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                   Clear Filters
                 </button>
               </div>
             </div>
+
+            {/* Active Filters Display */}
+            {Object.keys(filters).length > 0 && (
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-sm font-medium text-gray-600 mr-2">Active filters:</span>
+                  {Object.entries(filters).map(([key, value]) => (
+                    <span
+                      key={key}
+                      className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full border border-blue-200"
+                    >
+                      {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: {value}
+                      <button
+                        onClick={() => handleFilterChange(key, '')}
+                        className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Export Actions */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-200">
