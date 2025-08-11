@@ -1,4 +1,5 @@
 import axios from "../lib/axios";
+import type { Vendor } from "./apiVendors";
 
 // Primary Equipment interface aligned with /api/v1/equipments
 export interface Equipment {
@@ -11,6 +12,7 @@ export interface Equipment {
   year?: number | string | null;
   status: string; // available | maintenance | unavailable | retired | ...
   vendor_id: string;
+  vendor?: Vendor; // populated in some responses
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;

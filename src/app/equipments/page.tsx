@@ -1,16 +1,25 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { useEquipments } from "@/features/equipments/useEquipments";
 import { useCreateEquipment } from "@/features/equipments/useCreateEquipment";
 import { useUpdateEquipment } from "@/features/equipments/useUpdateEquipment";
 import { useDeleteEquipment } from "@/features/equipments/useDeleteEquipment";
+import { useVendors } from "@/features/vendors/useVendors";
 import {
   Equipment,
   EquipmentCreateRequest,
   EquipmentUpdateRequest,
 } from "@/services/apiEquipment";
-import { FaCogs, FaEllipsisV, FaEdit, FaPlus, FaTrash } from "react-icons/fa";
+import {
+  FaCogs,
+  FaEllipsisV,
+  FaEdit,
+  FaPlus,
+  FaTrash,
+  FaChevronDown,
+  FaSearch,
+} from "react-icons/fa";
 
 type ModalType = "create" | "edit";
 
@@ -19,6 +28,7 @@ const Equipments: React.FC = () => {
   const { createEquipment, isCreating } = useCreateEquipment();
   const { updateEquipment, isUpdating } = useUpdateEquipment();
   const { deleteEquipment, isDeleting } = useDeleteEquipment();
+  const { vendors = [], isLoading: vendorsLoading } = useVendors();
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
@@ -40,6 +50,26 @@ const Equipments: React.FC = () => {
     null
   );
 
+  // Searchable vendor dropdown state
+  const [isVendorDropdownOpen, setIsVendorDropdownOpen] = useState(false);
+  const [vendorSearch, setVendorSearch] = useState("");
+  const vendorSearchRef = useRef<HTMLInputElement>(null);
+
+  const filteredVendors = useMemo(() => {
+    const q = vendorSearch.toLowerCase();
+    return vendors
+      ?.filter(
+        (v) =>
+          v.name?.toLowerCase().includes(q) || v.code?.toLowerCase().includes(q)
+      )
+      .slice(0, 50);
+  }, [vendors, vendorSearch]);
+
+  const selectedVendor = useMemo(
+    () => vendors?.find((v) => v.id === form.vendor_id),
+    [vendors, form.vendor_id]
+  );
+
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
     return (equipments as Equipment[]).filter((e: Equipment) => {
@@ -48,7 +78,9 @@ const Equipments: React.FC = () => {
         e.name?.toLowerCase().includes(s) ||
         e.serial_number?.toLowerCase().includes(s) ||
         e.manufacturer?.toLowerCase().includes(s) ||
-        e.model?.toLowerCase().includes(s);
+        e.model?.toLowerCase().includes(s) ||
+        e.vendor?.name?.toLowerCase().includes(s) ||
+        e.vendor_id?.toLowerCase?.()?.includes?.(s);
       const matchesStatus = status === "all" || e.status === status;
       return matchesSearch && matchesStatus;
     });
@@ -85,11 +117,15 @@ const Equipments: React.FC = () => {
     });
     setShowModal(true);
     setActiveDropdown(null);
+    setIsVendorDropdownOpen(false);
+    setVendorSearch("");
   };
 
   const closeModal = () => {
     setShowModal(false);
     setSelected(null);
+    setIsVendorDropdownOpen(false);
+    setVendorSearch("");
   };
 
   const onSubmit = (ev: React.FormEvent) => {
@@ -288,7 +324,7 @@ const Equipments: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">{statusBadge(e.status)}</td>
                       <td className="px-6 py-4 text-sm text-gray-700">
-                        {e.vendor_id}
+                        {e.vendor?.name || e.vendor_id}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="relative">
@@ -455,6 +491,93 @@ const Equipments: React.FC = () => {
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Vendor
+                  </label>
+                  <div className="relative dropdown-container">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsVendorDropdownOpen(!isVendorDropdownOpen);
+                        if (!isVendorDropdownOpen) {
+                          setTimeout(
+                            () => vendorSearchRef.current?.focus(),
+                            100
+                          );
+                        }
+                      }}
+                      disabled={vendorsLoading}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    >
+                      <span
+                        className={
+                          selectedVendor ? "text-gray-900" : "text-gray-500"
+                        }
+                      >
+                        {vendorsLoading
+                          ? "Loading vendors..."
+                          : selectedVendor
+                          ? `${selectedVendor.name} (${selectedVendor.code})`
+                          : "Select a vendor"}
+                      </span>
+                      <FaChevronDown
+                        className={`text-gray-400 transition-transform ${
+                          isVendorDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {isVendorDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                        <div className="p-4 border-b border-gray-100">
+                          <div className="relative">
+                            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <input
+                              ref={vendorSearchRef}
+                              type="text"
+                              placeholder="Search vendors..."
+                              value={vendorSearch}
+                              onChange={(e) => setVendorSearch(e.target.value)}
+                              className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </div>
+                        <div className="max-h-60 overflow-y-auto">
+                          {filteredVendors && filteredVendors.length > 0 ? (
+                            filteredVendors.map((v) => (
+                              <div
+                                key={v.id}
+                                className="px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors"
+                                onClick={() => {
+                                  setForm({ ...form, vendor_id: v.id });
+                                  setIsVendorDropdownOpen(false);
+                                  setVendorSearch("");
+                                }}
+                              >
+                                <div className="font-semibold text-gray-900">
+                                  {v.name}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  Code: {v.code}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-4 py-8 text-center text-gray-500">
+                              {vendorsLoading
+                                ? "Loading vendors..."
+                                : "No vendors found"}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description (below Vendor) */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Description
                   </label>
                   <textarea
@@ -465,21 +588,6 @@ const Equipments: React.FC = () => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Description (optional)"
                     rows={3}
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Vendor ID
-                  </label>
-                  <input
-                    value={form.vendor_id}
-                    onChange={(e) =>
-                      setForm({ ...form, vendor_id: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                    placeholder="Vendor ID"
                   />
                 </div>
               </div>
