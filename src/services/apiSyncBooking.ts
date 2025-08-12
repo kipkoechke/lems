@@ -1,0 +1,100 @@
+import axiosInstance from "@/lib/axios";
+
+export interface SyncedBooking {
+  id: string;
+  booking_id: string;
+  synched_at: string;
+  synch_status: "complete" | "pending" | "failed";
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  booking: {
+    id: string;
+    booking_number: string;
+    patient_id: string;
+    vendor_facility_lot_service_pivot_id: string;
+    amount: string;
+    facility_share: string;
+    vendor_share: string;
+    booking_status: string;
+    service_status: string;
+    approval_status: string;
+    payment_mode: string;
+    booked_by: string | null;
+    service_completion_by: string | null;
+    approved_by: string | null;
+    booking_date: string;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    override: string;
+    patient: {
+      id: string;
+      name: string;
+      phone: string;
+      date_of_birth: string;
+      sha_number: string | null;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+    };
+    service: {
+      id: string;
+      ven_flty_lot_pivot_id: string;
+      service_id: string;
+      is_active: string;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+      equipment_id: string | null;
+    };
+  };
+}
+
+export interface SyncBookingsResponse {
+  results: {
+    current_page: number;
+    data: SyncedBooking[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: Array<{
+      url: string | null;
+      label: string;
+      active: boolean;
+    }>;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+  };
+}
+
+export const fetchSyncedBookings = async (
+  page: number = 1,
+  filters?: {
+    county_id?: string;
+    sub_county_id?: string;
+    ward_id?: string;
+    facility_id?: string;
+  }
+): Promise<SyncBookingsResponse> => {
+  const params = new URLSearchParams();
+  params.append("page", page.toString());
+
+  if (filters) {
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) {
+        params.append(key, value);
+      }
+    });
+  }
+
+  const response = await axiosInstance.get(
+    `/bookings/sync?${params.toString()}`
+  );
+  return response.data;
+};
