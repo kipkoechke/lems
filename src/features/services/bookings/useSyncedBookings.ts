@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchSyncedBookings, SyncBookingsResponse } from "@/services/apiSyncBooking";
+import {
+  fetchSyncedBookings,
+  SyncBookingsResponse,
+} from "@/services/apiSyncBooking";
 
 interface UseSyncedBookingsOptions {
   page?: number;

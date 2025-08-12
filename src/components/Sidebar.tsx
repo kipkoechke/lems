@@ -26,7 +26,11 @@ function Sidebar({ isMobileMenuOpen, onClose }: SidebarProps) {
     { href: "/contracts", label: "Contracts", icon: <HiOutlineUsers /> },
     { href: "/lots", label: "Lots", icon: <HiOutlineUsers /> },
     { href: "/bookings", label: "Services", icon: <HiOutlineUsers /> },
-    { href: "/bookings/synced", label: "Synched to SHA", icon: <HiOutlineChartBarSquare /> },
+    {
+      href: "/bookings/synced",
+      label: "Synched to SHA",
+      icon: <HiOutlineChartBarSquare />,
+    },
     { href: "/trends", label: "Analytics", icon: <HiOutlineChartBarSquare /> },
     // {
     //   href: "/payments",
