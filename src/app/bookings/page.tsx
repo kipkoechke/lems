@@ -317,7 +317,7 @@ const BookingReport: React.FC = () => {
         </div>
 
         {/* Location Filters */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg overflow-visible">
           <LocationFilters
             onLocationChange={setLocationFilters}
             showFacilityFilter={true}

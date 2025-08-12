@@ -213,8 +213,8 @@ const Equipments: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 md:px-8 py-4 md:py-6">
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6 overflow-visible">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 md:gap-4">
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -239,7 +239,7 @@ const Equipments: React.FC = () => {
           </div>
 
           {/* Filters */}
-          <div className="p-4 md:p-6 bg-gray-50 border-b space-y-4">
+          <div className="p-4 md:p-6 bg-gray-50 border-b space-y-4 overflow-visible">
             {/* Location Filters */}
             <LocationFilters
               onLocationChange={setLocationFilters}

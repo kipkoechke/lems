@@ -227,7 +227,7 @@ const LocationFilters: React.FC<LocationFiltersProps> = ({
           </button>
 
           {isCountyDropdownOpen && (
-            <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+            <div className="absolute z-[9999] w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
               <div className="p-3 md:p-4 border-b border-gray-100">
                 <div className="relative">
                   <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -317,7 +317,7 @@ const LocationFilters: React.FC<LocationFiltersProps> = ({
           </button>
 
           {isSubCountyDropdownOpen && selectedCounty && (
-            <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+            <div className="absolute z-[9999] w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
               <div className="p-3 md:p-4 border-b border-gray-100">
                 <div className="relative">
                   <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -404,7 +404,7 @@ const LocationFilters: React.FC<LocationFiltersProps> = ({
           </button>
 
           {isWardDropdownOpen && selectedSubCounty && (
-            <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+            <div className="absolute z-[9999] w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
               <div className="p-3 md:p-4 border-b border-gray-100">
                 <div className="relative">
                   <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -496,7 +496,7 @@ const LocationFilters: React.FC<LocationFiltersProps> = ({
             </button>
 
             {isFacilityDropdownOpen && selectedWard && (
-              <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+              <div className="absolute z-[9999] w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
                 <div className="p-3 md:p-4 border-b border-gray-100">
                   <div className="relative">
                     <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
