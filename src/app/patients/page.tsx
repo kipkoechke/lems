@@ -1,5 +1,6 @@
 "use client";
 import Pagination from "@/components/Pagination";
+import LocationFilters from "@/components/LocationFilters";
 import { usePatientsPaginated } from "@/features/patients/usePatients";
 import { useBookings } from "@/features/services/bookings/useBookings";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -245,6 +246,12 @@ function PatientBreadcrumb({ patient }: { patient: Patient }) {
 function Patients() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [locationFilters, setLocationFilters] = useState<{
+    county_id?: string;
+    sub_county_id?: string;
+    ward_id?: string;
+    facility_id?: string;
+  }>({});
   const [_selectedPatient, _setSelectedPatient] = useState<Patient | null>(
     null
   );
@@ -358,7 +365,14 @@ function Patients() {
           </div>
 
           {/* Search */}
-          <div className="p-4 md:p-6 bg-gray-50 border-b">
+          <div className="p-4 md:p-6 bg-gray-50 border-b space-y-4">
+            {/* Location Filters */}
+            <LocationFilters
+              onLocationChange={setLocationFilters}
+              showFacilityFilter={true}
+            />
+
+            {/* Search Input */}
             <div className="relative max-w-md">
               <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input

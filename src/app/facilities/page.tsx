@@ -1,6 +1,7 @@
 "use client";
 import Modal from "@/components/Modal";
 import Pagination from "@/components/Pagination";
+import LocationFilters from "@/components/LocationFilters";
 import {
   useFacilitiesPaginated,
   useUpdateFacility,
@@ -99,6 +100,12 @@ function FacilitiesContent() {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [locationFilters, setLocationFilters] = useState<{
+    county_id?: string;
+    sub_county_id?: string;
+    ward_id?: string;
+    facility_id?: string;
+  }>({});
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   // Use simple paginated facilities hook
@@ -198,7 +205,14 @@ function FacilitiesContent() {
           </div>
 
           {/* Search */}
-          <div className="p-4 md:p-6 bg-gray-50 border-b">
+          <div className="p-4 md:p-6 bg-gray-50 border-b space-y-4">
+            {/* Location Filters */}
+            <LocationFilters
+              onLocationChange={setLocationFilters}
+              showFacilityFilter={false}
+            />
+
+            {/* Search Form */}
             <form
               onSubmit={handleSearchSubmit}
               className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4"

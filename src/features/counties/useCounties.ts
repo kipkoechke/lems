@@ -1,4 +1,4 @@
-import { getCounties, getSubCounties } from "@/services/apiCounty";
+import { getCounties, getSubCounties, getWards } from "@/services/apiCounty";
 import { useQuery } from "@tanstack/react-query";
 
 export function useCounties() {
@@ -26,4 +26,18 @@ export function useSubCounties(county_code: string) {
   });
 
   return { isLoading, subCounties, error };
+}
+
+export function useWards(sub_county_code: string) {
+  const {
+    isLoading,
+    data: wards = [],
+    error,
+  } = useQuery({
+    queryKey: ["wards", sub_county_code],
+    queryFn: () => getWards(sub_county_code),
+    enabled: !!sub_county_code, // Only fetch if sub_county_code is provided
+  });
+
+  return { isLoading, wards, error };
 }

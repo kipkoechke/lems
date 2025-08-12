@@ -6,6 +6,7 @@ import { useCreateEquipment } from "@/features/equipments/useCreateEquipment";
 import { useUpdateEquipment } from "@/features/equipments/useUpdateEquipment";
 import { useDeleteEquipment } from "@/features/equipments/useDeleteEquipment";
 import { useVendors } from "@/features/vendors/useVendors";
+import LocationFilters from "@/components/LocationFilters";
 import {
   Equipment,
   EquipmentCreateRequest,
@@ -32,6 +33,12 @@ const Equipments: React.FC = () => {
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
+  const [locationFilters, setLocationFilters] = useState<{
+    county_id?: string;
+    sub_county_id?: string;
+    ward_id?: string;
+    facility_id?: string;
+  }>({});
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<ModalType>("create");
@@ -232,7 +239,14 @@ const Equipments: React.FC = () => {
           </div>
 
           {/* Filters */}
-          <div className="p-4 md:p-6 bg-gray-50 border-b">
+          <div className="p-4 md:p-6 bg-gray-50 border-b space-y-4">
+            {/* Location Filters */}
+            <LocationFilters
+              onLocationChange={setLocationFilters}
+              showFacilityFilter={true}
+            />
+
+            {/* Search and Status Filters */}
             <div className="flex flex-col gap-4">
               <div className="flex-1 relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
