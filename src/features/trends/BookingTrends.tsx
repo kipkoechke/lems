@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import {
   FaArrowUp,
-  FaBuilding,
   FaChartLine,
   FaDollarSign,
   FaDownload,
@@ -11,6 +10,8 @@ import {
   FaHospital,
   FaMoneyBillWave,
   FaUsers,
+  FaChevronDown,
+  FaSearch,
 } from "react-icons/fa";
 import {
   Area,
@@ -57,6 +58,35 @@ const BookingTrends: React.FC = () => {
     approval_status: "approved", // Default to approved
   });
 
+  // Dropdown states
+  const [isCountyDropdownOpen, setIsCountyDropdownOpen] = useState(false);
+  const [isSubCountyDropdownOpen, setIsSubCountyDropdownOpen] = useState(false);
+  const [isVendorDropdownOpen, setIsVendorDropdownOpen] = useState(false);
+  const [isLotDropdownOpen, setIsLotDropdownOpen] = useState(false);
+  const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
+  const [isFacilityDropdownOpen, setIsFacilityDropdownOpen] = useState(false);
+  const [isPaymentModeDropdownOpen, setIsPaymentModeDropdownOpen] =
+    useState(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+
+  // Search states
+  const [countySearch, setCountySearch] = useState("");
+  const [subCountySearch, setSubCountySearch] = useState("");
+  const [vendorSearch, setVendorSearch] = useState("");
+  const [lotSearch, setLotSearch] = useState("");
+  const [serviceSearch, setServiceSearch] = useState("");
+  const [facilitySearch, setFacilitySearch] = useState("");
+
+  // Refs for dropdowns
+  const countyDropdownRef = useRef<HTMLDivElement>(null);
+  const subCountyDropdownRef = useRef<HTMLDivElement>(null);
+  const vendorDropdownRef = useRef<HTMLDivElement>(null);
+  const lotDropdownRef = useRef<HTMLDivElement>(null);
+  const serviceDropdownRef = useRef<HTMLDivElement>(null);
+  const facilityDropdownRef = useRef<HTMLDivElement>(null);
+  const paymentModeDropdownRef = useRef<HTMLDivElement>(null);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+
   // Load data - initially without filters to get all data
   const { trends, isLoading, error } = useBookingTrends(filters);
 
@@ -70,6 +100,74 @@ const BookingTrends: React.FC = () => {
   // Get services for the selected lot
   const { data: lotServices = [] } = useLotServices(tempFilters.lot_number);
 
+  // Filter data based on search
+  const filteredCounties = counties?.filter((county) =>
+    county.name.toLowerCase().includes(countySearch.toLowerCase())
+  );
+
+  const filteredSubCounties = subCounties?.filter((subCounty) =>
+    subCounty.name.toLowerCase().includes(subCountySearch.toLowerCase())
+  );
+
+  const filteredVendors = vendors?.filter((vendor) =>
+    vendor.name.toLowerCase().includes(vendorSearch.toLowerCase())
+  );
+
+  const filteredLots = lots?.filter((lot) =>
+    `${lot.number} - ${lot.name}`
+      .toLowerCase()
+      .includes(lotSearch.toLowerCase())
+  );
+
+  const filteredServices = lotServices?.filter((service) =>
+    service.name.toLowerCase().includes(serviceSearch.toLowerCase())
+  );
+
+  const filteredFacilities = facilities?.filter((facility) =>
+    `${facility.name} (${facility.code})`
+      .toLowerCase()
+      .includes(facilitySearch.toLowerCase())
+  );
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const dropdowns = [
+        { ref: countyDropdownRef, setter: setIsCountyDropdownOpen },
+        { ref: subCountyDropdownRef, setter: setIsSubCountyDropdownOpen },
+        { ref: vendorDropdownRef, setter: setIsVendorDropdownOpen },
+        { ref: lotDropdownRef, setter: setIsLotDropdownOpen },
+        { ref: serviceDropdownRef, setter: setIsServiceDropdownOpen },
+        { ref: facilityDropdownRef, setter: setIsFacilityDropdownOpen },
+        { ref: paymentModeDropdownRef, setter: setIsPaymentModeDropdownOpen },
+        { ref: statusDropdownRef, setter: setIsStatusDropdownOpen },
+      ];
+
+      dropdowns.forEach(({ ref, setter }) => {
+        if (ref.current && !ref.current.contains(event.target as Node)) {
+          setter(false);
+        }
+      });
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Function to close all dropdowns
+  const closeAllDropdowns = () => {
+    setIsCountyDropdownOpen(false);
+    setIsSubCountyDropdownOpen(false);
+    setIsVendorDropdownOpen(false);
+    setIsLotDropdownOpen(false);
+    setIsServiceDropdownOpen(false);
+    setIsFacilityDropdownOpen(false);
+    setIsPaymentModeDropdownOpen(false);
+    setIsStatusDropdownOpen(false);
+  };
+
   // Filter handlers
   const handleFilterChange = (key: string, value: string) => {
     // Special handling for changes that should reset dependent filters
@@ -80,6 +178,14 @@ const BookingTrends: React.FC = () => {
       ...(key === "lot_number" ? { service_code: "" } : {}),
     };
     setTempFilters(newTempFilters);
+
+    // Clear search states when filter changes
+    if (key === "county_code") {
+      setSubCountySearch("");
+    }
+    if (key === "lot_number") {
+      setServiceSearch("");
+    }
 
     // Apply filter immediately - only include non-empty values
     const activeFilters: Record<string, string> = {};
@@ -106,6 +212,17 @@ const BookingTrends: React.FC = () => {
     };
     setTempFilters(clearedFilters);
     setFilters({ approval_status: "approved" });
+
+    // Clear all search states
+    setCountySearch("");
+    setSubCountySearch("");
+    setVendorSearch("");
+    setLotSearch("");
+    setServiceSearch("");
+    setFacilitySearch("");
+
+    // Close all dropdowns
+    closeAllDropdowns();
   };
 
   // CSV Export function
@@ -302,15 +419,15 @@ const BookingTrends: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6">
+        <div className="bg-white rounded-2xl shadow-xl overflow-visible">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                   <FaChartLine className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white mb-1">
+                  <h1 className="text-xl font-bold text-white mb-1">
                     Booking Trends Analytics
                   </h1>
                   <p className="text-blue-100">
@@ -333,36 +450,94 @@ const BookingTrends: React.FC = () => {
                     <label className="block text-xs font-medium text-gray-600">
                       County
                     </label>
-                    <div className="relative">
-                      <select
-                        value={tempFilters.county_code}
-                        onChange={(e) =>
-                          handleFilterChange("county_code", e.target.value)
-                        }
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none"
+                    <div className="relative" ref={countyDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCountyDropdownOpen(!isCountyDropdownOpen);
+                          closeAllDropdowns();
+                          setIsCountyDropdownOpen(!isCountyDropdownOpen);
+                        }}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-left flex items-center justify-between"
                       >
-                        <option value="">All Counties</option>
-                        {counties?.map((county) => (
-                          <option key={county.id} value={county.code}>
-                            {county.name}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                        <svg
-                          className="w-3 h-3 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                        <span
+                          className={
+                            tempFilters.county_code
+                              ? "text-gray-900"
+                              : "text-gray-500"
+                          }
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
+                          {counties?.find(
+                            (c) => c.code === tempFilters.county_code
+                          )?.name || "All Counties"}
+                        </span>
+                        <FaChevronDown
+                          className={`text-gray-400 transition-transform w-3 h-3 ${
+                            isCountyDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {isCountyDropdownOpen && (
+                        <div className="absolute z-[9999] w-80 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                          <div className="p-3 border-b border-gray-100">
+                            <div className="relative">
+                              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3" />
+                              <input
+                                type="text"
+                                placeholder="Search counties..."
+                                value={countySearch}
+                                onChange={(e) =>
+                                  setCountySearch(e.target.value)
+                                }
+                                className="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                          <div className="max-h-60 overflow-y-auto">
+                            <div
+                              className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                              onClick={() => {
+                                handleFilterChange("county_code", "");
+                                setIsCountyDropdownOpen(false);
+                                setCountySearch("");
+                              }}
+                            >
+                              <div className="font-semibold text-gray-900 text-sm">
+                                All Counties
+                              </div>
+                            </div>
+                            {filteredCounties && filteredCounties.length > 0 ? (
+                              filteredCounties.map((county) => (
+                                <div
+                                  key={county.id}
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    handleFilterChange(
+                                      "county_code",
+                                      county.code
+                                    );
+                                    setIsCountyDropdownOpen(false);
+                                    setCountySearch("");
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    {county.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Code: {county.code}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                                No counties found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -371,36 +546,94 @@ const BookingTrends: React.FC = () => {
                     <label className="block text-xs font-medium text-gray-600">
                       Vendor
                     </label>
-                    <div className="relative">
-                      <select
-                        value={tempFilters.vendor_code}
-                        onChange={(e) =>
-                          handleFilterChange("vendor_code", e.target.value)
-                        }
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none"
+                    <div className="relative" ref={vendorDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsVendorDropdownOpen(!isVendorDropdownOpen);
+                          closeAllDropdowns();
+                          setIsVendorDropdownOpen(!isVendorDropdownOpen);
+                        }}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-left flex items-center justify-between"
                       >
-                        <option value="">All Vendors</option>
-                        {vendors?.map((vendor) => (
-                          <option key={vendor.id} value={vendor.code}>
-                            {vendor.name}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                        <svg
-                          className="w-3 h-3 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                        <span
+                          className={
+                            tempFilters.vendor_code
+                              ? "text-gray-900"
+                              : "text-gray-500"
+                          }
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
+                          {vendors?.find(
+                            (v) => v.code === tempFilters.vendor_code
+                          )?.name || "All Vendors"}
+                        </span>
+                        <FaChevronDown
+                          className={`text-gray-400 transition-transform w-3 h-3 ${
+                            isVendorDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {isVendorDropdownOpen && (
+                        <div className="absolute z-[9999] w-80 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                          <div className="p-3 border-b border-gray-100">
+                            <div className="relative">
+                              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3" />
+                              <input
+                                type="text"
+                                placeholder="Search vendors..."
+                                value={vendorSearch}
+                                onChange={(e) =>
+                                  setVendorSearch(e.target.value)
+                                }
+                                className="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                          <div className="max-h-60 overflow-y-auto">
+                            <div
+                              className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                              onClick={() => {
+                                handleFilterChange("vendor_code", "");
+                                setIsVendorDropdownOpen(false);
+                                setVendorSearch("");
+                              }}
+                            >
+                              <div className="font-semibold text-gray-900 text-sm">
+                                All Vendors
+                              </div>
+                            </div>
+                            {filteredVendors && filteredVendors.length > 0 ? (
+                              filteredVendors.map((vendor) => (
+                                <div
+                                  key={vendor.id}
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    handleFilterChange(
+                                      "vendor_code",
+                                      vendor.code
+                                    );
+                                    setIsVendorDropdownOpen(false);
+                                    setVendorSearch("");
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    {vendor.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Code: {vendor.code}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                                No vendors found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -409,36 +642,102 @@ const BookingTrends: React.FC = () => {
                     <label className="block text-xs font-medium text-gray-600">
                       Lot
                     </label>
-                    <div className="relative">
-                      <select
-                        value={tempFilters.lot_number}
-                        onChange={(e) =>
-                          handleFilterChange("lot_number", e.target.value)
-                        }
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none"
+                    <div className="relative" ref={lotDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsLotDropdownOpen(!isLotDropdownOpen);
+                          closeAllDropdowns();
+                          setIsLotDropdownOpen(!isLotDropdownOpen);
+                        }}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-left flex items-center justify-between"
                       >
-                        <option value="">All Lots</option>
-                        {lots?.map((lot) => (
-                          <option key={lot.id} value={lot.number}>
-                            {lot.number} - {lot.name}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                        <svg
-                          className="w-3 h-3 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                        <span
+                          className={
+                            tempFilters.lot_number
+                              ? "text-gray-900"
+                              : "text-gray-500"
+                          }
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
+                          {lots?.find(
+                            (l) => l.number === tempFilters.lot_number
+                          )
+                            ? `${
+                                lots.find(
+                                  (l) => l.number === tempFilters.lot_number
+                                )?.number
+                              } - ${
+                                lots.find(
+                                  (l) => l.number === tempFilters.lot_number
+                                )?.name
+                              }`
+                            : "All Lots"}
+                        </span>
+                        <FaChevronDown
+                          className={`text-gray-400 transition-transform w-3 h-3 ${
+                            isLotDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {isLotDropdownOpen && (
+                        <div className="absolute z-[9999] w-80 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                          <div className="p-3 border-b border-gray-100">
+                            <div className="relative">
+                              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3" />
+                              <input
+                                type="text"
+                                placeholder="Search lots..."
+                                value={lotSearch}
+                                onChange={(e) => setLotSearch(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                          <div className="max-h-60 overflow-y-auto">
+                            <div
+                              className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                              onClick={() => {
+                                handleFilterChange("lot_number", "");
+                                setIsLotDropdownOpen(false);
+                                setLotSearch("");
+                              }}
+                            >
+                              <div className="font-semibold text-gray-900 text-sm">
+                                All Lots
+                              </div>
+                            </div>
+                            {filteredLots && filteredLots.length > 0 ? (
+                              filteredLots.map((lot) => (
+                                <div
+                                  key={lot.id}
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    handleFilterChange(
+                                      "lot_number",
+                                      lot.number
+                                    );
+                                    setIsLotDropdownOpen(false);
+                                    setLotSearch("");
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    {lot.number} - {lot.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Number: {lot.number}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                                No lots found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -447,41 +746,99 @@ const BookingTrends: React.FC = () => {
                     <label className="block text-xs font-medium text-gray-600">
                       Service
                     </label>
-                    <div className="relative">
-                      <select
-                        value={tempFilters.service_code}
-                        onChange={(e) =>
-                          handleFilterChange("service_code", e.target.value)
-                        }
+                    <div className="relative" ref={serviceDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (tempFilters.lot_number) {
+                            setIsServiceDropdownOpen(!isServiceDropdownOpen);
+                            closeAllDropdowns();
+                            setIsServiceDropdownOpen(!isServiceDropdownOpen);
+                          }
+                        }}
                         disabled={!tempFilters.lot_number}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500 bg-white appearance-none"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-left flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
                       >
-                        <option value="">
+                        <span
+                          className={
+                            tempFilters.service_code
+                              ? "text-gray-900"
+                              : "text-gray-500"
+                          }
+                        >
                           {!tempFilters.lot_number
                             ? "Select lot first"
-                            : "All Services"}
-                        </option>
-                        {lotServices?.map((service) => (
-                          <option key={service.id} value={service.code}>
-                            {service.name}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                        <svg
-                          className="w-3 h-3 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
+                            : lotServices?.find(
+                                (s) => s.code === tempFilters.service_code
+                              )?.name || "All Services"}
+                        </span>
+                        <FaChevronDown
+                          className={`text-gray-400 transition-transform w-3 h-3 ${
+                            isServiceDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {isServiceDropdownOpen && tempFilters.lot_number && (
+                        <div className="absolute z-[9999] w-80 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                          <div className="p-3 border-b border-gray-100">
+                            <div className="relative">
+                              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3" />
+                              <input
+                                type="text"
+                                placeholder="Search services..."
+                                value={serviceSearch}
+                                onChange={(e) =>
+                                  setServiceSearch(e.target.value)
+                                }
+                                className="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                          <div className="max-h-60 overflow-y-auto">
+                            <div
+                              className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                              onClick={() => {
+                                handleFilterChange("service_code", "");
+                                setIsServiceDropdownOpen(false);
+                                setServiceSearch("");
+                              }}
+                            >
+                              <div className="font-semibold text-gray-900 text-sm">
+                                All Services
+                              </div>
+                            </div>
+                            {filteredServices && filteredServices.length > 0 ? (
+                              filteredServices.map((service) => (
+                                <div
+                                  key={service.id}
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    handleFilterChange(
+                                      "service_code",
+                                      service.code
+                                    );
+                                    setIsServiceDropdownOpen(false);
+                                    setServiceSearch("");
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    {service.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Code: {service.code}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                                No services found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -490,36 +847,105 @@ const BookingTrends: React.FC = () => {
                     <label className="block text-xs font-medium text-gray-600">
                       Facility
                     </label>
-                    <div className="relative">
-                      <select
-                        value={tempFilters.facility_code}
-                        onChange={(e) =>
-                          handleFilterChange("facility_code", e.target.value)
-                        }
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none"
+                    <div className="relative" ref={facilityDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsFacilityDropdownOpen(!isFacilityDropdownOpen);
+                          closeAllDropdowns();
+                          setIsFacilityDropdownOpen(!isFacilityDropdownOpen);
+                        }}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-left flex items-center justify-between"
                       >
-                        <option value="">All Facilities</option>
-                        {facilities?.map((facility) => (
-                          <option key={facility.id} value={facility.code}>
-                            {facility.name} ({facility.code})
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                        <svg
-                          className="w-3 h-3 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                        <span
+                          className={
+                            tempFilters.facility_code
+                              ? "text-gray-900"
+                              : "text-gray-500"
+                          }
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
+                          {facilities?.find(
+                            (f) => f.code === tempFilters.facility_code
+                          )
+                            ? `${
+                                facilities.find(
+                                  (f) => f.code === tempFilters.facility_code
+                                )?.name
+                              } (${
+                                facilities.find(
+                                  (f) => f.code === tempFilters.facility_code
+                                )?.code
+                              })`
+                            : "All Facilities"}
+                        </span>
+                        <FaChevronDown
+                          className={`text-gray-400 transition-transform w-3 h-3 ${
+                            isFacilityDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {isFacilityDropdownOpen && (
+                        <div className="absolute z-[9999] w-96 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                          <div className="p-3 border-b border-gray-100">
+                            <div className="relative">
+                              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3" />
+                              <input
+                                type="text"
+                                placeholder="Search facilities..."
+                                value={facilitySearch}
+                                onChange={(e) =>
+                                  setFacilitySearch(e.target.value)
+                                }
+                                className="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                          <div className="max-h-60 overflow-y-auto">
+                            <div
+                              className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                              onClick={() => {
+                                handleFilterChange("facility_code", "");
+                                setIsFacilityDropdownOpen(false);
+                                setFacilitySearch("");
+                              }}
+                            >
+                              <div className="font-semibold text-gray-900 text-sm">
+                                All Facilities
+                              </div>
+                            </div>
+                            {filteredFacilities &&
+                            filteredFacilities.length > 0 ? (
+                              filteredFacilities.map((facility) => (
+                                <div
+                                  key={facility.id}
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    handleFilterChange(
+                                      "facility_code",
+                                      facility.code
+                                    );
+                                    setIsFacilityDropdownOpen(false);
+                                    setFacilitySearch("");
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    {facility.name} ({facility.code})
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Code: {facility.code}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                                No facilities found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -587,44 +1013,106 @@ const BookingTrends: React.FC = () => {
                         <label className="block text-xs font-medium text-gray-600">
                           Sub County
                         </label>
-                        <div className="relative">
-                          <select
-                            value={tempFilters.sub_county_code}
-                            onChange={(e) =>
-                              handleFilterChange(
-                                "sub_county_code",
-                                e.target.value
-                              )
-                            }
+                        <div className="relative" ref={subCountyDropdownRef}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (tempFilters.county_code) {
+                                setIsSubCountyDropdownOpen(
+                                  !isSubCountyDropdownOpen
+                                );
+                                closeAllDropdowns();
+                                setIsSubCountyDropdownOpen(
+                                  !isSubCountyDropdownOpen
+                                );
+                              }
+                            }}
                             disabled={!tempFilters.county_code}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500 bg-white appearance-none"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-left flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
                           >
-                            <option value="">
+                            <span
+                              className={
+                                tempFilters.sub_county_code
+                                  ? "text-gray-900"
+                                  : "text-gray-500"
+                              }
+                            >
                               {!tempFilters.county_code
                                 ? "Select county first"
-                                : "All Sub Counties"}
-                            </option>
-                            {subCounties?.map((subCounty) => (
-                              <option key={subCounty.id} value={subCounty.code}>
-                                {subCounty.name}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                            <svg
-                              className="w-3 h-3 text-gray-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 9l-7 7-7-7"
-                              />
-                            </svg>
-                          </div>
+                                : subCounties?.find(
+                                    (s) =>
+                                      s.code === tempFilters.sub_county_code
+                                  )?.name || "All Sub Counties"}
+                            </span>
+                            <FaChevronDown
+                              className={`text-gray-400 transition-transform w-3 h-3 ${
+                                isSubCountyDropdownOpen ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+
+                          {isSubCountyDropdownOpen &&
+                            tempFilters.county_code && (
+                              <div className="absolute z-[9999] w-80 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                                <div className="p-3 border-b border-gray-100">
+                                  <div className="relative">
+                                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3" />
+                                    <input
+                                      type="text"
+                                      placeholder="Search sub counties..."
+                                      value={subCountySearch}
+                                      onChange={(e) =>
+                                        setSubCountySearch(e.target.value)
+                                      }
+                                      className="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="max-h-60 overflow-y-auto">
+                                  <div
+                                    className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                    onClick={() => {
+                                      handleFilterChange("sub_county_code", "");
+                                      setIsSubCountyDropdownOpen(false);
+                                      setSubCountySearch("");
+                                    }}
+                                  >
+                                    <div className="font-semibold text-gray-900 text-sm">
+                                      All Sub Counties
+                                    </div>
+                                  </div>
+                                  {filteredSubCounties &&
+                                  filteredSubCounties.length > 0 ? (
+                                    filteredSubCounties.map((subCounty) => (
+                                      <div
+                                        key={subCounty.id}
+                                        className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                        onClick={() => {
+                                          handleFilterChange(
+                                            "sub_county_code",
+                                            subCounty.code
+                                          );
+                                          setIsSubCountyDropdownOpen(false);
+                                          setSubCountySearch("");
+                                        }}
+                                      >
+                                        <div className="font-semibold text-gray-900 text-sm">
+                                          {subCounty.name}
+                                        </div>
+                                        <div className="text-xs text-gray-500">
+                                          Code: {subCounty.code}
+                                        </div>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                                      No sub counties found
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                         </div>
                       </div>
 
@@ -633,33 +1121,79 @@ const BookingTrends: React.FC = () => {
                         <label className="block text-xs font-medium text-gray-600">
                           Payment Mode
                         </label>
-                        <div className="relative">
-                          <select
-                            value={tempFilters.payment_mode}
-                            onChange={(e) =>
-                              handleFilterChange("payment_mode", e.target.value)
-                            }
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none"
+                        <div className="relative" ref={paymentModeDropdownRef}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsPaymentModeDropdownOpen(
+                                !isPaymentModeDropdownOpen
+                              );
+                              closeAllDropdowns();
+                              setIsPaymentModeDropdownOpen(
+                                !isPaymentModeDropdownOpen
+                              );
+                            }}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-left flex items-center justify-between"
                           >
-                            <option value="">All Payment Modes</option>
-                            <option value="cash">Cash</option>
-                            <option value="sha">SHA</option>
-                          </select>
-                          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                            <svg
-                              className="w-3 h-3 text-gray-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                            <span
+                              className={
+                                tempFilters.payment_mode
+                                  ? "text-gray-900"
+                                  : "text-gray-500"
+                              }
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 9l-7 7-7-7"
-                              />
-                            </svg>
-                          </div>
+                              {tempFilters.payment_mode === "cash"
+                                ? "Cash"
+                                : tempFilters.payment_mode === "sha"
+                                ? "SHA"
+                                : "All Payment Modes"}
+                            </span>
+                            <FaChevronDown
+                              className={`text-gray-400 transition-transform w-3 h-3 ${
+                                isPaymentModeDropdownOpen ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+
+                          {isPaymentModeDropdownOpen && (
+                            <div className="absolute z-[9999] w-64 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-60 overflow-hidden">
+                              <div className="max-h-60 overflow-y-auto">
+                                <div
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    handleFilterChange("payment_mode", "");
+                                    setIsPaymentModeDropdownOpen(false);
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    All Payment Modes
+                                  </div>
+                                </div>
+                                <div
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    handleFilterChange("payment_mode", "cash");
+                                    setIsPaymentModeDropdownOpen(false);
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    Cash
+                                  </div>
+                                </div>
+                                <div
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    handleFilterChange("payment_mode", "sha");
+                                    setIsPaymentModeDropdownOpen(false);
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    SHA
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -668,37 +1202,97 @@ const BookingTrends: React.FC = () => {
                         <label className="block text-xs font-medium text-gray-600">
                           Status
                         </label>
-                        <div className="relative">
-                          <select
-                            value={tempFilters.approval_status}
-                            onChange={(e) =>
-                              handleFilterChange(
-                                "approval_status",
-                                e.target.value
-                              )
-                            }
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none"
+                        <div className="relative" ref={statusDropdownRef}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsStatusDropdownOpen(!isStatusDropdownOpen);
+                              closeAllDropdowns();
+                              setIsStatusDropdownOpen(!isStatusDropdownOpen);
+                            }}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-left flex items-center justify-between"
                           >
-                            <option value="">All Statuses</option>
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                          </select>
-                          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                            <svg
-                              className="w-3 h-3 text-gray-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                            <span
+                              className={
+                                tempFilters.approval_status
+                                  ? "text-gray-900"
+                                  : "text-gray-500"
+                              }
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 9l-7 7-7-7"
-                              />
-                            </svg>
-                          </div>
+                              {tempFilters.approval_status === "pending"
+                                ? "Pending"
+                                : tempFilters.approval_status === "approved"
+                                ? "Approved"
+                                : tempFilters.approval_status === "rejected"
+                                ? "Rejected"
+                                : "All Statuses"}
+                            </span>
+                            <FaChevronDown
+                              className={`text-gray-400 transition-transform w-3 h-3 ${
+                                isStatusDropdownOpen ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+
+                          {isStatusDropdownOpen && (
+                            <div className="absolute z-[9999] w-64 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-60 overflow-hidden">
+                              <div className="max-h-60 overflow-y-auto">
+                                <div
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    handleFilterChange("approval_status", "");
+                                    setIsStatusDropdownOpen(false);
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    All Statuses
+                                  </div>
+                                </div>
+                                <div
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    handleFilterChange(
+                                      "approval_status",
+                                      "pending"
+                                    );
+                                    setIsStatusDropdownOpen(false);
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    Pending
+                                  </div>
+                                </div>
+                                <div
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    handleFilterChange(
+                                      "approval_status",
+                                      "approved"
+                                    );
+                                    setIsStatusDropdownOpen(false);
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    Approved
+                                  </div>
+                                </div>
+                                <div
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    handleFilterChange(
+                                      "approval_status",
+                                      "rejected"
+                                    );
+                                    setIsStatusDropdownOpen(false);
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    Rejected
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 
