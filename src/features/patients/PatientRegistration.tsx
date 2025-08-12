@@ -193,36 +193,36 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-2 md:p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-4">
-            <FaUser className="w-4 h-4" />
+        <div className="text-center mb-4 md:mb-12">
+          <div className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-xs md:text-sm font-medium mb-3 md:mb-4">
+            <FaUser className="w-3 h-3 md:w-4 md:h-4" />
             Registration
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+          <h1 className="text-xl md:text-4xl font-bold text-gray-900 mb-2 md:mb-3">
             Patient Registration
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-sm md:text-lg text-gray-600 max-w-2xl mx-auto px-2 md:px-4">
             Complete your registration to access our healthcare services
           </p>
         </div>
 
-        <form onSubmit={handleProceed} className="space-y-8">
-          {/* Facility and Patient - Same Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <form onSubmit={handleProceed} className="space-y-3 md:space-y-8">
+          {/* Facility and Patient - Same Row on Desktop, Stacked on Mobile */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-8">
             {/* Medical Facility */}
-            <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <FaHospital className="w-6 h-6 text-blue-600" />
+            <div className="bg-white rounded-lg md:rounded-2xl shadow-sm md:shadow-lg p-3 md:p-8 hover:shadow-md md:hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center gap-3 mb-4 md:mb-6">
+                <div className="p-2 md:p-3 bg-blue-100 rounded-lg md:rounded-xl">
+                  <FaHospital className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">
+                  <h3 className="text-base md:text-xl font-bold text-gray-900">
                     Medical Facility
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs md:text-sm text-gray-500">
                     Select your healthcare provider
                   </p>
                 </div>
@@ -230,17 +230,17 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
 
               <div className="relative" ref={facilityDropdownRef}>
                 <div
-                  className="w-full p-4 bg-gray-50 rounded-xl cursor-pointer flex items-center justify-between hover:bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200"
+                  className="w-full p-3 md:p-4 bg-gray-50 rounded-xl cursor-pointer flex items-center justify-between hover:bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200"
                   onClick={() =>
                     setIsFacilityDropdownOpen(!isFacilityDropdownOpen)
                   }
                 >
                   <span
-                    className={
+                    className={`text-sm md:text-base ${
                       selectedFacility
                         ? "text-gray-900 font-medium"
                         : "text-gray-500"
-                    }
+                    }`}
                   >
                     {selectedFacility
                       ? selectedFacility.name
@@ -256,11 +256,11 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                         }}
                         className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-all"
                       >
-                        <FaTimes className="w-4 h-4" />
+                        <FaTimes className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                     )}
                     <FaChevronDown
-                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                      className={`w-4 h-4 md:w-5 md:h-5 text-gray-400 transition-transform duration-200 ${
                         isFacilityDropdownOpen ? "rotate-180" : ""
                       }`}
                     />
@@ -269,16 +269,16 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
 
                 {isFacilityDropdownOpen && (
                   <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
-                    <div className="p-4 border-b border-gray-100">
+                    <div className="p-3 md:p-4 border-b border-gray-100">
                       <div className="relative">
-                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 md:w-4 md:h-4" />
                         <input
                           ref={facilitySearchRef}
                           type="text"
                           placeholder="Search facilities..."
                           value={facilitySearch}
                           onChange={(e) => setFacilitySearch(e.target.value)}
-                          className="w-full pl-10 pr-20 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                          className="w-full pl-8 md:pl-10 pr-16 md:pr-20 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm md:text-base"
                           onClick={(e) => e.stopPropagation()}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
@@ -290,7 +290,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                         <button
                           type="button"
                           onClick={handleFacilitySearch}
-                          className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs font-medium"
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 px-2 md:px-3 py-1 md:py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs font-medium"
                         >
                           Search
                         </button>
@@ -299,29 +299,33 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                     <div className="max-h-60 overflow-y-auto">
                       {isFacilitiesLoading ? (
                         <div className="px-4 py-8 text-center text-gray-500">
-                          <FaSpinner className="w-6 h-6 mx-auto mb-2 text-blue-500 animate-spin" />
-                          <div>Loading facilities...</div>
+                          <FaSpinner className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-2 text-blue-500 animate-spin" />
+                          <div className="text-sm md:text-base">
+                            Loading facilities...
+                          </div>
                         </div>
                       ) : filteredFacilities &&
                         filteredFacilities.length > 0 ? (
                         filteredFacilities.map((facility) => (
                           <div
                             key={facility.id}
-                            className="px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors"
+                            className="px-3 md:px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors"
                             onClick={() => handleFacilitySelect(facility)}
                           >
-                            <div className="font-semibold text-gray-900">
+                            <div className="font-semibold text-gray-900 text-sm md:text-base">
                               {facility.name}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-xs md:text-sm text-gray-500">
                               Code: {facility.code}
                             </div>
                           </div>
                         ))
                       ) : (
                         <div className="px-4 py-8 text-center text-gray-500">
-                          <FaHospital className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                          <div>No facilities found</div>
+                          <FaHospital className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 text-gray-300" />
+                          <div className="text-sm md:text-base">
+                            No facilities found
+                          </div>
                           {searchQuery && (
                             <button
                               type="button"
@@ -329,7 +333,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                                 setSearchQuery("");
                                 setFacilitySearch("");
                               }}
-                              className="mt-2 text-blue-600 hover:text-blue-800 text-sm underline"
+                              className="mt-2 text-blue-600 hover:text-blue-800 text-xs md:text-sm underline"
                             >
                               Clear search
                             </button>
@@ -343,15 +347,17 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
             </div>
 
             {/* Patient Details */}
-            <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-lg md:rounded-2xl shadow-sm md:shadow-lg p-3 md:p-8 hover:shadow-md md:hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-green-100 rounded-xl">
-                    <FaUser className="w-6 h-6 text-green-600" />
+                  <div className="p-2 md:p-3 bg-green-100 rounded-lg md:rounded-xl">
+                    <FaUser className="w-4 h-4 md:w-6 md:h-6 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Patient</h3>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="text-base md:text-xl font-bold text-gray-900">
+                      Patient
+                    </h3>
+                    <p className="text-xs md:text-sm text-gray-500">
                       Select or add patient
                     </p>
                   </div>
@@ -361,10 +367,11 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                   <Modal.Open opens="patient-form">
                     <button
                       type="button"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl"
+                      className="inline-flex items-center gap-2 px-2 md:px-4 py-2 bg-green-600 text-white rounded-lg md:rounded-xl hover:bg-green-700 transition-colors shadow-sm md:shadow-lg hover:shadow-md md:hover:shadow-xl text-xs md:text-sm"
                     >
-                      <FaUserPlus className="w-4 h-4" />
-                      Add New
+                      <FaUserPlus className="w-3 h-3 md:w-4 md:h-4" />
+                      <span className="hidden sm:inline">Add New</span>
+                      <span className="sm:hidden">Add</span>
                     </button>
                   </Modal.Open>
                   <Modal.Window name="patient-form">
@@ -378,7 +385,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
               <select
                 value={selectedid}
                 onChange={(e) => setSelectedid(e.target.value)}
-                className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-gray-900"
+                className="w-full p-3 md:p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-gray-900 text-sm md:text-base"
                 required
               >
                 <option value="">Choose a patient</option>
@@ -392,28 +399,28 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
           </div>
 
           {/* Payment Method */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="p-3 bg-purple-100 rounded-xl">
-                <span className="text-2xl">💳</span>
+          <div className="bg-white rounded-lg md:rounded-2xl shadow-sm md:shadow-lg p-3 md:p-8 hover:shadow-md md:hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center gap-3 mb-4 md:mb-8">
+              <div className="p-2 md:p-3 bg-purple-100 rounded-lg md:rounded-xl">
+                <span className="text-lg md:text-2xl">💳</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900">
+                <h3 className="text-base md:text-xl font-bold text-gray-900">
                   Payment Method
                 </h3>
-                <p className="text-sm text-gray-500">
+                <p className="text-xs md:text-sm text-gray-500">
                   Select your payment option
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-6">
               {PAYMENT_MODES.map((paymentMode) => (
                 <label
                   key={paymentMode.paymentModeId}
-                  className={`relative p-6 rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                  className={`relative p-3 md:p-6 rounded-lg md:rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-sm md:hover:shadow-lg ${
                     selectedPaymentModeId === paymentMode.paymentModeId
-                      ? "bg-blue-50 ring-2 ring-blue-500 shadow-lg"
+                      ? "bg-blue-50 ring-2 ring-blue-500 shadow-sm md:shadow-lg"
                       : "bg-gray-50 hover:bg-gray-100"
                   }`}
                 >
@@ -429,17 +436,19 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                   />
 
                   <div className="text-center">
-                    <div className="text-4xl mb-4">{paymentMode.icon}</div>
-                    <div className="font-bold text-gray-900 mb-2 text-lg">
+                    <div className="text-2xl md:text-4xl mb-3 md:mb-4">
+                      {paymentMode.icon}
+                    </div>
+                    <div className="font-bold text-gray-900 mb-2 text-sm md:text-lg">
                       {paymentMode.paymentModeName}
                     </div>
-                    <div className="text-sm text-gray-600 leading-relaxed">
+                    <div className="text-xs md:text-sm text-gray-600 leading-relaxed">
                       {paymentMode.description}
                     </div>
                   </div>
 
                   {selectedPaymentModeId === paymentMode.paymentModeId && (
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                    <div className="absolute -top-2 -right-2 w-5 h-5 md:w-6 md:h-6 bg-blue-500 rounded-full flex items-center justify-center">
                       <span className="text-white text-xs">✓</span>
                     </div>
                   )}
@@ -449,11 +458,11 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center pt-2 md:pt-4">
             <button
               type="submit"
               disabled={!isComplete}
-              className={`inline-flex items-center gap-3 px-12 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl ${
+              className={`inline-flex items-center gap-2 md:gap-3 px-6 md:px-12 py-3 md:py-4 rounded-lg md:rounded-2xl font-bold text-sm md:text-lg transition-all duration-300 shadow-sm md:shadow-lg hover:shadow-md md:hover:shadow-xl w-full sm:w-auto ${
                 isComplete
                   ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transform hover:scale-105"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -461,13 +470,15 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
             >
               {isComplete ? (
                 <>
-                  Continue to Services
-                  <FaArrowRight className="w-5 h-5" />
+                  <span className="hidden sm:inline">Continue to Services</span>
+                  <span className="sm:hidden">Continue</span>
+                  <FaArrowRight className="w-4 h-4 md:w-5 md:h-5" />
                 </>
               ) : (
                 <>
-                  Complete All Fields
-                  <span className="w-5 h-5 flex items-center justify-center">
+                  <span className="hidden sm:inline">Complete All Fields</span>
+                  <span className="sm:hidden">Complete Fields</span>
+                  <span className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center">
                     ⚠️
                   </span>
                 </>
@@ -529,20 +540,23 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
   };
 
   return (
-    <div className="p-6 max-w-md mx-auto">
-      <div className="text-center mb-6">
-        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-          <FaUserPlus className="w-6 h-6 text-green-600" />
+    <div className="p-3 md:p-6 max-w-md mx-auto">
+      <div className="text-center mb-4 md:mb-6">
+        <div className="w-8 h-8 md:w-12 md:h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-3">
+          <FaUserPlus className="w-4 h-4 md:w-6 md:h-6 text-green-600" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900 mb-1">
+        <h3 className="text-base md:text-xl font-bold text-gray-900 mb-1">
           Register New Patient
         </h3>
       </div>
 
-      <form onSubmit={handleSubmit(handleAddPatient)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <form
+        onSubmit={handleSubmit(handleAddPatient)}
+        className="space-y-3 md:space-y-4"
+      >
+        <div className="grid grid-cols-1 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
               Full Name *
             </label>
             <input
@@ -560,7 +574,7 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
               Phone Number *
             </label>
             <input
@@ -582,9 +596,9 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
               Date of Birth *
             </label>
             <input
@@ -602,7 +616,7 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
               SHA Number{" "}
               <span className="text-gray-400 text-xs">(Optional)</span>
             </label>
@@ -618,10 +632,10 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
           <button
             type="submit"
             disabled={isRegistering}
-            className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg text-sm"
+            className="w-full sm:w-auto px-4 md:px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg text-sm"
           >
             {isRegistering ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center gap-2">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 Registering...
               </div>

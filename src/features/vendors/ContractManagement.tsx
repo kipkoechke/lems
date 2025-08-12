@@ -376,38 +376,38 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl mb-6 overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6 overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-4 md:px-8 py-4 md:py-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 md:gap-4">
                 {vendorCode && (
                   <button
                     onClick={() => router.back()}
-                    className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors"
+                    className="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors"
                   >
-                    <FaArrowLeft className="w-5 h-5 text-white" />
+                    <FaArrowLeft className="w-4 h-4 md:w-5 md:h-5 text-white" />
                   </button>
                 )}
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <FaFileContract className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <FaFileContract className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white mb-1">
+                  <h1 className="text-xl md:text-2xl font-bold text-white mb-1">
                     {vendorCode
                       ? `Vendor ${vendorCode} Contracts`
                       : "Contract Management"}
                   </h1>
-                  <p className="text-purple-100">
+                  <p className="text-sm md:text-base text-purple-100">
                     Manage vendor facility contracts and services
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => openModal("create")}
-                className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
+                className="bg-white/20 hover:bg-white/30 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-sm md:text-base w-full sm:w-auto justify-center"
               >
                 <FaPlus /> Add Contract
               </button>
@@ -415,16 +415,16 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
           </div>
 
           {/* Filters */}
-          <div className="p-6 bg-gray-50 border-b">
+          <div className="p-4 md:p-6 bg-gray-50 border-b">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Search contracts..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm md:text-base"
                 />
               </div>
 
@@ -625,7 +625,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
                 {isLotDropdownOpen && (
                   <div className="absolute z-[60] w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
-                    <div className="p-4 border-b border-gray-100">
+                    <div className="p-3 md:p-4 border-b border-gray-100">
                       <div className="relative">
                         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                         <input
@@ -633,21 +633,21 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                           placeholder="Search lots..."
                           value={lotSearch}
                           onChange={(e) => setLotSearch(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+                          className="w-full pl-10 pr-4 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all text-sm md:text-base"
                           onClick={(e) => e.stopPropagation()}
                         />
                       </div>
                     </div>
                     <div className="max-h-60 overflow-y-auto">
                       <div
-                        className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                        className="px-3 md:px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
                         onClick={() => {
                           handleFilterChange("lot_number", "");
                           setIsLotDropdownOpen(false);
                           setLotSearch("");
                         }}
                       >
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-gray-900 text-sm md:text-base">
                           All Lots
                         </div>
                       </div>
@@ -655,23 +655,23 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                         filteredLots.map((lot) => (
                           <div
                             key={lot.id}
-                            className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                            className="px-3 md:px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
                             onClick={() => {
                               handleFilterChange("lot_number", lot.number);
                               setIsLotDropdownOpen(false);
                               setLotSearch("");
                             }}
                           >
-                            <div className="font-semibold text-gray-900">
+                            <div className="font-semibold text-gray-900 text-sm md:text-base">
                               {lot.name}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-xs md:text-sm text-gray-500">
                               Lot Number: {lot.number}
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div className="px-4 py-8 text-center text-gray-500">
+                        <div className="px-3 md:px-4 py-6 md:py-8 text-center text-gray-500 text-sm md:text-base">
                           No lots found
                         </div>
                       )}
@@ -681,12 +681,12 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
               <FaFilter className="text-gray-500" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm md:text-base"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -696,8 +696,8 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-2xl shadow-xl">
+        {/* Table - Desktop */}
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl hidden md:block">
           <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -958,30 +958,168 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
           </div>
         </div>
 
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-3">
+          {filteredContracts?.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
+              {searchTerm || statusFilter !== "all"
+                ? "No contracts match your search criteria"
+                : "No contracts found. Create your first contract!"}
+            </div>
+          ) : (
+            filteredContracts?.map((contract) => (
+              <div
+                key={contract.id}
+                className="bg-white rounded-xl shadow-lg p-4 border border-gray-100"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 text-lg mb-1">
+                      {contract.vendor_name}
+                    </h3>
+                    <div className="text-sm text-gray-500 font-mono mb-2">
+                      {contract.vendor_code}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                        contract.is_active === "1"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {contract.is_active === "1" ? <FaCheck /> : <FaTimes />}
+                      {contract.is_active === "1" ? "Active" : "Inactive"}
+                    </span>
+                    <div className="relative">
+                      <button
+                        onClick={() =>
+                          setActiveDropdown(
+                            activeDropdown === contract.id ? null : contract.id
+                          )
+                        }
+                        className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                        </svg>
+                      </button>
+
+                      {activeDropdown === contract.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-30"
+                            onClick={() => setActiveDropdown(null)}
+                          ></div>
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
+                            <div className="p-1">
+                              <button
+                                onClick={() => {
+                                  setActiveDropdown(null);
+                                  router.push(`/contracts/${contract.id}`);
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                              >
+                                <FaEye className="text-blue-500" /> View Details
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setActiveDropdown(null);
+                                  openModal("services", contract);
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                              >
+                                <FaStethoscope className="text-green-500" />{" "}
+                                Manage Services
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <span className="text-gray-500 font-medium">Facility:</span>
+                    <p className="text-gray-900">{contract.facility_name}</p>
+                    <p className="text-gray-500 font-mono text-xs">
+                      {contract.facility_code}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-gray-500 font-medium">Lot:</span>
+                      <p className="text-gray-900">LOT {contract.lot_number}</p>
+                      <p className="text-gray-500 text-xs">
+                        {contract.lot_name}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 font-medium">
+                        Services:
+                      </span>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                          {contract.services.length} total
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          (
+                          {
+                            contract.services.filter((s) => s.is_active === "1")
+                              .length
+                          }{" "}
+                          active)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
         {/* Summary */}
         {filteredContracts && filteredContracts.length > 0 && (
-          <div className="mt-6 bg-white rounded-2xl shadow-xl p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
+          <div className="mt-4 md:mt-6 bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 md:hidden">
+              Summary
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              <div className="text-center p-3 md:p-0">
+                <div className="text-xl md:text-2xl font-bold text-purple-600">
                   {filteredContracts.length}
                 </div>
-                <div className="text-sm text-gray-600">Total Contracts</div>
+                <div className="text-xs md:text-sm text-gray-600">
+                  Total Contracts
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
+              <div className="text-center p-3 md:p-0">
+                <div className="text-xl md:text-2xl font-bold text-green-600">
                   {filteredContracts.filter((c) => c.is_active === "1").length}
                 </div>
-                <div className="text-sm text-gray-600">Active Contracts</div>
+                <div className="text-xs md:text-sm text-gray-600">
+                  Active Contracts
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
+              <div className="text-center p-3 md:p-0">
+                <div className="text-xl md:text-2xl font-bold text-blue-600">
                   {filteredContracts.reduce(
                     (sum, c) => sum + c.services.length,
                     0
                   )}
                 </div>
-                <div className="text-sm text-gray-600">Total Services</div>
+                <div className="text-xs md:text-sm text-gray-600">
+                  Total Services
+                </div>
               </div>
             </div>
           </div>
@@ -990,17 +1128,20 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
       {/* Modal for Create/View */}
       {showModal && modalType !== "services" && (
-        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-4 transition-all duration-300">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4">
-              <h2 className="text-xl font-bold text-white">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-3 md:p-4 transition-all duration-300">
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-md w-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-blue-600 px-4 md:px-6 py-3 md:py-4">
+              <h2 className="text-lg md:text-xl font-bold text-white">
                 {modalType === "create"
                   ? "Add New Contract"
                   : "Contract Details"}
               </h2>
             </div>
 
-            <form onSubmit={handleContractSubmit} className="p-6 space-y-6">
+            <form
+              onSubmit={handleContractSubmit}
+              className="p-4 md:p-6 space-y-4 md:space-y-6"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1011,7 +1152,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                       type="button"
                       onClick={toggleVendorDropdown}
                       disabled={!!vendorCode || vendorsLoading}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed text-sm md:text-base"
                     >
                       <span
                         className={
@@ -1033,7 +1174,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
                     {isVendorDropdownOpen && (
                       <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
-                        <div className="p-4 border-b border-gray-100">
+                        <div className="p-3 md:p-4 border-b border-gray-100">
                           <div className="relative">
                             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
@@ -1042,7 +1183,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                               placeholder="Search vendors..."
                               value={vendorSearch}
                               onChange={(e) => setVendorSearch(e.target.value)}
-                              className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+                              className="w-full pl-10 pr-4 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all text-sm md:text-base"
                               onClick={(e) => e.stopPropagation()}
                             />
                           </div>
@@ -1052,19 +1193,19 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                             filteredVendors.map((vendor) => (
                               <div
                                 key={vendor.id}
-                                className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                                className="px-3 md:px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
                                 onClick={() => handleVendorSelect(vendor)}
                               >
-                                <div className="font-semibold text-gray-900">
+                                <div className="font-semibold text-gray-900 text-sm md:text-base">
                                   {vendor.name}
                                 </div>
-                                <div className="text-sm text-gray-500">
+                                <div className="text-xs md:text-sm text-gray-500">
                                   Code: {vendor.code}
                                 </div>
                               </div>
                             ))
                           ) : (
-                            <div className="px-4 py-8 text-center text-gray-500">
+                            <div className="px-4 py-8 text-center text-gray-500 text-sm md:text-base">
                               No vendors found
                             </div>
                           )}
@@ -1086,7 +1227,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                         is_active: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm md:text-base"
                     disabled={false}
                   >
                     <option value="1">Active</option>
@@ -1104,7 +1245,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                     type="button"
                     onClick={toggleFacilityDropdown}
                     disabled={facilitiesLoading}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed text-sm md:text-base"
                   >
                     <span
                       className={
@@ -1128,7 +1269,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
                   {isFacilityDropdownOpen && (
                     <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
-                      <div className="p-4 border-b border-gray-100">
+                      <div className="p-3 md:p-4 border-b border-gray-100">
                         <div className="relative">
                           <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                           <input
@@ -1137,7 +1278,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                             placeholder="Search facilities..."
                             value={facilitySearch}
                             onChange={(e) => setFacilitySearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+                            className="w-full pl-10 pr-4 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all text-sm md:text-base"
                             onClick={(e) => e.stopPropagation()}
                           />
                         </div>
@@ -1148,21 +1289,21 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                           filteredFacilitiesDropdown.map((facility) => (
                             <div
                               key={facility.id}
-                              className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                              className="px-3 md:px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
                               onClick={() =>
                                 handleFacilitySelectDropdown(facility)
                               }
                             >
-                              <div className="font-semibold text-gray-900">
+                              <div className="font-semibold text-gray-900 text-sm md:text-base">
                                 {facility.name}
                               </div>
-                              <div className="text-sm text-gray-500">
+                              <div className="text-xs md:text-sm text-gray-500">
                                 Code: {facility.code}
                               </div>
                             </div>
                           ))
                         ) : (
-                          <div className="px-4 py-8 text-center text-gray-500">
+                          <div className="px-4 py-8 text-center text-gray-500 text-sm md:text-base">
                             No facilities found
                           </div>
                         )}
@@ -1181,7 +1322,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                     type="button"
                     onClick={toggleLotDropdown}
                     disabled={lotsLoading}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed text-sm md:text-base"
                   >
                     <span
                       className={
@@ -1203,7 +1344,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
                   {isLotDropdownOpen && (
                     <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
-                      <div className="p-4 border-b border-gray-100">
+                      <div className="p-3 md:p-4 border-b border-gray-100">
                         <div className="relative">
                           <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                           <input
@@ -1212,7 +1353,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                             placeholder="Search lots..."
                             value={lotSearch}
                             onChange={(e) => setLotSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+                            className="w-full pl-10 pr-4 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all text-sm md:text-base"
                             onClick={(e) => e.stopPropagation()}
                           />
                         </div>
@@ -1222,7 +1363,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                           filteredLots.map((lot) => (
                             <div
                               key={lot.id}
-                              className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
+                              className="px-3 md:px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
                               onClick={() => handleLotSelect(lot)}
                             >
                               <div className="font-semibold text-gray-900">

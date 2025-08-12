@@ -203,26 +203,28 @@ const Equipments: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl mb-6 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <FaCogs className="w-6 h-6 text-white" />
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 md:px-8 py-4 md:py-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <FaCogs className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white mb-1">
+                  <h1 className="text-xl md:text-2xl font-bold text-white mb-1">
                     Equipment Management
                   </h1>
-                  <p className="text-blue-100">Manage medical equipment</p>
+                  <p className="text-sm md:text-base text-blue-100">
+                    Manage medical equipment
+                  </p>
                 </div>
               </div>
               <button
                 onClick={openCreate}
-                className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
+                className="bg-white/20 hover:bg-white/30 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-sm md:text-base w-full sm:w-auto justify-center"
               >
                 <FaPlus /> Add Equipment
               </button>
@@ -230,22 +232,23 @@ const Equipments: React.FC = () => {
           </div>
 
           {/* Filters */}
-          <div className="p-6 bg-gray-50 border-b">
-            <div className="flex flex-col md:flex-row gap-4">
+          <div className="p-4 md:p-6 bg-gray-50 border-b">
+            <div className="flex flex-col gap-4">
               <div className="flex-1 relative">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  placeholder="Search by name, serial, model, manufacturer..."
+                  placeholder="Search by name, serial, model..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                 />
               </div>
               <div>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full md:w-auto px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                 >
                   <option value="all">All Status</option>
                   <option value="available">Available</option>
@@ -258,8 +261,8 @@ const Equipments: React.FC = () => {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-2xl shadow-xl">
+        {/* Table - Desktop */}
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl hidden md:block">
           <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -373,19 +376,119 @@ const Equipments: React.FC = () => {
           </div>
         </div>
 
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-3">
+          {filtered.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
+              No equipments found
+            </div>
+          ) : (
+            filtered.map((e: Equipment) => (
+              <div
+                key={e.id}
+                className="bg-white rounded-xl shadow-lg p-4 border border-gray-100"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 text-lg mb-1">
+                      {e.name}
+                    </h3>
+                    <div className="inline-block bg-gray-100 px-2 py-1 rounded text-xs font-mono text-gray-600 mb-2">
+                      {e.serial_number}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {statusBadge(e.status)}
+                    <div className="relative">
+                      <button
+                        onClick={() =>
+                          setActiveDropdown(
+                            activeDropdown === e.id ? null : e.id
+                          )
+                        }
+                        className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <FaEllipsisV />
+                      </button>
+
+                      {activeDropdown === e.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-30"
+                            onClick={() => setActiveDropdown(null)}
+                          ></div>
+                          <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
+                            <div className="p-1">
+                              <button
+                                onClick={() => openEdit(e)}
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                              >
+                                <FaEdit className="text-yellow-500" /> Edit
+                              </button>
+                              <button
+                                onClick={() => onDelete(e.id)}
+                                className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded flex items-center gap-2"
+                              >
+                                <FaTrash className="text-red-500" /> Delete
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {e.description && (
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    {e.description}
+                  </p>
+                )}
+
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-gray-500 font-medium">Model:</span>
+                    <p className="text-gray-900">{e.model || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 font-medium">
+                      Manufacturer:
+                    </span>
+                    <p className="text-gray-900">{e.manufacturer || "-"}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-gray-500 font-medium">Vendor:</span>
+                    <p className="text-gray-900">
+                      {e.vendor?.name || e.vendor_id || "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
         {/* Summary */}
         {filtered.length > 0 && (
-          <div className="mt-6 bg-white rounded-2xl shadow-xl p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="mt-4 md:mt-6 bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 md:hidden">
+              Summary
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {Array.from(
                 filtered.reduce((acc, cur) => {
                   acc.set(cur.status, (acc.get(cur.status) || 0) + 1);
                   return acc;
                 }, new Map<string, number>())
               ).map(([k, v]) => (
-                <div key={k} className="text-center">
+                <div key={k} className="text-center p-3 md:p-0">
                   <div className="mb-2">{statusBadge(k)}</div>
-                  <div className="text-2xl font-bold text-gray-800">{v}</div>
+                  <div className="text-xl md:text-2xl font-bold text-gray-800">
+                    {v}
+                  </div>
+                  <div className="text-xs md:text-sm text-gray-500 md:hidden">
+                    {k.charAt(0).toUpperCase() + k.slice(1)}
+                  </div>
                 </div>
               ))}
             </div>
@@ -395,14 +498,17 @@ const Equipments: React.FC = () => {
 
       {/* Modal for Create/Edit */}
       {showModal && (
-        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-4 transition-all duration-300">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
-              <h2 className="text-xl font-bold text-white">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-3 md:p-4 transition-all duration-300">
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 px-4 md:px-6 py-3 md:py-4">
+              <h2 className="text-lg md:text-xl font-bold text-white">
                 {modalType === "create" ? "Add Equipment" : "Edit Equipment"}
               </h2>
             </div>
-            <form onSubmit={onSubmit} className="p-6 space-y-6">
+            <form
+              onSubmit={onSubmit}
+              className="p-4 md:p-6 space-y-4 md:space-y-6"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -411,7 +517,7 @@ const Equipments: React.FC = () => {
                   <input
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                     required
                     placeholder="Equipment name"
                   />
@@ -425,7 +531,7 @@ const Equipments: React.FC = () => {
                     onChange={(e) =>
                       setForm({ ...form, serial_number: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                     required
                     placeholder="Serial number"
                   />
@@ -440,7 +546,7 @@ const Equipments: React.FC = () => {
                     onChange={(e) =>
                       setForm({ ...form, model: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                     placeholder="Model"
                   />
                 </div>
@@ -453,7 +559,7 @@ const Equipments: React.FC = () => {
                     onChange={(e) =>
                       setForm({ ...form, manufacturer: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                     placeholder="Manufacturer"
                   />
                 </div>
@@ -466,7 +572,7 @@ const Equipments: React.FC = () => {
                     type="number"
                     value={form.year as any}
                     onChange={(e) => setForm({ ...form, year: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                     placeholder="Year"
                   />
                 </div>
@@ -479,7 +585,7 @@ const Equipments: React.FC = () => {
                     onChange={(e) =>
                       setForm({ ...form, status: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                     required
                   >
                     <option value="available">Available</option>
@@ -506,7 +612,7 @@ const Equipments: React.FC = () => {
                         }
                       }}
                       disabled={vendorsLoading}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed text-sm md:text-base"
                     >
                       <span
                         className={
@@ -528,7 +634,7 @@ const Equipments: React.FC = () => {
 
                     {isVendorDropdownOpen && (
                       <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
-                        <div className="p-4 border-b border-gray-100">
+                        <div className="p-3 md:p-4 border-b border-gray-100">
                           <div className="relative">
                             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
@@ -537,7 +643,7 @@ const Equipments: React.FC = () => {
                               placeholder="Search vendors..."
                               value={vendorSearch}
                               onChange={(e) => setVendorSearch(e.target.value)}
-                              className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                              className="w-full pl-10 pr-4 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm md:text-base"
                               onClick={(e) => e.stopPropagation()}
                             />
                           </div>
@@ -547,23 +653,23 @@ const Equipments: React.FC = () => {
                             filteredVendors.map((v) => (
                               <div
                                 key={v.id}
-                                className="px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors"
+                                className="px-3 md:px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors"
                                 onClick={() => {
                                   setForm({ ...form, vendor_id: v.id });
                                   setIsVendorDropdownOpen(false);
                                   setVendorSearch("");
                                 }}
                               >
-                                <div className="font-semibold text-gray-900">
+                                <div className="font-semibold text-gray-900 text-sm md:text-base">
                                   {v.name}
                                 </div>
-                                <div className="text-sm text-gray-500">
+                                <div className="text-xs md:text-sm text-gray-500">
                                   Code: {v.code}
                                 </div>
                               </div>
                             ))
                           ) : (
-                            <div className="px-4 py-8 text-center text-gray-500">
+                            <div className="px-4 py-8 text-center text-gray-500 text-sm md:text-base">
                               {vendorsLoading
                                 ? "Loading vendors..."
                                 : "No vendors found"}
@@ -585,25 +691,25 @@ const Equipments: React.FC = () => {
                     onChange={(e) =>
                       setForm({ ...form, description: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                     placeholder="Description (optional)"
                     rows={3}
                   />
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-6">
+              <div className="flex flex-col md:flex-row gap-3 pt-4 md:pt-6">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                  className="w-full md:flex-1 px-4 py-2 md:py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm md:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating || isUpdating}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50"
+                  className="w-full md:flex-1 px-4 py-2 md:py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 text-sm md:text-base"
                 >
                   {isCreating || isUpdating
                     ? "Saving..."
@@ -619,32 +725,32 @@ const Equipments: React.FC = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-4 transition-all duration-300">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-            <div className="p-6">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-3 md:p-4 transition-all duration-300">
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="p-4 md:p-6">
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                  <FaTrash className="w-8 h-8 text-red-600" />
+                <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                  <FaTrash className="w-6 h-6 md:w-8 md:h-8 text-red-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
                   Delete Equipment
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">
                   Are you sure you want to delete this equipment? This action
                   cannot be undone.
                 </p>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col md:flex-row gap-3">
                   <button
                     onClick={() => setShowDeleteConfirm(null)}
-                    className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                    className="w-full md:flex-1 px-4 py-2 md:py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm md:text-base"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={confirmDelete}
                     disabled={isDeleting}
-                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                    className="w-full md:flex-1 px-4 py-2 md:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 text-sm md:text-base"
                   >
                     {isDeleting ? "Deleting..." : "Delete"}
                   </button>

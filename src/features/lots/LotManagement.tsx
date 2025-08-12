@@ -148,9 +148,9 @@ const LotManagement: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-6 md:p-8">
             <div className="animate-pulse space-y-6">
               <div className="h-8 bg-gray-200 rounded w-1/4"></div>
               <div className="space-y-4">
@@ -167,13 +167,15 @@ const LotManagement: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div className="text-red-500 text-xl mb-4">Error loading lots</div>
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-6 md:p-8 text-center">
+            <div className="text-red-500 text-lg md:text-xl mb-4">
+              Error loading lots
+            </div>
             <button
               onClick={() => refetch()}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 md:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm md:text-base"
             >
               Retry
             </button>
@@ -184,18 +186,18 @@ const LotManagement: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl mb-6 overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <FaLayerGroup className="w-6 h-6 text-white" />
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6 overflow-hidden">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 md:px-8 py-4 md:py-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <FaLayerGroup className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white mb-1">
+                  <h1 className="text-xl md:text-2xl font-bold text-white mb-1">
                     Lot Management
                   </h1>
                   <p className="text-indigo-100">
@@ -205,7 +207,7 @@ const LotManagement: React.FC = () => {
               </div>
               <button
                 onClick={() => openModal("create")}
-                className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
+                className="bg-white/20 hover:bg-white/30 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-sm md:text-base w-full sm:w-auto justify-center"
               >
                 <FaPlus /> Add Lot
               </button>
@@ -213,16 +215,16 @@ const LotManagement: React.FC = () => {
           </div>
 
           {/* Filters */}
-          <div className="p-6 bg-gray-50 border-b">
-            <div className="flex flex-col md:flex-row gap-4">
+          <div className="p-4 md:p-6 bg-gray-50 border-b">
+            <div className="flex flex-col gap-4">
               <div className="flex-1 relative">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Search lots by number or name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm md:text-base"
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -230,7 +232,7 @@ const LotManagement: React.FC = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full md:w-auto px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm md:text-base"
                 >
                   <option value="all">All Status</option>
                   <option value="active">Active</option>
@@ -241,8 +243,8 @@ const LotManagement: React.FC = () => {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-2xl shadow-xl">
+        {/* Table - Desktop */}
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl hidden md:block">
           <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -338,7 +340,9 @@ const LotManagement: React.FC = () => {
                               <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
                                 <div className="p-1">
                                   <button
-                                    onClick={() => router.push(`/lots/${lot.number}`)}
+                                    onClick={() =>
+                                      router.push(`/lots/${lot.number}`)
+                                    }
                                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
                                   >
                                     <FaEye className="text-blue-500" /> View
@@ -381,27 +385,146 @@ const LotManagement: React.FC = () => {
           </div>
         </div>
 
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-3">
+          {filteredLots?.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
+              {searchTerm || statusFilter !== "all"
+                ? "No lots match your search criteria"
+                : "No lots found. Create your first lot!"}
+            </div>
+          ) : (
+            filteredLots?.map((lot) => (
+              <div
+                key={lot.id}
+                className="bg-white rounded-xl shadow-lg p-4 border border-gray-100"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 text-lg mb-1">
+                      {lot.name}
+                    </h3>
+                    <div className="inline-block bg-indigo-100 px-2 py-1 rounded text-xs font-mono text-indigo-800 mb-2">
+                      LOT {lot.number}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                        lot.is_active === "1"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {lot.is_active === "1" ? <FaCheck /> : <FaTimes />}
+                      {lot.is_active === "1" ? "Active" : "Inactive"}
+                    </span>
+                    <div className="relative">
+                      <button
+                        onClick={() =>
+                          setActiveDropdown(
+                            activeDropdown === lot.id ? null : lot.id
+                          )
+                        }
+                        className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <FaEllipsisV />
+                      </button>
+
+                      {activeDropdown === lot.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-30"
+                            onClick={() => setActiveDropdown(null)}
+                          ></div>
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
+                            <div className="p-1">
+                              <button
+                                onClick={() =>
+                                  router.push(`/lots/${lot.number}`)
+                                }
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                              >
+                                <FaEye className="text-blue-500" /> View Details
+                              </button>
+                              <button
+                                onClick={() => openModal("edit", lot)}
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                              >
+                                <FaEdit className="text-yellow-500" /> Edit
+                              </button>
+                              <button
+                                onClick={() =>
+                                  navigateToServices(lot.number, lot.name)
+                                }
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
+                              >
+                                <FaStethoscope className="text-green-500" />{" "}
+                                Manage Services
+                              </button>
+                              <button
+                                onClick={() => setShowDeleteConfirm(lot.number)}
+                                className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded flex items-center gap-2"
+                              >
+                                <FaTrash className="text-red-500" /> Delete
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-gray-500 font-medium">Created:</span>
+                    <p className="text-gray-900">
+                      {formatDate(lot.created_at)}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 font-medium">Updated:</span>
+                    <p className="text-gray-900">
+                      {formatDate(lot.updated_at)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
         {/* Summary */}
         {filteredLots && filteredLots.length > 0 && (
-          <div className="mt-6 bg-white rounded-2xl shadow-xl p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-indigo-600">
+          <div className="mt-4 md:mt-6 bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 md:hidden">
+              Summary
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              <div className="text-center p-3 md:p-0">
+                <div className="text-xl md:text-2xl font-bold text-indigo-600">
                   {filteredLots.length}
                 </div>
-                <div className="text-sm text-gray-600">Total Lots</div>
+                <div className="text-xs md:text-sm text-gray-600">
+                  Total Lots
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
+              <div className="text-center p-3 md:p-0">
+                <div className="text-xl md:text-2xl font-bold text-green-600">
                   {filteredLots.filter((l) => l.is_active === "1").length}
                 </div>
-                <div className="text-sm text-gray-600">Active Lots</div>
+                <div className="text-xs md:text-sm text-gray-600">
+                  Active Lots
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
+              <div className="text-center p-3 md:p-0">
+                <div className="text-xl md:text-2xl font-bold text-red-600">
                   {filteredLots.filter((l) => l.is_active === "0").length}
                 </div>
-                <div className="text-sm text-gray-600">Inactive Lots</div>
+                <div className="text-xs md:text-sm text-gray-600">
+                  Inactive Lots
+                </div>
               </div>
             </div>
           </div>
@@ -410,10 +533,10 @@ const LotManagement: React.FC = () => {
 
       {/* Modal for Create/Edit/View */}
       {showModal && (
-        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-4 transition-all duration-300">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
-              <h2 className="text-xl font-bold text-white">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-3 md:p-4 transition-all duration-300">
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-md w-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 px-4 md:px-6 py-3 md:py-4">
+              <h2 className="text-lg md:text-xl font-bold text-white">
                 {modalType === "create"
                   ? "Add New Lot"
                   : modalType === "edit"
@@ -422,7 +545,10 @@ const LotManagement: React.FC = () => {
               </h2>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <form
+              onSubmit={handleSubmit}
+              className="p-4 md:p-6 space-y-4 md:space-y-6"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -434,7 +560,7 @@ const LotManagement: React.FC = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, number: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm md:text-base"
                     required
                     disabled={modalType === "view"}
                     placeholder="Enter lot number"
@@ -453,7 +579,7 @@ const LotManagement: React.FC = () => {
                         is_active: e.target.value === "1",
                       })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm md:text-base"
                     disabled={modalType === "view"}
                   >
                     <option value="1">Active</option>
@@ -472,7 +598,7 @@ const LotManagement: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm md:text-base"
                   required
                   disabled={modalType === "view"}
                   placeholder="Enter lot name"
@@ -502,11 +628,11 @@ const LotManagement: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex gap-3 pt-6">
+              <div className="flex flex-col md:flex-row gap-3 pt-4 md:pt-6">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                  className="w-full md:flex-1 px-4 py-2 md:py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm md:text-base"
                 >
                   {modalType === "view" ? "Close" : "Cancel"}
                 </button>
@@ -514,7 +640,7 @@ const LotManagement: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isCreating || isUpdating}
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50"
+                    className="w-full md:flex-1 px-4 py-2 md:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 text-sm md:text-base"
                   >
                     {isCreating || isUpdating
                       ? "Saving..."
@@ -531,32 +657,32 @@ const LotManagement: React.FC = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-4 transition-all duration-300">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-            <div className="p-6">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[100] p-3 md:p-4 transition-all duration-300">
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="p-4 md:p-6">
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                  <FaTrash className="w-8 h-8 text-red-600" />
+                <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                  <FaTrash className="w-6 h-6 md:w-8 md:h-8 text-red-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
                   Delete Lot
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">
                   Are you sure you want to delete LOT {showDeleteConfirm}? This
                   action cannot be undone.
                 </p>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col md:flex-row gap-3">
                   <button
                     onClick={() => setShowDeleteConfirm(null)}
-                    className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                    className="w-full md:flex-1 px-4 py-2 md:py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm md:text-base"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => handleDelete(showDeleteConfirm)}
                     disabled={isDeleting}
-                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                    className="w-full md:flex-1 px-4 py-2 md:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 text-sm md:text-base"
                   >
                     {isDeleting ? "Deleting..." : "Delete"}
                   </button>

@@ -79,7 +79,9 @@ function Clinicians() {
     }
   };
 
-  return <div className="container mx-auto p-6">{renderStepComponent()}</div>;
+  return (
+    <div className="container mx-auto p-2 md:p-6">{renderStepComponent()}</div>
+  );
 }
 
 export default Clinicians;
