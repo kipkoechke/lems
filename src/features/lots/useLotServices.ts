@@ -3,22 +3,39 @@ import { useQuery } from "@tanstack/react-query";
 
 interface LotService {
   id: string;
-  service_code: string;
-  service_name: string;
-  is_active: string;
+  name: string;
+  code: string;
+  sha_rate: string;
+  facility_share: string;
+  vendor_share: string;
+  is_capitated: string;
   lot_id: string;
-  lot_number: string;
+  is_active: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+interface Lot {
+  id: string;
+  number: string;
+  name: string;
+  is_active: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
 }
 
 interface LotServicesResponse {
-  data: LotService[];
+  lot: Lot;
+  services: LotService[];
 }
 
 const fetchLotServices = async (lotNumber: string): Promise<LotService[]> => {
   const response = await axios.get<LotServicesResponse>(
     `/lots?lot_number=${lotNumber}`
   );
-  return response.data.data || [];
+  return response.data.services || [];
 };
 
 export const useLotServices = (lotNumber: string) => {
