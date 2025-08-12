@@ -85,6 +85,13 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   const facilityDropdownRef = useRef<HTMLDivElement>(null);
   const facilitySearchRef = useRef<HTMLInputElement>(null);
 
+  // Patient dropdown state
+  const [patientSearch, setPatientSearch] = useState<string>("");
+  const [isPatientDropdownOpen, setIsPatientDropdownOpen] =
+    useState<boolean>(false);
+  const patientDropdownRef = useRef<HTMLDivElement>(null);
+  const patientSearchRef = useRef<HTMLInputElement>(null);
+
   // Get facilities with search parameters - simplified without debounce
   const { facilities, isLoading: isFacilitiesLoading } = useFacilities(
     searchQuery ? { search: searchQuery } : undefined
@@ -103,7 +110,17 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   // Use the searched facilities or show first 50 if no search
   const filteredFacilities = facilities?.slice(0, 50);
 
-  const _selectedPatient = patients?.find((p) => p.id === selectedid);
+  // Filter patients based on search
+  const filteredPatients = patients
+    ?.filter(
+      (patient) =>
+        patient.name.toLowerCase().includes(patientSearch.toLowerCase()) ||
+        patient.phone.includes(patientSearch) ||
+        patient.sha_number?.includes(patientSearch)
+    )
+    .slice(0, 50);
+
+  const selectedPatient = patients?.find((p) => p.id === selectedid);
 
   // Check if all fields are completed
   const isComplete = selectedFacilityId && selectedid && selectedPaymentModeId;
@@ -116,6 +133,12 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
         !facilityDropdownRef.current.contains(event.target as Node)
       ) {
         setIsFacilityDropdownOpen(false);
+      }
+      if (
+        patientDropdownRef.current &&
+        !patientDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsPatientDropdownOpen(false);
       }
     };
 
@@ -131,6 +154,13 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
       facilitySearchRef.current.focus();
     }
   }, [isFacilityDropdownOpen]);
+
+  // Focus patient search input when dropdown opens
+  useEffect(() => {
+    if (isPatientDropdownOpen && patientSearchRef.current) {
+      patientSearchRef.current.focus();
+    }
+  }, [isPatientDropdownOpen]);
 
   // Load initial facilities when dropdown opens for the first time
   useEffect(() => {
@@ -175,6 +205,16 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     setSelectedFacility(null);
     setFacilitySearch("");
     setSearchQuery("");
+  };
+
+  const togglePatientDropdown = () => {
+    setIsPatientDropdownOpen(!isPatientDropdownOpen);
+  };
+
+  const handlePatientSelect = (patient: Patient) => {
+    setSelectedid(patient.id);
+    setIsPatientDropdownOpen(false);
+    setPatientSearch("");
   };
 
   const handleProceed = (e: React.FormEvent) => {
@@ -382,19 +422,77 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                 </Modal>
               </div>
 
-              <select
-                value={selectedid}
-                onChange={(e) => setSelectedid(e.target.value)}
-                className="w-full p-3 md:p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-gray-900 text-sm md:text-base"
-                required
+              <div
+                className="relative dropdown-container"
+                ref={patientDropdownRef}
               >
-                <option value="">Choose a patient</option>
-                {patients?.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+                <button
+                  type="button"
+                  onClick={togglePatientDropdown}
+                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-left bg-white flex items-center justify-between text-sm md:text-base"
+                >
+                  <span
+                    className={
+                      selectedPatient ? "text-gray-900" : "text-gray-500"
+                    }
+                  >
+                    {selectedPatient
+                      ? `${selectedPatient.name} (${selectedPatient.phone})`
+                      : "Choose a patient"}
+                  </span>
+                  <FaChevronDown
+                    className={`text-gray-400 transition-transform ${
+                      isPatientDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {isPatientDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                    <div className="p-3 md:p-4 border-b border-gray-100">
+                      <div className="relative">
+                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                          ref={patientSearchRef}
+                          type="text"
+                          placeholder="Search patients..."
+                          value={patientSearch}
+                          onChange={(e) => setPatientSearch(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-sm md:text-base"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {filteredPatients && filteredPatients.length > 0 ? (
+                        filteredPatients.map((patient) => (
+                          <div
+                            key={patient.id}
+                            className="px-3 md:px-4 py-3 hover:bg-green-50 cursor-pointer transition-colors"
+                            onClick={() => handlePatientSelect(patient)}
+                          >
+                            <div className="font-semibold text-gray-900 text-sm md:text-base">
+                              {patient.name}
+                            </div>
+                            <div className="text-xs md:text-sm text-gray-500">
+                              Phone: {patient.phone}
+                            </div>
+                            {patient.sha_number && (
+                              <div className="text-xs md:text-sm text-gray-500">
+                                SHA: {patient.sha_number}
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-8 text-center text-gray-500 text-sm md:text-base">
+                          No patients found
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
