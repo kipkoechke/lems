@@ -8,6 +8,7 @@ export interface SyncedBooking {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  batch_id: string | null;
   booking: {
     id: string;
     booking_number: string;
@@ -96,5 +97,27 @@ export const fetchSyncedBookings = async (
   const response = await axiosInstance.get(
     `/bookings/sync?${params.toString()}`
   );
+  return response.data;
+};
+
+export interface CreateBatchRequest {
+  sync_ids: string[];
+}
+
+export interface CreateBatchResponse {
+  message: string;
+  batch: {
+    id: string;
+    sync_ids: string[];
+    status: string;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
+export const createBatch = async (
+  data: CreateBatchRequest
+): Promise<CreateBatchResponse> => {
+  const response = await axiosInstance.post("/batches", data);
   return response.data;
 };

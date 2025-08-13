@@ -1,18 +1,23 @@
 "use client";
 
 import { useSyncedBookings } from "@/features/services/bookings/useSyncedBookings";
+import { useCreateBatch } from "@/features/services/bookings/useCreateBatch";
 import Pagination from "@/components/Pagination";
 import {
   Calendar,
   CheckCircle,
+  CheckSquare,
   Clock,
   DollarSign,
   Eye,
+  MinusSquare,
   RefreshCw,
   RotateCcw,
+  Square,
   User,
   X,
   XCircle,
+  Send,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 
@@ -20,6 +25,7 @@ const SyncedBookingsReport: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<string>("all");
+  const [selectedSyncIds, setSelectedSyncIds] = useState<Set<string>>(new Set());
   // Location filters removed
 
   const {
@@ -33,6 +39,8 @@ const SyncedBookingsReport: React.FC = () => {
     // Location filters removed
   });
 
+  const { createBatch, isCreating } = useCreateBatch();
+
   // Filter bookings based on active tab
   const filteredBookings = useMemo(() => {
     if (!syncedBookings) return [];
@@ -41,6 +49,13 @@ const SyncedBookingsReport: React.FC = () => {
       (syncedBooking) => syncedBooking.synch_status === activeTab
     );
   }, [syncedBookings, activeTab]);
+
+  // Get bookings eligible for batch creation (batch_id is null)
+  const eligibleForBatch = useMemo(() => {
+    return filteredBookings.filter(
+      (syncedBooking) => syncedBooking.batch_id === null
+    );
+  }, [filteredBookings]);
 
   // Count bookings by status
   const statusCounts = useMemo(() => {
@@ -65,6 +80,46 @@ const SyncedBookingsReport: React.FC = () => {
     { id: "pending", label: "Pending", count: statusCounts.pending },
     { id: "failed", label: "Failed", count: statusCounts.failed },
   ];
+
+  // Selection handlers
+  const handleSelectAll = () => {
+    if (selectedSyncIds.size === eligibleForBatch.length) {
+      // If all are selected, deselect all
+      setSelectedSyncIds(new Set());
+    } else {
+      // Select all eligible sync bookings
+      setSelectedSyncIds(new Set(eligibleForBatch.map((sb) => sb.id)));
+    }
+  };
+
+  const handleSelectSyncBooking = (syncId: string) => {
+    setSelectedSyncIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(syncId)) {
+        newSet.delete(syncId);
+      } else {
+        newSet.add(syncId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleCreateBatch = async () => {
+    const selectedIds = Array.from(selectedSyncIds);
+    if (selectedIds.length === 0) {
+      return;
+    }
+
+    createBatch(
+      { sync_ids: selectedIds },
+      {
+        onSuccess: () => {
+          setSelectedSyncIds(new Set());
+          refetchSyncedBookings();
+        },
+      }
+    );
+  };
 
   const toggleExpandRow = (bookingId: string) => {
     setExpandedRows((prev) => {
@@ -116,6 +171,15 @@ const SyncedBookingsReport: React.FC = () => {
       currency: "KES",
     }).format(typeof amount === "string" ? parseFloat(amount) : amount);
   };
+
+  // Get the appropriate icon for select all checkbox
+  const getSelectAllIcon = () => {
+    if (selectedSyncIds.size === 0) return Square;
+    if (selectedSyncIds.size === eligibleForBatch.length) return CheckSquare;
+    return MinusSquare; // Partial selection
+  };
+
+  const SelectAllIcon = getSelectAllIcon();
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -192,7 +256,10 @@ const SyncedBookingsReport: React.FC = () => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setSelectedSyncIds(new Set()); // Clear selection when switching tabs
+                }}
                 className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? "border-blue-500 text-blue-600"
@@ -214,6 +281,55 @@ const SyncedBookingsReport: React.FC = () => {
           </nav>
         </div>
 
+        {/* Bulk Actions Bar */}
+        {eligibleForBatch.length > 0 && (
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={handleSelectAll}
+                  className="flex items-center text-sm text-gray-600 hover:text-gray-900"
+                >
+                  <SelectAllIcon className="h-4 w-4 mr-2" />
+                  {selectedSyncIds.size === 0
+                    ? "Select All"
+                    : selectedSyncIds.size === eligibleForBatch.length
+                    ? "Deselect All"
+                    : `Select All (${selectedSyncIds.size} selected)`}
+                </button>
+                {selectedSyncIds.size > 0 && (
+                  <span className="text-sm text-gray-500">
+                    {selectedSyncIds.size} of {eligibleForBatch.length} eligible
+                    bookings selected for batch processing
+                  </span>
+                )}
+              </div>
+
+              {selectedSyncIds.size > 0 && (
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleCreateBatch}
+                    disabled={isCreating}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded text-sm inline-flex items-center"
+                  >
+                    {isCreating ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
+                        Creating Batch...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Create Batch ({selectedSyncIds.size})
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {filteredBookings.length === 0 ? (
           <div className="text-center py-12">
             <RotateCcw className="mx-auto h-12 w-12 text-gray-400" />
@@ -232,6 +348,16 @@ const SyncedBookingsReport: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
+                    {eligibleForBatch.length > 0 && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <button
+                          onClick={handleSelectAll}
+                          className="flex items-center hover:text-gray-700"
+                        >
+                          <SelectAllIcon className="h-4 w-4" />
+                        </button>
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Patient Information
                     </th>
@@ -253,6 +379,28 @@ const SyncedBookingsReport: React.FC = () => {
                   {filteredBookings.map((syncedBooking) => (
                     <React.Fragment key={syncedBooking.id}>
                       <tr className="hover:bg-gray-50">
+                        {eligibleForBatch.length > 0 && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {syncedBooking.batch_id === null ? (
+                              <button
+                                onClick={() => handleSelectSyncBooking(syncedBooking.id)}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                {selectedSyncIds.has(syncedBooking.id) ? (
+                                  <CheckSquare className="h-4 w-4" />
+                                ) : (
+                                  <Square className="h-4 w-4" />
+                                )}
+                              </button>
+                            ) : (
+                              <div className="w-4 h-4 flex items-center justify-center">
+                                <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded">
+                                  Batched
+                                </span>
+                              </div>
+                            )}
+                          </td>
+                        )}
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
@@ -376,7 +524,7 @@ const SyncedBookingsReport: React.FC = () => {
 
                       {expandedRows.has(syncedBooking.id) && (
                         <tr>
-                          <td colSpan={5} className="px-6 py-4 bg-gray-50">
+                          <td colSpan={eligibleForBatch.length > 0 ? 6 : 5} className="px-6 py-4 bg-gray-50">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                               {/* Patient Information Card */}
                               <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
