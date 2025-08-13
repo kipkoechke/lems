@@ -128,8 +128,10 @@ function FacilitiesContent() {
     county: selectedCounty || undefined,
     sub_county: selectedSubCounty || undefined,
     ward: selectedWard || undefined,
-    level: selectedLevel || undefined,
+    keph_level: selectedLevel ? `Level ${selectedLevel}` : undefined,
   });
+
+  // Removed effect tied to location filters
 
   // Removed effect tied to location filters
 

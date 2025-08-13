@@ -36,13 +36,19 @@ export function useFacilities(
 }
 
 export function useFacilitiesPaginated(params?: FacilityQueryParams) {
+  // Create a stable query key by stringifying the params
+  const queryKey = ["facilities-paginated", JSON.stringify(params || {})];
+
   const {
     isLoading,
     data: paginatedData,
     error,
   } = useQuery<PaginatedFacilityResponse>({
-    queryKey: ["facilities-paginated", params],
+    queryKey,
     queryFn: () => getFacilitiesPaginated(params),
+    // Add these options to ensure fresh data
+    staleTime: 0, // Consider data stale immediately
+    gcTime: 5 * 60 * 1000, // 5 minutes cache time
   });
 
   return {

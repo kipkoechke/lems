@@ -165,10 +165,6 @@ export interface SearchParams {
 
 // Filter types for API queries
 export interface FacilityFilters {
-  // Backward-compatible keys (internal/UI)
-  county_id?: string;
-  sub_county_id?: string;
-  ward_id?: string;
   // API-expected keys
   county?: string;
   sub_county?: string;
@@ -177,7 +173,7 @@ export interface FacilityFilters {
   operation_status?: OperationStatus | string;
   regulatory_status?: RegulatoryStatus | string;
   owner?: Owner | string;
-  level?: KephLevel | string;
+  keph_level?: string; // API expects "Level X" format
   is_active?: string;
 }
 
@@ -190,8 +186,7 @@ export interface FacilityQueryParams
 export const getFacilities = async (
   params?: FacilityQueryParams
 ): Promise<Facility[]> => {
-  const mappedParams = mapFacilityQueryParams(params);
-  const response = await axios.get("/facilities", { params: mappedParams });
+  const response = await axios.get("/facilities", { params });
   // If the response has pagination structure, return the data array
   if (
     response.data &&
@@ -207,8 +202,7 @@ export const getFacilities = async (
 export const getFacilitiesPaginated = async (
   params?: FacilityQueryParams
 ): Promise<PaginatedFacilityResponse> => {
-  const mappedParams = mapFacilityQueryParams(params);
-  const response = await axios.get("/facilities", { params: mappedParams });
+  const response = await axios.get("/facilities", { params });
   return response.data;
 };
 
@@ -360,47 +354,25 @@ export const parseSearchParamsFromUrl = (
     params.operation_status = operationStatus;
   }
 
-  const kephLevel = searchParams.get("level");
+  const kephLevel = searchParams.get("keph_level") || searchParams.get("level");
   if (kephLevel) {
-    params.level = kephLevel;
+    params.keph_level = kephLevel;
   }
 
-  const countyId = searchParams.get("county_id");
-  if (countyId) {
-    params.county_id = countyId;
-    // Also set API-expected key for consistency
-    params.county = countyId;
-  }
-
-  const subCountyId = searchParams.get("sub_county_id");
-  if (subCountyId) {
-    params.sub_county_id = subCountyId;
-    params.sub_county = subCountyId;
-  }
-
-  const wardId = searchParams.get("ward_id");
-  if (wardId) {
-    params.ward_id = wardId;
-    params.ward = wardId;
-  }
-
-  // Support new param names in URL as well
-  const county = searchParams.get("county");
+  const county = searchParams.get("county") || searchParams.get("county_id");
   if (county) {
     params.county = county;
-    params.county_id = params.county_id ?? county;
   }
 
-  const sub_county = searchParams.get("sub_county");
-  if (sub_county) {
-    params.sub_county = sub_county;
-    params.sub_county_id = params.sub_county_id ?? sub_county;
+  const subCounty =
+    searchParams.get("sub_county") || searchParams.get("sub_county_id");
+  if (subCounty) {
+    params.sub_county = subCounty;
   }
 
-  const ward = searchParams.get("ward");
+  const ward = searchParams.get("ward") || searchParams.get("ward_id");
   if (ward) {
     params.ward = ward;
-    params.ward_id = params.ward_id ?? ward;
   }
 
   const isActive = searchParams.get("is_active");
@@ -416,23 +388,8 @@ export const buildUrlSearchParams = (
 ): string => {
   const searchParams = new URLSearchParams();
 
-  // Normalize to API-expected keys for location filters
-  const normalized: Record<string, any> = { ...params };
-  if (!normalized.county && normalized.county_id) {
-    normalized.county = normalized.county_id;
-    delete normalized.county_id;
-  }
-  if (!normalized.sub_county && normalized.sub_county_id) {
-    normalized.sub_county = normalized.sub_county_id;
-    delete normalized.sub_county_id;
-  }
-  if (!normalized.ward && normalized.ward_id) {
-    normalized.ward = normalized.ward_id;
-    delete normalized.ward_id;
-  }
-
   // Add all non-empty parameters to the URL
-  Object.entries(normalized).forEach(([key, value]) => {
+  Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") {
       searchParams.set(key, String(value));
     }
@@ -456,23 +413,3 @@ export const updateUrlWithSearchParams = (
     router.push(newUrl);
   }
 };
-
-// Internal: normalize outgoing query params to API-expected keys
-function mapFacilityQueryParams(
-  params?: FacilityQueryParams
-): Record<string, any> | undefined {
-  if (!params) return params;
-
-  const mapped: Record<string, any> = { ...params };
-  // Prefer explicit API keys if provided; otherwise map from *_id
-  mapped.county = mapped.county ?? mapped.county_id;
-  mapped.sub_county = mapped.sub_county ?? mapped.sub_county_id;
-  mapped.ward = mapped.ward ?? mapped.ward_id;
-
-  // Remove legacy keys to avoid duplication
-  delete mapped.county_id;
-  delete mapped.sub_county_id;
-  delete mapped.ward_id;
-
-  return mapped;
-}
