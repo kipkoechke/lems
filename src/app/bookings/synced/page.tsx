@@ -20,20 +20,20 @@ import React, { useMemo, useState } from "react";
 
 // Helper functions
 const formatCurrency = (amount: string | number): string => {
-  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat('en-KE', {
-    style: 'currency',
-    currency: 'KES',
+  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+  return new Intl.NumberFormat("en-KE", {
+    style: "currency",
+    currency: "KES",
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(numAmount);
 };
 
 const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('en-KE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
+  return new Date(dateString).toLocaleDateString("en-KE", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 };
 
@@ -106,7 +106,11 @@ const SyncedBookingsReport: React.FC = () => {
     { id: "complete", label: "Complete", count: statusCounts.complete },
     { id: "pending", label: "Pending", count: statusCounts.pending },
     { id: "failed", label: "Failed", count: statusCounts.failed },
-    { id: "vendor-payment", label: "Vendor Payment", count: vendorBatches?.length || 0 },
+    {
+      id: "vendor-payment",
+      label: "Vendor Payment",
+      count: vendorBatches?.length || 0,
+    },
   ];
 
   // Selection handlers
@@ -361,7 +365,9 @@ const SyncedBookingsReport: React.FC = () => {
                     <h3 className="text-sm font-medium text-red-800">
                       Error loading vendor batches
                     </h3>
-                    <div className="mt-2 text-sm text-red-700">{vendorBatchesError.message}</div>
+                    <div className="mt-2 text-sm text-red-700">
+                      {vendorBatchesError.message}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -403,11 +409,15 @@ const SyncedBookingsReport: React.FC = () => {
                             <td className="px-6 py-4 whitespace-normal break-words">
                               <div className="text-sm text-gray-900">
                                 <div className="mb-3">
-                                  <div className="font-medium text-black mb-1">Batch No:</div>
+                                  <div className="font-medium text-black mb-1">
+                                    Batch No:
+                                  </div>
                                   <div className="text-gray-500 mb-3">
                                     {batch.batch_no}
                                   </div>
-                                  <div className="font-medium text-black mb-1">Date Batched:</div>
+                                  <div className="font-medium text-black mb-1">
+                                    Date Batched:
+                                  </div>
                                   <div className="text-gray-500">
                                     {formatDate(batch.created_at)}
                                   </div>
@@ -420,8 +430,12 @@ const SyncedBookingsReport: React.FC = () => {
                                   {batch.vendor.name}
                                 </div>
                                 <div className="text-sm text-gray-500">
-                                  <span className="font-medium text-black">Code:</span>{" "}
-                                  <span className="text-gray-500">{batch.vendor.code}</span>
+                                  <span className="font-medium text-black">
+                                    Code:
+                                  </span>{" "}
+                                  <span className="text-gray-500">
+                                    {batch.vendor.code}
+                                  </span>
                                 </div>
                               </div>
                             </td>
@@ -449,7 +463,9 @@ const SyncedBookingsReport: React.FC = () => {
                                       Facility Share:
                                     </span>
                                     <span className="font-medium text-purple-600">
-                                      {formatCurrency(amountData.facility_share)}
+                                      {formatCurrency(
+                                        amountData.facility_share
+                                      )}
                                     </span>
                                   </div>
                                 </div>

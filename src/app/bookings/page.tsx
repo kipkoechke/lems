@@ -13,11 +13,12 @@ import {
   DollarSign,
   Eye,
   MinusSquare,
+  MoreVertical,
   Square,
   User,
   X,
 } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 const BookingReport: React.FC = () => {
@@ -31,7 +32,20 @@ const BookingReport: React.FC = () => {
   const [selectedBookings, setSelectedBookings] = useState<Set<string>>(
     new Set()
   );
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   // Removed location filters from bookings page
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setDropdownOpen(null);
+    };
+
+    if (dropdownOpen) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [dropdownOpen]);
 
   // Filter bookings based on active tab
   const filteredBookings = useMemo(() => {
@@ -459,7 +473,7 @@ const BookingReport: React.FC = () => {
                     Service & Facility
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cost Breakdown & Payment
+                    Cost Breakdown
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -494,12 +508,7 @@ const BookingReport: React.FC = () => {
                       )}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
-                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                              <User className="h-5 w-5 text-blue-600" />
-                            </div>
-                          </div>
-                          <div className="ml-4">
+                          <div className="ml-0">
                             <div className="text-sm font-medium text-gray-900">
                               {booking.patient.name}
                             </div>
@@ -579,54 +588,84 @@ const BookingReport: React.FC = () => {
                             "pending"
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button
-                          onClick={() => toggleExpandRow(booking.id)}
-                          className="text-blue-600 hover:text-blue-900 inline-flex items-center"
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          {expandedRows.has(booking.id) ? "Hide" : "Details"}
-                        </button>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="relative">
+                          <button
+                            onClick={() =>
+                              setDropdownOpen(
+                                dropdownOpen === booking.id ? null : booking.id
+                              )
+                            }
+                            className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </button>
 
-                        {(booking.approval_status || booking.approval) ===
-                          "pending" && (
-                          <div className="flex flex-col gap-2">
-                            <button
-                              onClick={() => handleApproval(booking.id)}
-                              disabled={approvingIds.has(booking.id)}
-                              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-3 py-1 rounded text-sm inline-flex items-center"
-                            >
-                              {approvingIds.has(booking.id) ? (
-                                <>
-                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                                  Approving...
-                                </>
-                              ) : (
-                                <>
-                                  <Check className="h-3 w-3 mr-1" />
-                                  Approve
-                                </>
-                              )}
-                            </button>
-                            <button
-                              onClick={() => handleRejection(booking.id)}
-                              disabled={isRejecting}
-                              className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-3 py-1 rounded text-sm inline-flex items-center"
-                            >
-                              {isRejecting ? (
-                                <>
-                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                                  Rejecting...
-                                </>
-                              ) : (
-                                <>
-                                  <X className="h-3 w-3 mr-1" />
-                                  Reject
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        )}
+                          {dropdownOpen === booking.id && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                              <div className="py-2 px-2">
+                                <button
+                                  onClick={() => {
+                                    toggleExpandRow(booking.id);
+                                    setDropdownOpen(null);
+                                  }}
+                                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  {expandedRows.has(booking.id)
+                                    ? "Hide Details"
+                                    : "View Details"}
+                                </button>
+
+                                {(booking.approval_status ||
+                                  booking.approval) === "pending" && (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        handleApproval(booking.id);
+                                        setDropdownOpen(null);
+                                      }}
+                                      disabled={approvingIds.has(booking.id)}
+                                      className="flex items-center w-full px-3 py-2 text-sm bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white my-1 rounded"
+                                    >
+                                      {approvingIds.has(booking.id) ? (
+                                        <>
+                                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                          Approving...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Check className="h-4 w-4 mr-2" />
+                                          Approve
+                                        </>
+                                      )}
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        handleRejection(booking.id);
+                                        setDropdownOpen(null);
+                                      }}
+                                      disabled={isRejecting}
+                                      className="flex items-center w-full px-3 py-2 text-sm bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white my-1 rounded"
+                                    >
+                                      {isRejecting ? (
+                                        <>
+                                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                          Rejecting...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <X className="h-4 w-4 mr-2" />
+                                          Reject
+                                        </>
+                                      )}
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </td>
                     </tr>
 
