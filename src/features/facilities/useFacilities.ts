@@ -14,7 +14,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-export function useFacilities(params?: FacilityQueryParams) {
+export function useFacilities(
+  params?: FacilityQueryParams,
+  options?: { enabled?: boolean }
+) {
   const {
     isLoading,
     data: facilities,
@@ -22,6 +25,7 @@ export function useFacilities(params?: FacilityQueryParams) {
   } = useQuery({
     queryKey: ["facilities", params],
     queryFn: () => getFacilities(params),
+    enabled: options?.enabled ?? true,
   });
 
   return {

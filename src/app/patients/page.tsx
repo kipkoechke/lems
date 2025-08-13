@@ -1,183 +1,17 @@
 "use client";
 import Pagination from "@/components/Pagination";
-import LocationFilters from "@/components/LocationFilters";
 import { usePatientsPaginated } from "@/features/patients/usePatients";
-import { useBookings } from "@/features/services/bookings/useBookings";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Patient } from "@/services/apiPatient";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  FaCalendar,
-  FaChevronRight,
-  FaPhone,
-  FaSearch,
-  FaUser,
-} from "react-icons/fa";
+import { FaCalendar, FaPhone, FaSearch, FaUser } from "react-icons/fa";
 import { FiMoreVertical } from "react-icons/fi";
 
-function PatientBookingsModal({
-  patient,
-  isOpen,
-  onClose,
-}: {
-  patient: Patient | null;
-  isOpen: boolean;
-  onClose: () => void;
-}) {
-  const { bookings, isLoading: _bookingsLoading } = useBookings();
-
-  if (!isOpen || !patient) return null;
-
-  return (
-    <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Patient Bookings
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6">
-          <PatientBreadcrumb patient={patient} />
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                    Booking ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                    Service
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                    Facility
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                    Date & Time
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                    Cost
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                    Payment Mode
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {bookings.map((booking) => (
-                  <tr key={booking.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b">
-                      {booking.id.slice(-8)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b">
-                      <div>
-                        <div className="font-medium">
-                          {booking.service?.service?.name || "N/A"}
-                        </div>
-                        <div className="text-gray-500 text-xs">
-                          {booking.service?.service?.code || "N/A"}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b">
-                      <div>
-                        <div className="font-medium">
-                          {booking.service?.contract?.facility?.name || "N/A"}
-                        </div>
-                        <div className="text-gray-500 text-xs">
-                          Code:{" "}
-                          {booking.service?.contract?.facility?.code || "N/A"}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b">
-                      {booking.booking_date
-                        ? new Date(booking.booking_date).toLocaleString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )
-                        : "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap border-b">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          (booking.approval_status || booking.approval) ===
-                          "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : (booking.approval_status || booking.approval) ===
-                              "approved"
-                            ? "bg-green-100 text-green-800"
-                            : (booking.approval_status || booking.approval) ===
-                              "rejected"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {(
-                          booking.approval_status ||
-                          booking.approval ||
-                          "pending"
-                        )
-                          .charAt(0)
-                          .toUpperCase() +
-                          (
-                            booking.approval_status ||
-                            booking.approval ||
-                            "pending"
-                          ).slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b">
-                      KES{" "}
-                      {booking.vendor_share
-                        ? parseInt(booking.vendor_share).toLocaleString()
-                        : "0"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b">
-                      {booking.payment_mode || "N/A"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {bookings.length === 0 && (
-            <div className="text-center py-8">
-              <FaCalendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">
-                No bookings found for this patient
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+// Removed unused PatientBookingsModal
 
 // Dropdown Menu Component
 function ActionsDropdown({
-  patient: _patient,
   onViewBookings,
 }: {
   patient: Patient;
@@ -223,39 +57,12 @@ function ActionsDropdown({
 }
 
 // Breadcrumb Component
-function PatientBreadcrumb({ patient }: { patient: Patient }) {
-  return (
-    <div className="bg-gray-50 p-4 rounded-lg mb-6">
-      <div className="flex items-center space-x-4 text-sm">
-        <div className="flex items-center gap-2">
-          <FaUser className="w-4 h-4 text-blue-600" />
-          <span className="font-medium text-gray-900">{patient.name}</span>
-        </div>
-        <FaChevronRight className="w-4 h-4 text-gray-400" />
-        <div className="flex items-center gap-2">
-          <FaPhone className="w-4 h-4 text-green-600" />
-          <span className="text-gray-600">{patient.phone}</span>
-        </div>
-        <FaChevronRight className="w-4 h-4 text-gray-400" />
-        <div className="text-gray-600">ID: {patient.id.slice(-8)}</div>
-      </div>
-    </div>
-  );
-}
+// Removed PatientBreadcrumb (unused)
 
 function Patients() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [locationFilters, setLocationFilters] = useState<{
-    county_id?: string;
-    sub_county_id?: string;
-    ward_id?: string;
-    facility_id?: string;
-  }>({});
-  const [_selectedPatient, _setSelectedPatient] = useState<Patient | null>(
-    null
-  );
-  const [_showBookingsModal, _setShowBookingsModal] = useState(false);
+  // Removed unused modal-related state
   const router = useRouter();
 
   // Debounce search term to avoid too many API calls
@@ -366,12 +173,6 @@ function Patients() {
 
           {/* Search */}
           <div className="p-4 md:p-6 bg-gray-50 border-b space-y-4 overflow-visible">
-            {/* Location Filters */}
-            <LocationFilters
-              onLocationChange={setLocationFilters}
-              showFacilityFilter={true}
-            />
-
             {/* Search Input */}
             <div className="relative max-w-md">
               <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />

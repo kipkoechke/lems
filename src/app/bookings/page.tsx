@@ -3,7 +3,6 @@
 import { useApproveBooking } from "@/features/services/bookings/useApproveBooking";
 import { useBookings } from "@/features/services/bookings/useBookings";
 import { useRejectBooking } from "@/features/services/bookings/useRejectBooking";
-import LocationFilters from "@/components/LocationFilters";
 import {
   Building,
   Calendar,
@@ -32,12 +31,7 @@ const BookingReport: React.FC = () => {
   const [selectedBookings, setSelectedBookings] = useState<Set<string>>(
     new Set()
   );
-  const [locationFilters, setLocationFilters] = useState<{
-    county_id?: string;
-    sub_county_id?: string;
-    ward_id?: string;
-    facility_id?: string;
-  }>({});
+  // Removed location filters from bookings page
 
   // Filter bookings based on active tab
   const filteredBookings = useMemo(() => {
@@ -316,13 +310,7 @@ const BookingReport: React.FC = () => {
           </span>
         </div>
 
-        {/* Location Filters */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg overflow-visible">
-          <LocationFilters
-            onLocationChange={setLocationFilters}
-            showFacilityFilter={true}
-          />
-        </div>
+        {/* Location Filters removed */}
 
         {/* Tabs */}
         <div className="border-b border-gray-200 mb-6">

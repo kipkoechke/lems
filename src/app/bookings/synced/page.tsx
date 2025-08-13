@@ -1,13 +1,11 @@
 "use client";
 
 import { useSyncedBookings } from "@/features/services/bookings/useSyncedBookings";
-import LocationFilters from "@/components/LocationFilters";
 import Pagination from "@/components/Pagination";
 import {
   Calendar,
   CheckCircle,
   Clock,
-  CreditCard,
   DollarSign,
   Eye,
   RefreshCw,
@@ -22,12 +20,7 @@ const SyncedBookingsReport: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<string>("all");
-  const [locationFilters, setLocationFilters] = useState<{
-    county_id?: string;
-    sub_county_id?: string;
-    ward_id?: string;
-    facility_id?: string;
-  }>({});
+  // Location filters removed
 
   const {
     syncedBookings,
@@ -37,7 +30,7 @@ const SyncedBookingsReport: React.FC = () => {
     refetchSyncedBookings,
   } = useSyncedBookings({
     page: currentPage,
-    filters: locationFilters,
+    // Location filters removed
   });
 
   // Filter bookings based on active tab
@@ -190,10 +183,7 @@ const SyncedBookingsReport: React.FC = () => {
 
         {/* Location Filters */}
         <div className="mb-6 p-4 bg-gray-50 rounded-lg overflow-visible">
-          <LocationFilters
-            onLocationChange={setLocationFilters}
-            showFacilityFilter={true}
-          />
+          {/* Location Filters removed */}
         </div>
 
         {/* Tabs */}
