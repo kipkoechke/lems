@@ -22,6 +22,7 @@ import { useContracts } from "./useContracts";
 import { useCreateContract } from "./useCreateContract";
 import { useUpdateContractServices } from "./useUpdateContractServices";
 import { useVendors } from "./useVendors";
+import { useVendorWithEquipments } from "./useVendorWithEquipments";
 
 interface ContractFormData {
   vendor_code: string;
@@ -32,7 +33,7 @@ interface ContractFormData {
 
 interface ContractServicesFormData {
   contract_id: string;
-  services: string[];
+  services: { code: string; equipment_id?: string }[];
 }
 
 interface ContractManagementProps {
@@ -68,6 +69,12 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   const { services: lotServices, isLoading: lotServicesLoading } =
     useLotWithServices(selectedLotNumber);
 
+  // Get vendor equipments when a contract is selected for services management
+  const selectedVendorId = selectedContract?.vendor_code ? 
+    vendors?.find(v => v.code === selectedContract.vendor_code)?.id || "" : "";
+  const { equipments: vendorEquipments, isLoading: vendorEquipmentsLoading } = 
+    useVendorWithEquipments(selectedVendorId);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
@@ -79,16 +86,22 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   const [facilitySearch, setFacilitySearch] = useState<string>("");
   const [lotSearch, setLotSearch] = useState<string>("");
   const [serviceSearch, setServiceSearch] = useState<string>("");
+  const [equipmentSearch, setEquipmentSearch] = useState<string>("");
   const [isVendorDropdownOpen, setIsVendorDropdownOpen] = useState(false);
   const [isFacilityDropdownOpen, setIsFacilityDropdownOpen] = useState(false);
   const [isLotDropdownOpen, setIsLotDropdownOpen] = useState(false);
   const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
+  const [isEquipmentDropdownOpen, setIsEquipmentDropdownOpen] = useState(false);
+
+  // Equipment selection state - maps service code to equipment id
+  const [selectedEquipments, setSelectedEquipments] = useState<Record<string, string>>({});
 
   // Search refs
   const vendorSearchRef = useRef<HTMLInputElement>(null);
   const facilitySearchRef = useRef<HTMLInputElement>(null);
   const lotSearchRef = useRef<HTMLInputElement>(null);
   const serviceSearchRef = useRef<HTMLInputElement>(null);
+  const equipmentSearchRef = useRef<HTMLInputElement>(null);
 
   // Form state
   const [contractFormData, setContractFormData] = useState<ContractFormData>({
@@ -153,6 +166,16 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     )
     .slice(0, 50);
 
+  // Filter equipments based on search term
+  const filteredEquipments = vendorEquipments
+    ?.filter(
+      (equipment) =>
+        equipment.name?.toLowerCase().includes(equipmentSearch.toLowerCase()) ||
+        equipment.serial_number?.toLowerCase().includes(equipmentSearch.toLowerCase()) ||
+        equipment.model?.toLowerCase().includes(equipmentSearch.toLowerCase())
+    )
+    .slice(0, 50);
+
   // Get selected items
   const selectedVendor = vendors?.find(
     (v) => v.code === contractFormData.vendor_code
@@ -177,15 +200,18 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
       services: [],
     });
     setSelectedContract(null);
+    setSelectedEquipments({});
     // Clear search states
     setVendorSearch("");
     setFacilitySearch("");
     setLotSearch("");
     setServiceSearch("");
+    setEquipmentSearch("");
     setIsVendorDropdownOpen(false);
     setIsFacilityDropdownOpen(false);
     setIsLotDropdownOpen(false);
     setIsServiceDropdownOpen(false);
+    setIsEquipmentDropdownOpen(false);
   };
 
   const openModal = (
@@ -233,7 +259,16 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   const handleServicesSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    updateContractServices(servicesFormData, {
+    // Create payload with equipment IDs
+    const payload = {
+      contract_id: servicesFormData.contract_id,
+      services: servicesFormData.services.map(service => ({
+        code: service.code,
+        equipment_id: selectedEquipments[service.code] || undefined
+      }))
+    };
+
+    updateContractServices(payload, {
       onSuccess: () => {
         closeModal();
         refetch();
@@ -306,16 +341,32 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
   const handleServiceToggle = (serviceCode: string) => {
     setServicesFormData((prev) => {
-      const isSelected = prev.services.includes(serviceCode);
+      const isSelected = prev.services.some((s) => s.code === serviceCode);
       const newServices = isSelected
-        ? prev.services.filter((code) => code !== serviceCode)
-        : [...prev.services, serviceCode];
+        ? prev.services.filter((s) => s.code !== serviceCode)
+        : [...prev.services, { code: serviceCode }];
+
+      // If removing service, also remove its equipment selection
+      if (isSelected) {
+        setSelectedEquipments(prevEquipments => {
+          const newEquipments = { ...prevEquipments };
+          delete newEquipments[serviceCode];
+          return newEquipments;
+        });
+      }
 
       return {
         ...prev,
         services: newServices,
       };
     });
+  };
+
+  const handleEquipmentSelect = (serviceCode: string, equipmentId: string) => {
+    setSelectedEquipments(prev => ({
+      ...prev,
+      [serviceCode]: equipmentId
+    }));
   };
 
   // Close dropdowns when clicking outside
@@ -327,6 +378,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
         setIsFacilityDropdownOpen(false);
         setIsLotDropdownOpen(false);
         setIsServiceDropdownOpen(false);
+        setIsEquipmentDropdownOpen(false);
       }
     };
 
@@ -1525,8 +1577,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                       <div className="max-h-60 overflow-y-auto">
                         {filteredServices && filteredServices.length > 0 ? (
                           filteredServices.map((service) => {
-                            const isSelected =
-                              servicesFormData.services.includes(service.code);
+                            const isSelected = servicesFormData.services.some(
+                              (s) => s.code === service.code
+                            );
                             const isCurrentlyInContract =
                               selectedContract.services.some(
                                 (s) => s.service_code === service.code
@@ -1601,27 +1654,71 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
               {servicesFormData.services.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Selected Services ({servicesFormData.services.length})
+                    Selected Services & Equipment ({servicesFormData.services.length})
                   </label>
-                  <div className="flex flex-wrap gap-2">
-                    {servicesFormData.services.map((serviceCode) => {
+                  <div className="space-y-3">
+                    {servicesFormData.services.map((serviceItem) => {
                       const service = filteredServices?.find(
-                        (s) => s.code === serviceCode
+                        (s) => s.code === serviceItem.code
                       );
+                      const selectedEquipment = filteredEquipments?.find(
+                        (eq) => eq.id === selectedEquipments[serviceItem.code]
+                      );
+                      
                       return (
-                        <span
-                          key={serviceCode}
-                          className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
+                        <div
+                          key={serviceItem.code}
+                          className="bg-gray-50 rounded-lg p-4 border border-gray-200"
                         >
-                          {service?.name || serviceCode}
-                          <button
-                            type="button"
-                            onClick={() => handleServiceToggle(serviceCode)}
-                            className="ml-1 hover:text-green-600"
-                          >
-                            <FaTimes className="w-3 h-3" />
-                          </button>
-                        </span>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-900">
+                                {service?.name || serviceItem.code}
+                              </span>
+                              <span className="text-sm text-gray-500">
+                                ({serviceItem.code})
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleServiceToggle(serviceItem.code)}
+                              className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-all"
+                            >
+                              <FaTimes className="w-4 h-4" />
+                            </button>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Select Equipment (Optional)
+                            </label>
+                            <select
+                              value={selectedEquipments[serviceItem.code] || ""}
+                              onChange={(e) => handleEquipmentSelect(serviceItem.code, e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                              disabled={vendorEquipmentsLoading}
+                            >
+                              <option value="">No equipment selected</option>
+                              {filteredEquipments?.map((equipment) => (
+                                <option key={equipment.id} value={equipment.id}>
+                                  {equipment.name} {equipment.serial_number && `(${equipment.serial_number})`} - {equipment.status}
+                                </option>
+                              ))}
+                            </select>
+                            {vendorEquipmentsLoading && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                Loading equipment...
+                              </div>
+                            )}
+                            {selectedEquipment && (
+                              <div className="text-xs text-gray-600 mt-1">
+                                Selected: {selectedEquipment.name} 
+                                {selectedEquipment.serial_number && ` (SN: ${selectedEquipment.serial_number})`}
+                                {selectedEquipment.model && ` - ${selectedEquipment.model}`}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       );
                     })}
                   </div>

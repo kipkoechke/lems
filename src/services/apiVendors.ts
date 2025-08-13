@@ -8,6 +8,26 @@ export interface Vendor {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  equipments?: VendorEquipment[];
+}
+
+export interface VendorEquipment {
+  id: string;
+  name: string;
+  description: string | null;
+  serial_number: string | null;
+  model: string | null;
+  manufacturer: string | null;
+  year: string | null;
+  status: string;
+  vendor_id: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface VendorWithEquipments {
+  vendor: Vendor;
 }
 
 export interface VendorCreateRequest {
@@ -40,6 +60,7 @@ export interface ContractService {
   service_code: string;
   service_name: string;
   is_active: string;
+  equipment_id?: string;
 }
 
 export interface ContractCreateRequest {
@@ -51,7 +72,12 @@ export interface ContractCreateRequest {
 
 export interface ContractUpdateRequest {
   contract_id: string;
-  services: string[];
+  services: ContractServiceUpdate[];
+}
+
+export interface ContractServiceUpdate {
+  code: string;
+  equipment_id?: string;
 }
 
 export interface ContractFilterParams {
@@ -68,11 +94,18 @@ export const getVendors = async (): Promise<Vendor[]> => {
 
 export const getVendor = async (vendorCode: string): Promise<Vendor> => {
   const response = await axios.get<Vendor[]>("/vendors");
-  const vendor = response.data.find(v => v.code === vendorCode);
+  const vendor = response.data.find((v) => v.code === vendorCode);
   if (!vendor) {
     throw new Error(`Vendor with code ${vendorCode} not found`);
   }
   return vendor;
+};
+
+export const getVendorWithEquipments = async (
+  vendorId: string
+): Promise<VendorWithEquipments> => {
+  const response = await axios.get<VendorWithEquipments>(`/vendors/${vendorId}`);
+  return response.data;
 };
 
 export const createVendor = async (
