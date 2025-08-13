@@ -26,6 +26,7 @@ import {
   FaFileContract,
   FaSearch,
   FaStethoscope,
+  FaTimes,
   FaUsers,
 } from "react-icons/fa";
 
@@ -105,6 +106,7 @@ function FacilitiesContent() {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   // Filter states
@@ -134,6 +136,17 @@ function FacilitiesContent() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     setActiveDropdown(null);
+  };
+
+  const handleSearch = () => {
+    setSearchTerm(searchInput);
+    setCurrentPage(1);
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setSearchTerm("");
+    setCurrentPage(1);
   };
 
   const handleCountyChange = (county: string) => {
@@ -214,7 +227,7 @@ function FacilitiesContent() {
       <div className="max-w-7xl mx-auto">
         {/* Search and Filters */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 mb-4 md:mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             {/* County Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -294,19 +307,38 @@ function FacilitiesContent() {
             </div>
 
             {/* Search Filter */}
-            <div>
+            <div className="lg:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Search
               </label>
-              <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search facilities..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                />
+              <div className="relative flex">
+                <div className="relative flex-1">
+                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search facilities..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                  {searchInput && (
+                    <button
+                      type="button"
+                      onClick={handleClearSearch}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <FaTimes />
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSearch}
+                  className="px-4 py-2 bg-blue-600 text-white border border-blue-600 rounded-r-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+                >
+                  Search
+                </button>
               </div>
             </div>
           </div>
