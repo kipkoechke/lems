@@ -4,17 +4,13 @@ import { useSyncedBookings } from "@/features/services/bookings/useSyncedBooking
 import { useCreateBatch } from "@/features/services/bookings/useCreateBatch";
 import Pagination from "@/components/Pagination";
 import {
-  Calendar,
   CheckCircle,
   CheckSquare,
   Clock,
-  DollarSign,
-  Eye,
   MinusSquare,
   RefreshCw,
   RotateCcw,
   Square,
-  User,
   X,
   XCircle,
   Send,
@@ -23,9 +19,10 @@ import React, { useMemo, useState } from "react";
 
 const SyncedBookingsReport: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<string>("all");
-  const [selectedSyncIds, setSelectedSyncIds] = useState<Set<string>>(new Set());
+  const [selectedSyncIds, setSelectedSyncIds] = useState<Set<string>>(
+    new Set()
+  );
   // Location filters removed
 
   const {
@@ -119,18 +116,6 @@ const SyncedBookingsReport: React.FC = () => {
         },
       }
     );
-  };
-
-  const toggleExpandRow = (bookingId: string) => {
-    setExpandedRows((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(bookingId)) {
-        newSet.delete(bookingId);
-      } else {
-        newSet.add(bookingId);
-      }
-      return newSet;
-    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -370,9 +355,6 @@ const SyncedBookingsReport: React.FC = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Sync Status & Time
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -383,7 +365,9 @@ const SyncedBookingsReport: React.FC = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             {syncedBooking.batch_id === null ? (
                               <button
-                                onClick={() => handleSelectSyncBooking(syncedBooking.id)}
+                                onClick={() =>
+                                  handleSelectSyncBooking(syncedBooking.id)
+                                }
                                 className="text-blue-600 hover:text-blue-800"
                               >
                                 {selectedSyncIds.has(syncedBooking.id) ? (
@@ -402,50 +386,52 @@ const SyncedBookingsReport: React.FC = () => {
                           </td>
                         )}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                <User className="h-5 w-5 text-blue-600" />
-                              </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {syncedBooking.booking.patient.name}
                             </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
-                                {syncedBooking.booking.patient.name}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                <span className="font-medium">Phone:</span>{" "}
-                                {syncedBooking.booking.patient.phone}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                <span className="font-medium">SHA Number:</span>{" "}
-                                <span
-                                  className={
-                                    syncedBooking.booking.patient.sha_number
-                                      ? "text-green-600 font-medium"
-                                      : "text-gray-400"
-                                  }
-                                >
-                                  {syncedBooking.booking.patient.sha_number ||
-                                    "Not Available"}
-                                </span>
-                              </div>
-                              <div className="text-xs text-gray-400">
-                                <span className="font-medium">DOB:</span>{" "}
-                                {new Date(
-                                  syncedBooking.booking.patient.date_of_birth
-                                ).toLocaleDateString()}
-                              </div>
+                            <div className="text-sm text-gray-500">
+                              <span className="font-medium">Phone:</span>{" "}
+                              {syncedBooking.booking.patient.phone}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              <span className="font-medium">SHA Number:</span>{" "}
+                              <span
+                                className={
+                                  syncedBooking.booking.patient.sha_number
+                                    ? "text-green-600 font-medium"
+                                    : "text-gray-400"
+                                }
+                              >
+                                {syncedBooking.booking.patient.sha_number ||
+                                  "Not Available"}
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              <span className="font-medium">DOB:</span>{" "}
+                              {new Date(
+                                syncedBooking.booking.patient.date_of_birth
+                              ).toLocaleDateString()}
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-normal break-words">
                           <div className="text-sm text-gray-900">
-                            <div className="font-medium text-blue-600 mb-2">
-                              Booking No: {syncedBooking.booking.booking_number}
+                            <div className="mb-3">
+                              <div className="font-medium text-black mb-1">
+                                Booking No:
+                              </div>
+                              <div className="text-gray-500">
+                                {syncedBooking.booking.booking_number}
+                              </div>
                             </div>
-                            <div className="text-gray-700">
-                              <span className="font-medium">Service Date:</span>{" "}
-                              {formatDate(syncedBooking.booking.booking_date)}
+                            <div>
+                              <div className="font-medium text-black mb-1">
+                                Service Date:
+                              </div>
+                              <div className="text-gray-500">
+                                {formatDate(syncedBooking.booking.booking_date)}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -509,262 +495,7 @@ const SyncedBookingsReport: React.FC = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => toggleExpandRow(syncedBooking.id)}
-                            className="text-blue-600 hover:text-blue-900 inline-flex items-center"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            {expandedRows.has(syncedBooking.id)
-                              ? "Hide"
-                              : "Details"}
-                          </button>
-                        </td>
                       </tr>
-
-                      {expandedRows.has(syncedBooking.id) && (
-                        <tr>
-                          <td colSpan={eligibleForBatch.length > 0 ? 6 : 5} className="px-6 py-4 bg-gray-50">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                              {/* Patient Information Card */}
-                              <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
-                                <h4 className="font-medium text-gray-900 mb-3 flex items-center">
-                                  <User className="h-4 w-4 mr-2 text-blue-600" />
-                                  Patient Information
-                                </h4>
-                                <div className="text-sm space-y-2">
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500 font-medium">
-                                      Name:
-                                    </span>
-                                    <span className="text-gray-900">
-                                      {syncedBooking.booking.patient.name}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500 font-medium">
-                                      Phone:
-                                    </span>
-                                    <span className="text-gray-900">
-                                      {syncedBooking.booking.patient.phone}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500 font-medium">
-                                      DOB:
-                                    </span>
-                                    <span className="text-gray-900">
-                                      {new Date(
-                                        syncedBooking.booking.patient.date_of_birth
-                                      ).toLocaleDateString()}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500 font-medium">
-                                      SHA Number:
-                                    </span>
-                                    <span
-                                      className={
-                                        syncedBooking.booking.patient.sha_number
-                                          ? "text-green-600 font-medium"
-                                          : "text-gray-400"
-                                      }
-                                    >
-                                      {syncedBooking.booking.patient
-                                        .sha_number || "Not Available"}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500 font-medium">
-                                      Patient ID:
-                                    </span>
-                                    <span className="text-gray-900 font-mono text-xs">
-                                      {syncedBooking.booking.patient.id.slice(
-                                        -12
-                                      )}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Booking Information Card */}
-                              <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
-                                <h4 className="font-medium text-gray-900 mb-3 flex items-center">
-                                  <Calendar className="h-4 w-4 mr-2 text-green-600" />
-                                  Booking Information
-                                </h4>
-                                <div className="text-sm space-y-2">
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500 font-medium">
-                                      Booking Number:
-                                    </span>
-                                    <span className="text-blue-600 font-mono text-xs font-medium">
-                                      {syncedBooking.booking.booking_number}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500 font-medium">
-                                      Service Date:
-                                    </span>
-                                    <span className="text-gray-900">
-                                      {formatDate(
-                                        syncedBooking.booking.booking_date
-                                      )}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500 font-medium">
-                                      Payment Mode:
-                                    </span>
-                                    <span className="text-gray-900 capitalize">
-                                      {syncedBooking.booking.payment_mode}
-                                    </span>
-                                  </div>
-                                  <div className="mt-3 pt-2 border-t border-gray-100">
-                                    <div className="grid grid-cols-1 gap-1">
-                                      <div className="flex justify-between">
-                                        <span className="text-gray-500 text-xs">
-                                          Booking Status:
-                                        </span>
-                                        <span className="text-blue-600 text-xs capitalize font-medium">
-                                          {syncedBooking.booking.booking_status}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span className="text-gray-500 text-xs">
-                                          Service Status:
-                                        </span>
-                                        <span className="text-green-600 text-xs capitalize font-medium">
-                                          {syncedBooking.booking.service_status}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span className="text-gray-500 text-xs">
-                                          Approval Status:
-                                        </span>
-                                        <span className="text-purple-600 text-xs capitalize font-medium">
-                                          {
-                                            syncedBooking.booking
-                                              .approval_status
-                                          }
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Financial Details Card */}
-                              <div className="bg-white p-4 rounded-lg shadow-sm border border-purple-100">
-                                <h4 className="font-medium text-gray-900 mb-3 flex items-center">
-                                  <DollarSign className="h-4 w-4 mr-2 text-purple-600" />
-                                  Financial Breakdown
-                                </h4>
-                                <div className="text-sm space-y-3">
-                                  <div className="bg-blue-50 p-2 rounded">
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-blue-700 font-medium">
-                                        Total Amount:
-                                      </span>
-                                      <span className="font-bold text-blue-800 text-lg">
-                                        {formatCurrency(
-                                          syncedBooking.booking.amount
-                                        )}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-green-600 font-medium">
-                                        Vendor Share:
-                                      </span>
-                                      <span className="font-semibold text-green-700">
-                                        {formatCurrency(
-                                          syncedBooking.booking.vendor_share
-                                        )}
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-purple-600 font-medium">
-                                        Facility Share:
-                                      </span>
-                                      <span className="font-semibold text-purple-700">
-                                        {formatCurrency(
-                                          syncedBooking.booking.facility_share
-                                        )}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="mt-3 pt-2 border-t border-gray-100">
-                                    <div className="text-xs text-gray-500">
-                                      <span className="font-medium">
-                                        Payment Method:
-                                      </span>{" "}
-                                      <span className="capitalize bg-gray-100 px-2 py-1 rounded">
-                                        {syncedBooking.booking.payment_mode}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Sync Information Card */}
-                              <div className="bg-white p-4 rounded-lg shadow-sm border border-orange-100">
-                                <h4 className="font-medium text-gray-900 mb-3 flex items-center">
-                                  <RotateCcw className="h-4 w-4 mr-2 text-orange-600" />
-                                  Sync Information
-                                </h4>
-                                <div className="text-sm space-y-2">
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-gray-500 font-medium">
-                                      Sync Status:
-                                    </span>
-                                    <div>
-                                      {getStatusBadge(
-                                        syncedBooking.synch_status
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500 font-medium">
-                                      Synced At:
-                                    </span>
-                                    <span className="text-gray-900 text-xs">
-                                      {formatDate(syncedBooking.synched_at)}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500 font-medium">
-                                      Created:
-                                    </span>
-                                    <span className="text-gray-900 text-xs">
-                                      {formatDate(syncedBooking.created_at)}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500 font-medium">
-                                      Last Updated:
-                                    </span>
-                                    <span className="text-gray-900 text-xs">
-                                      {formatDate(syncedBooking.updated_at)}
-                                    </span>
-                                  </div>
-                                  <div className="mt-3 pt-2 border-t border-gray-100">
-                                    <div className="text-xs text-gray-500">
-                                      <span className="font-medium">
-                                        Sync ID:
-                                      </span>{" "}
-                                      <span className="font-mono">
-                                        {syncedBooking.id.slice(-12)}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
                     </React.Fragment>
                   ))}
                 </tbody>

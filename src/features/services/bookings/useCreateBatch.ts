@@ -13,9 +13,9 @@ export const useCreateBatch = () => {
       queryClient.invalidateQueries({ queryKey: ["syncedBookings"] });
     },
     onError: (error: any) => {
-      const errorMessage = 
-        error.response?.data?.message || 
-        error.message || 
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
         "Failed to create batch";
       toast.error(errorMessage);
     },
