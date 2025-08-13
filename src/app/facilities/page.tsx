@@ -128,7 +128,7 @@ function FacilitiesContent() {
     county: selectedCounty || undefined,
     sub_county: selectedSubCounty || undefined,
     ward: selectedWard || undefined,
-    keph_level: selectedLevel || undefined,
+    level: selectedLevel || undefined,
   });
 
   // Removed effect tied to location filters
@@ -300,7 +300,7 @@ function FacilitiesContent() {
                 <option value="">All Levels</option>
                 {Object.values(KephLevel).map((level) => (
                   <option key={level} value={level}>
-                    {level}
+                    Level {level}
                   </option>
                 ))}
               </select>
@@ -419,8 +419,11 @@ function FacilitiesContent() {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
                       Code
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Created Date
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                      KEPH Level
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                      Facility Type
                     </th>
                     <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
                       Actions
@@ -434,15 +437,8 @@ function FacilitiesContent() {
                       className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <FaBuilding className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {facility.name}
-                            </div>
-                          </div>
+                        <div className="font-medium text-gray-900">
+                          {facility.name}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -450,15 +446,15 @@ function FacilitiesContent() {
                           {facility.code}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {new Date(facility.created_at).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          }
-                        )}
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-2.5 py-1.25 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {facility.keph_level}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {facility.facility_type}
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="relative">
@@ -607,6 +603,12 @@ function FacilitiesContent() {
                         <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mt-1">
                           {facility.code}
                         </div>
+                        <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1 ml-2">
+                          Level {facility.keph_level}
+                        </div>
+                        <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1 ml-2">
+                          {facility.facility_type}
+                        </div>
                       </div>
                     </div>
                     <div className="relative">
@@ -655,15 +657,6 @@ function FacilitiesContent() {
                         </>
                       )}
                     </div>
-                  </div>
-
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">Created:</span>{" "}
-                    {new Date(facility.created_at).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
                   </div>
                 </div>
               ))}

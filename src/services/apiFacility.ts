@@ -58,12 +58,12 @@ export enum OperationStatus {
 }
 
 export enum KephLevel {
-  LEVEL_1 = "Level 1",
-  LEVEL_2 = "Level 2",
-  LEVEL_3 = "Level 3",
-  LEVEL_4 = "Level 4",
-  LEVEL_5 = "Level 5",
-  LEVEL_6 = "Level 6",
+  LEVEL_1 = "1",
+  LEVEL_2 = "2",
+  LEVEL_3 = "3",
+  LEVEL_4 = "4",
+  LEVEL_5 = "5",
+  LEVEL_6 = "6",
 }
 
 export interface EditFacilityForm {
@@ -160,7 +160,7 @@ export interface SearchParams {
   owner?: string; // Search by owner
   regulatory_status?: string; // Search by regulatory status
   operation_status?: string; // Search by operation status
-  keph_level?: string; // Search by KEPH level
+  level?: string; // Search by KEPH level
 }
 
 // Filter types for API queries
@@ -177,7 +177,7 @@ export interface FacilityFilters {
   operation_status?: OperationStatus | string;
   regulatory_status?: RegulatoryStatus | string;
   owner?: Owner | string;
-  keph_level?: KephLevel | string;
+  level?: KephLevel | string;
   is_active?: string;
 }
 
@@ -291,7 +291,7 @@ export const buildAdvancedFacilitySearchParams = (filters: {
   }
 
   if (filters.kephLevel) {
-    params.keph_level = filters.kephLevel;
+    params.level = filters.kephLevel;
   }
 
   if (filters.countyId) {
@@ -360,9 +360,9 @@ export const parseSearchParamsFromUrl = (
     params.operation_status = operationStatus;
   }
 
-  const kephLevel = searchParams.get("keph_level");
+  const kephLevel = searchParams.get("level");
   if (kephLevel) {
-    params.keph_level = kephLevel;
+    params.level = kephLevel;
   }
 
   const countyId = searchParams.get("county_id");
