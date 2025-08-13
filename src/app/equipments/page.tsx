@@ -31,7 +31,6 @@ const Equipments: React.FC = () => {
   const { vendors = [], isLoading: vendorsLoading } = useVendors();
 
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<string>("all");
   // Location filters removed
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -82,10 +81,9 @@ const Equipments: React.FC = () => {
         e.model?.toLowerCase().includes(s) ||
         e.vendor?.name?.toLowerCase().includes(s) ||
         e.vendor_id?.toLowerCase?.()?.includes?.(s);
-      const matchesStatus = status === "all" || e.status === status;
-      return matchesSearch && matchesStatus;
+      return matchesSearch;
     });
-  }, [equipments, search, status]);
+  }, [equipments, search]);
 
   const openCreate = () => {
     setModalType("create");
@@ -109,7 +107,7 @@ const Equipments: React.FC = () => {
     setForm({
       name: e.name,
       description: e.description ?? "",
-      serial_number: e.serial_number,
+      serial_number: e.serial_number ?? "",
       model: e.model ?? "",
       manufacturer: e.manufacturer ?? "",
       year: (e.year as any) ?? "",
@@ -233,10 +231,10 @@ const Equipments: React.FC = () => {
           </div>
 
           {/* Filters */}
-          <div className="p-4 md:p-6 bg-gray-50 border-b space-y-4 overflow-visible">
+          <div className="p-4 md:p-6 bg-gray-50 space-y-4 overflow-visible rounded-xl md:rounded-2xl">
             {/* Location Filters removed */}
 
-            {/* Search and Status Filters */}
+            {/* Search Filters */}
             <div className="flex flex-col gap-4">
               <div className="flex-1 relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -247,19 +245,6 @@ const Equipments: React.FC = () => {
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                 />
-              </div>
-              <div>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full md:w-auto px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                >
-                  <option value="all">All Status</option>
-                  <option value="available">Available</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="unavailable">Unavailable</option>
-                  <option value="retired">Retired</option>
-                </select>
               </div>
             </div>
           </div>
@@ -311,7 +296,7 @@ const Equipments: React.FC = () => {
                       className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-6 py-4 font-mono text-sm bg-gray-50 rounded">
-                        {e.serial_number}
+                        {e.serial_number || "-"}
                       </td>
                       <td className="px-6 py-4">
                         <div className="font-medium text-gray-900">
@@ -397,9 +382,11 @@ const Equipments: React.FC = () => {
                     <h3 className="font-semibold text-gray-900 text-lg mb-1">
                       {e.name}
                     </h3>
-                    <div className="inline-block bg-gray-100 px-2 py-1 rounded text-xs font-mono text-gray-600 mb-2">
-                      {e.serial_number}
-                    </div>
+                    {e.serial_number && (
+                      <div className="inline-block bg-gray-100 px-2 py-1 rounded text-xs font-mono text-gray-600 mb-2">
+                        {e.serial_number}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {statusBadge(e.status)}
@@ -531,13 +518,15 @@ const Equipments: React.FC = () => {
                     Serial Number
                   </label>
                   <input
-                    value={form.serial_number}
+                    value={form.serial_number || ""}
                     onChange={(e) =>
-                      setForm({ ...form, serial_number: e.target.value })
+                      setForm({
+                        ...form,
+                        serial_number: e.target.value || null,
+                      })
                     }
                     className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                    required
-                    placeholder="Serial number"
+                    placeholder="Serial number (optional)"
                   />
                 </div>
 

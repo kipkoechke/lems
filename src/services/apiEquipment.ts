@@ -6,7 +6,7 @@ export interface Equipment {
   id: string;
   name: string;
   description?: string | null;
-  serial_number: string;
+  serial_number?: string | null;
   model?: string | null;
   manufacturer?: string | null;
   year?: number | string | null;
@@ -32,7 +32,7 @@ export interface ServiceCategory {
 export interface EquipmentWithService {
   equipmentId: string;
   equipmentName: string;
-  serialNumber: string;
+  serialNumber?: string | null;
   status: string;
   vendorShare: string;
   facilityShare: string;
@@ -48,7 +48,7 @@ export interface EquipmentCreateRequest {
   name: string;
   status: string;
   vendor_id: string;
-  serial_number: string;
+  serial_number?: string | null;
   description?: string | null;
   model?: string | null;
   manufacturer?: string | null;

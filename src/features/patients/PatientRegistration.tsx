@@ -96,7 +96,8 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   // Filter state for facility selection
   const [selectedCounty, setSelectedCounty] = useState<string>("");
   const [selectedKephLevel, setSelectedKephLevel] = useState<string>("");
-  const [isCountyDropdownOpen, setIsCountyDropdownOpen] = useState<boolean>(false);
+  const [isCountyDropdownOpen, setIsCountyDropdownOpen] =
+    useState<boolean>(false);
   const [isKephDropdownOpen, setIsKephDropdownOpen] = useState<boolean>(false);
   const [countySearch, setCountySearch] = useState<string>("");
   const [kephSearch, setKephSearch] = useState<string>("");
@@ -194,11 +195,17 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Handle county dropdown
-      if (isCountyDropdownOpen && !(event.target as Element).closest('.county-dropdown')) {
+      if (
+        isCountyDropdownOpen &&
+        !(event.target as Element).closest(".county-dropdown")
+      ) {
         setIsCountyDropdownOpen(false);
       }
       // Handle KEPH dropdown
-      if (isKephDropdownOpen && !(event.target as Element).closest('.keph-dropdown')) {
+      if (
+        isKephDropdownOpen &&
+        !(event.target as Element).closest(".keph-dropdown")
+      ) {
         setIsKephDropdownOpen(false);
       }
     };
@@ -321,13 +328,25 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                 <div className="relative county-dropdown">
                   <div
                     className="w-full p-2 md:p-3 bg-gray-50 rounded-lg cursor-pointer flex items-center justify-between hover:bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200"
-                    onClick={() => setIsCountyDropdownOpen(!isCountyDropdownOpen)}
+                    onClick={() =>
+                      setIsCountyDropdownOpen(!isCountyDropdownOpen)
+                    }
                   >
-                    <span className={`text-xs md:text-sm truncate ${selectedCounty ? "text-gray-900 font-medium" : "text-gray-500"}`}>
-                      {selectedCounty ? counties?.find(c => c.code === selectedCounty)?.name : "Select county"}
+                    <span
+                      className={`text-xs md:text-sm truncate ${
+                        selectedCounty
+                          ? "text-gray-900 font-medium"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {selectedCounty
+                        ? counties?.find((c) => c.code === selectedCounty)?.name
+                        : "Select county"}
                     </span>
                     <FaChevronDown
-                      className={`w-3 h-3 md:w-4 md:h-4 text-gray-400 transition-transform duration-200 ${isCountyDropdownOpen ? "rotate-180" : ""}`}
+                      className={`w-3 h-3 md:w-4 md:h-4 text-gray-400 transition-transform duration-200 ${
+                        isCountyDropdownOpen ? "rotate-180" : ""
+                      }`}
                     />
                   </div>
 
@@ -347,7 +366,9 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                         {isCountiesLoading ? (
                           <div className="p-3 text-center">
                             <FaSpinner className="animate-spin mx-auto mb-2 text-gray-400" />
-                            <span className="text-sm text-gray-500">Loading counties...</span>
+                            <span className="text-sm text-gray-500">
+                              Loading counties...
+                            </span>
                           </div>
                         ) : (
                           <>
@@ -362,8 +383,10 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                               All Counties
                             </div>
                             {counties
-                              ?.filter(county =>
-                                county.name.toLowerCase().includes(countySearch.toLowerCase())
+                              ?.filter((county) =>
+                                county.name
+                                  .toLowerCase()
+                                  .includes(countySearch.toLowerCase())
                               )
                               .map((county) => (
                                 <div
@@ -391,11 +414,19 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                     className="w-full p-2 md:p-3 bg-gray-50 rounded-lg cursor-pointer flex items-center justify-between hover:bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200"
                     onClick={() => setIsKephDropdownOpen(!isKephDropdownOpen)}
                   >
-                    <span className={`text-xs md:text-sm truncate ${selectedKephLevel ? "text-gray-900 font-medium" : "text-gray-500"}`}>
+                    <span
+                      className={`text-xs md:text-sm truncate ${
+                        selectedKephLevel
+                          ? "text-gray-900 font-medium"
+                          : "text-gray-500"
+                      }`}
+                    >
                       {selectedKephLevel || "Select KEPH level"}
                     </span>
                     <FaChevronDown
-                      className={`w-3 h-3 md:w-4 md:h-4 text-gray-400 transition-transform duration-200 ${isKephDropdownOpen ? "rotate-180" : ""}`}
+                      className={`w-3 h-3 md:w-4 md:h-4 text-gray-400 transition-transform duration-200 ${
+                        isKephDropdownOpen ? "rotate-180" : ""
+                      }`}
                     />
                   </div>
 
@@ -423,8 +454,10 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                           All Levels
                         </div>
                         {kephLevels
-                          .filter(level =>
-                            level.name.toLowerCase().includes(kephSearch.toLowerCase())
+                          .filter((level) =>
+                            level.name
+                              .toLowerCase()
+                              .includes(kephSearch.toLowerCase())
                           )
                           .map((level) => (
                             <div

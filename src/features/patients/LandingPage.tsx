@@ -105,11 +105,13 @@ const PatientRegistration: React.FC = () => {
   // Filter states for county and KEPH level
   const [selectedCounty, setSelectedCounty] = useState<string>("");
   const [selectedKephLevel, setSelectedKephLevel] = useState<string>("");
-  const [isCountyDropdownOpen, setIsCountyDropdownOpen] = useState<boolean>(false);
-  const [isKephLevelDropdownOpen, setIsKephLevelDropdownOpen] = useState<boolean>(false);
+  const [isCountyDropdownOpen, setIsCountyDropdownOpen] =
+    useState<boolean>(false);
+  const [isKephLevelDropdownOpen, setIsKephLevelDropdownOpen] =
+    useState<boolean>(false);
   const [countySearch, setCountySearch] = useState<string>("");
   const [kephLevelSearch, setKephLevelSearch] = useState<string>("");
-  
+
   // Refs for filter dropdowns
   const countyDropdownRef = useRef<HTMLDivElement>(null);
   const kephLevelDropdownRef = useRef<HTMLDivElement>(null);
@@ -145,20 +147,28 @@ const PatientRegistration: React.FC = () => {
   );
 
   // Filter facilities based on search and filters
-  const filteredFacilities = (facilities || mockFacilities).filter((facility) => {
-    const matchesSearch = 
-      facility.name.toLowerCase().includes(facilitySearch.toLowerCase()) ||
-      facility.code.toLowerCase().includes(facilitySearch.toLowerCase());
-    
-    // For real facilities from API, check county_id and keph_level
-    // For mock facilities, check basic fields only
-    const matchesCounty = !selectedCounty || 
-      ('county_id' in facility ? facility.county_id === selectedCounty : true);
-    const matchesKephLevel = !selectedKephLevel || 
-      ('keph_level' in facility ? facility.keph_level === `Level ${selectedKephLevel}` : true);
-    
-    return matchesSearch && matchesCounty && matchesKephLevel;
-  });
+  const filteredFacilities = (facilities || mockFacilities).filter(
+    (facility) => {
+      const matchesSearch =
+        facility.name.toLowerCase().includes(facilitySearch.toLowerCase()) ||
+        facility.code.toLowerCase().includes(facilitySearch.toLowerCase());
+
+      // For real facilities from API, check county_id and keph_level
+      // For mock facilities, check basic fields only
+      const matchesCounty =
+        !selectedCounty ||
+        ("county_id" in facility
+          ? facility.county_id === selectedCounty
+          : true);
+      const matchesKephLevel =
+        !selectedKephLevel ||
+        ("keph_level" in facility
+          ? facility.keph_level === `Level ${selectedKephLevel}`
+          : true);
+
+      return matchesSearch && matchesCounty && matchesKephLevel;
+    }
+  );
 
   const selectedFacility = (facilities || mockFacilities).find(
     (f) => f.id === selectedFacilityId
@@ -707,8 +717,8 @@ const PatientRegistration: React.FC = () => {
                             selectedCounty ? "text-gray-900" : "text-gray-500"
                           }`}
                         >
-                          {counties?.find((c) => c.id === selectedCounty)?.name ||
-                            "All Counties"}
+                          {counties?.find((c) => c.id === selectedCounty)
+                            ?.name || "All Counties"}
                         </span>
                         <FaChevronDown
                           className={`text-gray-400 transition-transform w-3 h-3 ${
@@ -726,7 +736,9 @@ const PatientRegistration: React.FC = () => {
                                 type="text"
                                 placeholder="Search counties..."
                                 value={countySearch}
-                                onChange={(e) => setCountySearch(e.target.value)}
+                                onChange={(e) =>
+                                  setCountySearch(e.target.value)
+                                }
                                 className="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
                                 onClick={(e) => e.stopPropagation()}
                               />
@@ -792,10 +804,14 @@ const PatientRegistration: React.FC = () => {
                       >
                         <span
                           className={`truncate ${
-                            selectedKephLevel ? "text-gray-900" : "text-gray-500"
+                            selectedKephLevel
+                              ? "text-gray-900"
+                              : "text-gray-500"
                           }`}
                         >
-                          {selectedKephLevel ? `Level ${selectedKephLevel}` : "All Levels"}
+                          {selectedKephLevel
+                            ? `Level ${selectedKephLevel}`
+                            : "All Levels"}
                         </span>
                         <FaChevronDown
                           className={`text-gray-400 transition-transform w-3 h-3 ${
@@ -813,7 +829,9 @@ const PatientRegistration: React.FC = () => {
                                 type="text"
                                 placeholder="Search levels..."
                                 value={kephLevelSearch}
-                                onChange={(e) => setKephLevelSearch(e.target.value)}
+                                onChange={(e) =>
+                                  setKephLevelSearch(e.target.value)
+                                }
                                 className="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
                                 onClick={(e) => e.stopPropagation()}
                               />
@@ -832,7 +850,8 @@ const PatientRegistration: React.FC = () => {
                                 All Levels
                               </div>
                             </div>
-                            {filteredKephLevels && filteredKephLevels.length > 0 ? (
+                            {filteredKephLevels &&
+                            filteredKephLevels.length > 0 ? (
                               filteredKephLevels.map((level) => (
                                 <div
                                   key={level}
@@ -962,7 +981,9 @@ const PatientRegistration: React.FC = () => {
                                   </div>
                                   <div className="text-sm text-gray-600">
                                     {facility.code}
-                                    {'location' in facility ? ` • ${facility.location}` : ''}
+                                    {"location" in facility
+                                      ? ` • ${facility.location}`
+                                      : ""}
                                   </div>
                                 </div>
                               </div>
@@ -986,7 +1007,9 @@ const PatientRegistration: React.FC = () => {
                     </div>
                     <div className="text-sm text-green-600 mt-1">
                       {selectedFacility.name}
-                      {'location' in selectedFacility ? ` - ${selectedFacility.location}` : ''}
+                      {"location" in selectedFacility
+                        ? ` - ${selectedFacility.location}`
+                        : ""}
                     </div>
                   </div>
                 )}
