@@ -6,8 +6,14 @@ import {
   useUpdateFacility,
 } from "@/features/facilities/useFacilities";
 import {
+  useCounties,
+  useSubCounties,
+  useWards,
+} from "@/features/counties/useCounties";
+import {
   EditFacilityForm as EditFacility,
   Facility,
+  KephLevel,
 } from "@/services/apiFacility";
 import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -99,14 +105,28 @@ function FacilitiesContent() {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  // Location filters removed
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-  // Use simple paginated facilities hook
+  // Filter states
+  const [selectedCounty, setSelectedCounty] = useState("");
+  const [selectedSubCounty, setSelectedSubCounty] = useState("");
+  const [selectedWard, setSelectedWard] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("");
+
+  // Location data hooks
+  const { counties } = useCounties();
+  const { subCounties } = useSubCounties(selectedCounty);
+  const { wards } = useWards(selectedSubCounty);
+
+  // Use facilities hook with filters
   const { isLoading, facilities, pagination, error } = useFacilitiesPaginated({
     page: currentPage,
     per_page: 100,
     search: searchTerm || undefined,
+    county: selectedCounty || undefined,
+    sub_county: selectedSubCounty || undefined,
+    ward: selectedWard || undefined,
+    keph_level: selectedLevel || undefined,
   });
 
   // Removed effect tied to location filters
@@ -116,15 +136,32 @@ function FacilitiesContent() {
     setActiveDropdown(null);
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1); // Reset to first page when searching
-  };
-
-  const handleClearSearch = () => {
-    setSearchTerm("");
+  const handleCountyChange = (county: string) => {
+    setSelectedCounty(county);
+    setSelectedSubCounty(""); // Reset sub county when county changes
+    setSelectedWard(""); // Reset ward when county changes
     setCurrentPage(1);
   };
+
+  const handleSubCountyChange = (subCounty: string) => {
+    setSelectedSubCounty(subCounty);
+    setSelectedWard(""); // Reset ward when sub county changes
+    setCurrentPage(1);
+  };
+
+  const handleWardChange = (ward: string) => {
+    setSelectedWard(ward);
+    setCurrentPage(1);
+  };
+
+  const handleLevelChange = (level: string) => {
+    setSelectedLevel(level);
+    setCurrentPage(1);
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters =
+    selectedCounty || selectedSubCounty || selectedWard || selectedLevel;
 
   if (isLoading) {
     return (
@@ -170,95 +207,114 @@ function FacilitiesContent() {
 
   // Show loading state or search results info
   const showEmptyState = !isLoading && facilityData.length === 0;
-  const isSearching = searchTerm.length > 0;
+  const isSearchingOrFiltering = searchTerm.length > 0 || hasActiveFilters;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6 overflow-visible">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <FaBuilding className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl md:text-2xl font-bold text-white mb-1">
-                    Facility Management
-                  </h1>
-                  <p className="text-sm md:text-base text-blue-100">
-                    Manage healthcare facilities and their services
-                    {pagination && (
-                      <span className="block sm:inline sm:ml-2">
-                        • Page {pagination.currentPage} of {pagination.lastPage}
-                      </span>
-                    )}
-                  </p>
-                </div>
-              </div>
+        {/* Search and Filters */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 mb-4 md:mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* County Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                County
+              </label>
+              <select
+                value={selectedCounty}
+                onChange={(e) => handleCountyChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                <option value="">All Counties</option>
+                {counties?.map((county) => (
+                  <option key={county.id} value={county.code}>
+                    {county.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
 
-          {/* Search */}
-          <div className="p-4 md:p-6 bg-gray-50 border-b space-y-4 overflow-visible">
-            {/* Location Filters removed */}
+            {/* Sub County Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Sub County
+              </label>
+              <select
+                value={selectedSubCounty}
+                onChange={(e) => handleSubCountyChange(e.target.value)}
+                disabled={!selectedCounty}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                <option value="">All Sub Counties</option>
+                {subCounties?.map((subCounty) => (
+                  <option key={subCounty.id} value={subCounty.code}>
+                    {subCounty.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            {/* Search Form */}
-            <form
-              onSubmit={handleSearchSubmit}
-              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4"
-            >
-              <div className="relative flex-1 max-w-md">
+            {/* Ward Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ward
+              </label>
+              <select
+                value={selectedWard}
+                onChange={(e) => handleWardChange(e.target.value)}
+                disabled={!selectedSubCounty}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                <option value="">All Wards</option>
+                {wards?.map((ward) => (
+                  <option key={ward.id} value={ward.code}>
+                    {ward.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Level Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                KEPH Level
+              </label>
+              <select
+                value={selectedLevel}
+                onChange={(e) => handleLevelChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                <option value="">All Levels</option>
+                {Object.values(KephLevel).map((level) => (
+                  <option key={level} value={level}>
+                    {level}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Search Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Search
+              </label>
+              <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search facilities..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
-
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="flex-1 sm:flex-none px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base"
-                >
-                  Search
-                </button>
-
-                {searchTerm && (
-                  <button
-                    type="button"
-                    onClick={handleClearSearch}
-                    className="flex-1 sm:flex-none px-4 py-3 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors text-sm md:text-base"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-            </form>
-
-            {isSearching && (
-              <div className="mt-3 text-sm text-gray-600">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <span>Searching for &quot;{searchTerm}&quot;...</span>
-                  {totalFacilities > 0 && (
-                    <span className="text-blue-600 font-medium">
-                      {totalFacilities} result{totalFacilities !== 1 ? "s" : ""}{" "}
-                      found
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-sm p-2 md:p-6">
             <div className="flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                 <FaBuilding className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
@@ -268,12 +324,12 @@ function FacilitiesContent() {
                   {totalFacilities}
                 </div>
                 <div className="text-xs md:text-sm text-gray-600">
-                  {isSearching ? "Search Results" : "Total Facilities"}
+                  Total Facilities
                 </div>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-sm p-4 md:p-6">
             <div className="flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-xl flex items-center justify-center">
                 <FaStethoscope className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
@@ -288,7 +344,7 @@ function FacilitiesContent() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-sm p-4 md:p-6">
             <div className="flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-xl flex items-center justify-center">
                 <FaFileContract className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
@@ -306,22 +362,22 @@ function FacilitiesContent() {
         </div>
 
         {/* Table - Desktop */}
-        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl hidden md:block">
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-sm hidden md:block">
           {showEmptyState ? (
             <div className="p-12 text-center">
               <div className="text-gray-500 text-xl mb-4">
-                {isSearching
-                  ? "No facilities match your search"
+                {isSearchingOrFiltering
+                  ? "No facilities match your search criteria"
                   : "No facilities found"}
               </div>
               <p className="text-gray-400">
-                {isSearching
-                  ? "Try adjusting your search terms"
+                {isSearchingOrFiltering
+                  ? "Try adjusting your search terms or filters"
                   : "Facilities will appear here once they are added to the system"}
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto overflow-y-visible">
+            <div className="overflow-x-auto overflow-y-visible shadow-sm rounded-2xl">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
@@ -490,13 +546,13 @@ function FacilitiesContent() {
           {showEmptyState ? (
             <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
               <div className="text-lg mb-2">
-                {isSearching
-                  ? "No facilities match your search"
+                {isSearchingOrFiltering
+                  ? "No facilities match your search criteria"
                   : "No facilities found"}
               </div>
               <p className="text-sm text-gray-400">
-                {isSearching
-                  ? "Try adjusting your search terms"
+                {isSearchingOrFiltering
+                  ? "Try adjusting your search terms or filters"
                   : "Facilities will appear here once they are added to the system"}
               </p>
             </div>
