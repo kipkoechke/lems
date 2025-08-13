@@ -404,8 +404,12 @@ const SyncedBookingsReport: React.FC = () => {
                               <div className="text-sm text-gray-900">
                                 <div className="mb-3">
                                   <div className="font-medium text-black mb-1">Batch No:</div>
-                                  <div className="text-gray-500">
+                                  <div className="text-gray-500 mb-3">
                                     {batch.batch_no}
+                                  </div>
+                                  <div className="font-medium text-black mb-1">Date Batched:</div>
+                                  <div className="text-gray-500">
+                                    {formatDate(batch.created_at)}
                                   </div>
                                 </div>
                               </div>
