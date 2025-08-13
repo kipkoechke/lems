@@ -121,3 +121,51 @@ export const createBatch = async (
   const response = await axiosInstance.post("/batches", data);
   return response.data;
 };
+
+export interface VendorBatch {
+  id: string;
+  batch_no: string;
+  vendor_id: string;
+  amount: string; // JSON string containing vendor_share, facility_share, total
+  start_date: string;
+  end_date: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  vendor: {
+    id: string;
+    name: string;
+    code: string;
+    is_active: string;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+  };
+}
+
+export interface VendorBatchesResponse {
+  current_page: number;
+  data: VendorBatch[];
+  first_page_url: string;
+  from: number;
+  last_page: number;
+  last_page_url: string;
+  links: Array<{
+    url: string | null;
+    label: string;
+    active: boolean;
+  }>;
+  next_page_url: string | null;
+  path: string;
+  per_page: number;
+  prev_page_url: string | null;
+  to: number;
+  total: number;
+}
+
+export const fetchVendorBatches = async (
+  page: number = 1
+): Promise<VendorBatchesResponse> => {
+  const response = await axiosInstance.get(`/batches?page=${page}`);
+  return response.data;
+};

@@ -2,6 +2,7 @@
 
 import { useSyncedBookings } from "@/features/services/bookings/useSyncedBookings";
 import { useCreateBatch } from "@/features/services/bookings/useCreateBatch";
+import { useVendorBatches } from "@/features/services/bookings/useVendorBatches";
 import Pagination from "@/components/Pagination";
 import {
   CheckCircle,
@@ -16,6 +17,25 @@ import {
   Send,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
+
+// Helper functions
+const formatCurrency = (amount: string | number): string => {
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  return new Intl.NumberFormat('en-KE', {
+    style: 'currency',
+    currency: 'KES',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(numAmount);
+};
+
+const formatDate = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString('en-KE', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+};
 
 const SyncedBookingsReport: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,6 +57,16 @@ const SyncedBookingsReport: React.FC = () => {
   });
 
   const { createBatch, isCreating } = useCreateBatch();
+
+  const {
+    vendorBatches,
+    pagination: vendorPagination,
+    isLoading: isLoadingVendorBatches,
+    error: vendorBatchesError,
+    refetchVendorBatches,
+  } = useVendorBatches({
+    page: currentPage,
+  });
 
   // Filter bookings based on active tab
   const filteredBookings = useMemo(() => {
@@ -76,6 +106,7 @@ const SyncedBookingsReport: React.FC = () => {
     { id: "complete", label: "Complete", count: statusCounts.complete },
     { id: "pending", label: "Pending", count: statusCounts.pending },
     { id: "failed", label: "Failed", count: statusCounts.failed },
+    { id: "vendor-payment", label: "Vendor Payment", count: vendorBatches?.length || 0 },
   ];
 
   // Selection handlers
@@ -315,7 +346,158 @@ const SyncedBookingsReport: React.FC = () => {
           </div>
         )}
 
-        {filteredBookings.length === 0 ? (
+        {activeTab === "vendor-payment" ? (
+          // Vendor Payment Tab Content
+          <>
+            {isLoadingVendorBatches ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            ) : vendorBatchesError ? (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <div className="flex">
+                  <X className="h-5 w-5 text-red-400" />
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">
+                      Error loading vendor batches
+                    </h3>
+                    <div className="mt-2 text-sm text-red-700">{vendorBatchesError.message}</div>
+                  </div>
+                </div>
+              </div>
+            ) : vendorBatches.length === 0 ? (
+              <div className="text-center py-12">
+                <RotateCcw className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  No vendor payment batches found
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  No vendor payment batches have been created yet.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="overflow-hidden md:rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-300">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Batch Information
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Vendor Details
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Financial Breakdown
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Date Range
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {vendorBatches.map((batch) => {
+                        const amountData = JSON.parse(batch.amount);
+                        return (
+                          <tr key={batch.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-normal break-words">
+                              <div className="text-sm text-gray-900">
+                                <div className="mb-3">
+                                  <div className="font-medium text-black mb-1">Batch No:</div>
+                                  <div className="text-gray-500">
+                                    {batch.batch_no}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {batch.vendor.name}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  <span className="font-medium text-black">Code:</span>{" "}
+                                  <span className="text-gray-500">{batch.vendor.code}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-gray-600 text-xs font-medium">
+                                      Total Amount:
+                                    </span>
+                                    <span className="font-bold text-blue-600">
+                                      {formatCurrency(amountData.total)}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-gray-600 text-xs">
+                                      Vendor Share:
+                                    </span>
+                                    <span className="font-medium text-green-600">
+                                      {formatCurrency(amountData.vendor_share)}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-gray-600 text-xs">
+                                      Facility Share:
+                                    </span>
+                                    <span className="font-medium text-purple-600">
+                                      {formatCurrency(amountData.facility_share)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="space-y-2">
+                                <div className="text-xs text-gray-500">
+                                  <div className="font-medium text-gray-700 mb-1">
+                                    Start Date:
+                                  </div>
+                                  <div className="flex items-center">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    {formatDate(batch.start_date)}
+                                  </div>
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  <div className="font-medium text-gray-700 mb-1">
+                                    End Date:
+                                  </div>
+                                  <div className="flex items-center">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    {formatDate(batch.end_date)}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Vendor Payment Pagination */}
+                {vendorPagination && vendorPagination.totalPages > 1 && (
+                  <div className="mt-6">
+                    <Pagination
+                      currentPage={vendorPagination.currentPage}
+                      lastPage={vendorPagination.totalPages}
+                      total={vendorPagination.total}
+                      from={vendorPagination.from}
+                      to={vendorPagination.to}
+                      links={[]}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        ) : filteredBookings.length === 0 ? (
           <div className="text-center py-12">
             <RotateCcw className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">
