@@ -16,6 +16,10 @@ import {
   FaUsers,
 } from "react-icons/fa";
 
+import { useFacilities } from "@/features/facilities/useFacilities";
+import { useCounties } from "@/features/counties/useCounties";
+import { KephLevel } from "@/services/apiFacility";
+
 // Mock data for demonstration
 const mockPatients = [
   { id: "1", name: "John Doe", phone: "0712345678", email: "john@example.com" },
@@ -66,12 +70,12 @@ const PAYMENT_MODES = [
   },
 ];
 
-interface Patient {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string;
-}
+// interface Patient {
+//   id: string;
+//   name: string;
+//   phone: string;
+//   email?: string;
+// }
 
 interface Facility {
   id: string;
@@ -98,13 +102,25 @@ const PatientRegistration: React.FC = () => {
   const facilityDropdownRef = useRef<HTMLDivElement>(null);
   const facilitySearchRef = useRef<HTMLInputElement>(null);
 
+  // Filter states for county and KEPH level
+  const [selectedCounty, setSelectedCounty] = useState<string>("");
+  const [selectedKephLevel, setSelectedKephLevel] = useState<string>("");
+  const [isCountyDropdownOpen, setIsCountyDropdownOpen] = useState<boolean>(false);
+  const [isKephLevelDropdownOpen, setIsKephLevelDropdownOpen] = useState<boolean>(false);
+  const [countySearch, setCountySearch] = useState<string>("");
+  const [kephLevelSearch, setKephLevelSearch] = useState<string>("");
+  
+  // Refs for filter dropdowns
+  const countyDropdownRef = useRef<HTMLDivElement>(null);
+  const kephLevelDropdownRef = useRef<HTMLDivElement>(null);
+
   // Form for new patient registration
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-    watch,
+    // watch,
   } = useForm<{
     name: string;
     phone: string;
@@ -113,17 +129,38 @@ const PatientRegistration: React.FC = () => {
   }>();
 
   // Watch form values for real-time validation feedback
-  const watchedFields = watch();
+  // const watchedFields = watch();
 
-  // Filter facilities based on search
-  const filteredFacilities = mockFacilities.filter(
-    (facility) =>
-      facility.name.toLowerCase().includes(facilitySearch.toLowerCase()) ||
-      facility.code.toLowerCase().includes(facilitySearch.toLowerCase()) ||
-      facility.location?.toLowerCase().includes(facilitySearch.toLowerCase())
+  // Data hooks
+  const { counties } = useCounties();
+  const { facilities } = useFacilities();
+
+  // Filter data based on search
+  const filteredCounties = counties?.filter((county) =>
+    county.name.toLowerCase().includes(countySearch.toLowerCase())
   );
 
-  const selectedFacility = mockFacilities.find(
+  const filteredKephLevels = Object.values(KephLevel).filter((level) =>
+    `Level ${level}`.toLowerCase().includes(kephLevelSearch.toLowerCase())
+  );
+
+  // Filter facilities based on search and filters
+  const filteredFacilities = (facilities || mockFacilities).filter((facility) => {
+    const matchesSearch = 
+      facility.name.toLowerCase().includes(facilitySearch.toLowerCase()) ||
+      facility.code.toLowerCase().includes(facilitySearch.toLowerCase());
+    
+    // For real facilities from API, check county_id and keph_level
+    // For mock facilities, check basic fields only
+    const matchesCounty = !selectedCounty || 
+      ('county_id' in facility ? facility.county_id === selectedCounty : true);
+    const matchesKephLevel = !selectedKephLevel || 
+      ('keph_level' in facility ? facility.keph_level === `Level ${selectedKephLevel}` : true);
+    
+    return matchesSearch && matchesCounty && matchesKephLevel;
+  });
+
+  const selectedFacility = (facilities || mockFacilities).find(
     (f) => f.id === selectedFacilityId
   );
   const selectedPaymentMode = PAYMENT_MODES.find(
@@ -133,12 +170,17 @@ const PatientRegistration: React.FC = () => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        facilityDropdownRef.current &&
-        !facilityDropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsFacilityDropdownOpen(false);
-      }
+      const dropdowns = [
+        { ref: facilityDropdownRef, setter: setIsFacilityDropdownOpen },
+        { ref: countyDropdownRef, setter: setIsCountyDropdownOpen },
+        { ref: kephLevelDropdownRef, setter: setIsKephLevelDropdownOpen },
+      ];
+
+      dropdowns.forEach(({ ref, setter }) => {
+        if (ref.current && !ref.current.contains(event.target as Node)) {
+          setter(false);
+        }
+      });
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -146,6 +188,22 @@ const PatientRegistration: React.FC = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Function to close all dropdowns
+  const closeAllDropdowns = () => {
+    setIsFacilityDropdownOpen(false);
+    setIsCountyDropdownOpen(false);
+    setIsKephLevelDropdownOpen(false);
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSelectedCounty("");
+    setSelectedKephLevel("");
+    setCountySearch("");
+    setKephLevelSearch("");
+    closeAllDropdowns();
+  };
 
   // Focus search input when dropdown opens
   useEffect(() => {
@@ -605,6 +663,204 @@ const PatientRegistration: React.FC = () => {
                 </div>
               </div>
 
+              {/* Facility Filters */}
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <FaSearch className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      Filter Facilities
+                    </h3>
+                  </div>
+                  {(selectedCounty || selectedKephLevel) && (
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors flex items-center gap-1"
+                    >
+                      <FaTimes className="w-3 h-3" />
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* County Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      County
+                    </label>
+                    <div className="relative" ref={countyDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCountyDropdownOpen(!isCountyDropdownOpen);
+                          closeAllDropdowns();
+                          setIsCountyDropdownOpen(!isCountyDropdownOpen);
+                        }}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-left flex items-center justify-between"
+                      >
+                        <span
+                          className={`truncate ${
+                            selectedCounty ? "text-gray-900" : "text-gray-500"
+                          }`}
+                        >
+                          {counties?.find((c) => c.id === selectedCounty)?.name ||
+                            "All Counties"}
+                        </span>
+                        <FaChevronDown
+                          className={`text-gray-400 transition-transform w-3 h-3 ${
+                            isCountyDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {isCountyDropdownOpen && (
+                        <div className="absolute z-[9999] w-80 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                          <div className="p-3 border-b border-gray-100">
+                            <div className="relative">
+                              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3" />
+                              <input
+                                type="text"
+                                placeholder="Search counties..."
+                                value={countySearch}
+                                onChange={(e) => setCountySearch(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                          <div className="max-h-60 overflow-y-auto">
+                            <div
+                              className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                              onClick={() => {
+                                setSelectedCounty("");
+                                setIsCountyDropdownOpen(false);
+                                setCountySearch("");
+                              }}
+                            >
+                              <div className="font-semibold text-gray-900 text-sm">
+                                All Counties
+                              </div>
+                            </div>
+                            {filteredCounties && filteredCounties.length > 0 ? (
+                              filteredCounties.map((county) => (
+                                <div
+                                  key={county.id}
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    setSelectedCounty(county.id);
+                                    setIsCountyDropdownOpen(false);
+                                    setCountySearch("");
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    {county.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Code: {county.code}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                                No counties found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* KEPH Level Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      KEPH Level
+                    </label>
+                    <div className="relative" ref={kephLevelDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsKephLevelDropdownOpen(!isKephLevelDropdownOpen);
+                          closeAllDropdowns();
+                          setIsKephLevelDropdownOpen(!isKephLevelDropdownOpen);
+                        }}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-left flex items-center justify-between"
+                      >
+                        <span
+                          className={`truncate ${
+                            selectedKephLevel ? "text-gray-900" : "text-gray-500"
+                          }`}
+                        >
+                          {selectedKephLevel ? `Level ${selectedKephLevel}` : "All Levels"}
+                        </span>
+                        <FaChevronDown
+                          className={`text-gray-400 transition-transform w-3 h-3 ${
+                            isKephLevelDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {isKephLevelDropdownOpen && (
+                        <div className="absolute z-[9999] w-80 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                          <div className="p-3 border-b border-gray-100">
+                            <div className="relative">
+                              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3" />
+                              <input
+                                type="text"
+                                placeholder="Search levels..."
+                                value={kephLevelSearch}
+                                onChange={(e) => setKephLevelSearch(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                          <div className="max-h-60 overflow-y-auto">
+                            <div
+                              className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                              onClick={() => {
+                                setSelectedKephLevel("");
+                                setIsKephLevelDropdownOpen(false);
+                                setKephLevelSearch("");
+                              }}
+                            >
+                              <div className="font-semibold text-gray-900 text-sm">
+                                All Levels
+                              </div>
+                            </div>
+                            {filteredKephLevels && filteredKephLevels.length > 0 ? (
+                              filteredKephLevels.map((level) => (
+                                <div
+                                  key={level}
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    setSelectedKephLevel(level);
+                                    setIsKephLevelDropdownOpen(false);
+                                    setKephLevelSearch("");
+                                  }}
+                                >
+                                  <div className="font-semibold text-gray-900 text-sm">
+                                    Level {level}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                                No levels found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Facility Selection */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
@@ -615,7 +871,7 @@ const PatientRegistration: React.FC = () => {
                     Medical Facility
                   </h3>
                   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                    {mockFacilities.length} available
+                    {filteredFacilities.length} available
                   </span>
                 </div>
 
@@ -705,7 +961,8 @@ const PatientRegistration: React.FC = () => {
                                     {facility.name}
                                   </div>
                                   <div className="text-sm text-gray-600">
-                                    {facility.code} • {facility.location}
+                                    {facility.code}
+                                    {'location' in facility ? ` • ${facility.location}` : ''}
                                   </div>
                                 </div>
                               </div>
@@ -728,7 +985,8 @@ const PatientRegistration: React.FC = () => {
                       <span className="font-medium">Facility Selected</span>
                     </div>
                     <div className="text-sm text-green-600 mt-1">
-                      {selectedFacility.name} - {selectedFacility.location}
+                      {selectedFacility.name}
+                      {'location' in selectedFacility ? ` - ${selectedFacility.location}` : ''}
                     </div>
                   </div>
                 )}
