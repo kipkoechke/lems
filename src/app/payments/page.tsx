@@ -81,9 +81,9 @@ const PaymentReport: React.FC = () => {
 
   // Filter bookings by status for different tabs
   const pendingBookings =
-    bookings?.filter((booking) => booking.approval === "pending") || [];
+    bookings?.filter((booking) => booking.approval_status === "pending") || [];
   const approvedBookings =
-    bookings?.filter((booking) => booking.approval === "approved") || [];
+    bookings?.filter((booking) => booking.approval_status === "approved") || [];
 
   // Generate payment summary from pending bookings
   const paymentSummary = useMemo(() => {
@@ -92,7 +92,7 @@ const PaymentReport: React.FC = () => {
     const summaryMap = new Map<string, PaymentSummaryItem>();
 
     pendingBookings.forEach((booking) => {
-      const facility = booking.service?.contract?.facility || booking.facility;
+      const facility = booking.service?.contract?.facility;
       const serviceName = booking.service?.service?.name || "Unknown Service";
 
       if (!facility) return; // Skip if no facility data
@@ -102,7 +102,7 @@ const PaymentReport: React.FC = () => {
       if (summaryMap.has(key)) {
         const existing = summaryMap.get(key)!;
         existing.patientCount += 1;
-        existing.bookingIds.push(booking.id || booking.bookingId || "");
+        existing.bookingIds.push(booking.id || "");
         // Recalculate totals
         existing.totalShaAmount = existing.shaRate * existing.patientCount;
         existing.totalFacilityAmount =
@@ -133,7 +133,7 @@ const PaymentReport: React.FC = () => {
           totalShaAmount: shaRate,
           totalFacilityAmount: facilityShare,
           totalVendorAmount: vendorShare,
-          bookingIds: [booking.id || booking.bookingId || ""],
+          bookingIds: [booking.id || ""],
           paymentMode: booking.payment_mode || "N/A",
         });
       }
@@ -149,7 +149,7 @@ const PaymentReport: React.FC = () => {
     const summaryMap = new Map<string, PaymentSummaryItem>();
 
     approvedBookings.forEach((booking) => {
-      const facility = booking.service?.contract?.facility || booking.facility;
+      const facility = booking.service?.contract?.facility;
       const serviceName = booking.service?.service?.name || "Unknown Service";
 
       if (!facility) return; // Skip if no facility data
@@ -159,7 +159,7 @@ const PaymentReport: React.FC = () => {
       if (summaryMap.has(key)) {
         const existing = summaryMap.get(key)!;
         existing.patientCount += 1;
-        existing.bookingIds.push(booking.id || booking.bookingId || "");
+        existing.bookingIds.push(booking.id || "");
         // Recalculate totals
         existing.totalShaAmount = existing.shaRate * existing.patientCount;
         existing.totalFacilityAmount =
@@ -190,7 +190,7 @@ const PaymentReport: React.FC = () => {
           totalShaAmount: shaRate,
           totalFacilityAmount: facilityShare,
           totalVendorAmount: vendorShare,
-          bookingIds: [booking.id || booking.bookingId || ""],
+          bookingIds: [booking.id || ""],
           paymentMode: booking.payment_mode || "N/A",
         });
       }

@@ -287,53 +287,49 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-2 md:p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-2">
+      <div className="max-w-6xl mx-auto px-2">
         {/* Header */}
-        <div className="text-center mb-4 md:mb-12">
-          <div className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-xs md:text-sm font-medium mb-3 md:mb-4">
-            <FaUser className="w-3 h-3 md:w-4 md:h-4" />
-            Registration
-          </div>
-          <h1 className="text-xl md:text-4xl font-bold text-gray-900 mb-2 md:mb-3">
+        <div className="text-center mb-2">
+          <h1 className="text-lg md:text-2xl font-bold text-gray-900 mb-1">
             Patient Registration
           </h1>
-          <p className="text-sm md:text-lg text-gray-600 max-w-2xl mx-auto px-2 md:px-4">
+          <p className="text-xs md:text-sm text-gray-600 max-w-2xl mx-auto">
             Complete your registration to access our healthcare services
           </p>
         </div>
 
-        <form onSubmit={handleProceed} className="space-y-3 md:space-y-8">
-          {/* Facility and Patient - Same Row on Desktop, Stacked on Mobile */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-8">
-            {/* Medical Facility */}
-            <div className="bg-white rounded-lg md:rounded-2xl shadow-sm md:shadow-lg p-3 md:p-8 hover:shadow-md md:hover:shadow-xl transition-all duration-300">
-              <div className="flex items-center gap-3 mb-4 md:mb-6">
-                <div className="p-2 md:p-3 bg-blue-100 rounded-lg md:rounded-xl">
-                  <FaHospital className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
+        <form onSubmit={handleProceed} className="space-y-2">
+          {/* Main Layout: Facility on Left, Patient + Payment on Right */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-4">
+            {/* LEFT SIDE: Medical Facility */}
+            <div className="bg-white rounded-lg shadow-sm p-2 md:p-4 hover:shadow-md transition-all duration-300">
+              <div className="flex items-center gap-2 mb-2 md:mb-3">
+                <div className="p-1 md:p-2 bg-blue-100 rounded-lg">
+                  <FaHospital className="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-base md:text-xl font-bold text-gray-900">
+                  <h3 className="text-sm md:text-lg font-bold text-gray-900">
                     Medical Facility
                   </h3>
-                  <p className="text-xs md:text-sm text-gray-500">
+                  <p className="text-xs text-gray-500">
                     Select your healthcare provider
                   </p>
                 </div>
               </div>
 
               {/* Filters */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-2 gap-2 mb-2">
                 {/* County Filter */}
                 <div className="relative county-dropdown">
                   <div
-                    className="w-full p-2 md:p-3 bg-gray-50 rounded-lg cursor-pointer flex items-center justify-between hover:bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200"
+                    className="w-full p-1 md:p-2 bg-gray-50 rounded-lg cursor-pointer flex items-center justify-between hover:bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200"
                     onClick={() =>
                       setIsCountyDropdownOpen(!isCountyDropdownOpen)
                     }
                   >
                     <span
-                      className={`text-xs md:text-sm truncate ${
+                      className={`text-xs truncate ${
                         selectedCounty
                           ? "text-gray-900 font-medium"
                           : "text-gray-500"
@@ -344,36 +340,36 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                         : "Select county"}
                     </span>
                     <FaChevronDown
-                      className={`w-3 h-3 md:w-4 md:h-4 text-gray-400 transition-transform duration-200 ${
+                      className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
                         isCountyDropdownOpen ? "rotate-180" : ""
                       }`}
                     />
                   </div>
 
                   {isCountyDropdownOpen && (
-                    <div className="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-xl border border-gray-100 max-h-60 overflow-hidden">
-                      <div className="p-2 border-b border-gray-100">
+                    <div className="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-xl border border-gray-100 max-h-40 overflow-hidden">
+                      <div className="p-1 border-b border-gray-100">
                         <input
                           type="text"
                           placeholder="Search counties..."
                           value={countySearch}
                           onChange={(e) => setCountySearch(e.target.value)}
-                          className="w-full px-3 py-2 bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs md:text-sm"
+                          className="w-full px-2 py-1 bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs"
                           onClick={(e) => e.stopPropagation()}
                         />
                       </div>
-                      <div className="max-h-48 overflow-y-auto">
+                      <div className="max-h-32 overflow-y-auto">
                         {isCountiesLoading ? (
-                          <div className="p-3 text-center">
-                            <FaSpinner className="animate-spin mx-auto mb-2 text-gray-400" />
-                            <span className="text-sm text-gray-500">
+                          <div className="p-2 text-center">
+                            <FaSpinner className="animate-spin mx-auto mb-1 text-gray-400" />
+                            <span className="text-xs text-gray-500">
                               Loading counties...
                             </span>
                           </div>
                         ) : (
                           <>
                             <div
-                              className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-xs md:text-sm text-gray-700"
+                              className="px-2 py-1 hover:bg-gray-50 cursor-pointer text-xs text-gray-700"
                               onClick={() => {
                                 setSelectedCounty("");
                                 setIsCountyDropdownOpen(false);
@@ -391,7 +387,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                               .map((county) => (
                                 <div
                                   key={county.code}
-                                  className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-xs md:text-sm text-gray-700"
+                                  className="px-2 py-1 hover:bg-gray-50 cursor-pointer text-xs text-gray-700"
                                   onClick={() => {
                                     setSelectedCounty(county.code);
                                     setIsCountyDropdownOpen(false);
@@ -411,11 +407,11 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                 {/* KEPH Level Filter */}
                 <div className="relative keph-dropdown">
                   <div
-                    className="w-full p-2 md:p-3 bg-gray-50 rounded-lg cursor-pointer flex items-center justify-between hover:bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200"
+                    className="w-full p-1 md:p-2 bg-gray-50 rounded-lg cursor-pointer flex items-center justify-between hover:bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200"
                     onClick={() => setIsKephDropdownOpen(!isKephDropdownOpen)}
                   >
                     <span
-                      className={`text-xs md:text-sm truncate ${
+                      className={`text-xs truncate ${
                         selectedKephLevel
                           ? "text-gray-900 font-medium"
                           : "text-gray-500"
@@ -424,7 +420,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                       {selectedKephLevel || "Select KEPH level"}
                     </span>
                     <FaChevronDown
-                      className={`w-3 h-3 md:w-4 md:h-4 text-gray-400 transition-transform duration-200 ${
+                      className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
                         isKephDropdownOpen ? "rotate-180" : ""
                       }`}
                     />
@@ -480,13 +476,13 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
 
               <div className="relative" ref={facilityDropdownRef}>
                 <div
-                  className="w-full p-3 md:p-4 bg-gray-50 rounded-xl cursor-pointer flex items-center justify-between hover:bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200"
+                  className="w-full p-2 bg-gray-50 rounded-lg cursor-pointer flex items-center justify-between hover:bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200"
                   onClick={() =>
                     setIsFacilityDropdownOpen(!isFacilityDropdownOpen)
                   }
                 >
                   <span
-                    className={`text-sm md:text-base ${
+                    className={`text-xs md:text-sm ${
                       selectedFacility
                         ? "text-gray-900 font-medium"
                         : "text-gray-500"
@@ -496,7 +492,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                       ? selectedFacility.name
                       : "Choose medical facility"}
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     {selectedFacility && (
                       <button
                         type="button"
@@ -506,11 +502,11 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                         }}
                         className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-all"
                       >
-                        <FaTimes className="w-3 h-3 md:w-4 md:h-4" />
+                        <FaTimes className="w-3 h-3" />
                       </button>
                     )}
                     <FaChevronDown
-                      className={`w-4 h-4 md:w-5 md:h-5 text-gray-400 transition-transform duration-200 ${
+                      className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
                         isFacilityDropdownOpen ? "rotate-180" : ""
                       }`}
                     />
@@ -596,190 +592,171 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
               </div>
             </div>
 
-            {/* Patient Details */}
-            <div className="bg-white rounded-lg md:rounded-2xl shadow-sm md:shadow-lg p-3 md:p-8 hover:shadow-md md:hover:shadow-xl transition-all duration-300">
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 md:p-3 bg-green-100 rounded-lg md:rounded-xl">
-                    <FaUser className="w-4 h-4 md:w-6 md:h-6 text-green-600" />
+            {/* RIGHT SIDE: Patient + Payment Method */}
+            <div className="space-y-1 md:space-y-2">
+              {/* Patient Details */}
+              <div className="bg-white rounded-lg md:rounded-2xl shadow-sm md:shadow-lg p-2 md:p-4 hover:shadow-md md:hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center justify-between mb-1 md:mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 md:p-2 bg-green-100 rounded-lg">
+                      <FaUser className="w-3 h-3 md:w-4 md:h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm md:text-lg font-bold text-gray-900">
+                        Patient
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        Select or add patient
+                      </p>
+                    </div>
+                  </div>
+
+                  <Modal>
+                    <Modal.Open opens="patient-form">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs"
+                      >
+                        <FaUserPlus className="w-3 h-3" />
+                        Add
+                      </button>
+                    </Modal.Open>
+                    <Modal.Window name="patient-form">
+                      <PatientRegistrationForm
+                        newlyRegisteredPatientId={newlyRegisteredPatientId}
+                      />
+                    </Modal.Window>
+                  </Modal>
+                </div>
+
+                <div
+                  className="relative dropdown-container"
+                  ref={patientDropdownRef}
+                >
+                  <button
+                    type="button"
+                    onClick={togglePatientDropdown}
+                    className="w-full px-2 py-1 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-left bg-white flex items-center justify-between text-xs md:text-sm"
+                  >
+                    <span
+                      className={
+                        selectedPatient ? "text-gray-900" : "text-gray-500"
+                      }
+                    >
+                      {selectedPatient
+                        ? `${selectedPatient.name} (${selectedPatient.phone})`
+                        : "Choose a patient"}
+                    </span>
+                    <FaChevronDown
+                      className={`text-gray-400 transition-transform ${
+                        isPatientDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {isPatientDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
+                      <div className="p-3 md:p-4 border-b border-gray-100">
+                        <div className="relative">
+                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <input
+                            ref={patientSearchRef}
+                            type="text"
+                            placeholder="Search patients..."
+                            value={patientSearch}
+                            onChange={(e) => setPatientSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-sm md:text-base"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {filteredPatients && filteredPatients.length > 0 ? (
+                          filteredPatients.map((patient) => (
+                            <div
+                              key={patient.id}
+                              className="px-3 md:px-4 py-3 hover:bg-green-50 cursor-pointer transition-colors"
+                              onClick={() => handlePatientSelect(patient)}
+                            >
+                              <div className="font-semibold text-gray-900 text-sm md:text-base">
+                                {patient.name}
+                              </div>
+                              <div className="text-xs md:text-sm text-gray-500">
+                                Phone: {patient.phone}
+                              </div>
+                              {patient.sha_number && (
+                                <div className="text-xs md:text-sm text-gray-500">
+                                  SHA: {patient.sha_number}
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-8 text-center text-gray-500 text-sm md:text-base">
+                            No patients found
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Payment Method */}
+              <div className="bg-white rounded-lg shadow-sm p-2 md:p-4 hover:shadow-md transition-all duration-300">
+                <div className="flex items-center gap-2 mb-1 md:mb-2">
+                  <div className="p-1 md:p-2 bg-purple-100 rounded-lg">
+                    <span className="text-sm md:text-lg">💳</span>
                   </div>
                   <div>
-                    <h3 className="text-base md:text-xl font-bold text-gray-900">
-                      Patient
+                    <h3 className="text-sm md:text-lg font-bold text-gray-900">
+                      Payment Method
                     </h3>
-                    <p className="text-xs md:text-sm text-gray-500">
-                      Select or add patient
+                    <p className="text-xs text-gray-500">
+                      Select your payment option
                     </p>
                   </div>
                 </div>
 
-                <Modal>
-                  <Modal.Open opens="patient-form">
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-2 px-2 md:px-4 py-2 bg-green-600 text-white rounded-lg md:rounded-xl hover:bg-green-700 transition-colors shadow-sm md:shadow-lg hover:shadow-md md:hover:shadow-xl text-xs md:text-sm"
-                    >
-                      <FaUserPlus className="w-3 h-3 md:w-4 md:h-4" />
-                      <span className="hidden sm:inline">Add New</span>
-                      <span className="sm:hidden">Add</span>
-                    </button>
-                  </Modal.Open>
-                  <Modal.Window name="patient-form">
-                    <PatientRegistrationForm
-                      newlyRegisteredPatientId={newlyRegisteredPatientId}
-                    />
-                  </Modal.Window>
-                </Modal>
-              </div>
-
-              <div
-                className="relative dropdown-container"
-                ref={patientDropdownRef}
-              >
-                <button
-                  type="button"
-                  onClick={togglePatientDropdown}
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-left bg-white flex items-center justify-between text-sm md:text-base"
-                >
-                  <span
-                    className={
-                      selectedPatient ? "text-gray-900" : "text-gray-500"
-                    }
-                  >
-                    {selectedPatient
-                      ? `${selectedPatient.name} (${selectedPatient.phone})`
-                      : "Choose a patient"}
-                  </span>
-                  <FaChevronDown
-                    className={`text-gray-400 transition-transform ${
-                      isPatientDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {isPatientDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
-                    <div className="p-3 md:p-4 border-b border-gray-100">
-                      <div className="relative">
-                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <input
-                          ref={patientSearchRef}
-                          type="text"
-                          placeholder="Search patients..."
-                          value={patientSearch}
-                          onChange={(e) => setPatientSearch(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-sm md:text-base"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    </div>
-                    <div className="max-h-60 overflow-y-auto">
-                      {filteredPatients && filteredPatients.length > 0 ? (
-                        filteredPatients.map((patient) => (
-                          <div
-                            key={patient.id}
-                            className="px-3 md:px-4 py-3 hover:bg-green-50 cursor-pointer transition-colors"
-                            onClick={() => handlePatientSelect(patient)}
-                          >
-                            <div className="font-semibold text-gray-900 text-sm md:text-base">
-                              {patient.name}
-                            </div>
-                            <div className="text-xs md:text-sm text-gray-500">
-                              Phone: {patient.phone}
-                            </div>
-                            {patient.sha_number && (
-                              <div className="text-xs md:text-sm text-gray-500">
-                                SHA: {patient.sha_number}
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="px-4 py-8 text-center text-gray-500 text-sm md:text-base">
-                          No patients found
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Method */}
-          <div className="bg-white rounded-lg md:rounded-2xl shadow-sm md:shadow-lg p-3 md:p-8 hover:shadow-md md:hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center gap-3 mb-4 md:mb-8">
-              <div className="p-2 md:p-3 bg-purple-100 rounded-lg md:rounded-xl">
-                <span className="text-lg md:text-2xl">💳</span>
-              </div>
-              <div>
-                <h3 className="text-base md:text-xl font-bold text-gray-900">
-                  Payment Method
-                </h3>
-                <p className="text-xs md:text-sm text-gray-500">
-                  Select your payment option
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-6">
-              {PAYMENT_MODES.map((paymentMode) => (
-                <label
-                  key={paymentMode.paymentModeId}
-                  className={`relative p-3 md:p-6 rounded-lg md:rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-sm md:hover:shadow-lg ${
-                    selectedPaymentModeId === paymentMode.paymentModeId
-                      ? "bg-blue-50 ring-2 ring-blue-500 shadow-sm md:shadow-lg"
-                      : "bg-gray-50 hover:bg-gray-100"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="paymentMode"
-                    value={paymentMode.paymentModeId}
-                    checked={
-                      selectedPaymentModeId === paymentMode.paymentModeId
-                    }
+                <div className="relative">
+                  <select
+                    value={selectedPaymentModeId}
                     onChange={(e) => setSelectedPaymentModeId(e.target.value)}
-                    className="sr-only"
-                  />
-
-                  <div className="text-center">
-                    <div className="text-2xl md:text-4xl mb-3 md:mb-4">
-                      {paymentMode.icon}
-                    </div>
-                    <div className="font-bold text-gray-900 mb-2 text-sm md:text-lg">
-                      {paymentMode.paymentModeName}
-                    </div>
-                    <div className="text-xs md:text-sm text-gray-600 leading-relaxed">
-                      {paymentMode.description}
-                    </div>
-                  </div>
-
-                  {selectedPaymentModeId === paymentMode.paymentModeId && (
-                    <div className="absolute -top-2 -right-2 w-5 h-5 md:w-6 md:h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                  )}
-                </label>
-              ))}
+                    className="w-full px-2 py-1 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs md:text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="" disabled>
+                      Choose payment method
+                    </option>
+                    {PAYMENT_MODES.map((paymentMode) => (
+                      <option
+                        key={paymentMode.paymentModeId}
+                        value={paymentMode.paymentModeId}
+                      >
+                        {paymentMode.paymentModeName} -{" "}
+                        {paymentMode.description}
+                      </option>
+                    ))}
+                  </select>
+                  <FaChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 pointer-events-none" />
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center pt-2 md:pt-4">
+          <div className="flex justify-center pt-1 md:pt-2">
             <button
               type="submit"
               disabled={!isComplete}
-              className={`inline-flex items-center gap-2 md:gap-3 px-6 md:px-12 py-3 md:py-4 rounded-lg md:rounded-2xl font-bold text-sm md:text-lg transition-all duration-300 shadow-sm md:shadow-lg hover:shadow-md md:hover:shadow-xl w-full sm:w-auto ${
+              className={`inline-flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold text-xs md:text-sm transition-all duration-300 w-full sm:w-auto ${
                 isComplete
-                  ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transform hover:scale-105"
+                  ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
               {isComplete ? (
                 <>
-                  <span className="hidden sm:inline">Continue to Services</span>
-                  <span className="sm:hidden">Continue</span>
+                  <span>Continue to Services</span>
                   <FaArrowRight className="w-4 h-4 md:w-5 md:h-5" />
                 </>
               ) : (

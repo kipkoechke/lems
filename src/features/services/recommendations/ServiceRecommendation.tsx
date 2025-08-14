@@ -207,35 +207,9 @@ const ServiceRecommendation: React.FC = () => {
 
     createBooking(bookingData, {
       onSuccess: (response) => {
-        console.log("=== BOOKING CREATION RESPONSE ===");
-        console.log("Full response:", response);
-        console.log("Response keys:", Object.keys(response));
-        console.log("Booking object:", response.booking);
-        console.log("Booking object keys:", Object.keys(response.booking));
-        console.log("OTP code:", response.otp_code);
-
-        // Log all possible booking identifier fields
-        console.log("=== BOOKING IDENTIFIER ANALYSIS ===");
-        console.log("booking.bookingId:", response.booking.bookingId);
-        console.log("booking.id:", (response.booking as any).id);
-        console.log(
-          "booking.booking_id:",
-          (response.booking as any).booking_id
-        );
-        console.log("booking.number:", (response.booking as any).number);
-        console.log(
-          "booking.booking_number:",
-          (response.booking as any).booking_number
-        );
-
-        console.log(
-          "All booking fields:",
-          JSON.stringify(response.booking, null, 2)
-        );
         toast.success("Booking created successfully!");
         dispatch(setBooking(response.booking));
-        dispatch(setOtpCode(response.otp_code)); // Store OTP in workflow state
-        console.log("Setting OTP code in workflow:", response.otp_code);
+        dispatch(setOtpCode(response.otp_code));
         setBookingCreated(true);
 
         // Handle OTP that comes directly from booking creation
@@ -403,7 +377,7 @@ const ServiceRecommendation: React.FC = () => {
                       <p className="text-green-700 text-sm mt-1">
                         Booking ID:{" "}
                         <span className="font-mono bg-green-100 px-2 py-1 rounded text-xs">
-                          {booking?.bookingId || "Generated"}
+                          {booking?.id}
                         </span>
                         {isOverrideMode
                           ? " - Emergency override mode active"

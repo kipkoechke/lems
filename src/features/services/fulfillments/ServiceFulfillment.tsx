@@ -35,12 +35,6 @@ const ServiceFulfillment: React.FC = () => {
   const { booking } = useAppSelector((store) => store.workflow);
   const bookingNumber = booking?.booking_number;
 
-  // Debug logging
-  console.log("=== SERVICE FULFILLMENT DEBUG ===");
-  console.log("Full booking object:", booking);
-  console.log("Booking number for fulfillment:", bookingNumber);
-  console.log("Booking ID (should not be used):", booking?.bookingId);
-
   const [generatedOtp, setGeneratedOtp] = useState<string | null>(null);
   const { isRequesting, requestFulfillmentOtp } = useFulfillmentOtp();
   const { validateOtpMutation, isValidating } =
@@ -170,10 +164,7 @@ const ServiceFulfillment: React.FC = () => {
       },
       {
         onSuccess: (response) => {
-          console.log("=== OTP VALIDATION SUCCESS ===");
-          console.log("Response:", response);
-
-          dispatch(setBooking({ ...booking, serviceCompletion: "completed" }));
+          dispatch(setBooking({ ...booking, service_status: "completed" }));
           setFulfillmentStatus("completed");
           setShowOTP(false);
           dispatch(completeService(true));

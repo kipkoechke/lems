@@ -51,15 +51,13 @@ const BookingReport: React.FC = () => {
   const filteredBookings = useMemo(() => {
     if (!bookings) return [];
     if (activeTab === "all") return bookings;
-    return bookings.filter(
-      (booking) => (booking.approval_status || booking.approval) === activeTab
-    );
+    return bookings.filter((booking) => booking.approval_status === activeTab);
   }, [bookings, activeTab]);
 
   // Get pending bookings from filtered bookings for selection
   const pendingBookings = useMemo(() => {
     return filteredBookings.filter(
-      (booking) => (booking.approval_status || booking.approval) === "pending"
+      (booking) => booking.approval_status === "pending"
     );
   }, [filteredBookings]);
 
@@ -69,8 +67,7 @@ const BookingReport: React.FC = () => {
 
     const counts = bookings.reduce(
       (acc, booking) => {
-        const approvalStatus =
-          booking.approval_status || booking.approval || "pending";
+        const approvalStatus = booking.approval_status || "pending";
         acc[approvalStatus as keyof typeof acc]++;
         acc.all++;
         return acc;
@@ -489,8 +486,7 @@ const BookingReport: React.FC = () => {
                     <tr className="hover:bg-gray-50">
                       {pendingBookings.length > 0 && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {(booking.approval_status || booking.approval) ===
-                          "pending" ? (
+                          {booking.approval_status === "pending" ? (
                             <button
                               onClick={() => handleSelectBooking(booking.id)}
                               className="text-blue-600 hover:text-blue-800"
@@ -531,9 +527,7 @@ const BookingReport: React.FC = () => {
                           </div>
                           <div className="text-xs text-gray-400 mt-1 break-words">
                             <Building className="inline h-3 w-3 mr-1" />
-                            {booking.service?.contract?.facility?.name ||
-                              booking.facility?.name ||
-                              "N/A"}
+                            {booking.service?.contract?.facility?.name || "N/A"}
                           </div>
                         </div>
                       </td>
@@ -582,11 +576,7 @@ const BookingReport: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(
-                          booking.approval_status ||
-                            booking.approval ||
-                            "pending"
-                        )}
+                        {getStatusBadge(booking.approval_status || "pending")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="relative">
@@ -617,8 +607,7 @@ const BookingReport: React.FC = () => {
                                     : "View Details"}
                                 </button>
 
-                                {(booking.approval_status ||
-                                  booking.approval) === "pending" && (
+                                {booking.approval_status === "pending" && (
                                   <>
                                     <button
                                       onClick={() => {
@@ -764,17 +753,6 @@ const BookingReport: React.FC = () => {
                                 </div>
                               </div>
                             </div>
-
-                            {booking.notes && (
-                              <div className="bg-white p-4 rounded-lg shadow-sm md:col-span-2 lg:col-span-3">
-                                <h4 className="font-medium text-gray-900 mb-2">
-                                  Notes
-                                </h4>
-                                <p className="text-sm text-gray-700">
-                                  {booking.notes}
-                                </p>
-                              </div>
-                            )}
                           </div>
                         </td>
                       </tr>

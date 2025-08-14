@@ -81,7 +81,7 @@ const PatientConsent: React.FC = () => {
     const bookingAny = booking as any;
     const bookingNumber =
       booking.booking_number ||
-      booking.bookingId ||
+      booking.id ||
       bookingAny.booking_id ||
       bookingAny.id ||
       bookingAny.number;
@@ -296,7 +296,7 @@ const PatientConsent: React.FC = () => {
               <>
                 <p>
                   <span className="font-medium">Booking Number:</span>{" "}
-                  {booking.booking_number || booking.bookingId}
+                  {booking.booking_number || booking.id}
                 </p>
                 <p>
                   <span className="font-medium">Vendor Share:</span> KSh{" "}

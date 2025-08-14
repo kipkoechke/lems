@@ -168,20 +168,20 @@ function PatientBookings() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          (booking.approval_status || booking.approval) ===
+                          (booking.approval_status) ===
                           "pending"
                             ? "bg-yellow-100 text-yellow-800"
-                            : (booking.approval_status || booking.approval) ===
+                            : (booking.approval_status) ===
                               "approved"
                             ? "bg-green-100 text-green-800"
-                            : (booking.approval_status || booking.approval) ===
+                            : (booking.approval_status) ===
                               "rejected"
                             ? "bg-red-100 text-red-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {booking.approval_status ||
-                          booking.approval ||
+                          
                           "pending"}
                       </span>
                     </td>
