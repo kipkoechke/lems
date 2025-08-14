@@ -103,8 +103,71 @@ const ServiceFulfillment: React.FC = () => {
       setFulfillmentStatus("failed");
       return;
     }
+
+    // Get service_id from the booking services array
+    let serviceId = null;
+
+    // Debug: Log booking structure
+    console.log("=== BOOKING STRUCTURE DEBUG ===");
+    console.log("Booking object:", booking);
+    console.log("Booking services array:", booking?.services);
+    console.log("Selected service from workflow:", selectedService);
+
+    // Try to get service ID from various sources
+    if (
+      booking?.services &&
+      Array.isArray(booking.services) &&
+      booking.services.length > 0
+    ) {
+      // Use the first service in the array for now
+      // TODO: In the future, might need to let user select which service to fulfill
+      serviceId = booking.services[0].id;
+      console.log("Using service ID from booking.services array:", serviceId);
+      console.log(
+        "Available services:",
+        booking.services.map((s) => ({
+          id: s.id,
+          status: s.service_status,
+          date: s.booking_date,
+        }))
+      );
+    } else if (selectedService?.serviceId) {
+      serviceId = selectedService.serviceId;
+      console.log("Using service ID from selectedService:", serviceId);
+    } else if (booking?.service?.service_id) {
+      serviceId = booking.service.service_id;
+      console.log("Using service ID from booking.service:", serviceId);
+    } else if (booking?.vendor_facility_lot_service_pivot_id) {
+      serviceId = booking.vendor_facility_lot_service_pivot_id;
+      console.log(
+        "Using vendor_facility_lot_service_pivot_id as fallback:",
+        serviceId
+      );
+    }
+
+    if (!serviceId) {
+      console.error("No service ID available for OTP validation");
+      console.error(
+        "Tried sources: booking.services, selectedService.serviceId, booking.service.service_id, booking.vendor_facility_lot_service_pivot_id"
+      );
+      toast.error("Service ID missing. Cannot validate OTP.");
+      setFulfillmentStatus("failed");
+      return;
+    }
+
+    console.log("=== VALIDATING SERVICE FULFILLMENT OTP ===");
+    console.log("Booking number:", bookingNumber);
+    console.log("Service ID:", serviceId);
+    console.log("OTP code:", otp);
+
     validateOtpMutation(
-      { data: { booking_number: bookingNumber, otp_code: otp } },
+      {
+        data: {
+          booking_number: bookingNumber,
+          service_id: serviceId,
+          otp_code: otp,
+        },
+      },
       {
         onSuccess: (response) => {
           console.log("=== OTP VALIDATION SUCCESS ===");

@@ -4,11 +4,13 @@ import { Patient } from "./apiPatient";
 import { PaymentMode } from "./apiPaymentMode";
 
 export type ServiceBookingForm = {
-  service_id: string;
   patient_id: string;
   payment_mode: string;
-  booking_date: string;
-  override?: boolean;
+  override: boolean;
+  services: {
+    service_id: string;
+    booking_date: string;
+  }[];
 };
 
 export interface PatientConsent {
@@ -77,23 +79,30 @@ export interface Bookings {
       deleted_at: string | null;
     };
   };
-  // Legacy properties for backward compatibility
-  bookingId?: string;
-  cost?: string;
-  bookingDate?: string;
-  status?: "pending" | "confirmed" | "completed" | "cancelled";
-  serviceCompletion?: "pending" | "completed";
-  approval?: "pending" | "approved" | "rejected";
-  notes?: string | null;
-  otpOverridden?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  facility?: Facility;
-  paymentMode?: PaymentMode;
+  // New services array for multiple services booking
+  services?: {
+    id: string;
+    booking_id: string;
+    vendor_facility_lot_service_pivot_id: string;
+    service_completion_by: string | null;
+    booking_date: string;
+    vendor_share: string;
+    facility_share: string;
+    service_status: "not_started" | "completed";
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+  }[];
 }
 
 export interface ValidateOtp {
   booking_number: string;
+  otp_code: string;
+}
+
+export interface ValidateServiceCompletionOtp {
+  booking_number: string;
+  service_id: string;
   otp_code: string;
 }
 
@@ -135,6 +144,19 @@ export interface BookingCreationResponse {
   otp_code: string;
   expires_at: string;
   booking: Bookings;
+  services: {
+    id: string;
+    booking_id: string;
+    vendor_facility_lot_service_pivot_id: string;
+    service_completion_by: string | null;
+    booking_date: string;
+    vendor_share: string;
+    facility_share: string;
+    service_status: "not_started" | "completed";
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+  }[];
 }
 
 export const createServiceBooking = async (
@@ -182,7 +204,7 @@ export const requestServiceFulfillmentOtp = async (
 };
 
 export const validateServiceFulfillmentOtp = async (
-  data: ValidateOtp
+  data: ValidateServiceCompletionOtp
 ): Promise<ValidateOtpResponse> => {
   const response = await axios.post(
     `/booking/serviceCompletion/verify/OTP`,

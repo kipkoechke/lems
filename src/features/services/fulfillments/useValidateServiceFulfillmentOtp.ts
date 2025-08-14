@@ -1,7 +1,7 @@
 import { completeService } from "@/context/workflowSlice";
 import { useAppDispatch } from "@/hooks/hooks";
 import {
-  ValidateOtp,
+  ValidateServiceCompletionOtp,
   ValidateOtpResponse,
   validateServiceFulfillmentOtp,
 } from "@/services/apiBooking";
@@ -12,7 +12,7 @@ export function useValidateServiceFulfillmentOtp() {
   const dispatch = useAppDispatch();
 
   const { mutate: validateOtpMutation, isPending: isValidating } = useMutation({
-    mutationFn: ({ data }: { data: ValidateOtp }) =>
+    mutationFn: ({ data }: { data: ValidateServiceCompletionOtp }) =>
       validateServiceFulfillmentOtp(data),
     onSuccess: (data: ValidateOtpResponse) => {
       console.log("=== SERVICE FULFILLMENT OTP VALIDATION RESPONSE ===");

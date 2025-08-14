@@ -33,7 +33,6 @@ const ServiceRecommendation: React.FC = () => {
   // Use the correct property names based on your workflow slice
   const selectedPaymentModeId =
     workflow.selectedPaymentMode?.paymentModeId || "";
-  const selectedFacilityId = workflow.selectedFacility?.id || "";
   const facilityCode = workflow.selectedFacility?.code || "";
 
   console.log("ServiceRecommendation workflow state:", {
@@ -45,13 +44,14 @@ const ServiceRecommendation: React.FC = () => {
   });
 
   // Get services based on facility code - now returns FacilityContract[]
-  const { contracts, isServicesLoading, error } =
-    useServicesByFacilityCode(facilityCode);
+  const { contracts } = useServicesByFacilityCode(facilityCode);
 
   // Two-level selection state
   const [selectedContractId, setSelectedContractId] = useState<string>(""); // For diagnostic service (category)
-  const [selectedServiceId, setSelectedServiceId] = useState<string>(""); // For individual service
-  const [bookingDate, setBookingDate] = useState<string>("");
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]); // For multiple individual services
+  const [serviceDates, setServiceDates] = useState<{
+    [serviceId: string]: string;
+  }>({}); // Individual dates for each service
   const [isOverrideMode, setIsOverrideMode] = useState<boolean>(false);
 
   // Booking state
@@ -68,7 +68,35 @@ const ServiceRecommendation: React.FC = () => {
   // Handle contract selection (diagnostic service category)
   const handleContractChange = (contractId: string) => {
     setSelectedContractId(contractId);
-    setSelectedServiceId(""); // Reset service selection when contract changes
+    setSelectedServiceIds([]); // Reset service selection when contract changes
+    setServiceDates({}); // Reset service dates
+  };
+
+  // Handle multiple service selection
+  const handleServiceToggle = (serviceId: string) => {
+    setSelectedServiceIds((prev) => {
+      const isSelected = prev.includes(serviceId);
+      if (isSelected) {
+        // Remove service and its date
+        setServiceDates((prevDates) => {
+          const newDates = { ...prevDates };
+          delete newDates[serviceId];
+          return newDates;
+        });
+        return prev.filter((id) => id !== serviceId);
+      } else {
+        // Add service
+        return [...prev, serviceId];
+      }
+    });
+  };
+
+  // Handle date change for specific service
+  const handleServiceDateChange = (serviceId: string, date: string) => {
+    setServiceDates((prev) => ({
+      ...prev,
+      [serviceId]: date,
+    }));
   };
 
   // Validate all fields for booking
@@ -76,18 +104,24 @@ const ServiceRecommendation: React.FC = () => {
     const patient = patients?.find((p) => p.id === selectedPatientId);
     const facility = workflow.selectedFacility;
 
-    // Find the selected service and contract
-    let selectedService = null;
+    // Find the selected services and contract
+    const selectedServices = [];
     let selectedContract = null;
 
-    for (const contract of contracts) {
-      const service = contract.services.find(
-        (s) => s.service_code === selectedServiceId
-      );
-      if (service) {
-        selectedService = service;
-        selectedContract = contract;
-        break;
+    if (selectedContractId) {
+      selectedContract = contracts?.find((c) => c.id === selectedContractId);
+      if (selectedContract) {
+        for (const serviceId of selectedServiceIds) {
+          const service = selectedContract.services.find(
+            (s) => s.service_code === serviceId
+          );
+          if (service && serviceDates[serviceId]) {
+            selectedServices.push({
+              ...service,
+              booking_date: serviceDates[serviceId],
+            });
+          }
+        }
       }
     }
 
@@ -104,18 +138,17 @@ const ServiceRecommendation: React.FC = () => {
 
     if (
       !patient ||
-      !selectedService ||
+      selectedServices.length === 0 ||
       !selectedContract ||
       !facility ||
-      !paymentMode ||
-      !bookingDate
+      !paymentMode
     ) {
       return null;
     }
 
     return {
       patient,
-      service: selectedService,
+      services: selectedServices,
       contract: selectedContract,
       facility,
       paymentMode,
@@ -141,14 +174,14 @@ const ServiceRecommendation: React.FC = () => {
   };
 
   const createBookingFirst = (validatedFields: any) => {
-    const { patient, service, contract, facility, paymentMode } =
-      validatedFields;
+    const { patient, services, contract } = validatedFields;
 
-    // Create a service object for the workflow state
+    // Create a service object for the workflow state (use first service for legacy compatibility)
+    const firstService = services[0];
     const serviceForWorkflow = {
-      serviceId: service.service_code,
-      serviceName: service.service_name,
-      description: `${contract.lot_name} - ${service.service_name}`,
+      serviceId: firstService.service_code,
+      serviceName: firstService.service_name,
+      description: `${contract.lot_name} - ${firstService.service_name}`,
       shaRate: "0",
       vendorShare: "0",
       facilityShare: "0",
@@ -163,14 +196,13 @@ const ServiceRecommendation: React.FC = () => {
 
     // Format the booking data according to the API requirements
     const bookingData = {
-      service_id: service.service_id,
       patient_id: patient.id,
       payment_mode: selectedPaymentModeId, // Use the payment mode ID directly as string
-      booking_date: new Date(bookingDate)
-        .toISOString()
-        .slice(0, 19)
-        .replace("T", " "), // Convert to Y-m-d H:i:s format
       override: isOverrideMode, // Pass override flag based on current mode
+      services: services.map((service: any) => ({
+        service_id: service.service_id,
+        booking_date: new Date(service.booking_date).toISOString(),
+      })),
     };
 
     createBooking(bookingData, {
@@ -229,33 +261,6 @@ const ServiceRecommendation: React.FC = () => {
     // Go to consent step for override OTP validation
     dispatch(goToNextStep());
   };
-
-  const inputClasses = `
-    w-full h-12 px-4 py-3
-    border border-gray-300 rounded-lg
-    bg-white text-gray-900 text-sm
-    placeholder:text-gray-500
-    transition-all duration-200 ease-in-out
-    hover:border-blue-400 hover:shadow-sm
-    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-    disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed
-  `;
-
-  const labelClasses = `
-    block text-sm font-semibold text-gray-700 mb-2
-  `;
-
-  const buttonClasses = `
-    px-6 py-3 min-w-[140px]
-    font-semibold text-sm
-    rounded-lg shadow-sm
-    transition-all duration-200
-    cursor-pointer
-    focus:outline-none focus:ring-2 focus:ring-offset-2
-    hover:shadow-md
-    flex items-center justify-center
-    disabled:cursor-not-allowed
-  `;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -491,53 +496,96 @@ const ServiceRecommendation: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-gray-900">
-                        Specific Service
+                        Specific Services
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Choose the exact service needed
+                        Select multiple services as needed
                       </p>
                     </div>
                   </div>
 
-                  <select
-                    value={selectedServiceId}
-                    onChange={(e) => setSelectedServiceId(e.target.value)}
-                    className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border-2 border-gray-200 hover:border-gray-300"
-                    required
-                    disabled={bookingCreated || !selectedContractId}
-                  >
-                    <option value="">
-                      {selectedContractId
-                        ? "Select a specific service"
-                        : "First select a diagnostic service"}
-                    </option>
-                    {availableServices.map((service) => (
-                      <option
-                        key={service.service_code}
-                        value={service.service_code}
-                      >
-                        {service.service_name}
-                      </option>
-                    ))}
-                  </select>
+                  {!selectedContractId ? (
+                    <div className="p-4 bg-gray-100 rounded-xl text-gray-500 text-center">
+                      First select a diagnostic service category
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {availableServices.map((service) => (
+                        <div
+                          key={service.service_code}
+                          className={`border-2 rounded-xl p-4 transition-all ${
+                            selectedServiceIds.includes(service.service_code)
+                              ? "border-green-500 bg-green-50"
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedServiceIds.includes(
+                                  service.service_code
+                                )}
+                                onChange={() =>
+                                  handleServiceToggle(service.service_code)
+                                }
+                                className="w-4 h-4 text-green-600 rounded"
+                                disabled={bookingCreated}
+                              />
+                              <span className="font-medium text-gray-900">
+                                {service.service_name}
+                              </span>
+                            </label>
+                            <span className="text-sm text-gray-500">
+                              {service.service_code}
+                            </span>
+                          </div>
 
-                  {selectedServiceId &&
-                    availableServices.find(
-                      (s) => s.service_code === selectedServiceId
-                    ) && (
-                      <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
-                        <div className="font-semibold text-green-800 mb-1">
-                          {
-                            availableServices.find(
-                              (s) => s.service_code === selectedServiceId
-                            )?.service_name
-                          }
+                          {selectedServiceIds.includes(
+                            service.service_code
+                          ) && (
+                            <div className="mt-3 pt-3 border-t border-green-200">
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Appointment Date & Time
+                              </label>
+                              <input
+                                type="datetime-local"
+                                value={serviceDates[service.service_code] || ""}
+                                onChange={(e) =>
+                                  handleServiceDateChange(
+                                    service.service_code,
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                                min={new Date().toISOString().slice(0, 16)}
+                                disabled={bookingCreated}
+                                required
+                              />
+                            </div>
+                          )}
                         </div>
-                        <div className="text-sm text-green-700">
-                          Code: {selectedServiceId}
-                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {selectedServiceIds.length > 0 && (
+                    <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+                      <div className="font-semibold text-green-800 mb-1">
+                        {selectedServiceIds.length} service(s) selected
                       </div>
-                    )}
+                      <div className="text-sm text-green-700">
+                        {selectedServiceIds
+                          .map(
+                            (id) =>
+                              availableServices.find(
+                                (s) => s.service_code === id
+                              )?.service_name
+                          )
+                          .join(", ")}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -559,13 +607,8 @@ const ServiceRecommendation: React.FC = () => {
                   </div>
 
                   <input
-                    type="datetime-local"
-                    value={bookingDate}
-                    onChange={(e) => setBookingDate(e.target.value)}
+                    type="hidden"
                     className="w-full p-4 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all border-2 border-gray-200 hover:border-gray-300"
-                    required
-                    disabled={bookingCreated}
-                    min={new Date().toISOString().slice(0, 16)}
                   />
                 </div>
 
@@ -628,9 +671,15 @@ const ServiceRecommendation: React.FC = () => {
           <div className="flex justify-center">
             <button
               type="submit"
-              disabled={isCreating || !selectedServiceId || !bookingDate}
+              disabled={
+                isCreating ||
+                selectedServiceIds.length === 0 ||
+                !Object.keys(serviceDates).every((id) => serviceDates[id])
+              }
               className={`inline-flex items-center gap-3 px-12 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl ${
-                !isCreating && selectedServiceId && bookingDate
+                !isCreating &&
+                selectedServiceIds.length > 0 &&
+                Object.keys(serviceDates).every((id) => serviceDates[id])
                   ? bookingCreated
                     ? "bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 transform hover:scale-105"
                     : isOverrideMode
