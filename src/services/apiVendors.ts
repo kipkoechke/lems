@@ -104,7 +104,9 @@ export const getVendor = async (vendorCode: string): Promise<Vendor> => {
 export const getVendorWithEquipments = async (
   vendorId: string
 ): Promise<VendorWithEquipments> => {
-  const response = await axios.get<VendorWithEquipments>(`/vendors/${vendorId}`);
+  const response = await axios.get<VendorWithEquipments>(
+    `/vendors/${vendorId}`
+  );
   return response.data;
 };
 

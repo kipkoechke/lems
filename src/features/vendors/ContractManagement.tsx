@@ -23,6 +23,7 @@ import { useCreateContract } from "./useCreateContract";
 import { useUpdateContractServices } from "./useUpdateContractServices";
 import { useVendors } from "./useVendors";
 import { useVendorWithEquipments } from "./useVendorWithEquipments";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface ContractFormData {
   vendor_code: string;
@@ -51,7 +52,20 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   const { contracts, isLoading, error, refetch } = useContracts(filters);
   const { createContract, isCreating } = useCreateContract();
   const { updateContractServices, isUpdating } = useUpdateContractServices();
-  const { facilities, isLoading: facilitiesLoading } = useFacilities();
+
+  // Searchable dropdown states and debounced search
+  const [vendorSearch, setVendorSearch] = useState<string>("");
+  const [facilitySearch, setFacilitySearch] = useState<string>("");
+  const [lotSearch, setLotSearch] = useState<string>("");
+  const [serviceSearch, setServiceSearch] = useState<string>("");
+  const [equipmentSearch, setEquipmentSearch] = useState<string>("");
+
+  // Debounced search for backend queries
+  const debouncedFacilitySearch = useDebounce(facilitySearch, 300);
+
+  const { facilities, isLoading: facilitiesLoading } = useFacilities({
+    search: debouncedFacilitySearch || undefined,
+  });
   const { vendors, isLoading: vendorsLoading } = useVendors();
   const { lots, isLoading: lotsLoading } = useLots();
 
@@ -70,9 +84,10 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     useLotWithServices(selectedLotNumber);
 
   // Get vendor equipments when a contract is selected for services management
-  const selectedVendorId = selectedContract?.vendor_code ? 
-    vendors?.find(v => v.code === selectedContract.vendor_code)?.id || "" : "";
-  const { equipments: vendorEquipments, isLoading: vendorEquipmentsLoading } = 
+  const selectedVendorId = selectedContract?.vendor_code
+    ? vendors?.find((v) => v.code === selectedContract.vendor_code)?.id || ""
+    : "";
+  const { equipments: vendorEquipments, isLoading: vendorEquipmentsLoading } =
     useVendorWithEquipments(selectedVendorId);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -81,27 +96,21 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   >("all");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-  // Searchable dropdown states
-  const [vendorSearch, setVendorSearch] = useState<string>("");
-  const [facilitySearch, setFacilitySearch] = useState<string>("");
-  const [lotSearch, setLotSearch] = useState<string>("");
-  const [serviceSearch, setServiceSearch] = useState<string>("");
-  const [equipmentSearch, setEquipmentSearch] = useState<string>("");
   const [isVendorDropdownOpen, setIsVendorDropdownOpen] = useState(false);
   const [isFacilityDropdownOpen, setIsFacilityDropdownOpen] = useState(false);
   const [isLotDropdownOpen, setIsLotDropdownOpen] = useState(false);
   const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
-  const [isEquipmentDropdownOpen, setIsEquipmentDropdownOpen] = useState(false);
 
   // Equipment selection state - maps service code to equipment id
-  const [selectedEquipments, setSelectedEquipments] = useState<Record<string, string>>({});
+  const [selectedEquipments, setSelectedEquipments] = useState<
+    Record<string, string>
+  >({});
 
   // Search refs
   const vendorSearchRef = useRef<HTMLInputElement>(null);
   const facilitySearchRef = useRef<HTMLInputElement>(null);
   const lotSearchRef = useRef<HTMLInputElement>(null);
   const serviceSearchRef = useRef<HTMLInputElement>(null);
-  const equipmentSearchRef = useRef<HTMLInputElement>(null);
 
   // Form state
   const [contractFormData, setContractFormData] = useState<ContractFormData>({
@@ -141,13 +150,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     )
     .slice(0, 50);
 
-  const filteredFacilitiesDropdown = facilities
-    ?.filter(
-      (facility) =>
-        facility.name?.toLowerCase().includes(facilitySearch.toLowerCase()) ||
-        facility.code?.toLowerCase().includes(facilitySearch.toLowerCase())
-    )
-    .slice(0, 50);
+  const filteredFacilitiesDropdown = facilities?.slice(0, 50);
 
   const filteredLots = lots
     ?.filter(
@@ -171,7 +174,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     ?.filter(
       (equipment) =>
         equipment.name?.toLowerCase().includes(equipmentSearch.toLowerCase()) ||
-        equipment.serial_number?.toLowerCase().includes(equipmentSearch.toLowerCase()) ||
+        equipment.serial_number
+          ?.toLowerCase()
+          .includes(equipmentSearch.toLowerCase()) ||
         equipment.model?.toLowerCase().includes(equipmentSearch.toLowerCase())
     )
     .slice(0, 50);
@@ -211,7 +216,6 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     setIsFacilityDropdownOpen(false);
     setIsLotDropdownOpen(false);
     setIsServiceDropdownOpen(false);
-    setIsEquipmentDropdownOpen(false);
   };
 
   const openModal = (
@@ -262,10 +266,10 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     // Create payload with equipment IDs
     const payload = {
       contract_id: servicesFormData.contract_id,
-      services: servicesFormData.services.map(service => ({
+      services: servicesFormData.services.map((service) => ({
         code: service.code,
-        equipment_id: selectedEquipments[service.code] || undefined
-      }))
+        equipment_id: selectedEquipments[service.code] || undefined,
+      })),
     };
 
     updateContractServices(payload, {
@@ -348,7 +352,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
       // If removing service, also remove its equipment selection
       if (isSelected) {
-        setSelectedEquipments(prevEquipments => {
+        setSelectedEquipments((prevEquipments) => {
           const newEquipments = { ...prevEquipments };
           delete newEquipments[serviceCode];
           return newEquipments;
@@ -363,9 +367,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   };
 
   const handleEquipmentSelect = (serviceCode: string, equipmentId: string) => {
-    setSelectedEquipments(prev => ({
+    setSelectedEquipments((prev) => ({
       ...prev,
-      [serviceCode]: equipmentId
+      [serviceCode]: equipmentId,
     }));
   };
 
@@ -378,7 +382,6 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
         setIsFacilityDropdownOpen(false);
         setIsLotDropdownOpen(false);
         setIsServiceDropdownOpen(false);
-        setIsEquipmentDropdownOpen(false);
       }
     };
 
@@ -617,8 +620,15 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                           All Facilities
                         </div>
                       </div>
-                      {filteredFacilitiesDropdown &&
-                      filteredFacilitiesDropdown.length > 0 ? (
+                      {facilitiesLoading ? (
+                        <div className="px-4 py-8 text-center text-gray-500">
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+                            <span>Loading facilities...</span>
+                          </div>
+                        </div>
+                      ) : filteredFacilitiesDropdown &&
+                        filteredFacilitiesDropdown.length > 0 ? (
                         filteredFacilitiesDropdown.map((facility) => (
                           <div
                             key={facility.id}
@@ -1336,8 +1346,15 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                         </div>
                       </div>
                       <div className="max-h-60 overflow-y-auto">
-                        {filteredFacilitiesDropdown &&
-                        filteredFacilitiesDropdown.length > 0 ? (
+                        {facilitiesLoading ? (
+                          <div className="px-4 py-8 text-center text-gray-500 text-sm md:text-base">
+                            <div className="flex items-center justify-center space-x-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+                              <span>Loading facilities...</span>
+                            </div>
+                          </div>
+                        ) : filteredFacilitiesDropdown &&
+                          filteredFacilitiesDropdown.length > 0 ? (
                           filteredFacilitiesDropdown.map((facility) => (
                             <div
                               key={facility.id}
@@ -1654,7 +1671,8 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
               {servicesFormData.services.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Selected Services & Equipment ({servicesFormData.services.length})
+                    Selected Services & Equipment (
+                    {servicesFormData.services.length})
                   </label>
                   <div className="space-y-3">
                     {servicesFormData.services.map((serviceItem) => {
@@ -1664,7 +1682,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                       const selectedEquipment = filteredEquipments?.find(
                         (eq) => eq.id === selectedEquipments[serviceItem.code]
                       );
-                      
+
                       return (
                         <div
                           key={serviceItem.code}
@@ -1681,27 +1699,37 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                             </div>
                             <button
                               type="button"
-                              onClick={() => handleServiceToggle(serviceItem.code)}
+                              onClick={() =>
+                                handleServiceToggle(serviceItem.code)
+                              }
                               className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-all"
                             >
                               <FaTimes className="w-4 h-4" />
                             </button>
                           </div>
-                          
+
                           <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1">
                               Select Equipment (Optional)
                             </label>
                             <select
                               value={selectedEquipments[serviceItem.code] || ""}
-                              onChange={(e) => handleEquipmentSelect(serviceItem.code, e.target.value)}
+                              onChange={(e) =>
+                                handleEquipmentSelect(
+                                  serviceItem.code,
+                                  e.target.value
+                                )
+                              }
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
                               disabled={vendorEquipmentsLoading}
                             >
                               <option value="">No equipment selected</option>
                               {filteredEquipments?.map((equipment) => (
                                 <option key={equipment.id} value={equipment.id}>
-                                  {equipment.name} {equipment.serial_number && `(${equipment.serial_number})`} - {equipment.status}
+                                  {equipment.name}{" "}
+                                  {equipment.serial_number &&
+                                    `(${equipment.serial_number})`}{" "}
+                                  - {equipment.status}
                                 </option>
                               ))}
                             </select>
@@ -1712,9 +1740,11 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                             )}
                             {selectedEquipment && (
                               <div className="text-xs text-gray-600 mt-1">
-                                Selected: {selectedEquipment.name} 
-                                {selectedEquipment.serial_number && ` (SN: ${selectedEquipment.serial_number})`}
-                                {selectedEquipment.model && ` - ${selectedEquipment.model}`}
+                                Selected: {selectedEquipment.name}
+                                {selectedEquipment.serial_number &&
+                                  ` (SN: ${selectedEquipment.serial_number})`}
+                                {selectedEquipment.model &&
+                                  ` - ${selectedEquipment.model}`}
                               </div>
                             )}
                           </div>

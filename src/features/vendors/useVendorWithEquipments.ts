@@ -1,4 +1,7 @@
-import { getVendorWithEquipments, VendorWithEquipments } from "@/services/apiVendors";
+import {
+  getVendorWithEquipments,
+  VendorWithEquipments,
+} from "@/services/apiVendors";
 import { useQuery } from "@tanstack/react-query";
 
 export const useVendorWithEquipments = (vendorId: string) => {
