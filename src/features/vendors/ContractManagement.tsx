@@ -1,6 +1,7 @@
 "use client";
 
 import { useFacilities } from "@/features/facilities/useFacilities";
+import { useFacility } from "@/features/facilities/useFacility";
 import { useLots } from "@/features/lots/useLots";
 import { useLotWithServices } from "@/features/lots/useLotWithServices";
 import { Contract, ContractFilterParams } from "@/services/apiVendors";
@@ -23,7 +24,6 @@ import { useCreateContract } from "./useCreateContract";
 import { useUpdateContractServices } from "./useUpdateContractServices";
 import { useVendors } from "./useVendors";
 import { useVendorWithEquipments } from "./useVendorWithEquipments";
-import { useDebounce } from "@/hooks/useDebounce";
 
 interface ContractFormData {
   vendor_code: string;
@@ -53,18 +53,19 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   const { createContract, isCreating } = useCreateContract();
   const { updateContractServices, isUpdating } = useUpdateContractServices();
 
-  // Searchable dropdown states and debounced search
+  // Searchable dropdown states 
   const [vendorSearch, setVendorSearch] = useState<string>("");
   const [facilitySearch, setFacilitySearch] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>(""); // Actual search query for API
   const [lotSearch, setLotSearch] = useState<string>("");
   const [serviceSearch, setServiceSearch] = useState<string>("");
   const [equipmentSearch, setEquipmentSearch] = useState<string>("");
 
-  // Debounced search for backend queries
-  const debouncedFacilitySearch = useDebounce(facilitySearch, 300);
+  // Store selected facility separately to avoid disappearing when search changes
+  const [selectedFacility, setSelectedFacility] = useState<any | null>(null);
 
   const { facilities, isLoading: facilitiesLoading } = useFacilities({
-    search: debouncedFacilitySearch || undefined,
+    search: searchQuery || undefined,
   });
   const { vendors, isLoading: vendorsLoading } = useVendors();
   const { lots, isLoading: lotsLoading } = useLots();
@@ -120,6 +121,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     is_active: "1",
   });
 
+  // Fetch selected facility separately to ensure it's always available for display
+  const { facility: selectedFacilityDetail } = useFacility(contractFormData.facility_code);
+
   const [servicesFormData, setServicesFormData] =
     useState<ContractServicesFormData>({
       contract_id: "",
@@ -150,6 +154,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     )
     .slice(0, 50);
 
+  // Use the searched facilities or show first 50 if no search
   const filteredFacilitiesDropdown = facilities?.slice(0, 50);
 
   const filteredLots = lots
@@ -185,7 +190,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   const selectedVendor = vendors?.find(
     (v) => v.code === contractFormData.vendor_code
   );
-  const selectedFacilityDropdown = facilities?.find(
+  const selectedFacilityDropdown = selectedFacility || selectedFacilityDetail || facilities?.find(
     (f) => f.code === contractFormData.facility_code
   );
   const selectedLot = lots?.find(
@@ -205,10 +210,12 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
       services: [],
     });
     setSelectedContract(null);
+    setSelectedFacility(null); // Clear selected facility
     setSelectedEquipments({});
     // Clear search states
     setVendorSearch("");
     setFacilitySearch("");
+    setSearchQuery("");
     setLotSearch("");
     setServiceSearch("");
     setEquipmentSearch("");
@@ -235,6 +242,11 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
         contract_id: contract.id,
         services: [], // Start with empty array for adding new services
       });
+      // Find and set the selected facility when editing
+      const facilityForEdit = facilities?.find(f => f.code === contract.facility_code);
+      if (facilityForEdit) {
+        setSelectedFacility(facilityForEdit);
+      }
     } else {
       resetForm();
     }
@@ -299,8 +311,30 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
   const handleFacilitySelectDropdown = (facility: any) => {
     setContractFormData((prev) => ({ ...prev, facility_code: facility.code }));
+    setSelectedFacility(facility); // Store the selected facility separately
     setIsFacilityDropdownOpen(false);
+    // Don't clear the search immediately to allow user to see what they selected
+    setTimeout(() => {
+      setFacilitySearch("");
+      setSearchQuery("");
+    }, 100);
+  };
+
+  // Handle facility search with API request - similar to PatientRegistration
+  const handleFacilitySearch = () => {
+    if (facilitySearch.trim()) {
+      setSearchQuery(facilitySearch.trim());
+    } else {
+      // If search is empty, clear search query to show all facilities
+      setSearchQuery("");
+    }
+  };
+
+  const clearFacilitySelection = () => {
+    setContractFormData((prev) => ({ ...prev, facility_code: "" }));
+    setSelectedFacility(null);
     setFacilitySearch("");
+    setSearchQuery("");
   };
 
   const handleLotSelect = (lot: any) => {
@@ -390,6 +424,18 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Load initial facilities when dropdown opens for the first time
+  useEffect(() => {
+    if (
+      isFacilityDropdownOpen &&
+      !searchQuery &&
+      (!facilities || facilities.length === 0)
+    ) {
+      // Trigger initial load of facilities if none are loaded
+      setSearchQuery(""); // This will trigger the API call with no search param
+    }
+  }, [isFacilityDropdownOpen, searchQuery, facilities]);
 
   if (isLoading) {
     return (
@@ -653,6 +699,18 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                       ) : (
                         <div className="px-4 py-8 text-center text-gray-500">
                           No facilities found
+                          {searchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSearchQuery("");
+                                setFacilitySearch("");
+                              }}
+                              className="mt-2 text-purple-600 hover:text-purple-800 text-xs underline block mx-auto"
+                            >
+                              Clear search
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1322,11 +1380,25 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                         ? `${selectedFacilityDropdown.name} (${selectedFacilityDropdown.code})`
                         : "Select a facility"}
                     </span>
-                    <FaChevronDown
-                      className={`text-gray-400 transition-transform ${
-                        isFacilityDropdownOpen ? "rotate-180" : ""
-                      }`}
-                    />
+                    <div className="flex items-center gap-2">
+                      {selectedFacilityDropdown && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            clearFacilitySelection();
+                          }}
+                          className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-all"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      )}
+                      <FaChevronDown
+                        className={`text-gray-400 transition-transform ${
+                          isFacilityDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </div>
                   </button>
 
                   {isFacilityDropdownOpen && (
@@ -1340,9 +1412,22 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                             placeholder="Search facilities..."
                             value={facilitySearch}
                             onChange={(e) => setFacilitySearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all text-sm md:text-base"
+                            className="w-full pl-10 pr-20 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all text-sm md:text-base"
                             onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleFacilitySearch();
+                              }
+                            }}
                           />
+                          <button
+                            type="button"
+                            onClick={handleFacilitySearch}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-xs font-medium"
+                          >
+                            Search
+                          </button>
                         </div>
                       </div>
                       <div className="max-h-60 overflow-y-auto">
@@ -1359,9 +1444,11 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                             <div
                               key={facility.id}
                               className="px-3 md:px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
-                              onClick={() =>
-                                handleFacilitySelectDropdown(facility)
-                              }
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleFacilitySelectDropdown(facility);
+                              }}
                             >
                               <div className="font-semibold text-gray-900 text-sm md:text-base">
                                 {facility.name}
@@ -1374,6 +1461,18 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                         ) : (
                           <div className="px-4 py-8 text-center text-gray-500 text-sm md:text-base">
                             No facilities found
+                            {searchQuery && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSearchQuery("");
+                                  setFacilitySearch("");
+                                }}
+                                className="mt-2 text-purple-600 hover:text-purple-800 text-xs md:text-sm underline block mx-auto"
+                              >
+                                Clear search
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
