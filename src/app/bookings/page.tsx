@@ -512,63 +512,175 @@ const BookingReport: React.FC = () => {
                               {booking.patient.phone}
                             </div>
                             <div className="text-xs text-gray-400">
-                              {formatDate(booking.booking_date)}
+                              {booking.booking_date
+                                ? formatDate(booking.booking_date)
+                                : booking.services &&
+                                  booking.services.length > 0
+                                ? formatDate(booking.services[0].booking_date)
+                                : formatDate(booking.created_at)}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-normal break-words">
                         <div className="text-sm text-gray-900">
-                          <div className="font-medium break-words">
-                            {booking.service?.service?.name || "N/A"}
-                          </div>
-                          <div className="text-gray-500 break-words">
-                            {booking.service?.service?.code || "N/A"}
-                          </div>
-                          <div className="text-xs text-gray-400 mt-1 break-words">
-                            <Building className="inline h-3 w-3 mr-1" />
-                            {booking.service?.contract?.facility?.name || "N/A"}
-                          </div>
+                          {booking.services && booking.services.length > 0 ? (
+                            <div className="space-y-2">
+                              {booking.services.map((service, index) => (
+                                <div
+                                  key={service.id}
+                                  className="border-l-2 border-blue-200 pl-2"
+                                >
+                                  <div className="font-medium break-words">
+                                    {service.service?.service?.name || "N/A"}
+                                  </div>
+                                  <div className="text-gray-500 break-words">
+                                    {service.service?.service?.code || "N/A"}
+                                  </div>
+                                  <div className="text-xs text-gray-400 mt-1 break-words">
+                                    <Building className="inline h-3 w-3 mr-1" />
+                                    {service.service?.contract?.facility
+                                      ?.name || "N/A"}
+                                  </div>
+                                  <div className="text-xs text-blue-600 mt-1">
+                                    Status: {service.service_status}
+                                  </div>
+                                  {booking.services.length > 1 &&
+                                    index < booking.services.length - 1 && (
+                                      <div className="border-b border-gray-100 my-1"></div>
+                                    )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            // Fallback to legacy service structure for backward compatibility
+                            <div>
+                              <div className="font-medium break-words">
+                                {booking.service?.service?.name || "N/A"}
+                              </div>
+                              <div className="text-gray-500 break-words">
+                                {booking.service?.service?.code || "N/A"}
+                              </div>
+                              <div className="text-xs text-gray-400 mt-1 break-words">
+                                <Building className="inline h-3 w-3 mr-1" />
+                                {booking.service?.contract?.facility?.name ||
+                                  "N/A"}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          <div className="text-xs text-gray-600 mt-1 space-y-0.5">
-                            <div className="flex justify-between items-center">
-                              <span className="text-blue-600">SHA Rate:</span>
-                              <span className="font-medium">
-                                {formatCurrency(
-                                  booking.service?.service?.sha_rate ||
-                                    booking.amount ||
-                                    "0"
-                                )}
-                              </span>
+                          {booking.services && booking.services.length > 0 ? (
+                            <div className="space-y-3">
+                              {booking.services.map((service, index) => (
+                                <div
+                                  key={service.id}
+                                  className="border-l-2 border-green-200 pl-2"
+                                >
+                                  <div className="text-xs text-gray-600 space-y-0.5">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-blue-600">
+                                        SHA Rate:
+                                      </span>
+                                      <span className="font-medium">
+                                        {formatCurrency(
+                                          service.service?.service?.sha_rate ||
+                                            "0"
+                                        )}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-green-600">
+                                        Vendor Share:
+                                      </span>
+                                      <span className="font-medium">
+                                        {formatCurrency(
+                                          service.vendor_share || "0"
+                                        )}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-purple-600">
+                                        Facility Share:
+                                      </span>
+                                      <span className="font-medium">
+                                        {formatCurrency(
+                                          service.facility_share || "0"
+                                        )}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  {booking.services.length > 1 &&
+                                    index < booking.services.length - 1 && (
+                                      <div className="border-b border-gray-100 my-2"></div>
+                                    )}
+                                </div>
+                              ))}
+                              {booking.services.length > 1 && (
+                                <div className="border-t border-gray-200 pt-2 mt-2">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-gray-900 font-bold">
+                                      Total:
+                                    </span>
+                                    <span className="font-bold">
+                                      {formatCurrency(
+                                        booking.services.reduce(
+                                          (total, service) => {
+                                            const shaRate = parseFloat(
+                                              service.service?.service
+                                                ?.sha_rate || "0"
+                                            );
+                                            return total + shaRate;
+                                          },
+                                          0
+                                        )
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-green-600">
-                                Vendor Share:
-                              </span>
-                              <span className="font-medium">
-                                {formatCurrency(
-                                  booking.service?.service?.vendor_share ||
-                                    booking.vendor_share ||
-                                    "0"
-                                )}
-                              </span>
+                          ) : (
+                            // Fallback to legacy cost structure for backward compatibility
+                            <div className="text-xs text-gray-600 mt-1 space-y-0.5">
+                              <div className="flex justify-between items-center">
+                                <span className="text-blue-600">SHA Rate:</span>
+                                <span className="font-medium">
+                                  {formatCurrency(
+                                    booking.service?.service?.sha_rate ||
+                                      booking.amount ||
+                                      "0"
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-green-600">
+                                  Vendor Share:
+                                </span>
+                                <span className="font-medium">
+                                  {formatCurrency(
+                                    booking.service?.service?.vendor_share ||
+                                      booking.vendor_share ||
+                                      "0"
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-purple-600">
+                                  Facility Share:
+                                </span>
+                                <span className="font-medium">
+                                  {formatCurrency(
+                                    booking.service?.service?.facility_share ||
+                                      booking.facility_share ||
+                                      "0"
+                                  )}
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-purple-600">
-                                Facility Share:
-                              </span>
-                              <span className="font-medium">
-                                {formatCurrency(
-                                  booking.service?.service?.facility_share ||
-                                    booking.facility_share ||
-                                    "0"
-                                )}
-                              </span>
-                            </div>
-                          </div>
+                          )}
                           <div className="text-xs text-gray-500 mt-2">
                             <CreditCard className="inline h-3 w-3 mr-1" />
                             Payment Mode: {booking.payment_mode || "N/A"}
@@ -664,95 +776,305 @@ const BookingReport: React.FC = () => {
                           colSpan={pendingBookings.length > 0 ? 6 : 5}
                           className="px-6 py-4 bg-gray-50"
                         >
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div className="bg-white p-4 rounded-lg shadow-sm">
-                              <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                                <User className="h-4 w-4 mr-2" />
-                                Patient Details
-                              </h4>
-                              <div className="text-sm space-y-1">
-                                <p>
-                                  <span className="text-gray-500">DOB:</span>
-                                  {new Date(
-                                    booking.patient.date_of_birth
-                                  ).toLocaleDateString()}
-                                </p>
-                                <p>
-                                  <span className="text-gray-500">
-                                    Patient ID:
-                                  </span>
-                                  {booking.patient.id.slice(-8)}
-                                </p>
+                          <div className="space-y-6">
+                            {/* Patient and Facility Details */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              <div className="bg-white p-4 rounded-lg shadow-sm">
+                                <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                                  <User className="h-4 w-4 mr-2" />
+                                  Patient Details
+                                </h4>
+                                <div className="text-sm space-y-1">
+                                  <p>
+                                    <span className="text-gray-500">DOB:</span>
+                                    {new Date(
+                                      booking.patient.date_of_birth
+                                    ).toLocaleDateString()}
+                                  </p>
+                                  <p>
+                                    <span className="text-gray-500">
+                                      SHA Number:
+                                    </span>
+                                    {booking.patient.sha_number || "N/A"}
+                                  </p>
+                                  <p>
+                                    <span className="text-gray-500">
+                                      Patient ID:
+                                    </span>
+                                    {booking.patient.id.slice(-8)}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="bg-white p-4 rounded-lg shadow-sm">
+                                <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                                  <Building className="h-4 w-4 mr-2" />
+                                  Booking Details
+                                </h4>
+                                <div className="text-sm space-y-1">
+                                  <p>
+                                    <span className="text-gray-500">
+                                      Booking Number:
+                                    </span>
+                                    {booking.booking_number}
+                                  </p>
+                                  <p>
+                                    <span className="text-gray-500">
+                                      Booking Status:
+                                    </span>
+                                    {booking.booking_status}
+                                  </p>
+                                  <p>
+                                    <span className="text-gray-500">
+                                      Created:
+                                    </span>
+                                    {formatDate(booking.created_at)}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="bg-white p-4 rounded-lg shadow-sm">
+                                <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                                  <DollarSign className="h-4 w-4 mr-2" />
+                                  Total Cost Summary
+                                </h4>
+                                <div className="text-sm space-y-2">
+                                  {booking.services &&
+                                  booking.services.length > 0 ? (
+                                    <>
+                                      <div className="flex justify-between">
+                                        <span className="text-blue-600 font-medium">
+                                          Total SHA Rate:
+                                        </span>
+                                        <span className="font-semibold">
+                                          {formatCurrency(
+                                            booking.services.reduce(
+                                              (total, service) => {
+                                                return (
+                                                  total +
+                                                  parseFloat(
+                                                    service.service?.service
+                                                      ?.sha_rate || "0"
+                                                  )
+                                                );
+                                              },
+                                              0
+                                            )
+                                          )}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-green-600 font-medium">
+                                          Total Vendor Share:
+                                        </span>
+                                        <span className="font-semibold">
+                                          {formatCurrency(
+                                            booking.services.reduce(
+                                              (total, service) => {
+                                                return (
+                                                  total +
+                                                  parseFloat(
+                                                    service.vendor_share || "0"
+                                                  )
+                                                );
+                                              },
+                                              0
+                                            )
+                                          )}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-purple-600 font-medium">
+                                          Total Facility Share:
+                                        </span>
+                                        <span className="font-semibold">
+                                          {formatCurrency(
+                                            booking.services.reduce(
+                                              (total, service) => {
+                                                return (
+                                                  total +
+                                                  parseFloat(
+                                                    service.facility_share ||
+                                                      "0"
+                                                  )
+                                                );
+                                              },
+                                              0
+                                            )
+                                          )}
+                                        </span>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    // Legacy fallback
+                                    <>
+                                      <div className="flex justify-between">
+                                        <span className="text-blue-600 font-medium">
+                                          SHA Rate:
+                                        </span>
+                                        <span className="font-semibold">
+                                          {formatCurrency(
+                                            booking.service?.service
+                                              ?.sha_rate || "0"
+                                          )}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-green-600 font-medium">
+                                          Vendor Share:
+                                        </span>
+                                        <span className="font-semibold">
+                                          {formatCurrency(
+                                            booking.service?.service
+                                              ?.vendor_share ||
+                                              booking.vendor_share ||
+                                              "0"
+                                          )}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-purple-600 font-medium">
+                                          Facility Share:
+                                        </span>
+                                        <span className="font-semibold">
+                                          {formatCurrency(
+                                            booking.service?.service
+                                              ?.facility_share ||
+                                              booking.facility_share ||
+                                              "0"
+                                          )}
+                                        </span>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
-                            <div className="bg-white p-4 rounded-lg shadow-sm">
-                              <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                                <Building className="h-4 w-4 mr-2" />
-                                Facility Details
-                              </h4>
-                              <div className="text-sm space-y-1">
-                                <p>
-                                  <span className="text-gray-500">Code:</span>
-                                  {booking.service?.contract?.facility?.code ||
-                                    "N/A"}
-                                </p>
-                              </div>
-                            </div>
+                            {/* Services Details */}
+                            {booking.services &&
+                              booking.services.length > 0 && (
+                                <div className="bg-white p-4 rounded-lg shadow-sm">
+                                  <h4 className="font-medium text-gray-900 mb-4 flex items-center">
+                                    <Calendar className="h-4 w-4 mr-2" />
+                                    Services Details ({
+                                      booking.services.length
+                                    }{" "}
+                                    service
+                                    {booking.services.length > 1 ? "s" : ""})
+                                  </h4>
+                                  <div className="space-y-4">
+                                    {booking.services.map((service) => (
+                                      <div
+                                        key={service.id}
+                                        className="border border-gray-200 rounded-lg p-4"
+                                      >
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                          <div>
+                                            <h5 className="font-medium text-gray-900 mb-2">
+                                              Service Information
+                                            </h5>
+                                            <div className="text-sm space-y-1">
+                                              <p>
+                                                <span className="text-gray-500">
+                                                  Name:
+                                                </span>
+                                                {service.service?.service
+                                                  ?.name || "N/A"}
+                                              </p>
+                                              <p>
+                                                <span className="text-gray-500">
+                                                  Code:
+                                                </span>
+                                                {service.service?.service
+                                                  ?.code || "N/A"}
+                                              </p>
+                                              <p>
+                                                <span className="text-gray-500">
+                                                  Status:
+                                                </span>
+                                                <span
+                                                  className={`ml-1 px-2 py-1 rounded-full text-xs ${
+                                                    service.service_status ===
+                                                    "completed"
+                                                      ? "bg-green-100 text-green-800"
+                                                      : "bg-yellow-100 text-yellow-800"
+                                                  }`}
+                                                >
+                                                  {service.service_status}
+                                                </span>
+                                              </p>
+                                            </div>
+                                          </div>
 
-                            <div className="bg-white p-4 rounded-lg shadow-sm">
-                              <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                                <DollarSign className="h-4 w-4 mr-2" />
-                                Detailed Cost Breakdown
-                              </h4>
-                              <div className="text-sm space-y-2">
-                                <div className="flex justify-between">
-                                  <span className="text-blue-600 font-medium">
-                                    SHA Rate:
-                                  </span>
-                                  <span className="font-semibold">
-                                    {formatCurrency(
-                                      booking.service?.service?.sha_rate || "0"
-                                    )}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-green-600 font-medium">
-                                    Vendor Share:
-                                  </span>
-                                  <span className="font-semibold">
-                                    {formatCurrency(
-                                      booking.service?.service?.vendor_share ||
-                                        booking.vendor_share ||
-                                        "0"
-                                    )}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-purple-600 font-medium">
-                                    Facility Share:
-                                  </span>
-                                  <span className="font-semibold">
-                                    {formatCurrency(
-                                      booking.service?.service
-                                        ?.facility_share ||
-                                        booking.facility_share ||
-                                        "0"
-                                    )}
-                                  </span>
-                                </div>
-                                <div className="border-t pt-2 mt-2">
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-900 font-bold">
-                                      Total Cost:
-                                    </span>
-                                    <span className="font-bold text-lg">
-                                      {formatCurrency(booking.amount || "0")}
-                                    </span>
+                                          <div>
+                                            <h5 className="font-medium text-gray-900 mb-2">
+                                              Facility Information
+                                            </h5>
+                                            <div className="text-sm space-y-1">
+                                              <p>
+                                                <span className="text-gray-500">
+                                                  Facility:
+                                                </span>
+                                                {service.service?.contract
+                                                  ?.facility?.name || "N/A"}
+                                              </p>
+                                              <p>
+                                                <span className="text-gray-500">
+                                                  Code:
+                                                </span>
+                                                {service.service?.contract
+                                                  ?.facility?.code || "N/A"}
+                                              </p>
+                                              <p>
+                                                <span className="text-gray-500">
+                                                  Level:
+                                                </span>
+                                                {service.service?.contract
+                                                  ?.facility?.keph_level ||
+                                                  "N/A"}
+                                              </p>
+                                            </div>
+                                          </div>
+
+                                          <div>
+                                            <h5 className="font-medium text-gray-900 mb-2">
+                                              Cost & Schedule
+                                            </h5>
+                                            <div className="text-sm space-y-1">
+                                              <p>
+                                                <span className="text-gray-500">
+                                                  Scheduled:
+                                                </span>
+                                                {formatDate(
+                                                  service.booking_date
+                                                )}
+                                              </p>
+                                              <p>
+                                                <span className="text-gray-500">
+                                                  SHA Rate:
+                                                </span>
+                                                {formatCurrency(
+                                                  service.service?.service
+                                                    ?.sha_rate || "0"
+                                                )}
+                                              </p>
+                                              <p>
+                                                <span className="text-gray-500">
+                                                  Vendor Share:
+                                                </span>
+                                                {formatCurrency(
+                                                  service.vendor_share || "0"
+                                                )}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
-                              </div>
-                            </div>
+                              )}
                           </div>
                         </td>
                       </tr>
