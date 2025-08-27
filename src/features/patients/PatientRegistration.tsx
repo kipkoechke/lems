@@ -5,7 +5,7 @@ import { useFacilities } from "@/features/facilities/useFacilities";
 import { Facility } from "@/services/apiFacility";
 import { Patient } from "@/services/apiPatient";
 import { useCounties } from "@/features/counties/useCounties";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import {
@@ -17,9 +17,12 @@ import {
   FaTimes,
   FaUser,
   FaUserPlus,
+  FaCheckCircle,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import { usePatients } from "./usePatients";
 import { useRegisterPatient } from "./useRegisterPatient";
+import { useEligibilityCheck } from "./useEligibilityCheck";
 
 interface PatientRegistrationProps {
   onStepOneComplete?: (
@@ -63,9 +66,16 @@ const PAYMENT_MODES = [
 
 const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   onStepOneComplete,
-  onCloseModal,
 }) => {
-  const { patients } = usePatients();
+  // Patient search with API
+  const [patientSearchQuery, setPatientSearchQuery] = useState<string>("");
+  const { patients } = usePatients(
+    patientSearchQuery ? { search: patientSearchQuery } : undefined
+  );
+
+  // Eligibility check
+  const { checkSHAEligibility, isCheckingEligibility, eligibilityResult } = 
+    useEligibilityCheck();
 
   const [selectedid, setSelectedid] = useState<string>("");
   const [selectedPaymentModeId, setSelectedPaymentModeId] =
@@ -140,16 +150,38 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   const filteredFacilities = facilities?.slice(0, 50);
 
   // Filter patients based on search
-  const filteredPatients = patients
-    ?.filter(
-      (patient) =>
-        patient.name.toLowerCase().includes(patientSearch.toLowerCase()) ||
-        patient.phone.includes(patientSearch) ||
-        patient.sha_number?.includes(patientSearch)
-    )
-    .slice(0, 50);
+  const filteredPatients = patients?.slice(0, 50);
 
   const selectedPatient = patients?.find((p) => p.id === selectedid);
+
+  // Handle patient search with API request
+  const handlePatientSearch = () => {
+    if (patientSearch.trim()) {
+      setPatientSearchQuery(patientSearch.trim());
+    } else {
+      // If search is empty, clear search query to show all patients
+      setPatientSearchQuery("");
+    }
+  };
+
+  // Handle SHA eligibility check
+  const handleEligibilityCheck = useCallback(() => {
+    if (selectedPatient?.sha_number && selectedPaymentModeId === "sha") {
+      checkSHAEligibility({
+        identification_type: "National ID",
+        identification_number: selectedPatient.sha_number,
+      });
+    } else if (selectedPaymentModeId === "sha") {
+      toast.error("Please select a patient with SHA number for eligibility check");
+    }
+  }, [selectedPatient?.sha_number, selectedPaymentModeId, checkSHAEligibility]);
+
+  // Auto-trigger eligibility check when SHA is selected and patient has SHA number
+  useEffect(() => {
+    if (selectedPaymentModeId === "sha" && selectedPatient?.sha_number) {
+      handleEligibilityCheck();
+    }
+  }, [selectedPaymentModeId, selectedPatient?.sha_number, handleEligibilityCheck]);
 
   // Check if all fields are completed
   const isComplete = selectedFacilityId && selectedid && selectedPaymentModeId;
@@ -269,6 +301,10 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     setSelectedid(patient.id);
     setIsPatientDropdownOpen(false);
     setPatientSearch("");
+    // Clear search query after a delay to show the selected patient
+    setTimeout(() => {
+      setPatientSearchQuery("");
+    }, 100);
   };
 
   const handleProceed = (e: React.FormEvent) => {
@@ -658,16 +694,29 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                     <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
                       <div className="p-3 md:p-4 border-b border-gray-100">
                         <div className="relative">
-                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 md:w-4 md:h-4" />
                           <input
                             ref={patientSearchRef}
                             type="text"
                             placeholder="Search patients..."
                             value={patientSearch}
                             onChange={(e) => setPatientSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-sm md:text-base"
+                            className="w-full pl-8 md:pl-10 pr-16 md:pr-20 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-sm md:text-base"
                             onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handlePatientSearch();
+                              }
+                            }}
                           />
+                          <button
+                            type="button"
+                            onClick={handlePatientSearch}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 px-2 md:px-3 py-1 md:py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-xs font-medium"
+                          >
+                            Search
+                          </button>
                         </div>
                       </div>
                       <div className="max-h-60 overflow-y-auto">
@@ -692,8 +741,23 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                             </div>
                           ))
                         ) : (
-                          <div className="px-4 py-8 text-center text-gray-500 text-sm md:text-base">
-                            No patients found
+                          <div className="px-4 py-8 text-center text-gray-500">
+                            <FaUser className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 text-gray-300" />
+                            <div className="text-sm md:text-base">
+                              No patients found
+                            </div>
+                            {patientSearchQuery && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPatientSearchQuery("");
+                                  setPatientSearch("");
+                                }}
+                                className="mt-2 text-green-600 hover:text-green-800 text-xs md:text-sm underline"
+                              >
+                                Clear search
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -739,6 +803,59 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                   </select>
                   <FaChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 pointer-events-none" />
                 </div>
+
+                {/* SHA Eligibility Status */}
+                {selectedPaymentModeId === "sha" && (
+                  <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-1">
+                        {isCheckingEligibility ? (
+                          <FaSpinner className="w-4 h-4 animate-spin text-blue-600" />
+                        ) : eligibilityResult?.eligible === 1 ? (
+                          <FaCheckCircle className="w-4 h-4 text-green-600" />
+                        ) : eligibilityResult?.eligible === 0 ? (
+                          <FaExclamationTriangle className="w-4 h-4 text-red-600" />
+                        ) : (
+                          <FaSearch className="w-4 h-4 text-gray-400" />
+                        )}
+                        <span className="text-sm font-medium text-gray-700">
+                          SHA Eligibility Status
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {isCheckingEligibility ? (
+                      <p className="text-xs text-blue-600">
+                        Checking eligibility...
+                      </p>
+                    ) : eligibilityResult ? (
+                      <div>
+                        <p className={`text-xs ${
+                          eligibilityResult.eligible === 1 
+                            ? "text-green-700" 
+                            : "text-red-700"
+                        }`}>
+                          {eligibilityResult.eligible === 1 
+                            ? "✅ Patient is eligible for SHA coverage" 
+                            : `❌ ${eligibilityResult.reason}`}
+                        </p>
+                        {eligibilityResult.possible_solution && (
+                          <p className="text-xs text-blue-700 mt-1">
+                            💡 {eligibilityResult.possible_solution}
+                          </p>
+                        )}
+                      </div>
+                    ) : selectedPatient?.sha_number ? (
+                      <p className="text-xs text-gray-600">
+                        Eligibility will be checked automatically...
+                      </p>
+                    ) : (
+                      <p className="text-xs text-orange-600">
+                        ⚠️ Please select a patient with SHA number for eligibility check
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
