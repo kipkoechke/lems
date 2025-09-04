@@ -3,6 +3,7 @@
 import { useSyncedBookings } from "@/features/services/bookings/useSyncedBookings";
 import { useCreateBatch } from "@/features/services/bookings/useCreateBatch";
 import { useVendorBatches } from "@/features/services/bookings/useVendorBatches";
+import { useFacilityPayments } from "@/features/services/bookings/useFacilityPayments";
 import Pagination from "@/components/Pagination";
 import {
   CheckCircle,
@@ -80,6 +81,12 @@ const SyncedBookingsReport: React.FC = () => {
     page: currentPage,
   });
 
+  const {
+    data: facilityPaymentsData,
+    isLoading: isLoadingFacilityPayments,
+    error: facilityPaymentsError,
+  } = useFacilityPayments(currentPage);
+
   // Filter bookings based on active tab
   const filteredBookings = useMemo(() => {
     if (!syncedBookings) return [];
@@ -122,6 +129,11 @@ const SyncedBookingsReport: React.FC = () => {
       id: "vendor-payment",
       label: "Vendor Payment",
       count: vendorBatches?.length || 0,
+    },
+    {
+      id: "facility-payment",
+      label: "Facility Payment",
+      count: facilityPaymentsData?.data?.length || 0,
     },
   ];
 
@@ -389,7 +401,7 @@ const SyncedBookingsReport: React.FC = () => {
                           Vendor Details
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Financial Breakdown
+                          Amount & Status
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Date Range
@@ -397,100 +409,93 @@ const SyncedBookingsReport: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {vendorBatches.map((batch) => {
-                        const amountData = JSON.parse(batch.amount);
-                        return (
-                          <tr key={batch.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-normal break-words">
-                              <div className="text-sm text-gray-900">
-                                <div className="mb-3">
-                                  <div className="font-medium text-black mb-1">
-                                    Batch No:
-                                  </div>
-                                  <div className="text-gray-500 mb-3">
-                                    {batch.batch_no}
-                                  </div>
-                                  <div className="font-medium text-black mb-1">
-                                    Date Batched:
-                                  </div>
-                                  <div className="text-gray-500">
-                                    {formatDate(batch.created_at)}
-                                  </div>
+                      {vendorBatches.map((batch) => (
+                        <tr key={batch.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-normal break-words">
+                            <div className="text-sm text-gray-900">
+                              <div className="mb-3">
+                                <div className="font-medium text-black mb-1">
+                                  Batch No:
+                                </div>
+                                <div className="text-gray-500 mb-3">
+                                  {batch.batch_no}
+                                </div>
+                                <div className="font-medium text-black mb-1">
+                                  Date Batched:
+                                </div>
+                                <div className="text-gray-500">
+                                  {formatDate(batch.created_at)}
                                 </div>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">
-                                  {batch.vendor.name}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {batch.vendor.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                <span className="font-medium text-black">
+                                  Code:
+                                </span>{" "}
+                                <span className="text-gray-500">
+                                  {batch.vendor.code}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-gray-600 text-xs font-medium">
+                                    Total Amount:
+                                  </span>
+                                  <span className="font-bold text-blue-600">
+                                    {formatCurrency(batch.amount)}
+                                  </span>
                                 </div>
-                                <div className="text-sm text-gray-500">
-                                  <span className="font-medium text-black">
-                                    Code:
-                                  </span>{" "}
-                                  <span className="text-gray-500">
-                                    {batch.vendor.code}
+                                <div className="flex justify-between items-center">
+                                  <span className="text-gray-600 text-xs">
+                                    Status:
+                                  </span>
+                                  <span className={`font-medium text-xs px-2 py-1 rounded-full ${
+                                    batch.status === 'pending' 
+                                      ? 'bg-yellow-100 text-yellow-800' 
+                                      : batch.status === 'completed'
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {batch.status}
                                   </span>
                                 </div>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">
-                                <div className="bg-gray-50 p-3 rounded-lg space-y-2">
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-gray-600 text-xs font-medium">
-                                      Total Amount:
-                                    </span>
-                                    <span className="font-bold text-blue-600">
-                                      {formatCurrency(amountData.total)}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-gray-600 text-xs">
-                                      Vendor Share:
-                                    </span>
-                                    <span className="font-medium text-green-600">
-                                      {formatCurrency(amountData.vendor_share)}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-gray-600 text-xs">
-                                      Facility Share:
-                                    </span>
-                                    <span className="font-medium text-purple-600">
-                                      {formatCurrency(
-                                        amountData.facility_share
-                                      )}
-                                    </span>
-                                  </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="space-y-2">
+                              <div className="text-xs text-gray-500">
+                                <div className="font-medium text-gray-700 mb-1">
+                                  Start Date:
+                                </div>
+                                <div className="flex items-center">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {formatDate(batch.start_date)}
                                 </div>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="space-y-2">
-                                <div className="text-xs text-gray-500">
-                                  <div className="font-medium text-gray-700 mb-1">
-                                    Start Date:
-                                  </div>
-                                  <div className="flex items-center">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    {formatDate(batch.start_date)}
-                                  </div>
+                              <div className="text-xs text-gray-500">
+                                <div className="font-medium text-gray-700 mb-1">
+                                  End Date:
                                 </div>
-                                <div className="text-xs text-gray-500">
-                                  <div className="font-medium text-gray-700 mb-1">
-                                    End Date:
-                                  </div>
-                                  <div className="flex items-center">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    {formatDate(batch.end_date)}
-                                  </div>
+                                <div className="flex items-center">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {formatDate(batch.end_date)}
                                 </div>
                               </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -505,6 +510,174 @@ const SyncedBookingsReport: React.FC = () => {
                       from={vendorPagination.from}
                       to={vendorPagination.to}
                       links={[]}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        ) : activeTab === "facility-payment" ? (
+          // Facility Payment Tab Content
+          <>
+            {isLoadingFacilityPayments ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+              </div>
+            ) : facilityPaymentsError ? (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <div className="flex">
+                  <X className="h-5 w-5 text-red-400" />
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">
+                      Error loading facility payments
+                    </h3>
+                    <div className="mt-2 text-sm text-red-700">
+                      {facilityPaymentsError.message}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : !facilityPaymentsData || facilityPaymentsData.data.length === 0 ? (
+              <div className="text-center py-12">
+                <RotateCcw className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  No facility payment batches found
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  No facility payment batches have been created yet.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="overflow-hidden md:rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-300">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Batch Information
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Facility Details
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Amount & Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Date Range
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {facilityPaymentsData.data.map((payment) => (
+                        <tr key={payment.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-normal break-words">
+                            <div className="text-sm text-gray-900">
+                              <div className="mb-3">
+                                <div className="font-medium text-black mb-1">
+                                  Batch No:
+                                </div>
+                                <div className="text-gray-500 mb-3">
+                                  {payment.batch_no}
+                                </div>
+                                <div className="font-medium text-black mb-1">
+                                  Date Created:
+                                </div>
+                                <div className="text-gray-500">
+                                  {formatDate(payment.created_at)}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {payment.facility.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                <span className="font-medium text-black">
+                                  Code:
+                                </span>{" "}
+                                <span className="text-gray-500">
+                                  {payment.facility.code}
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-400 mt-1">
+                                {payment.facility.facility_type}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {payment.facility.keph_level}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              <div className="bg-purple-50 p-3 rounded-lg space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-gray-600 text-xs font-medium">
+                                    Amount:
+                                  </span>
+                                  <span className="font-bold text-purple-600">
+                                    {formatCurrency(payment.amount)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-gray-600 text-xs">
+                                    Owner:
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {payment.facility.owner}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-gray-600 text-xs">
+                                    Status:
+                                  </span>
+                                  <span className="text-xs text-green-600 font-medium">
+                                    {payment.facility.operation_status}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="space-y-2">
+                              <div className="text-xs text-gray-500">
+                                <div className="font-medium text-gray-700 mb-1">
+                                  Start Date:
+                                </div>
+                                <div className="flex items-center">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {formatDate(payment.start_date)}
+                                </div>
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                <div className="font-medium text-gray-700 mb-1">
+                                  End Date:
+                                </div>
+                                <div className="flex items-center">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {formatDate(payment.end_date)}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Facility Payment Pagination */}
+                {facilityPaymentsData && facilityPaymentsData.total > facilityPaymentsData.per_page && (
+                  <div className="mt-6">
+                    <Pagination
+                      currentPage={facilityPaymentsData.current_page}
+                      lastPage={facilityPaymentsData.last_page}
+                      total={facilityPaymentsData.total}
+                      from={facilityPaymentsData.from}
+                      to={facilityPaymentsData.to}
+                      links={facilityPaymentsData.links}
                       onPageChange={handlePageChange}
                     />
                   </div>
