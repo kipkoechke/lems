@@ -1,5 +1,6 @@
-import { goToNextStep } from "@/context/workflowSlice";
+import { goToNextStep, goToPreviousStep } from "@/context/workflowSlice";
 import { useAppDispatch } from "@/hooks/hooks";
+import BackButton from "@/components/BackButton";
 import React, { useEffect, useState } from "react";
 import {
   FaArrowRight,
@@ -172,18 +173,21 @@ const ServiceInProgress: React.FC = () => {
               </div>
             </div>
 
-            {/* Action Button */}
+            {/* Action Buttons */}
             {canProceed && (
-              <div className="animate-fade-in">
-                <button
-                  className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-white rounded-2xl hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 font-bold text-lg"
-                  onClick={() => dispatch(goToNextStep())}
-                >
-                  <FaCheckCircle className="w-5 h-5" />
-                  Proceed to Service Fulfillment
-                  <FaArrowRight className="w-5 h-5" />
-                </button>
-                <p className="text-gray-500 text-sm mt-4">
+              <div className="animate-fade-in flex flex-col items-center gap-4">
+                <div className="flex justify-between items-center w-full max-w-lg">
+                  <BackButton onClick={() => dispatch(goToPreviousStep())} />
+                  <button
+                    className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-white rounded-2xl hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 font-bold text-lg"
+                    onClick={() => dispatch(goToNextStep())}
+                  >
+                    <FaCheckCircle className="w-5 h-5" />
+                    Proceed to Service Fulfillment
+                    <FaArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="text-gray-500 text-sm text-center">
                   Complete the verification process to finalize your service
                 </p>
               </div>

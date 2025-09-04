@@ -40,6 +40,11 @@ export interface WorkflowState {
   validationReport?: ValidationReport;
   paymentApproved?: boolean;
   disbursementComplete?: boolean;
+  // Service recommendation state
+  selectedContractId?: string;
+  selectedServiceIds?: string[];
+  serviceDates?: { [serviceId: string]: string };
+  isOverrideMode?: boolean;
 }
 
 const initialState: WorkflowState = {
@@ -116,6 +121,21 @@ export const workflowSlice = createSlice({
     setOtpCode: (state, action: PayloadAction<string>) => {
       state.otp_code = action.payload;
     },
+    setSelectedContract: (state, action: PayloadAction<string>) => {
+      state.selectedContractId = action.payload;
+    },
+    setSelectedServices: (state, action: PayloadAction<string[]>) => {
+      state.selectedServiceIds = action.payload;
+    },
+    setServiceDate: (state, action: PayloadAction<{ serviceId: string; date: string }>) => {
+      if (!state.serviceDates) {
+        state.serviceDates = {};
+      }
+      state.serviceDates[action.payload.serviceId] = action.payload.date;
+    },
+    setOverrideMode: (state, action: PayloadAction<boolean>) => {
+      state.isOverrideMode = action.payload;
+    },
     resetWorkflow: () => initialState,
     goToNextStep: (state) => {
       const currentIndex = stepOrder.indexOf(state.currentStep);
@@ -150,6 +170,10 @@ export const {
   completeDisbursement,
   setBooking,
   setOtpCode,
+  setSelectedContract,
+  setSelectedServices,
+  setServiceDate,
+  setOverrideMode,
   resetWorkflow,
   goToNextStep,
   goToPreviousStep,

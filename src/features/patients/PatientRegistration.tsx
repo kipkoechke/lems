@@ -1,6 +1,7 @@
 "use client";
 
 import Modal from "@/components/Modal";
+import { useAppSelector } from "@/hooks/hooks";
 import { useFacilities } from "@/features/facilities/useFacilities";
 import { Facility } from "@/services/apiFacility";
 import { Patient } from "@/services/apiPatient";
@@ -67,6 +68,9 @@ const PAYMENT_MODES = [
 const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   onStepOneComplete,
 }) => {
+  // Get existing workflow data to preserve state when navigating back
+  const workflow = useAppSelector((store) => store.workflow);
+  
   // Patient search with API
   const [patientSearchQuery, setPatientSearchQuery] = useState<string>("");
   const { patients } = usePatients(
@@ -77,12 +81,12 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   const { checkSHAEligibility, isCheckingEligibility, eligibilityResult } = 
     useEligibilityCheck();
 
-  const [selectedid, setSelectedid] = useState<string>("");
+  const [selectedid, setSelectedid] = useState<string>(workflow.patient?.id || "");
   const [selectedPaymentModeId, setSelectedPaymentModeId] =
-    useState<string>("");
-  const [selectedFacilityId, setSelectedFacilityId] = useState<string>("");
+    useState<string>(workflow.selectedPaymentMode?.paymentModeId || "");
+  const [selectedFacilityId, setSelectedFacilityId] = useState<string>(workflow.selectedFacility?.id || "");
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
-    null
+    workflow.selectedFacility || null
   );
 
   // Ref to track newly registered patient ID
@@ -861,7 +865,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center pt-1 md:pt-2">
+          <div className="flex justify-end pt-1 md:pt-2">
             <button
               type="submit"
               disabled={!isComplete}

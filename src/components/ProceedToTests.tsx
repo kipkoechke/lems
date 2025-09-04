@@ -1,5 +1,6 @@
-import { goToNextStep } from "@/context/workflowSlice";
+import { goToNextStep, goToPreviousStep } from "@/context/workflowSlice";
 import { useAppDispatch } from "@/hooks/hooks";
+import BackButton from "@/components/BackButton";
 import React from "react";
 import { FaCheckCircle, FaVial } from "react-icons/fa";
 
@@ -14,12 +15,17 @@ const ProceedToTests: React.FC = () => {
         Patient consent has been verified. Click below to proceed to the
         diagnostic tests.
       </p>
-      <button
-        className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
-        onClick={() => dispatch(goToNextStep())}
-      >
-        <FaVial className="mr-2" /> Proceed for Tests
-      </button>
+      <div className="flex justify-between items-center w-full max-w-md">
+        <BackButton 
+          onClick={() => dispatch(goToPreviousStep())}
+        />
+        <button
+          className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+          onClick={() => dispatch(goToNextStep())}
+        >
+          <FaVial className="mr-2" /> Proceed for Tests
+        </button>
+      </div>
     </div>
   );
 };

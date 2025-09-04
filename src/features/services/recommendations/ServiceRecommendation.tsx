@@ -2,15 +2,21 @@
 
 import {
   goToNextStep,
+  goToPreviousStep,
   selectService,
   setBooking,
   setOtpCode,
+  setSelectedContract,
+  setSelectedServices,
+  setServiceDate,
+  setOverrideMode,
 } from "@/context/workflowSlice";
+import BackButton from "@/components/BackButton";
 import { usePatients } from "@/features/patients/usePatients";
 import { useCreateBooking } from "@/features/services/bookings/useCreateBooking";
 import { useServicesByFacilityCode } from "@/features/services/useServicesByFacilityCode";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import {
   FaArrowRight,
@@ -34,6 +40,12 @@ const ServiceRecommendation: React.FC = () => {
     workflow.selectedPaymentMode?.paymentModeId || "";
   const facilityCode = workflow.selectedFacility?.code || "";
 
+  // Get service selection state from Redux
+  const selectedContractId = workflow.selectedContractId || "";
+  const selectedServiceIds = workflow.selectedServiceIds || [];
+  const serviceDates = workflow.serviceDates || {};
+  const isOverrideMode = workflow.isOverrideMode || false;
+
   console.log("ServiceRecommendation workflow state:", {
     patient: workflow.patient,
     paymentMode: workflow.selectedPaymentMode,
@@ -45,16 +57,15 @@ const ServiceRecommendation: React.FC = () => {
   // Get services based on facility code - now returns FacilityContract[]
   const { contracts } = useServicesByFacilityCode(facilityCode);
 
-  // Two-level selection state
-  const [selectedContractId, setSelectedContractId] = useState<string>(""); // For diagnostic service (category)
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]); // For multiple individual services
-  const [serviceDates, setServiceDates] = useState<{
-    [serviceId: string]: string;
-  }>({}); // Individual dates for each service
-  const [isOverrideMode, setIsOverrideMode] = useState<boolean>(false);
+  // Initialize contract selection if not set and contracts are available
+  useEffect(() => {
+    if (!selectedContractId && contracts && contracts.length > 0) {
+      dispatch(setSelectedContract(contracts[0].id));
+    }
+  }, [selectedContractId, contracts, dispatch]);
 
-  // Booking state
-  const [bookingCreated, setBookingCreated] = useState<boolean>(false);
+  // Booking state - check if booking already exists to preserve UI state
+  const [bookingCreated, setBookingCreated] = useState<boolean>(!!workflow.booking);
   const booking = useAppSelector((store) => store.workflow.booking);
 
   // Get the selected contract (diagnostic service category)
@@ -66,36 +77,30 @@ const ServiceRecommendation: React.FC = () => {
 
   // Handle contract selection (diagnostic service category)
   const handleContractChange = (contractId: string) => {
-    setSelectedContractId(contractId);
-    setSelectedServiceIds([]); // Reset service selection when contract changes
-    setServiceDates({}); // Reset service dates
+    dispatch(setSelectedContract(contractId));
+    dispatch(setSelectedServices([])); // Reset service selection when contract changes
+    // Reset service dates - we'll need to clear all dates
+    selectedServiceIds.forEach(serviceId => {
+      dispatch(setServiceDate({ serviceId, date: '' }));
+    });
   };
 
   // Handle multiple service selection
   const handleServiceToggle = (serviceId: string) => {
-    setSelectedServiceIds((prev) => {
-      const isSelected = prev.includes(serviceId);
-      if (isSelected) {
-        // Remove service and its date
-        setServiceDates((prevDates) => {
-          const newDates = { ...prevDates };
-          delete newDates[serviceId];
-          return newDates;
-        });
-        return prev.filter((id) => id !== serviceId);
-      } else {
-        // Add service
-        return [...prev, serviceId];
-      }
-    });
+    const isSelected = selectedServiceIds.includes(serviceId);
+    if (isSelected) {
+      // Remove service and its date
+      dispatch(setSelectedServices(selectedServiceIds.filter(id => id !== serviceId)));
+      dispatch(setServiceDate({ serviceId, date: '' }));
+    } else {
+      // Add service
+      dispatch(setSelectedServices([...selectedServiceIds, serviceId]));
+    }
   };
 
   // Handle date change for specific service
   const handleServiceDateChange = (serviceId: string, date: string) => {
-    setServiceDates((prev) => ({
-      ...prev,
-      [serviceId]: date,
-    }));
+    dispatch(setServiceDate({ serviceId, date }));
   };
 
   // Validate all fields for booking
@@ -541,7 +546,7 @@ const ServiceRecommendation: React.FC = () => {
                             );
                             return;
                           }
-                          setIsOverrideMode(!isOverrideMode);
+                          dispatch(setOverrideMode(!isOverrideMode));
                         }}
                         disabled={bookingCreated}
                         className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 ${
@@ -562,7 +567,10 @@ const ServiceRecommendation: React.FC = () => {
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center mt-6">
+          <div className="flex justify-between items-center mt-6">
+            <BackButton 
+              onClick={() => dispatch(goToPreviousStep())}
+            />
             <button
               type="submit"
               disabled={
