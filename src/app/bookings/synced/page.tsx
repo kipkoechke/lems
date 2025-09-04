@@ -37,6 +37,19 @@ const formatDate = (dateString: string): string => {
   });
 };
 
+// Calculate total amounts from services
+const calculateTotalAmounts = (services: any[]) => {
+  return services.reduce(
+    (totals, service) => {
+      totals.vendorShare += parseFloat(service.vendor_share || "0");
+      totals.facilityShare += parseFloat(service.facility_share || "0");
+      totals.total = totals.vendorShare + totals.facilityShare;
+      return totals;
+    },
+    { vendorShare: 0, facilityShare: 0, total: 0 }
+  );
+};
+
 const SyncedBookingsReport: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -63,7 +76,6 @@ const SyncedBookingsReport: React.FC = () => {
     pagination: vendorPagination,
     isLoading: isLoadingVendorBatches,
     error: vendorBatchesError,
-    refetchVendorBatches,
   } = useVendorBatches({
     page: currentPage,
   });
@@ -173,23 +185,6 @@ const SyncedBookingsReport: React.FC = () => {
         {status}
       </span>
     );
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const formatCurrency = (amount: string | number) => {
-    return new Intl.NumberFormat("en-KE", {
-      style: "currency",
-      currency: "KES",
-    }).format(typeof amount === "string" ? parseFloat(amount) : amount);
   };
 
   // Get the appropriate icon for select all checkbox
@@ -609,6 +604,28 @@ const SyncedBookingsReport: React.FC = () => {
                                   "Not Available"}
                               </span>
                             </div>
+                            {syncedBooking.booking.patient
+                              .identification_no && (
+                              <div className="text-xs text-gray-400">
+                                <span className="font-medium">ID No:</span>{" "}
+                                {
+                                  syncedBooking.booking.patient
+                                    .identification_no
+                                }
+                              </div>
+                            )}
+                            {syncedBooking.booking.patient.cr_no && (
+                              <div className="text-xs text-gray-400">
+                                <span className="font-medium">CR No:</span>{" "}
+                                {syncedBooking.booking.patient.cr_no}
+                              </div>
+                            )}
+                            {syncedBooking.booking.patient.hh_no && (
+                              <div className="text-xs text-gray-400">
+                                <span className="font-medium">HH No:</span>{" "}
+                                {syncedBooking.booking.patient.hh_no}
+                              </div>
+                            )}
                             <div className="text-xs text-gray-400">
                               <span className="font-medium">DOB:</span>{" "}
                               {new Date(
@@ -627,58 +644,80 @@ const SyncedBookingsReport: React.FC = () => {
                                 {syncedBooking.booking.booking_number}
                               </div>
                             </div>
-                            <div>
+                            <div className="mb-3">
                               <div className="font-medium text-black mb-1">
                                 Service Date:
                               </div>
                               <div className="text-gray-500">
-                                {formatDate(syncedBooking.booking.booking_date)}
+                                {syncedBooking.booking.booking_date
+                                  ? formatDate(
+                                      syncedBooking.booking.booking_date
+                                    )
+                                  : syncedBooking.booking.services?.[0]
+                                      ?.booking_date
+                                  ? formatDate(
+                                      syncedBooking.booking.services[0]
+                                        .booking_date
+                                    )
+                                  : "Not Available"}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="font-medium text-black mb-1">
+                                Services Count:
+                              </div>
+                              <div className="text-gray-500">
+                                {syncedBooking.booking.services?.length || 0}{" "}
+                                service(s)
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            <div className="bg-gray-50 p-3 rounded-lg space-y-2">
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-600 text-xs font-medium">
-                                  Total Amount:
-                                </span>
-                                <span className="font-bold text-blue-600">
-                                  {formatCurrency(syncedBooking.booking.amount)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-600 text-xs">
-                                  Vendor Share:
-                                </span>
-                                <span className="font-medium text-green-600">
-                                  {formatCurrency(
-                                    syncedBooking.booking.vendor_share
-                                  )}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-600 text-xs">
-                                  Facility Share:
-                                </span>
-                                <span className="font-medium text-purple-600">
-                                  {formatCurrency(
-                                    syncedBooking.booking.facility_share
-                                  )}
-                                </span>
-                              </div>
-                              <div className="pt-2 border-t border-gray-200">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-gray-600 text-xs">
-                                    Payment Mode:
-                                  </span>
-                                  <span className="capitalize bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
-                                    {syncedBooking.booking.payment_mode}
-                                  </span>
+                            {(() => {
+                              const totals = calculateTotalAmounts(
+                                syncedBooking.booking.services || []
+                              );
+                              return (
+                                <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-gray-600 text-xs font-medium">
+                                      Total Amount:
+                                    </span>
+                                    <span className="font-bold text-blue-600">
+                                      {formatCurrency(totals.total)}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-gray-600 text-xs">
+                                      Vendor Share:
+                                    </span>
+                                    <span className="font-medium text-green-600">
+                                      {formatCurrency(totals.vendorShare)}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-gray-600 text-xs">
+                                      Facility Share:
+                                    </span>
+                                    <span className="font-medium text-purple-600">
+                                      {formatCurrency(totals.facilityShare)}
+                                    </span>
+                                  </div>
+                                  <div className="pt-2 border-t border-gray-200">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-gray-600 text-xs">
+                                        Payment Mode:
+                                      </span>
+                                      <span className="capitalize bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+                                        {syncedBooking.booking.payment_mode}
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
+                              );
+                            })()}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -692,7 +731,9 @@ const SyncedBookingsReport: React.FC = () => {
                               </div>
                               <div className="flex items-center justify-center">
                                 <Clock className="h-3 w-3 mr-1" />
-                                {formatDate(syncedBooking.synched_at)}
+                                {syncedBooking.synched_at
+                                  ? formatDate(syncedBooking.synched_at)
+                                  : "Not synced yet"}
                               </div>
                             </div>
                           </div>

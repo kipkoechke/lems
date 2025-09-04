@@ -3,28 +3,23 @@ import axiosInstance from "@/lib/axios";
 export interface SyncedBooking {
   id: string;
   booking_id: string;
-  synched_at: string;
+  synched_at: string | null;
   synch_status: "complete" | "pending" | "failed";
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
   batch_id: string | null;
+  facility_batch_id: string | null;
   booking: {
     id: string;
     booking_number: string;
     patient_id: string;
-    vendor_facility_lot_service_pivot_id: string;
-    amount: string;
-    facility_share: string;
-    vendor_share: string;
     booking_status: string;
-    service_status: string;
     approval_status: string;
     payment_mode: string;
     booked_by: string | null;
-    service_completion_by: string | null;
     approved_by: string | null;
-    booking_date: string;
+    booking_date: string | null;
     created_at: string;
     updated_at: string;
     deleted_at: string | null;
@@ -34,21 +29,37 @@ export interface SyncedBooking {
       name: string;
       phone: string;
       date_of_birth: string;
+      identification_no: string | null;
       sha_number: string | null;
+      cr_no: string | null;
+      hh_no: string | null;
       created_at: string;
       updated_at: string;
       deleted_at: string | null;
     };
-    service: {
+    services: Array<{
       id: string;
-      ven_flty_lot_pivot_id: string;
-      service_id: string;
-      is_active: string;
+      booking_id: string;
+      vendor_facility_lot_service_pivot_id: string;
+      service_completion_by: string | null;
+      booking_date: string;
+      vendor_share: string;
+      facility_share: string;
+      service_status: string;
       created_at: string;
       updated_at: string;
       deleted_at: string | null;
-      equipment_id: string | null;
-    };
+      service: {
+        id: string;
+        ven_flty_lot_pivot_id: string;
+        service_id: string;
+        is_active: string;
+        created_at: string;
+        updated_at: string;
+        deleted_at: string | null;
+        equipment_id: string | null;
+      };
+    }>;
   };
 }
 
