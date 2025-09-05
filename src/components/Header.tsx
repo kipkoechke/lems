@@ -8,7 +8,7 @@ interface HeaderProps {
 
 const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
   return (
-    <div className="bg-white font-bold tracking-widest border-b h-25 border-gray-200 flex items-center px-4 md:px-8 py-2 col-span-full">
+    <div className="bg-white font-bold tracking-widest border-b h-18 border-gray-200 flex items-center px-4 md:px-8 py-2 col-span-full">
       {/* Mobile menu button */}
       <button
         onClick={onMenuToggle}
@@ -22,9 +22,9 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
         )}
       </button>
 
-      <div className="flex items-center gap-3 md:gap-6">
+      <div className="flex items-center gap-2 md:gap-4">
         {/* Ministry of Health Logo */}
-        <div className="h-16 md:h-24 w-auto">
+        <div className="h-10 md:h-14 w-auto">
           <Image
             src="/assets/moh-logo.png"
             alt="Ministry of Health Logo"
@@ -37,10 +37,10 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
         </div>
 
         {/* Vertical Separator Line */}
-        <div className="h-6 md:h-10 w-px bg-gray-300"></div>
+        <div className="h-4 md:h-6 w-px bg-gray-300"></div>
 
         {/* COG Logo */}
-        <div className="h-16 md:h-24 w-auto">
+        <div className="h-10 md:h-14 w-auto">
           <Image
             src="/assets/cog-logo.png"
             alt="COG Logo"
