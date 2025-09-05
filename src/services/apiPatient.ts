@@ -63,7 +63,7 @@ export interface PatientQueryParams extends PaginationParams, SearchParams {}
 export const registerPatient = async (
   data: PatientRegistrationForm
 ): Promise<Patient> => {
-  const response = await axios.post("/patient/upsert", data);
+  const response = await axios.post("/patients", data);
   return response.data;
 };
 

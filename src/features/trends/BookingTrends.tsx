@@ -76,6 +76,7 @@ const BookingTrends: React.FC = () => {
   const [lotSearch, setLotSearch] = useState("");
   const [serviceSearch, setServiceSearch] = useState("");
   const [facilitySearch, setFacilitySearch] = useState("");
+  const [facilitySearchQuery, setFacilitySearchQuery] = useState(""); // For API requests
 
   // Refs for dropdowns
   const countyDropdownRef = useRef<HTMLDivElement>(null);
@@ -93,7 +94,9 @@ const BookingTrends: React.FC = () => {
   // Data for filter dropdowns
   const { vendors } = useVendors();
   const { lots } = useLots();
-  const { facilities } = useFacilities();
+  const { facilities } = useFacilities({
+    search: facilitySearchQuery || undefined,
+  });
   const { counties } = useCounties();
   const { subCounties } = useSubCounties(tempFilters.county_code);
 
@@ -123,11 +126,23 @@ const BookingTrends: React.FC = () => {
     service.name.toLowerCase().includes(serviceSearch.toLowerCase())
   );
 
-  const filteredFacilities = facilities?.filter((facility) =>
-    `${facility.name} (${facility.code})`
-      .toLowerCase()
-      .includes(facilitySearch.toLowerCase())
-  );
+  // Use facilities from API search instead of client-side filtering
+  const filteredFacilities = facilities?.slice(0, 50);
+
+  // Handle facility search with API request
+  const handleFacilitySearch = () => {
+    if (facilitySearch.trim()) {
+      setFacilitySearchQuery(facilitySearch.trim());
+    } else {
+      // If search is empty, clear search query to show initial facilities
+      setFacilitySearchQuery("");
+    }
+  };
+
+  const clearFacilitySearch = () => {
+    setFacilitySearch("");
+    setFacilitySearchQuery("");
+  };
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -220,6 +235,7 @@ const BookingTrends: React.FC = () => {
     setLotSearch("");
     setServiceSearch("");
     setFacilitySearch("");
+    setFacilitySearchQuery("");
 
     // Close all dropdowns
     closeAllDropdowns();
@@ -897,9 +913,22 @@ const BookingTrends: React.FC = () => {
                                 onChange={(e) =>
                                   setFacilitySearch(e.target.value)
                                 }
-                                className="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+                                className="w-full pl-9 pr-20 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
                                 onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    handleFacilitySearch();
+                                  }
+                                }}
                               />
+                              <button
+                                type="button"
+                                onClick={handleFacilitySearch}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs font-medium"
+                              >
+                                Search
+                              </button>
                             </div>
                           </div>
                           <div className="max-h-60 overflow-y-auto">
@@ -908,7 +937,7 @@ const BookingTrends: React.FC = () => {
                               onClick={() => {
                                 handleFilterChange("facility_code", "");
                                 setIsFacilityDropdownOpen(false);
-                                setFacilitySearch("");
+                                clearFacilitySearch();
                               }}
                             >
                               <div className="font-semibold text-gray-900 text-sm">
@@ -927,7 +956,7 @@ const BookingTrends: React.FC = () => {
                                       facility.code
                                     );
                                     setIsFacilityDropdownOpen(false);
-                                    setFacilitySearch("");
+                                    clearFacilitySearch();
                                   }}
                                 >
                                   <div className="font-semibold text-gray-900 text-sm">
@@ -941,6 +970,17 @@ const BookingTrends: React.FC = () => {
                             ) : (
                               <div className="px-3 py-4 text-center text-gray-500 text-sm">
                                 No facilities found
+                                {facilitySearchQuery && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      clearFacilitySearch();
+                                    }}
+                                    className="mt-2 text-blue-600 hover:text-blue-800 text-xs underline block mx-auto"
+                                  >
+                                    Clear search
+                                  </button>
+                                )}
                               </div>
                             )}
                           </div>

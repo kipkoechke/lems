@@ -628,11 +628,13 @@ const BookingReport: React.FC = () => {
                                       {formatCurrency(
                                         booking.services.reduce(
                                           (total, service) => {
-                                            const shaRate = parseFloat(
-                                              service.service?.service
-                                                ?.sha_rate || "0"
+                                            const vendorShare = parseFloat(
+                                              service.vendor_share || "0"
                                             );
-                                            return total + shaRate;
+                                            const facilityShare = parseFloat(
+                                              service.facility_share || "0"
+                                            );
+                                            return total + vendorShare + facilityShare;
                                           },
                                           0
                                         )
