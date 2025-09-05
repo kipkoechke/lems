@@ -51,7 +51,9 @@ const ServiceFulfillment: React.FC = () => {
   // New state for handling multiple services
   const [currentServiceIndex, setCurrentServiceIndex] = useState(0);
   const [completedServices, setCompletedServices] = useState<string[]>([]);
-  const [servicesStatus, setServicesStatus] = useState<{[key: string]: 'pending' | 'completed' | 'failed'}>({});
+  const [servicesStatus, setServicesStatus] = useState<{
+    [key: string]: "pending" | "completed" | "failed";
+  }>({});
 
   // Get services array from booking
   const services = booking?.services || [];
@@ -86,7 +88,11 @@ const ServiceFulfillment: React.FC = () => {
 
         if (data?.otp_code) {
           setGeneratedOtp(data.otp_code);
-          toast.success(`Service ${currentServiceIndex + 1}/${totalServices} - OTP: ${data.otp_code}`);
+          toast.success(
+            `Service ${currentServiceIndex + 1}/${totalServices} - OTP: ${
+              data.otp_code
+            }`
+          );
         }
         setTimeout(() => {
           setShowOTP(true);
@@ -146,20 +152,21 @@ const ServiceFulfillment: React.FC = () => {
           // Mark current service as completed
           const updatedCompletedServices = [...completedServices, serviceId];
           setCompletedServices(updatedCompletedServices);
-          
+
           // Update service status
-          setServicesStatus(prev => ({
+          setServicesStatus((prev) => ({
             ...prev,
-            [serviceId]: 'completed'
+            [serviceId]: "completed",
           }));
 
           // Update booking in redux (mark current service as completed)
-          const updatedServices = booking?.services?.map(service => 
-            service.id === serviceId 
-              ? { ...service, service_status: "completed" as const }
-              : service
-          ) || [];
-          
+          const updatedServices =
+            booking?.services?.map((service) =>
+              service.id === serviceId
+                ? { ...service, service_status: "completed" as const }
+                : service
+            ) || [];
+
           if (booking) {
             dispatch(setBooking({ ...booking, services: updatedServices }));
           }
@@ -178,8 +185,12 @@ const ServiceFulfillment: React.FC = () => {
             // Move to next service
             const nextIndex = currentServiceIndex + 1;
             setCurrentServiceIndex(nextIndex);
-            toast.success(`Service ${currentServiceIndex + 1}/${totalServices} completed! Moving to next service...`);
-            
+            toast.success(
+              `Service ${
+                currentServiceIndex + 1
+              }/${totalServices} completed! Moving to next service...`
+            );
+
             // Auto-request OTP for next service after a short delay
             setTimeout(() => {
               handleSendOTP();
@@ -189,9 +200,9 @@ const ServiceFulfillment: React.FC = () => {
         onError: (error) => {
           console.error("=== OTP VALIDATION ERROR ===");
           console.error("Error:", error);
-          setServicesStatus(prev => ({
+          setServicesStatus((prev) => ({
             ...prev,
-            [serviceId]: 'failed'
+            [serviceId]: "failed",
           }));
           setFulfillmentStatus("failed");
         },
@@ -208,15 +219,15 @@ const ServiceFulfillment: React.FC = () => {
     setShowOTP(false);
     setOtpSent(false);
     setFulfillmentStatus("pending");
-    
+
     // Reset status for current service
     if (currentService) {
-      setServicesStatus(prev => ({
+      setServicesStatus((prev) => ({
         ...prev,
-        [currentService.id]: 'pending'
+        [currentService.id]: "pending",
       }));
     }
-    
+
     handleSendOTP();
   };
 
@@ -231,7 +242,12 @@ const ServiceFulfillment: React.FC = () => {
     }
   }, [fulfillmentStatus, dispatch, router]);
 
-  if (!patient || !selectedService || !consentObtained || !booking?.services?.length) {
+  if (
+    !patient ||
+    !selectedService ||
+    !consentObtained ||
+    !booking?.services?.length
+  ) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
         <div className="max-w-4xl mx-auto pt-8">
@@ -415,36 +431,38 @@ const ServiceFulfillment: React.FC = () => {
           {/* Services List */}
           {totalServices > 1 && (
             <div className="border-t pt-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Services in this booking:</h4>
+              <h4 className="text-sm font-medium text-gray-700 mb-3">
+                Services in this booking:
+              </h4>
               <div className="space-y-2">
                 {services.map((service, index) => {
                   const isCompleted = completedServices.includes(service.id);
                   const isCurrent = index === currentServiceIndex;
-                  const isFailed = servicesStatus[service.id] === 'failed';
-                  
+                  const isFailed = servicesStatus[service.id] === "failed";
+
                   return (
                     <div
                       key={service.id}
                       className={`flex items-center justify-between p-3 rounded-lg border ${
                         isCompleted
-                          ? 'bg-green-50 border-green-200'
+                          ? "bg-green-50 border-green-200"
                           : isFailed
-                          ? 'bg-red-50 border-red-200'
+                          ? "bg-red-50 border-red-200"
                           : isCurrent
-                          ? 'bg-blue-50 border-blue-200'
-                          : 'bg-gray-50 border-gray-200'
+                          ? "bg-blue-50 border-blue-200"
+                          : "bg-gray-50 border-gray-200"
                       }`}
                     >
                       <div className="flex items-center space-x-3">
                         <div
                           className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
                             isCompleted
-                              ? 'bg-green-500 text-white'
+                              ? "bg-green-500 text-white"
                               : isFailed
-                              ? 'bg-red-500 text-white'
+                              ? "bg-red-500 text-white"
                               : isCurrent
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-gray-300 text-gray-600'
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-300 text-gray-600"
                           }`}
                         >
                           {isCompleted ? (
@@ -458,29 +476,36 @@ const ServiceFulfillment: React.FC = () => {
                           )}
                         </div>
                         <div>
-                          <p className="text-sm font-medium">Service {index + 1}</p>
+                          <p className="text-sm font-medium">
+                            Service {index + 1}
+                          </p>
                           <p className="text-xs text-gray-500">
-                            Booking Date: {new Date(service.booking_date).toLocaleDateString()}
+                            Booking Date:{" "}
+                            {new Date(
+                              service.booking_date
+                            ).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className={`text-xs font-medium ${
-                          isCompleted
-                            ? 'text-green-600'
-                            : isFailed
-                            ? 'text-red-600'
-                            : isCurrent
-                            ? 'text-blue-600'
-                            : 'text-gray-500'
-                        }`}>
+                        <p
+                          className={`text-xs font-medium ${
+                            isCompleted
+                              ? "text-green-600"
+                              : isFailed
+                              ? "text-red-600"
+                              : isCurrent
+                              ? "text-blue-600"
+                              : "text-gray-500"
+                          }`}
+                        >
                           {isCompleted
-                            ? 'Completed'
+                            ? "Completed"
                             : isFailed
-                            ? 'Failed'
+                            ? "Failed"
                             : isCurrent
-                            ? 'In Progress'
-                            : 'Pending'}
+                            ? "In Progress"
+                            : "Pending"}
                         </p>
                       </div>
                     </div>
@@ -502,8 +527,9 @@ const ServiceFulfillment: React.FC = () => {
                 All Services Completed Successfully!
               </h3>
               <p className="text-gray-600 mb-6">
-                All {totalServices} diagnostic service{totalServices > 1 ? 's' : ''} in this booking 
-                ha{totalServices > 1 ? 've' : 's'} been successfully fulfilled.
+                All {totalServices} diagnostic service
+                {totalServices > 1 ? "s" : ""} in this booking ha
+                {totalServices > 1 ? "ve" : "s"} been successfully fulfilled.
               </p>
 
               <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
@@ -595,7 +621,9 @@ const ServiceFulfillment: React.FC = () => {
               </h3>
               <p className="text-gray-600">
                 Enter the OTP to confirm completion of service{" "}
-                <strong>{currentServiceIndex + 1} of {totalServices}</strong>
+                <strong>
+                  {currentServiceIndex + 1} of {totalServices}
+                </strong>
                 {totalServices > 1 && (
                   <span className="block text-sm mt-1">
                     ({completedServices.length} already completed)
@@ -627,16 +655,23 @@ const ServiceFulfillment: React.FC = () => {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 {isRequesting || otpSent
-                  ? `Sending Verification Code - Service ${currentServiceIndex + 1}/${totalServices}`
-                  : `Preparing Service ${currentServiceIndex + 1}/${totalServices}`}
+                  ? `Sending Verification Code - Service ${
+                      currentServiceIndex + 1
+                    }/${totalServices}`
+                  : `Preparing Service ${
+                      currentServiceIndex + 1
+                    }/${totalServices}`}
               </h3>
               <p className="text-gray-600 mb-6">
                 {isRequesting || otpSent
-                  ? `We're sending an OTP for service ${currentServiceIndex + 1} verification...`
+                  ? `We're sending an OTP for service ${
+                      currentServiceIndex + 1
+                    } verification...`
                   : `Please wait while we prepare the service fulfillment process...`}
                 {completedServices.length > 0 && (
                   <span className="block text-sm mt-2 text-green-600">
-                    ✓ {completedServices.length} service{completedServices.length > 1 ? 's' : ''} already completed
+                    ✓ {completedServices.length} service
+                    {completedServices.length > 1 ? "s" : ""} already completed
                   </span>
                 )}
               </p>

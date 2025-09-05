@@ -16,9 +16,7 @@ const ProceedToTests: React.FC = () => {
         diagnostic tests.
       </p>
       <div className="flex justify-between items-center w-full max-w-md">
-        <BackButton 
-          onClick={() => dispatch(goToPreviousStep())}
-        />
+        <BackButton onClick={() => dispatch(goToPreviousStep())} />
         <button
           className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
           onClick={() => dispatch(goToNextStep())}

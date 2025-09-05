@@ -634,7 +634,11 @@ const BookingReport: React.FC = () => {
                                             const facilityShare = parseFloat(
                                               service.facility_share || "0"
                                             );
-                                            return total + vendorShare + facilityShare;
+                                            return (
+                                              total +
+                                              vendorShare +
+                                              facilityShare
+                                            );
                                           },
                                           0
                                         )

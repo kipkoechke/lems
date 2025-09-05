@@ -69,6 +69,12 @@ const BookingTrends: React.FC = () => {
     useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
+  // State to store selected facility details for display
+  const [selectedFacilityDetails, setSelectedFacilityDetails] = useState<{
+    code: string;
+    name: string;
+  } | null>(null);
+
   // Search states
   const [countySearch, setCountySearch] = useState("");
   const [subCountySearch, setSubCountySearch] = useState("");
@@ -236,6 +242,7 @@ const BookingTrends: React.FC = () => {
     setServiceSearch("");
     setFacilitySearch("");
     setFacilitySearchQuery("");
+    setSelectedFacilityDetails(null);
 
     // Close all dropdowns
     closeAllDropdowns();
@@ -432,33 +439,15 @@ const BookingTrends: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-visible">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <FaChartLine className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-white mb-1">
-                    Booking Trends Analytics
-                  </h1>
-                  <p className="text-blue-100">
-                    Monitor booking patterns and revenue trends over time
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        {/* Header - Removed title and description */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-visible">
           {/* Compact Filters Bar */}
-          <div className="p-4 bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200">
-            <div className="flex flex-col gap-4">
+          <div className="p-2 bg-white rounded-2xl border-b border-gray-200">
+            <div className="flex flex-col gap-2">
               {/* Primary Filters Row */}
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 {/* Essential Filters */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
                   {/* County Filter */}
@@ -874,31 +863,48 @@ const BookingTrends: React.FC = () => {
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-left flex items-center justify-between"
                       >
                         <span
-                          className={
+                          className={`truncate mr-2 ${
                             tempFilters.facility_code
                               ? "text-gray-900"
                               : "text-gray-500"
-                          }
+                          }`}
                         >
-                          {facilities?.find(
-                            (f) => f.code === tempFilters.facility_code
-                          )
+                          {tempFilters.facility_code && selectedFacilityDetails
+                            ? `${selectedFacilityDetails.name} (${selectedFacilityDetails.code})`
+                            : tempFilters.facility_code &&
+                              facilities?.find(
+                                (f) => f.code === tempFilters.facility_code
+                              )
                             ? `${
                                 facilities.find(
                                   (f) => f.code === tempFilters.facility_code
                                 )?.name
-                              } (${
-                                facilities.find(
-                                  (f) => f.code === tempFilters.facility_code
-                                )?.code
-                              })`
+                              } (${tempFilters.facility_code})`
                             : "All Facilities"}
                         </span>
-                        <FaChevronDown
-                          className={`text-gray-400 transition-transform w-3 h-3 ${
-                            isFacilityDropdownOpen ? "rotate-180" : ""
-                          }`}
-                        />
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {tempFilters.facility_code && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleFilterChange("facility_code", "");
+                                setSelectedFacilityDetails(null);
+                                clearFacilitySearch();
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600"
+                              title="Clear facility filter"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
+                          <FaChevronDown
+                            className={`text-gray-400 transition-transform w-3 h-3 ${
+                              isFacilityDropdownOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </div>
                       </button>
 
                       {isFacilityDropdownOpen && (
@@ -936,6 +942,7 @@ const BookingTrends: React.FC = () => {
                               className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
                               onClick={() => {
                                 handleFilterChange("facility_code", "");
+                                setSelectedFacilityDetails(null);
                                 setIsFacilityDropdownOpen(false);
                                 clearFacilitySearch();
                               }}
@@ -955,6 +962,10 @@ const BookingTrends: React.FC = () => {
                                       "facility_code",
                                       facility.code
                                     );
+                                    setSelectedFacilityDetails({
+                                      code: facility.code,
+                                      name: facility.name,
+                                    });
                                     setIsFacilityDropdownOpen(false);
                                     clearFacilitySearch();
                                   }}
@@ -1372,60 +1383,60 @@ const BookingTrends: React.FC = () => {
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <FaUsers className="w-6 h-6 text-blue-600" />
+        {/* Summary Cards - Reduced size with 4 cards in more compact layout */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FaUsers className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-xl font-bold text-gray-900">
                   {summary.totalBookings.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">Total Bookings</div>
+                <div className="text-xs text-gray-600">Total Bookings</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <FaDollarSign className="w-6 h-6 text-green-600" />
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <FaDollarSign className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-xl font-bold text-gray-900">
                   KES {summary.totalAmount.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">Total Revenue</div>
+                <div className="text-xs text-gray-600">Total Revenue</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <FaHandshake className="w-6 h-6 text-purple-600" />
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <FaHandshake className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-xl font-bold text-gray-900">
                   KES {summary.totalVendorShare.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">Vendor Share</div>
+                <div className="text-xs text-gray-600">Vendor Share</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                <FaHospital className="w-6 h-6 text-orange-600" />
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <FaHospital className="w-5 h-5 text-orange-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-xl font-bold text-gray-900">
                   KES {summary.totalFacilityShare.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">Facility Share</div>
+                <div className="text-xs text-gray-600">Facility Share</div>
               </div>
             </div>
           </div>

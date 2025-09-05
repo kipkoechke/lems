@@ -70,7 +70,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
 }) => {
   // Get existing workflow data to preserve state when navigating back
   const workflow = useAppSelector((store) => store.workflow);
-  
+
   // Patient search with API
   const [patientSearchQuery, setPatientSearchQuery] = useState<string>("");
   const { patients } = usePatients(
@@ -78,13 +78,18 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   );
 
   // Eligibility check
-  const { checkSHAEligibility, isCheckingEligibility, eligibilityResult } = 
+  const { checkSHAEligibility, isCheckingEligibility, eligibilityResult } =
     useEligibilityCheck();
 
-  const [selectedid, setSelectedid] = useState<string>(workflow.patient?.id || "");
-  const [selectedPaymentModeId, setSelectedPaymentModeId] =
-    useState<string>(workflow.selectedPaymentMode?.paymentModeId || "");
-  const [selectedFacilityId, setSelectedFacilityId] = useState<string>(workflow.selectedFacility?.id || "");
+  const [selectedid, setSelectedid] = useState<string>(
+    workflow.patient?.id || ""
+  );
+  const [selectedPaymentModeId, setSelectedPaymentModeId] = useState<string>(
+    workflow.selectedPaymentMode?.paymentModeId || ""
+  );
+  const [selectedFacilityId, setSelectedFacilityId] = useState<string>(
+    workflow.selectedFacility?.id || ""
+  );
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
     workflow.selectedFacility || null
   );
@@ -176,7 +181,9 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
         identification_number: selectedPatient.sha_number,
       });
     } else if (selectedPaymentModeId === "sha") {
-      toast.error("Please select a patient with SHA number for eligibility check");
+      toast.error(
+        "Please select a patient with SHA number for eligibility check"
+      );
     }
   }, [selectedPatient?.sha_number, selectedPaymentModeId, checkSHAEligibility]);
 
@@ -185,7 +192,11 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     if (selectedPaymentModeId === "sha" && selectedPatient?.sha_number) {
       handleEligibilityCheck();
     }
-  }, [selectedPaymentModeId, selectedPatient?.sha_number, handleEligibilityCheck]);
+  }, [
+    selectedPaymentModeId,
+    selectedPatient?.sha_number,
+    handleEligibilityCheck,
+  ]);
 
   // Check if all fields are completed
   const isComplete = selectedFacilityId && selectedid && selectedPaymentModeId;
@@ -827,20 +838,22 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                         </span>
                       </div>
                     </div>
-                    
+
                     {isCheckingEligibility ? (
                       <p className="text-xs text-blue-600">
                         Checking eligibility...
                       </p>
                     ) : eligibilityResult ? (
                       <div>
-                        <p className={`text-xs ${
-                          eligibilityResult.eligible === 1 
-                            ? "text-green-700" 
-                            : "text-red-700"
-                        }`}>
-                          {eligibilityResult.eligible === 1 
-                            ? "✅ Patient is eligible for SHA coverage" 
+                        <p
+                          className={`text-xs ${
+                            eligibilityResult.eligible === 1
+                              ? "text-green-700"
+                              : "text-red-700"
+                          }`}
+                        >
+                          {eligibilityResult.eligible === 1
+                            ? "✅ Patient is eligible for SHA coverage"
                             : `❌ ${eligibilityResult.reason}`}
                         </p>
                         {eligibilityResult.possible_solution && (
@@ -855,7 +868,8 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                       </p>
                     ) : (
                       <p className="text-xs text-orange-600">
-                        ⚠️ Please select a patient with SHA number for eligibility check
+                        ⚠️ Please select a patient with SHA number for
+                        eligibility check
                       </p>
                     )}
                   </div>

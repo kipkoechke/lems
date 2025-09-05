@@ -131,19 +131,24 @@ export const workflowSlice = createSlice({
     setBooking: (state, action: PayloadAction<Bookings>) => {
       state.booking = action.payload;
     },
-    setBookingServices: (state, action: PayloadAction<{
-      id: string;
-      booking_id: string;
-      vendor_facility_lot_service_pivot_id: string;
-      service_completion_by: string | null;
-      booking_date: string;
-      vendor_share: string;
-      facility_share: string;
-      service_status: "not_started" | "completed";
-      created_at: string;
-      updated_at: string;
-      deleted_at: string | null;
-    }[]>) => {
+    setBookingServices: (
+      state,
+      action: PayloadAction<
+        {
+          id: string;
+          booking_id: string;
+          vendor_facility_lot_service_pivot_id: string;
+          service_completion_by: string | null;
+          booking_date: string;
+          vendor_share: string;
+          facility_share: string;
+          service_status: "not_started" | "completed";
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        }[]
+      >
+    ) => {
       state.bookingServices = action.payload;
     },
     setOtpCode: (state, action: PayloadAction<string>) => {
@@ -155,7 +160,10 @@ export const workflowSlice = createSlice({
     setSelectedServices: (state, action: PayloadAction<string[]>) => {
       state.selectedServiceIds = action.payload;
     },
-    setServiceDate: (state, action: PayloadAction<{ serviceId: string; date: string }>) => {
+    setServiceDate: (
+      state,
+      action: PayloadAction<{ serviceId: string; date: string }>
+    ) => {
       if (!state.serviceDates) {
         state.serviceDates = {};
       }

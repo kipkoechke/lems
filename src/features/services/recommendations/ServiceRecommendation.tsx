@@ -66,7 +66,9 @@ const ServiceRecommendation: React.FC = () => {
   }, [selectedContractId, contracts, dispatch]);
 
   // Booking state - check if booking already exists to preserve UI state
-  const [bookingCreated, setBookingCreated] = useState<boolean>(!!workflow.booking);
+  const [bookingCreated, setBookingCreated] = useState<boolean>(
+    !!workflow.booking
+  );
   const booking = useAppSelector((store) => store.workflow.booking);
 
   // Get the selected contract (diagnostic service category)
@@ -81,8 +83,8 @@ const ServiceRecommendation: React.FC = () => {
     dispatch(setSelectedContract(contractId));
     dispatch(setSelectedServices([])); // Reset service selection when contract changes
     // Reset service dates - we'll need to clear all dates
-    selectedServiceIds.forEach(serviceId => {
-      dispatch(setServiceDate({ serviceId, date: '' }));
+    selectedServiceIds.forEach((serviceId) => {
+      dispatch(setServiceDate({ serviceId, date: "" }));
     });
   };
 
@@ -91,8 +93,10 @@ const ServiceRecommendation: React.FC = () => {
     const isSelected = selectedServiceIds.includes(serviceId);
     if (isSelected) {
       // Remove service and its date
-      dispatch(setSelectedServices(selectedServiceIds.filter(id => id !== serviceId)));
-      dispatch(setServiceDate({ serviceId, date: '' }));
+      dispatch(
+        setSelectedServices(selectedServiceIds.filter((id) => id !== serviceId))
+      );
+      dispatch(setServiceDate({ serviceId, date: "" }));
     } else {
       // Add service
       dispatch(setSelectedServices([...selectedServiceIds, serviceId]));
@@ -571,9 +575,7 @@ const ServiceRecommendation: React.FC = () => {
 
           {/* Submit Button */}
           <div className="flex justify-between items-center mt-6">
-            <BackButton 
-              onClick={() => dispatch(goToPreviousStep())}
-            />
+            <BackButton onClick={() => dispatch(goToPreviousStep())} />
             <button
               type="submit"
               disabled={

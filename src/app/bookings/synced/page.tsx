@@ -459,13 +459,15 @@ const SyncedBookingsReport: React.FC = () => {
                                   <span className="text-gray-600 text-xs">
                                     Status:
                                   </span>
-                                  <span className={`font-medium text-xs px-2 py-1 rounded-full ${
-                                    batch.status === 'pending' 
-                                      ? 'bg-yellow-100 text-yellow-800' 
-                                      : batch.status === 'completed'
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-gray-100 text-gray-800'
-                                  }`}>
+                                  <span
+                                    className={`font-medium text-xs px-2 py-1 rounded-full ${
+                                      batch.status === "pending"
+                                        ? "bg-yellow-100 text-yellow-800"
+                                        : batch.status === "completed"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-gray-100 text-gray-800"
+                                    }`}
+                                  >
                                     {batch.status}
                                   </span>
                                 </div>
@@ -538,7 +540,8 @@ const SyncedBookingsReport: React.FC = () => {
                   </div>
                 </div>
               </div>
-            ) : !facilityPaymentsData || facilityPaymentsData.data.length === 0 ? (
+            ) : !facilityPaymentsData ||
+              facilityPaymentsData.data.length === 0 ? (
               <div className="text-center py-12">
                 <RotateCcw className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900">
@@ -669,19 +672,21 @@ const SyncedBookingsReport: React.FC = () => {
                 </div>
 
                 {/* Facility Payment Pagination */}
-                {facilityPaymentsData && facilityPaymentsData.total > facilityPaymentsData.per_page && (
-                  <div className="mt-6">
-                    <Pagination
-                      currentPage={facilityPaymentsData.current_page}
-                      lastPage={facilityPaymentsData.last_page}
-                      total={facilityPaymentsData.total}
-                      from={facilityPaymentsData.from}
-                      to={facilityPaymentsData.to}
-                      links={facilityPaymentsData.links}
-                      onPageChange={handlePageChange}
-                    />
-                  </div>
-                )}
+                {facilityPaymentsData &&
+                  facilityPaymentsData.total >
+                    facilityPaymentsData.per_page && (
+                    <div className="mt-6">
+                      <Pagination
+                        currentPage={facilityPaymentsData.current_page}
+                        lastPage={facilityPaymentsData.last_page}
+                        total={facilityPaymentsData.total}
+                        from={facilityPaymentsData.from}
+                        to={facilityPaymentsData.to}
+                        links={facilityPaymentsData.links}
+                        onPageChange={handlePageChange}
+                      />
+                    </div>
+                  )}
               </>
             )}
           </>

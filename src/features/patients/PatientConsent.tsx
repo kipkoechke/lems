@@ -8,9 +8,8 @@ import StatusCard from "../../components/StatusCard";
 import { useOtpValidation } from "./useValidateOtp";
 
 const PatientConsent: React.FC = () => {
-  const { patient, selectedService, booking, bookingServices, otp_code } = useAppSelector(
-    (store) => store.workflow
-  );
+  const { patient, selectedService, booking, bookingServices, otp_code } =
+    useAppSelector((store) => store.workflow);
 
   console.log("PatientConsent - Workflow state:", {
     patient: patient?.name,
@@ -305,13 +304,16 @@ const PatientConsent: React.FC = () => {
                     const services = bookingServices || booking?.services;
                     if (services && services.length > 0) {
                       const totalVendorShare = services.reduce(
-                        (total, service) => total + parseFloat(service.vendor_share || "0"),
+                        (total, service) =>
+                          total + parseFloat(service.vendor_share || "0"),
                         0
                       );
                       return totalVendorShare.toLocaleString();
                     }
                     // Fallback to legacy vendor_share property
-                    return parseFloat(booking?.vendor_share || "0").toLocaleString();
+                    return parseFloat(
+                      booking?.vendor_share || "0"
+                    ).toLocaleString();
                   })()}
                 </p>
                 <p>
@@ -321,13 +323,16 @@ const PatientConsent: React.FC = () => {
                     const services = bookingServices || booking?.services;
                     if (services && services.length > 0) {
                       const totalFacilityShare = services.reduce(
-                        (total, service) => total + parseFloat(service.facility_share || "0"),
+                        (total, service) =>
+                          total + parseFloat(service.facility_share || "0"),
                         0
                       );
                       return totalFacilityShare.toLocaleString();
                     }
                     // Fallback to legacy facility_share property
-                    return parseFloat(booking?.facility_share || "0").toLocaleString();
+                    return parseFloat(
+                      booking?.facility_share || "0"
+                    ).toLocaleString();
                   })()}
                 </p>
               </>
