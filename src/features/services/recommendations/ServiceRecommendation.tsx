@@ -5,6 +5,7 @@ import {
   goToPreviousStep,
   selectService,
   setBooking,
+  setBookingServices,
   setOtpCode,
   setSelectedContract,
   setSelectedServices,
@@ -212,7 +213,9 @@ const ServiceRecommendation: React.FC = () => {
     createBooking(bookingData, {
       onSuccess: (response) => {
         toast.success("Booking created successfully!");
+        // Store the booking and services separately
         dispatch(setBooking(response.booking));
+        dispatch(setBookingServices(response.services)); // Store services with vendor/facility shares
         dispatch(setOtpCode(response.otp_code));
         setBookingCreated(true);
 

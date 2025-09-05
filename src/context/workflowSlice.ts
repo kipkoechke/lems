@@ -32,6 +32,19 @@ export interface WorkflowState {
   selectedFacility?: Facility;
   selectedPaymentMode?: PaymentMode;
   booking?: Bookings;
+  bookingServices?: {
+    id: string;
+    booking_id: string;
+    vendor_facility_lot_service_pivot_id: string;
+    service_completion_by: string | null;
+    booking_date: string;
+    vendor_share: string;
+    facility_share: string;
+    service_status: "not_started" | "completed";
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+  }[]; // Services from booking creation response with vendor/facility shares
   otp_code?: string; // OTP from booking creation
   consentObtained?: boolean;
   serviceValidated?: boolean;
@@ -118,6 +131,21 @@ export const workflowSlice = createSlice({
     setBooking: (state, action: PayloadAction<Bookings>) => {
       state.booking = action.payload;
     },
+    setBookingServices: (state, action: PayloadAction<{
+      id: string;
+      booking_id: string;
+      vendor_facility_lot_service_pivot_id: string;
+      service_completion_by: string | null;
+      booking_date: string;
+      vendor_share: string;
+      facility_share: string;
+      service_status: "not_started" | "completed";
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+    }[]>) => {
+      state.bookingServices = action.payload;
+    },
     setOtpCode: (state, action: PayloadAction<string>) => {
       state.otp_code = action.payload;
     },
@@ -169,6 +197,7 @@ export const {
   approvePayment,
   completeDisbursement,
   setBooking,
+  setBookingServices,
   setOtpCode,
   setSelectedContract,
   setSelectedServices,

@@ -9,8 +9,10 @@ export const useCreateBatch = () => {
     mutationFn: (data: CreateBatchRequest) => createBatch(data),
     onSuccess: () => {
       toast.success("Batch created successfully!");
-      // Invalidate and refetch synced bookings to update the UI
+      // Invalidate and refetch all related queries to update the UI
       queryClient.invalidateQueries({ queryKey: ["syncedBookings"] });
+      queryClient.invalidateQueries({ queryKey: ["vendorBatches"] });
+      queryClient.invalidateQueries({ queryKey: ["facilityPayments"] });
     },
     onError: (error: any) => {
       const errorMessage =
