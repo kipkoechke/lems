@@ -53,7 +53,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   const { createContract, isCreating } = useCreateContract();
   const { updateContractServices, isUpdating } = useUpdateContractServices();
 
-  // Searchable dropdown states 
+  // Searchable dropdown states
   const [vendorSearch, setVendorSearch] = useState<string>("");
   const [facilitySearch, setFacilitySearch] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>(""); // Actual search query for API
@@ -80,13 +80,13 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   );
 
   // Get lot services when a contract is selected for services management
-  const selectedLotNumber = selectedContract?.lot_number || "";
+  const selectedLotNumber = selectedContract?.lot.number || "";
   const { services: lotServices, isLoading: lotServicesLoading } =
     useLotWithServices(selectedLotNumber);
 
   // Get vendor equipments when a contract is selected for services management
-  const selectedVendorId = selectedContract?.vendor_code
-    ? vendors?.find((v) => v.code === selectedContract.vendor_code)?.id || ""
+  const selectedVendorId = selectedContract?.vendor.code
+    ? vendors?.find((v) => v.code === selectedContract.vendor.code)?.id || ""
     : "";
   const { equipments: vendorEquipments, isLoading: vendorEquipmentsLoading } =
     useVendorWithEquipments(selectedVendorId);
@@ -122,7 +122,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   });
 
   // Fetch selected facility separately to ensure it's always available for display
-  const { facility: selectedFacilityDetail } = useFacility(contractFormData.facility_code);
+  const { facility: selectedFacilityDetail } = useFacility(
+    contractFormData.facility_code
+  );
 
   const [servicesFormData, setServicesFormData] =
     useState<ContractServicesFormData>({
@@ -133,9 +135,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   // Filter contracts based on search and status
   const filteredContracts = contracts?.filter((contract) => {
     const matchesSearch =
-      contract.vendor_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.facility_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.lot_name.toLowerCase().includes(searchTerm.toLowerCase());
+      contract.vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.lot.name.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       statusFilter === "all" ||
@@ -190,9 +192,10 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
   const selectedVendor = vendors?.find(
     (v) => v.code === contractFormData.vendor_code
   );
-  const selectedFacilityDropdown = selectedFacility || selectedFacilityDetail || facilities?.find(
-    (f) => f.code === contractFormData.facility_code
-  );
+  const selectedFacilityDropdown =
+    selectedFacility ||
+    selectedFacilityDetail ||
+    facilities?.find((f) => f.code === contractFormData.facility_code);
   const selectedLot = lots?.find(
     (l) => l.number === contractFormData.lot_number
   );
@@ -233,9 +236,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     if (contract) {
       setSelectedContract(contract);
       setContractFormData({
-        vendor_code: contract.vendor_code,
-        facility_code: contract.facility_code,
-        lot_number: contract.lot_number,
+        vendor_code: contract.vendor.code,
+        facility_code: contract.facility.code,
+        lot_number: contract.lot.number,
         is_active: contract.is_active,
       });
       setServicesFormData({
@@ -243,7 +246,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
         services: [], // Start with empty array for adding new services
       });
       // Find and set the selected facility when editing
-      const facilityForEdit = facilities?.find(f => f.code === contract.facility_code);
+      const facilityForEdit = facilities?.find(
+        (f) => f.code === contract.facility.code
+      );
       if (facilityForEdit) {
         setSelectedFacility(facilityForEdit);
       }
@@ -863,45 +868,43 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                       <td className="px-6 py-4">
                         <div>
                           <div className="font-medium text-gray-900">
-                            {contract.vendor_name}
+                            {contract.vendor.name}
                           </div>
                           <div className="text-sm text-gray-500 font-mono">
-                            {contract.vendor_code}
+                            {contract.vendor.code}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div>
                           <div className="font-medium text-gray-900">
-                            {contract.facility_name}
+                            {contract.facility.name}
                           </div>
                           <div className="text-sm text-gray-500 font-mono">
-                            {contract.facility_code}
+                            {contract.facility.code}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div>
                           <div className="font-medium text-gray-900">
-                            LOT {contract.lot_number}
+                            LOT {contract.lot.number}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {contract.lot_name}
+                            {contract.lot.name}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                            {contract.services.length} services
+                            {contract.services?.length || 0} services
                           </span>
                           <span className="text-sm text-gray-500">
                             (
-                            {
-                              contract.services.filter(
-                                (s) => s.is_active === "1"
-                              ).length
-                            }{" "}
+                            {contract.services?.filter(
+                              (s) => s.is_active === "1"
+                            ).length || 0}{" "}
                             active)
                           </span>
                         </div>
@@ -990,7 +993,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                                     onClick={() => {
                                       setActiveDropdown(null);
                                       router.push(
-                                        `/vendors/${contract.vendor_code}`
+                                        `/vendors/${contract.vendor.code}`
                                       );
                                     }}
                                     className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center gap-3"
@@ -1016,7 +1019,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                                     onClick={() => {
                                       setActiveDropdown(null);
                                       router.push(
-                                        `/facilities/${contract.facility_code}`
+                                        `/facilities/${contract.facility.code}`
                                       );
                                     }}
                                     className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors flex items-center gap-3"
@@ -1042,7 +1045,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                                     onClick={() => {
                                       setActiveDropdown(null);
                                       router.push(
-                                        `/lots/${contract.lot_number}`
+                                        `/lots/${contract.lot.number}`
                                       );
                                     }}
                                     className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors flex items-center gap-3"
@@ -1095,10 +1098,10 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900 text-lg mb-1">
-                      {contract.vendor_name}
+                      {contract.vendor.name}
                     </h3>
                     <div className="text-sm text-gray-500 font-mono mb-2">
-                      {contract.vendor_code}
+                      {contract.vendor.code}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1168,18 +1171,18 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                 <div className="space-y-3 text-sm">
                   <div>
                     <span className="text-gray-500 font-medium">Facility:</span>
-                    <p className="text-gray-900">{contract.facility_name}</p>
+                    <p className="text-gray-900">{contract.facility.name}</p>
                     <p className="text-gray-500 font-mono text-xs">
-                      {contract.facility_code}
+                      {contract.facility.code}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <span className="text-gray-500 font-medium">Lot:</span>
-                      <p className="text-gray-900">LOT {contract.lot_number}</p>
+                      <p className="text-gray-900">LOT {contract.lot.number}</p>
                       <p className="text-gray-500 text-xs">
-                        {contract.lot_name}
+                        {contract.lot.name}
                       </p>
                     </div>
                     <div>
@@ -1188,14 +1191,12 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                       </span>
                       <div className="flex items-center gap-1 mt-1">
                         <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                          {contract.services.length} total
+                          {contract.services?.length || 0} total
                         </span>
                         <span className="text-xs text-gray-500">
                           (
-                          {
-                            contract.services.filter((s) => s.is_active === "1")
-                              .length
-                          }{" "}
+                          {contract.services?.filter((s) => s.is_active === "1")
+                            .length || 0}{" "}
                           active)
                         </span>
                       </div>
@@ -1233,7 +1234,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
               <div className="text-center p-3 md:p-0">
                 <div className="text-xl md:text-2xl font-bold text-blue-600">
                   {filteredContracts.reduce(
-                    (sum, c) => sum + c.services.length,
+                    (sum, c) => sum + (c.services?.length || 0),
                     0
                   )}
                 </div>
@@ -1583,9 +1584,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                 Add Services to Contract
               </h2>
               <p className="text-green-100 text-sm">
-                {selectedContract.vendor_name} -{" "}
-                {selectedContract.facility_name} (Lot{" "}
-                {selectedContract.lot_number})
+                {selectedContract.vendor.name} -{" "}
+                {selectedContract.facility.name} (Lot{" "}
+                {selectedContract.lot.number})
               </p>
             </div>
 
@@ -1607,10 +1608,11 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Current Services ({selectedContract.services.length})
+                  Current Services ({selectedContract.services?.length || 0})
                 </label>
                 <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
-                  {selectedContract.services.length > 0 ? (
+                  {selectedContract.services &&
+                  selectedContract.services.length > 0 ? (
                     selectedContract.services.map((service) => (
                       <div
                         key={service.service_id}
@@ -1697,9 +1699,9 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                               (s) => s.code === service.code
                             );
                             const isCurrentlyInContract =
-                              selectedContract.services.some(
+                              selectedContract.services?.some(
                                 (s) => s.service_code === service.code
-                              );
+                              ) || false;
 
                             return (
                               <div
@@ -1763,7 +1765,7 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
                 </div>
                 <div className="text-sm text-gray-500 mt-1">
                   Services are loaded based on the contract&apos;s lot number (
-                  {selectedContract.lot_number})
+                  {selectedContract.lot.number})
                 </div>
               </div>
 

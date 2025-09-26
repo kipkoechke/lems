@@ -58,7 +58,7 @@ export const getServicesByFacilityCode = async (
   facilityCode: string
 ): Promise<FacilityContract[]> => {
   const response = await axios.get(
-    `/vendor/facility/contracts?facility_code=${facilityCode}`
+    `contracts?facility_code=${facilityCode}`
   );
   return response.data;
 };

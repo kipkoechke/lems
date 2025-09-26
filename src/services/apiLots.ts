@@ -59,6 +59,28 @@ export interface ServiceUpdateRequest {
   facility_share: number;
 }
 
+export interface PaginatedLotsResponse {
+  lots: {
+    current_page: number;
+    data: Lot[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: Array<{
+      url: string | null;
+      label: string;
+      active: boolean;
+    }>;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+  };
+}
+
 export interface LotsResponse {
   lots: Lot[];
 }
@@ -74,8 +96,8 @@ export interface LotWithServicesResponse {
 
 // Lot CRUD operations
 export const getLots = async (): Promise<Lot[]> => {
-  const response = await axios.get<LotsResponse>("/lots");
-  return response.data.lots;
+  const response = await axios.get<PaginatedLotsResponse>("/lots");
+  return response.data.lots.data;
 };
 
 export const createLot = async (data: LotCreateRequest): Promise<Lot> => {

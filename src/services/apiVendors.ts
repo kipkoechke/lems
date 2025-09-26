@@ -45,14 +45,51 @@ export interface VendorUpdateRequest {
 
 export interface Contract {
   id: string;
-  vendor_code: string;
-  vendor_name: string;
-  facility_code: string;
-  facility_name: string;
-  lot_number: string;
-  lot_name: string;
+  vendor_id: string;
+  facility_id: string;
+  lot_id: string;
   is_active: string;
-  services: ContractService[];
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  vendor: {
+    id: string;
+    code: string;
+    name: string;
+  };
+  facility: {
+    id: string;
+    code: string;
+    name: string;
+  };
+  lot: {
+    id: string;
+    number: string;
+    name: string;
+  };
+  services?: ContractService[];
+}
+
+export interface PaginatedContractsResponse {
+  data: {
+    current_page: number;
+    data: Contract[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: Array<{
+      url: string | null;
+      label: string;
+      active: boolean;
+    }>;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+  };
 }
 
 export interface ContractService {
@@ -64,9 +101,9 @@ export interface ContractService {
 }
 
 export interface ContractCreateRequest {
-  vendor_code: string;
-  facility_code: string;
-  lot_number: string;
+  vendor_id: string;
+  facility_id: string;
+  lot_id: string;
   is_active: string;
 }
 
@@ -139,20 +176,17 @@ export const getContracts = async (
   if (params?.vendor_code)
     queryParams.append("vendor_code", params.vendor_code);
 
-  const url = `/vendor/facility/contracts${
+  const url = `contracts${
     queryParams.toString() ? `?${queryParams.toString()}` : ""
   }`;
-  const response = await axios.get<Contract[]>(url);
-  return response.data;
+  const response = await axios.get<PaginatedContractsResponse>(url);
+  return response.data.data.data;
 };
 
 export const createContract = async (
   data: ContractCreateRequest
 ): Promise<Contract> => {
-  const response = await axios.post<Contract>(
-    "/vendor/facility/contract",
-    data
-  );
+  const response = await axios.post<Contract>("contracts", data);
   return response.data;
 };
 
