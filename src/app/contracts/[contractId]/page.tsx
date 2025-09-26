@@ -162,10 +162,10 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
                     Vendor
                   </label>
                   <p className="text-gray-900 font-semibold">
-                    {contract.vendor_name}
+                    {contract.vendor.name}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Code: {contract.vendor_code}
+                    Code: {contract.vendor.code}
                   </p>
                 </div>
                 <div>
@@ -174,10 +174,10 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
                   </label>
                   <p className="text-gray-900 font-semibold flex items-center gap-2">
                     <FaMapMarkerAlt className="text-gray-400" />
-                    {contract.facility_name}
+                    {contract.facility.name}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Code: {contract.facility_code}
+                    Code: {contract.facility.code}
                   </p>
                 </div>
                 <div>
@@ -186,10 +186,10 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
                   </label>
                   <p className="text-gray-900 font-semibold flex items-center gap-2">
                     <FaBox className="text-gray-400" />
-                    {contract.lot_name}
+                    {contract.lot.name}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Number: {contract.lot_number}
+                    Number: {contract.lot.number}
                   </p>
                 </div>
               </div>
@@ -201,11 +201,11 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
                 <FaStethoscope className="text-green-600" />
                 Contract Services
                 <span className="text-sm font-normal text-gray-600">
-                  ({contract.services.length} services)
+                  ({contract.services?.length || 0} services)
                 </span>
               </h2>
 
-              {contract.services.length > 0 ? (
+              {contract.services && contract.services.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {contract.services.map(
                     (service: ContractService, index: number) => (
@@ -271,7 +271,7 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Services Count</span>
                   <span className="font-semibold text-gray-900">
-                    {contract.services.length}
+                    {contract.services?.length || 0}
                   </span>
                 </div>
               </div>
@@ -285,7 +285,7 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
               <div className="space-y-3">
                 <button
                   onClick={() =>
-                    router.push(`/vendors/${contract.vendor_code}/contracts`)
+                    router.push(`/vendors/${contract.vendor.code}/contracts`)
                   }
                   className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                 >
@@ -294,7 +294,7 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
                 </button>
                 <button
                   onClick={() =>
-                    router.push(`/vendors/${contract.vendor_code}`)
+                    router.push(`/vendors/${contract.vendor.code}`)
                   }
                   className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
                 >

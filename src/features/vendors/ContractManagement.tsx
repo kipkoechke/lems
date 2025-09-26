@@ -268,7 +268,24 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
     e.preventDefault();
 
     if (modalType === "create") {
-      createContract(contractFormData, {
+      // Transform codes to IDs for the API
+      const vendor = vendors?.find(v => v.code === contractFormData.vendor_code);
+      const facility = facilities?.find(f => f.code === contractFormData.facility_code);  
+      const lot = lots?.find(l => l.number === contractFormData.lot_number);
+
+      if (!vendor || !facility || !lot) {
+        console.error("Could not find vendor, facility, or lot for the given codes");
+        return;
+      }
+
+      const createPayload = {
+        vendor_id: vendor.id,
+        facility_id: facility.id,
+        lot_id: lot.id,
+        is_active: contractFormData.is_active,
+      };
+
+      createContract(createPayload, {
         onSuccess: () => {
           closeModal();
           refetch();

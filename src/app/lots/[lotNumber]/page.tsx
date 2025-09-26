@@ -161,7 +161,7 @@ export default function LotDetailPage() {
               </div>
               <div>
                 <p className="text-3xl font-bold text-orange-600">
-                  {new Set(contracts.map(c => c.vendor_code)).size}
+                  {new Set(contracts.map(c => c.vendor.code)).size}
                 </p>
                 <p className="text-sm font-medium text-gray-600">Vendors</p>
               </div>
@@ -338,20 +338,20 @@ export default function LotDetailPage() {
                       <tr key={contract.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">{contract.vendor_name}</p>
-                            <p className="text-sm text-gray-500 font-mono">Code: {contract.vendor_code}</p>
+                            <p className="text-sm font-semibold text-gray-900">{contract.vendor.name}</p>
+                            <p className="text-sm text-gray-500 font-mono">Code: {contract.vendor.code}</p>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">{contract.facility_name}</p>
-                            <p className="text-sm text-gray-500 font-mono">Code: {contract.facility_code}</p>
+                            <p className="text-sm font-semibold text-gray-900">{contract.facility.name}</p>
+                            <p className="text-sm text-gray-500 font-mono">Code: {contract.facility.code}</p>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900">
-                            <span className="font-medium">{contract.services.length} service{contract.services.length !== 1 ? 's' : ''}</span>
-                            {contract.services.length > 0 && (
+                            <span className="font-medium">{contract.services?.length || 0} service{(contract.services?.length || 0) !== 1 ? 's' : ''}</span>
+                            {contract.services && contract.services.length > 0 && (
                               <div className="mt-2 flex flex-wrap gap-1">
                                 {contract.services.slice(0, 3).map((service) => (
                                   <span
@@ -384,13 +384,13 @@ export default function LotDetailPage() {
                         <td className="px-6 py-4">
                           <div className="flex space-x-3">
                             <button
-                              onClick={() => router.push(`/vendors/${contract.vendor_code}`)}
+                              onClick={() => router.push(`/vendors/${contract.vendor.code}`)}
                               className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
                             >
                               View Vendor
                             </button>
                             <button
-                              onClick={() => router.push(`/facilities/${contract.facility_code}`)}
+                              onClick={() => router.push(`/facilities/${contract.facility.code}`)}
                               className="text-green-600 hover:text-green-800 text-sm font-medium transition-colors"
                             >
                               View Facility
