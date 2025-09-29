@@ -1,4 +1,3 @@
-import AppLayout from "@/components/AppLayout";
 import Providers from "@/lib/providers";
 import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
@@ -19,7 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="font-sans antialiased">
         <Providers>
-          <AppLayout>{children}</AppLayout>
+          {children}
           <Toaster position="top-right" />
         </Providers>
       </body>

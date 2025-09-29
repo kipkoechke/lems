@@ -269,12 +269,18 @@ const ContractManagement: React.FC<ContractManagementProps> = ({
 
     if (modalType === "create") {
       // Transform codes to IDs for the API
-      const vendor = vendors?.find(v => v.code === contractFormData.vendor_code);
-      const facility = facilities?.find(f => f.code === contractFormData.facility_code);  
-      const lot = lots?.find(l => l.number === contractFormData.lot_number);
+      const vendor = vendors?.find(
+        (v) => v.code === contractFormData.vendor_code
+      );
+      const facility = facilities?.find(
+        (f) => f.code === contractFormData.facility_code
+      );
+      const lot = lots?.find((l) => l.number === contractFormData.lot_number);
 
       if (!vendor || !facility || !lot) {
-        console.error("Could not find vendor, facility, or lot for the given codes");
+        console.error(
+          "Could not find vendor, facility, or lot for the given codes"
+        );
         return;
       }
 

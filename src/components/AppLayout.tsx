@@ -11,6 +11,9 @@ type AppLayoutProps = {
 const AppLayout = ({ children }: AppLayoutProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Trust the middleware to handle authentication
+  // If this component renders, the user should be authenticated (middleware allows it)
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };

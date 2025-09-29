@@ -2,6 +2,7 @@
 
 import ProceedToTests from "@/components/ProceedToTests";
 import ServiceInProgress from "@/components/ServiceInProgress";
+import UserInfo from "@/components/UserInfo";
 import {
   goToNextStep,
   selectFacility,
@@ -80,7 +81,10 @@ function Clinicians() {
   };
 
   return (
-    <div className="container mx-auto p-2 md:p-6">{renderStepComponent()}</div>
+    <div className="container mx-auto p-2 md:p-6">
+      <UserInfo />
+      {renderStepComponent()}
+    </div>
   );
 }
 

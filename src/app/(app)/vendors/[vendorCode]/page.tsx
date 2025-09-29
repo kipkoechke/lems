@@ -10,12 +10,16 @@ export default function VendorDetailPage() {
   const router = useRouter();
   const vendorCode = params.vendorCode as string;
 
-  const { vendor, isLoading: vendorLoading, error: vendorError } = useVendor(vendorCode);
-  
-  const { 
-    data: contracts = [], 
-    isLoading: contractsLoading, 
-    error: contractsError 
+  const {
+    vendor,
+    isLoading: vendorLoading,
+    error: vendorError,
+  } = useVendor(vendorCode);
+
+  const {
+    data: contracts = [],
+    isLoading: contractsLoading,
+    error: contractsError,
   } = useQuery({
     queryKey: ["contracts", vendorCode],
     queryFn: () => getContracts({ vendor_code: vendorCode }),
@@ -78,19 +82,33 @@ export default function VendorDetailPage() {
                 onClick={() => router.back()}
                 className="mb-4 flex items-center text-blue-600 hover:text-blue-800 transition-colors"
               >
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
                 </svg>
                 Back
               </button>
-              <h1 className="text-4xl font-bold text-gray-900">{vendor.name}</h1>
-              <p className="text-gray-600 mt-2 text-lg">Vendor Code: {vendor.code}</p>
+              <h1 className="text-4xl font-bold text-gray-900">
+                {vendor.name}
+              </h1>
+              <p className="text-gray-600 mt-2 text-lg">
+                Vendor Code: {vendor.code}
+              </p>
             </div>
             <div className="text-right">
-              <span 
+              <span
                 className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold shadow-sm ${
-                  vendor.is_active === "1" 
-                    ? "bg-green-100 text-green-800 border-green-200" 
+                  vendor.is_active === "1"
+                    ? "bg-green-100 text-green-800 border-green-200"
                     : "bg-red-100 text-red-800 border-red-200"
                 }`}
               >
@@ -105,14 +123,26 @@ export default function VendorDetailPage() {
           <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-blue-100 mr-4">
-                <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                  <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
+                <svg
+                  className="w-6 h-6 text-blue-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                  <path
+                    fillRule="evenodd"
+                    d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div>
-                <p className="text-3xl font-bold text-blue-600">{contracts.length}</p>
-                <p className="text-sm font-medium text-gray-600">Total Contracts</p>
+                <p className="text-3xl font-bold text-blue-600">
+                  {contracts.length}
+                </p>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Contracts
+                </p>
               </div>
             </div>
           </div>
@@ -120,15 +150,25 @@ export default function VendorDetailPage() {
           <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-green-100 mr-4">
-                <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div>
                 <p className="text-3xl font-bold text-green-600">
-                  {contracts.filter(c => c.is_active === "1").length}
+                  {contracts.filter((c) => c.is_active === "1").length}
                 </p>
-                <p className="text-sm font-medium text-gray-600">Active Contracts</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Active Contracts
+                </p>
               </div>
             </div>
           </div>
@@ -136,13 +176,21 @@ export default function VendorDetailPage() {
           <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-orange-500">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-orange-100 mr-4">
-                <svg className="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z" clipRule="evenodd"/>
+                <svg
+                  className="w-6 h-6 text-orange-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div>
                 <p className="text-3xl font-bold text-orange-600">
-                  {new Set(contracts.map(c => c.facility.code)).size}
+                  {new Set(contracts.map((c) => c.facility.code)).size}
                 </p>
                 <p className="text-sm font-medium text-gray-600">Facilities</p>
               </div>
@@ -153,26 +201,44 @@ export default function VendorDetailPage() {
         {/* Vendor Information */}
         <div className="bg-white rounded-2xl shadow-lg mb-8">
           <div className="px-8 py-6 border-b border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-900">Vendor Information</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Vendor Information
+            </h2>
           </div>
           <div className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wide">Vendor Name</label>
-                <p className="text-lg font-medium text-gray-900">{vendor.name}</p>
+                <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                  Vendor Name
+                </label>
+                <p className="text-lg font-medium text-gray-900">
+                  {vendor.name}
+                </p>
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wide">Vendor Code</label>
-                <p className="text-lg font-medium text-gray-900 font-mono bg-gray-50 px-3 py-1 rounded-lg inline-block">{vendor.code}</p>
+                <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                  Vendor Code
+                </label>
+                <p className="text-lg font-medium text-gray-900 font-mono bg-gray-50 px-3 py-1 rounded-lg inline-block">
+                  {vendor.code}
+                </p>
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wide">Status</label>
-                <p className={`text-lg font-semibold ${vendor.is_active === "1" ? "text-green-600" : "text-red-600"}`}>
+                <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                  Status
+                </label>
+                <p
+                  className={`text-lg font-semibold ${
+                    vendor.is_active === "1" ? "text-green-600" : "text-red-600"
+                  }`}
+                >
                   {vendor.is_active === "1" ? "Active" : "Inactive"}
                 </p>
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wide">Created Date</label>
+                <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                  Created Date
+                </label>
                 <p className="text-lg font-medium text-gray-900">
                   {new Date(vendor.created_at).toLocaleDateString()}
                 </p>
@@ -191,11 +257,17 @@ export default function VendorDetailPage() {
               <div className="text-center py-12">
                 <div className="w-16 h-16 mx-auto mb-4 text-gray-300">
                   <svg fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                    <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                    <path
+                      fillRule="evenodd"
+                      d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
-                <p className="text-gray-600 text-lg">No contracts found for this vendor</p>
+                <p className="text-gray-600 text-lg">
+                  No contracts found for this vendor
+                </p>
               </div>
             ) : (
               <div className="overflow-hidden rounded-xl border border-gray-200">
@@ -221,46 +293,65 @@ export default function VendorDetailPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {contracts.map((contract) => (
-                      <tr key={contract.id} className="hover:bg-gray-50 transition-colors">
+                      <tr
+                        key={contract.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
                         <td className="px-6 py-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">{contract.facility.name}</p>
-                            <p className="text-sm text-gray-500 font-mono">Code: {contract.facility.code}</p>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {contract.facility.name}
+                            </p>
+                            <p className="text-sm text-gray-500 font-mono">
+                              Code: {contract.facility.code}
+                            </p>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">{contract.lot.name}</p>
-                            <p className="text-sm text-gray-500">Number: {contract.lot.number}</p>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {contract.lot.name}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Number: {contract.lot.number}
+                            </p>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900">
-                            <span className="font-medium">{contract.services?.length || 0} service{(contract.services?.length || 0) !== 1 ? 's' : ''}</span>
-                            {contract.services && contract.services.length > 0 && (
-                              <div className="mt-2 flex flex-wrap gap-1">
-                                {contract.services.slice(0, 3).map((service) => (
-                                  <span
-                                    key={service.service_id}
-                                    className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium"
-                                  >
-                                    {service.service_name}
-                                  </span>
-                                ))}
-                                {contract.services.length > 3 && (
-                                  <span className="text-xs text-gray-500 py-1">
-                                    +{contract.services.length - 3} more
-                                  </span>
-                                )}
-                              </div>
-                            )}
+                            <span className="font-medium">
+                              {contract.services?.length || 0} service
+                              {(contract.services?.length || 0) !== 1
+                                ? "s"
+                                : ""}
+                            </span>
+                            {contract.services &&
+                              contract.services.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                  {contract.services
+                                    .slice(0, 3)
+                                    .map((service) => (
+                                      <span
+                                        key={service.service_id}
+                                        className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium"
+                                      >
+                                        {service.service_name}
+                                      </span>
+                                    ))}
+                                  {contract.services.length > 3 && (
+                                    <span className="text-xs text-gray-500 py-1">
+                                      +{contract.services.length - 3} more
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span 
+                          <span
                             className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                              contract.is_active === "1" 
-                                ? "bg-green-100 text-green-800" 
+                              contract.is_active === "1"
+                                ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
                             }`}
                           >
@@ -270,13 +361,19 @@ export default function VendorDetailPage() {
                         <td className="px-6 py-4">
                           <div className="flex space-x-3">
                             <button
-                              onClick={() => router.push(`/facilities/${contract.facility.code}`)}
+                              onClick={() =>
+                                router.push(
+                                  `/facilities/${contract.facility.code}`
+                                )
+                              }
                               className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
                             >
                               View Facility
                             </button>
                             <button
-                              onClick={() => router.push(`/lots/${contract.lot.number}`)}
+                              onClick={() =>
+                                router.push(`/lots/${contract.lot.number}`)
+                              }
                               className="text-green-600 hover:text-green-800 text-sm font-medium transition-colors"
                             >
                               View Lot
