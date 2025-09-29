@@ -1,32 +1,49 @@
 import axios from "../lib/axios";
 
+export interface Ward {
+  id: string;
+  code: string;
+  name: string;
+}
+
+export interface SubCounty {
+  id: string;
+  code: string;
+  name: string;
+  ward: Ward;
+}
+
+export interface County {
+  id: string;
+  code: string;
+  name: string;
+  subcounty: SubCounty;
+}
+
 export interface Facility {
   id: string;
   name: string;
   code: string;
-  ward_id: string;
-  sub_county_id: string;
-  county_id: string;
-  is_active: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-  regulatory_status: string;
+  keph_level: string;
+  regulatory_status: string | null;
   facility_type: string;
   owner: string;
-  operation_status: string;
-  keph_level: string;
-}
-
-// Legacy interface for backward compatibility
-export interface LegacyFacility {
-  id: string;
-  name: string;
-  code: string;
-  contactInfo: string;
-  created_at: string;
-  updatedAt: string;
-  deletedAt: string | null;
+  county: County;
+  // Additional fields that might be in the API but not shown in the sample
+  operation_status?: string;
+  is_active?: string;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
+  // DHA credentials (optional)
+  dha_pass_id?: string;
+  dha_username?: string;
+  dha_code?: string;
+  dha_agent?: string;
+  dha_key?: string;
+  dha_secret?: string;
+  public_key?: string;
+  private_key?: string;
 }
 
 // Enums for better type safety
@@ -94,11 +111,24 @@ export interface CreateFacilityForm {
   keph_level: KephLevel | string;
 }
 
-// Legacy form interface for backward compatibility
-export interface LegacyEditFacilityForm {
-  name: string;
+// New interface matching the API payload you provided
+export interface CreateFacilityPayload {
   code: string;
-  contact_info: string;
+  name: string;
+  regulatory_status?: string;
+  facility_type?: string;
+  owner?: string;
+  ward_code: string; // required
+  keph_level?: string;
+  operation_status?: string;
+  dha_pass_id?: string;
+  dha_username?: string;
+  dha_code?: string;
+  dha_agent?: string;
+  dha_key?: string;
+  dha_secret?: string;
+  public_key?: string;
+  private_key?: string;
 }
 
 // Utility types
@@ -106,7 +136,6 @@ export type FacilityForm = Omit<
   Facility,
   "id" | "created_at" | "updated_at" | "deleted_at"
 >;
-export type LegacyFacilityForm = Omit<LegacyFacility, "id">;
 
 // Pagination link interface
 export interface PaginationLink {
@@ -115,20 +144,12 @@ export interface PaginationLink {
   active: boolean;
 }
 
-// Paginated response interface
+// Paginated response interface matching the API structure
 export interface PaginatedFacilityResponse {
-  current_page: number;
   data: Facility[];
-  first_page_url: string;
-  from: number;
+  current_page: number;
   last_page: number;
-  last_page_url: string;
-  links: PaginationLink[];
-  next_page_url: string | null;
-  path: string;
   per_page: number;
-  prev_page_url: string | null;
-  to: number;
   total: number;
 }
 
@@ -202,7 +223,22 @@ export const getFacilities = async (
 export const getFacilitiesPaginated = async (
   params?: FacilityQueryParams
 ): Promise<PaginatedFacilityResponse> => {
-  const response = await axios.get("/facilities", { params });
+  let queryParams = { ...params };
+
+  // If there's a search term, remove pagination parameters
+  if (queryParams?.search) {
+    delete queryParams.page;
+    delete queryParams.per_page;
+  } else {
+    // For non-search requests, add default pagination if not specified
+    queryParams = {
+      page: 1,
+      per_page: 100,
+      ...queryParams,
+    };
+  }
+
+  const response = await axios.get("/facilities", { params: queryParams });
   return response.data;
 };
 
@@ -221,7 +257,14 @@ export const getFacilityByCode = async (code: string): Promise<Facility> => {
 };
 
 export const createFacility = async (data: FacilityForm): Promise<Facility> => {
-  const response = await axios.post("/create-facility", data);
+  const response = await axios.post("/facilities", data);
+  return response.data.data;
+};
+
+export const createFacilityNew = async (
+  data: CreateFacilityPayload
+): Promise<Facility> => {
+  const response = await axios.post("/facilities", data);
   return response.data.data;
 };
 
@@ -229,12 +272,12 @@ export const updateFacility = async (
   id: string,
   data: Partial<EditFacilityForm>
 ): Promise<EditFacilityForm> => {
-  const response = await axios.put(`/update-facility/${id}`, data);
+  const response = await axios.put(`/facilities/${id}`, data);
   return response.data.data;
 };
 
 export const deleteFacility = async (id: string): Promise<void> => {
-  await axios.delete<void>(`/Facility/${id}`);
+  await axios.delete<void>(`/facilities/${id}`);
 };
 
 // Utility functions for building search queries

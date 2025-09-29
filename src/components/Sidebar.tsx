@@ -7,48 +7,39 @@ import {
   HiOutlineUser,
   HiOutlineUsers,
   HiXMark,
+  HiOutlineDocumentText,
+  HiOutlineCog6Tooth,
+  HiOutlineClipboardDocumentList,
+  HiOutlineCurrencyDollar,
 } from "react-icons/hi2";
+import { useAccessibleNavItems } from "@/lib/navigation";
+import { Permission } from "@/lib/rbac";
 
 interface SidebarProps {
   isMobileMenuOpen?: boolean;
   onClose?: () => void;
 }
 
+// Icon mapping for navigation items
+const getIconForRoute = (href: string) => {
+  if (href === "/") return <HiOutlineHome />;
+  if (href.startsWith("/patients")) return <HiOutlineUser />;
+  if (href.startsWith("/equipments")) return <HiOutlineCog6Tooth />;
+  if (href.startsWith("/facilities")) return <HiOutlineUsers />;
+  if (href.startsWith("/vendors")) return <HiOutlineUsers />;
+  if (href.startsWith("/contracts")) return <HiOutlineDocumentText />;
+  if (href.startsWith("/lots")) return <HiOutlineClipboardDocumentList />;
+  if (href.startsWith("/bookings")) return <HiOutlineClipboardDocumentList />;
+  if (href.startsWith("/services")) return <HiOutlineCog6Tooth />;
+  if (href.startsWith("/payments")) return <HiOutlineCurrencyDollar />;
+  if (href.startsWith("/reports")) return <HiOutlineDocumentText />;
+  if (href.startsWith("/trends")) return <HiOutlineChartBarSquare />;
+  return <HiOutlineUser />;
+};
+
 function Sidebar({ isMobileMenuOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-
-  const navItems = [
-    { href: "/", label: "Home", icon: <HiOutlineHome /> },
-    { href: "/patients", label: "Patients", icon: <HiOutlineUser /> },
-    { href: "/equipments", label: "Equipments", icon: <HiOutlineUsers /> },
-    { href: "/facilities", label: "Facilities", icon: <HiOutlineUsers /> },
-    { href: "/vendors", label: "Vendors", icon: <HiOutlineUsers /> },
-    { href: "/contracts", label: "Contracts", icon: <HiOutlineUsers /> },
-    { href: "/lots", label: "Lots", icon: <HiOutlineUsers /> },
-    { href: "/bookings", label: "Services", icon: <HiOutlineUsers /> },
-    {
-      href: "/bookings/synced",
-      label: "Synched to SHA",
-      icon: <HiOutlineChartBarSquare />,
-    },
-    { href: "/trends", label: "Analytics", icon: <HiOutlineChartBarSquare /> },
-    // {
-    //   href: "/payments",
-    //   label: "Payments Report",
-    //   icon: <HiOutlineUsers />,
-    // },
-    // {
-    //   label: "Reports",
-    //   icon: <HiOutlineUsers />,
-    //   children: [
-    //     { href: "/reports/facility", label: "Facility Report" },
-    //     { href: "/reports/vendor", label: "Vendor Report" },
-    //     { href: "/reports/payments", label: "Payments Report" },
-    //   ],
-    // },
-    // { href: "/services", label: "Services", icon: <HiOutlineHomeModern /> },
-    // { href: "/lems", label: "Lems", icon: <HiOutlineCog6Tooth /> },
-  ];
+  const accessibleNavItems = useAccessibleNavItems();
 
   const handleLinkClick = () => {
     if (onClose) {
@@ -84,7 +75,7 @@ function Sidebar({ isMobileMenuOpen, onClose }: SidebarProps) {
 
         <nav>
           <ul className="flex flex-col gap-2">
-            {navItems.map((item) => (
+            {accessibleNavItems.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
@@ -94,6 +85,7 @@ function Sidebar({ isMobileMenuOpen, onClose }: SidebarProps) {
                       ? "bg-gray-200 text-gray-800"
                       : "hover:bg-gray-300 hover:text-gray-800"
                   }`}
+                  title={item.description}
                 >
                   <span
                     className={`w-6 h-6 ${
@@ -102,7 +94,7 @@ function Sidebar({ isMobileMenuOpen, onClose }: SidebarProps) {
                         : "text-gray-400"
                     } transition-all`}
                   >
-                    {item.icon}
+                    {getIconForRoute(item.href)}
                   </span>
                   <span className="text-sm md:text-base">{item.label}</span>
                 </Link>

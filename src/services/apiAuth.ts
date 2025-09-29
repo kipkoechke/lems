@@ -28,7 +28,9 @@ export interface AuthState {
 }
 
 // Login fetcher function for React Query
-export const loginFetcher = async (credentials: LoginFormData): Promise<LoginResponse> => {
+export const loginFetcher = async (
+  credentials: LoginFormData
+): Promise<LoginResponse> => {
   try {
     const response = await axios.post("/login", credentials);
     // The response should match the format: { user, facility, token }
@@ -49,14 +51,20 @@ export const loginFetcher = async (credentials: LoginFormData): Promise<LoginRes
 export const loginUser = loginFetcher;
 
 // Auth utility functions
-export const setAuthData = (user: User, facility: Facility, token: string): void => {
+export const setAuthData = (
+  user: User,
+  facility: Facility,
+  token: string
+): void => {
   // Set in localStorage
   localStorage.setItem("authToken", token);
   localStorage.setItem("user", JSON.stringify(user));
   localStorage.setItem("facility", JSON.stringify(facility));
-  
+
   // Set in cookies for middleware access
-  document.cookie = `authToken=${token}; path=/; max-age=${7 * 24 * 60 * 60}; samesite=strict`;
+  document.cookie = `authToken=${token}; path=/; max-age=${
+    7 * 24 * 60 * 60
+  }; samesite=strict`;
 };
 
 export const getAuthData = (): AuthState => {
@@ -67,7 +75,7 @@ export const getAuthData = (): AuthState => {
   const token = localStorage.getItem("authToken");
   const userStr = localStorage.getItem("user");
   const facilityStr = localStorage.getItem("facility");
-  
+
   if (!token || !userStr) {
     return { user: null, facility: null, token: null, isAuthenticated: false };
   }
@@ -85,9 +93,10 @@ export const clearAuthData = (): void => {
   localStorage.removeItem("authToken");
   localStorage.removeItem("user");
   localStorage.removeItem("facility");
-  
+
   // Clear cookies
-  document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+  document.cookie =
+    "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
 };
 
 // User profile fetcher (for future use)

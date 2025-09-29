@@ -60,11 +60,6 @@ export function useFacilitiesPaginated(params?: FacilityQueryParams) {
           lastPage: paginatedData.last_page,
           perPage: paginatedData.per_page,
           total: paginatedData.total,
-          from: paginatedData.from,
-          to: paginatedData.to,
-          links: paginatedData.links,
-          nextPageUrl: paginatedData.next_page_url,
-          prevPageUrl: paginatedData.prev_page_url,
         }
       : null,
     error,
@@ -197,7 +192,9 @@ export function useFacilitySearchWithUrl() {
       const newParams = { ...queryParams };
       if (search.trim()) {
         newParams.search = search.trim();
-        newParams.page = 1; // Reset to first page when searching
+        // Remove pagination when searching
+        delete newParams.page;
+        delete newParams.per_page;
       } else {
         delete newParams.search;
         delete newParams.page; // Also remove page when clearing search
@@ -235,11 +232,6 @@ export function useFacilitySearchWithUrl() {
           lastPage: paginatedData.last_page,
           perPage: paginatedData.per_page,
           total: paginatedData.total,
-          from: paginatedData.from,
-          to: paginatedData.to,
-          links: paginatedData.links,
-          nextPageUrl: paginatedData.next_page_url,
-          prevPageUrl: paginatedData.prev_page_url,
         }
       : null,
     error,

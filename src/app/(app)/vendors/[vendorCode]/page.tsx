@@ -372,7 +372,7 @@ export default function VendorDetailPage() {
                             </button>
                             <button
                               onClick={() =>
-                                router.push(`/lots/${contract.lot.number}`)
+                                router.push(`/lots/${contract.lot.id}`)
                               }
                               className="text-green-600 hover:text-green-800 text-sm font-medium transition-colors"
                             >

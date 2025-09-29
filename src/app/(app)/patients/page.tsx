@@ -6,55 +6,11 @@ import { Patient } from "@/services/apiPatient";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaCalendar, FaPhone, FaSearch, FaUser } from "react-icons/fa";
-import { FiMoreVertical } from "react-icons/fi";
+import { ActionMenu } from "@/components/ActionMenu";
 
 // Removed unused PatientBookingsModal
 
-// Dropdown Menu Component
-function ActionsDropdown({
-  onViewBookings,
-}: {
-  patient: Patient;
-  onViewBookings: () => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsOpen(!isOpen);
-        }}
-        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-      >
-        <FiMoreVertical className="w-4 h-4 text-gray-600" />
-      </button>
-
-      {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onViewBookings();
-                setIsOpen(false);
-              }}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-            >
-              <FaCalendar className="w-4 h-4" />
-              View Bookings
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+// Removed ActionsDropdown component - replaced with ActionMenu
 
 // Breadcrumb Component
 // Removed PatientBreadcrumb (unused)
@@ -334,10 +290,16 @@ function Patients() {
                         )}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <ActionsDropdown
-                          patient={patient}
-                          onViewBookings={() => handleViewBookings(patient)}
-                        />
+                        <ActionMenu menuId={`patient-${patient.id}`}>
+                          <ActionMenu.Trigger />
+                          <ActionMenu.Content>
+                            <ActionMenu.Item
+                              onClick={() => handleViewBookings(patient)}
+                            >
+                              <FaCalendar className="w-4 h-4" /> View Bookings
+                            </ActionMenu.Item>
+                          </ActionMenu.Content>
+                        </ActionMenu>
                       </td>
                     </tr>
                   ))}
@@ -354,7 +316,6 @@ function Patients() {
               total={pagination.total}
               from={pagination.from}
               to={pagination.to}
-              links={pagination.links}
               onPageChange={handlePageChange}
             />
           )}
@@ -395,10 +356,16 @@ function Patients() {
                         </div>
                       </div>
                     </div>
-                    <ActionsDropdown
-                      patient={patient}
-                      onViewBookings={() => handleViewBookings(patient)}
-                    />
+                    <ActionMenu menuId={`patient-mobile-${patient.id}`}>
+                      <ActionMenu.Trigger />
+                      <ActionMenu.Content>
+                        <ActionMenu.Item
+                          onClick={() => handleViewBookings(patient)}
+                        >
+                          <FaCalendar className="w-4 h-4" /> View Bookings
+                        </ActionMenu.Item>
+                      </ActionMenu.Content>
+                    </ActionMenu>
                   </div>
 
                   <div className="space-y-2 text-sm">
@@ -472,7 +439,6 @@ function Patients() {
                     total={pagination.total}
                     from={pagination.from}
                     to={pagination.to}
-                    links={pagination.links}
                     onPageChange={handlePageChange}
                   />
                 </div>

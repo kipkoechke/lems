@@ -100,11 +100,15 @@ export const getPatientById = async (id: string): Promise<Patient> => {
   return response.data.data;
 };
 
+export interface PatientUpdateRequest {
+  id: string;
+  data: Partial<Patient>;
+}
+
 export const updatePatient = async (
-  id: string,
-  data: Partial<Patient>
+  request: PatientUpdateRequest
 ): Promise<Patient> => {
-  const response = await axios.patch(`/Patient/${id}`, data);
+  const response = await axios.patch(`/patient/${request.id}`, request.data);
   return response.data.data;
 };
 

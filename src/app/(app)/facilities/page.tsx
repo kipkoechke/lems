@@ -1,6 +1,7 @@
 "use client";
 import Modal from "@/components/Modal";
 import Pagination from "@/components/Pagination";
+import { ActionMenu } from "@/components/ActionMenu";
 import {
   useFacilitiesPaginated,
   useUpdateFacility,
@@ -21,7 +22,6 @@ import { useForm } from "react-hook-form";
 import {
   FaBuilding,
   FaEdit,
-  FaEllipsisV,
   FaEye,
   FaFileContract,
   FaSearch,
@@ -108,7 +108,6 @@ function FacilitiesContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchInput, setSearchInput] = useState("");
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   // Filter states
   const [selectedCounty, setSelectedCounty] = useState("");
@@ -204,7 +203,6 @@ function FacilitiesContent() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    setActiveDropdown(null);
   };
 
   const handleSearch = () => {
@@ -842,109 +840,69 @@ function FacilitiesContent() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <div className="relative">
-                          <button
-                            onClick={() =>
-                              setActiveDropdown(
-                                activeDropdown === facility.id
-                                  ? null
-                                  : facility.id
-                              )
-                            }
-                            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                          >
-                            <FaEllipsisV />
-                          </button>
-
-                          {activeDropdown === facility.id && (
-                            <>
-                              {/* Backdrop to close dropdown */}
-                              <div
-                                className="fixed inset-0 z-30"
-                                onClick={() => setActiveDropdown(null)}
-                              ></div>
-
-                              {/* Dropdown menu */}
-                              <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
-                                <div className="p-1">
-                                  <button
-                                    onClick={() => {
-                                      router.push(
-                                        `/facilities/${facility.code}`
-                                      );
-                                      setActiveDropdown(null);
-                                    }}
-                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
-                                  >
-                                    <FaEye className="text-blue-500" /> View
-                                    Details
-                                  </button>
-                                  <Modal>
-                                    <Modal.Open
-                                      opens={`edit-facility-${facility.id}`}
-                                    >
-                                      <button
-                                        onClick={() => {
-                                          setActiveDropdown(null);
-                                        }}
-                                        className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
-                                      >
-                                        <FaEdit className="text-green-500" />{" "}
-                                        Edit Facility
-                                      </button>
-                                    </Modal.Open>
-                                    <Modal.Window
-                                      name={`edit-facility-${facility.id}`}
-                                    >
-                                      <EditFacilityForm
-                                        facility={facility}
-                                        onSuccess={() => {
-                                          // Modal will auto-close
-                                        }}
-                                      />
-                                    </Modal.Window>
-                                  </Modal>
-                                  <button
-                                    onClick={() => {
-                                      router.push(
-                                        `/contracts?facility_code=${facility.code}`
-                                      );
-                                      setActiveDropdown(null);
-                                    }}
-                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
-                                  >
-                                    <FaFileContract className="text-purple-500" />{" "}
-                                    View Contracts
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      router.push(
-                                        `/patients?facility_code=${facility.code}`
-                                      );
-                                      setActiveDropdown(null);
-                                    }}
-                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
-                                  >
-                                    <FaUsers className="text-indigo-500" /> View
-                                    Patients
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      router.push(
-                                        `/services?facility_code=${facility.code}`
-                                      );
-                                      setActiveDropdown(null);
-                                    }}
-                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
-                                  >
-                                    <FaStethoscope className="text-orange-500" />{" "}
-                                    View Services
-                                  </button>
-                                </div>
-                              </div>
-                            </>
-                          )}
-                        </div>
+                        <ActionMenu menuId={`facility-${facility.id}`}>
+                          <ActionMenu.Trigger />
+                          <ActionMenu.Content>
+                            <ActionMenu.Item
+                              onClick={() =>
+                                router.push(`/facilities/${facility.code}`)
+                              }
+                            >
+                              <FaEye className="h-4 w-4 text-blue-500" />
+                              View Details
+                            </ActionMenu.Item>
+                            <Modal>
+                              <Modal.Open
+                                opens={`edit-facility-${facility.id}`}
+                              >
+                                <ActionMenu.Item onClick={() => {}}>
+                                  <FaEdit className="h-4 w-4 text-green-500" />
+                                  Edit Facility
+                                </ActionMenu.Item>
+                              </Modal.Open>
+                              <Modal.Window
+                                name={`edit-facility-${facility.id}`}
+                              >
+                                <EditFacilityForm
+                                  facility={facility}
+                                  onSuccess={() => {
+                                    // Modal will auto-close
+                                  }}
+                                />
+                              </Modal.Window>
+                            </Modal>
+                            <ActionMenu.Item
+                              onClick={() =>
+                                router.push(
+                                  `/contracts?facility_code=${facility.code}`
+                                )
+                              }
+                            >
+                              <FaFileContract className="h-4 w-4 text-purple-500" />
+                              View Contracts
+                            </ActionMenu.Item>
+                            <ActionMenu.Item
+                              onClick={() =>
+                                router.push(
+                                  `/patients?facility_code=${facility.code}`
+                                )
+                              }
+                            >
+                              <FaUsers className="h-4 w-4 text-indigo-500" />
+                              View Patients
+                            </ActionMenu.Item>
+                            <ActionMenu.Item
+                              onClick={() =>
+                                router.push(
+                                  `/services?facility_code=${facility.code}`
+                                )
+                              }
+                            >
+                              <FaStethoscope className="h-4 w-4 text-orange-500" />
+                              View Services
+                            </ActionMenu.Item>
+                          </ActionMenu.Content>
+                        </ActionMenu>
                       </td>
                     </tr>
                   ))}
@@ -996,52 +954,29 @@ function FacilitiesContent() {
                         </div>
                       </div>
                     </div>
-                    <div className="relative">
-                      <button
-                        onClick={() =>
-                          setActiveDropdown(
-                            activeDropdown === facility.id ? null : facility.id
-                          )
-                        }
-                        className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                      >
-                        <FaEllipsisV />
-                      </button>
-
-                      {activeDropdown === facility.id && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-30"
-                            onClick={() => setActiveDropdown(null)}
-                          ></div>
-                          <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
-                            <div className="p-1">
-                              <button
-                                onClick={() => {
-                                  router.push(`/facilities/${facility.code}`);
-                                  setActiveDropdown(null);
-                                }}
-                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
-                              >
-                                <FaEye className="text-blue-500" /> View Details
-                              </button>
-                              <button
-                                onClick={() => {
-                                  router.push(
-                                    `/services?facility_code=${facility.code}`
-                                  );
-                                  setActiveDropdown(null);
-                                }}
-                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
-                              >
-                                <FaStethoscope className="text-orange-500" />{" "}
-                                View Services
-                              </button>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                    <ActionMenu menuId={`facility-mobile-${facility.id}`}>
+                      <ActionMenu.Trigger />
+                      <ActionMenu.Content>
+                        <ActionMenu.Item
+                          onClick={() =>
+                            router.push(`/facilities/${facility.code}`)
+                          }
+                        >
+                          <FaEye className="h-4 w-4 text-blue-500" />
+                          View Details
+                        </ActionMenu.Item>
+                        <ActionMenu.Item
+                          onClick={() =>
+                            router.push(
+                              `/services?facility_code=${facility.code}`
+                            )
+                          }
+                        >
+                          <FaStethoscope className="h-4 w-4 text-orange-500" />
+                          View Services
+                        </ActionMenu.Item>
+                      </ActionMenu.Content>
+                    </ActionMenu>
                   </div>
                 </div>
               ))}
@@ -1055,9 +990,6 @@ function FacilitiesContent() {
                 currentPage={pagination.currentPage}
                 lastPage={pagination.lastPage}
                 total={pagination.total}
-                from={pagination.from}
-                to={pagination.to}
-                links={pagination.links}
                 onPageChange={handlePageChange}
               />
             </div>
@@ -1071,9 +1003,6 @@ function FacilitiesContent() {
               currentPage={pagination.currentPage}
               lastPage={pagination.lastPage}
               total={pagination.total}
-              from={pagination.from}
-              to={pagination.to}
-              links={pagination.links}
               onPageChange={handlePageChange}
             />
           </div>

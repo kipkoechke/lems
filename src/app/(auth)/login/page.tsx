@@ -7,6 +7,7 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import { MdMedicalServices } from "react-icons/md";
+import { Suspense } from "react";
 
 export default function LoginPage() {
   return (
@@ -31,7 +32,9 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <LoginForm />
+          <Suspense fallback={<div className="animate-pulse bg-gray-200 h-64 rounded-lg"></div>}>
+            <LoginForm />
+          </Suspense>
 
           <div className="mt-6">
             <div className="relative">

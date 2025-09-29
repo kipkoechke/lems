@@ -4,27 +4,28 @@ import { useParams, useRouter } from "next/navigation";
 import { useLotWithServices } from "@/features/lots/useLotWithServices";
 import { getContracts } from "@/services/apiVendors";
 import { useQuery } from "@tanstack/react-query";
+import { FaCogs } from "react-icons/fa";
 
 export default function LotDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const lotNumber = params.lotNumber as string;
+  const id = params.id as string;
 
   const {
     lot,
     services = [],
     isLoading: lotLoading,
     error: lotError,
-  } = useLotWithServices(lotNumber);
+  } = useLotWithServices(id);
 
   const {
     data: contracts = [],
     isLoading: contractsLoading,
     error: contractsError,
   } = useQuery({
-    queryKey: ["contracts", lotNumber],
-    queryFn: () => getContracts({ lot_number: lotNumber }),
-    enabled: !!lotNumber,
+    queryKey: ["contracts", id],
+    queryFn: () => getContracts({ lot_number: lot?.number }),
+    enabled: !!lot?.number,
   });
 
   if (lotLoading || contractsLoading) {
@@ -258,22 +259,21 @@ export default function LotDetailPage() {
                   {lot.is_active === "1" ? "Active" : "Inactive"}
                 </p>
               </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                  Created Date
-                </label>
-                <p className="text-lg font-medium text-gray-900">
-                  {new Date(lot.created_at).toLocaleDateString()}
-                </p>
-              </div>
             </div>
           </div>
         </div>
 
         {/* Services */}
         <div className="bg-white rounded-2xl shadow-lg mb-8">
-          <div className="px-8 py-6 border-b border-gray-100">
+          <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-900">Services</h2>
+            <button
+              onClick={() => router.push(`/lots/${id}/services`)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm"
+            >
+              <FaCogs className="w-4 h-4" />
+              Manage Services
+            </button>
           </div>
           <div className="p-8">
             {services.length === 0 ? (
@@ -300,10 +300,7 @@ export default function LotDetailPage() {
                         Service
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        SHA Rate
+                        Description
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                         Vendor Share
@@ -333,31 +330,18 @@ export default function LotDetailPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                              service.is_capitated
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {service.is_capitated
-                              ? "Capitated"
-                              : "Fee-for-Service"}
-                          </span>
+                          <p className="text-sm text-gray-900">
+                            {service.description || "No description"}
+                          </p>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-sm font-semibold text-gray-900">
-                            KES {service.sha_rate.toLocaleString()}
+                          <span className="text-sm font-medium text-gray-900">
+                            {service.vendor_share}
                           </span>
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-sm font-medium text-gray-900">
-                            {service.vendor_share}%
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm font-medium text-gray-900">
-                            {service.facility_share}%
+                            {service.facility_share}
                           </span>
                         </td>
                         <td className="px-6 py-4">

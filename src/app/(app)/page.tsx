@@ -1,8 +1,9 @@
 "use client";
 
+import { RoleBasedDashboard } from "@/components/RoleBasedDashboard";
+import UserInfo from "@/components/UserInfo";
 import ProceedToTests from "@/components/ProceedToTests";
 import ServiceInProgress from "@/components/ServiceInProgress";
-import UserInfo from "@/components/UserInfo";
 import {
   goToNextStep,
   selectFacility,
@@ -83,7 +84,13 @@ function Clinicians() {
   return (
     <div className="container mx-auto p-2 md:p-6">
       <UserInfo />
-      {renderStepComponent()}
+      <div className="mt-6">
+        <RoleBasedDashboard />
+      </div>
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">Patient Workflow</h3>
+        {renderStepComponent()}
+      </div>
     </div>
   );
 }

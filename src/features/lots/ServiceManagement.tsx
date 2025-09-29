@@ -21,8 +21,7 @@ import { useUpdateService } from "./useUpdateService";
 interface ServiceFormData {
   name: string;
   code: string;
-  is_capitated: boolean;
-  sha_rate: number;
+  description?: string;
   vendor_share: number;
   facility_share: number;
 }
@@ -31,10 +30,9 @@ const ServiceManagement: React.FC = () => {
   const router = useRouter();
   const params = useParams();
 
-  const lotNumber = params.lotNumber as string;
+  const id = params.id as string;
 
-  const { lot, services, isLoading, error, refetch } =
-    useLotWithServices(lotNumber);
+  const { lot, services, isLoading, error, refetch } = useLotWithServices(id);
   const createServiceMutation = useCreateService();
   const updateServiceMutation = useUpdateService();
   const deleteServiceMutation = useDeleteService();
@@ -58,8 +56,7 @@ const ServiceManagement: React.FC = () => {
   const [formData, setFormData] = useState<ServiceFormData>({
     name: "",
     code: "",
-    is_capitated: false,
-    sha_rate: 0,
+    description: "",
     vendor_share: 0,
     facility_share: 0,
   });
@@ -85,18 +82,16 @@ const ServiceManagement: React.FC = () => {
       setFormData({
         name: service.name,
         code: service.code,
-        is_capitated: service.is_capitated,
-        sha_rate: service.sha_rate,
-        vendor_share: service.vendor_share,
-        facility_share: service.facility_share,
+        description: service.description || "",
+        vendor_share: parseInt(service.vendor_share) || 0,
+        facility_share: parseInt(service.facility_share) || 0,
       });
     } else {
       setSelectedService(null);
       setFormData({
         name: "",
         code: "",
-        is_capitated: false,
-        sha_rate: 0,
+        description: "",
         vendor_share: 0,
         facility_share: 0,
       });
@@ -110,8 +105,7 @@ const ServiceManagement: React.FC = () => {
     setFormData({
       name: "",
       code: "",
-      is_capitated: false,
-      sha_rate: 0,
+      description: "",
       vendor_share: 0,
       facility_share: 0,
     });
@@ -287,9 +281,6 @@ const ServiceManagement: React.FC = () => {
                     Code
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    SHA Rate
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Vendor Share
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -307,7 +298,7 @@ const ServiceManagement: React.FC = () => {
                 {filteredServices.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={6}
                       className="px-6 py-8 text-center text-gray-500"
                     >
                       {searchTerm || statusFilter !== "all"
@@ -329,11 +320,6 @@ const ServiceManagement: React.FC = () => {
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
                           {service.code}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {service.sha_rate}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -452,23 +438,9 @@ const ServiceManagement: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Capitated
+                      Description
                     </label>
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        selectedService?.is_capitated
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {selectedService?.is_capitated ? "Yes" : "No"}
-                    </span>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      SHA Rate
-                    </label>
-                    <p className="text-gray-900">{selectedService?.sha_rate}</p>
+                    <p className="text-gray-900">{selectedService?.description || "No description"}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -539,23 +511,19 @@ const ServiceManagement: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      SHA Rate <span className="text-red-500">*</span>
+                      Description
                     </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      required
-                      value={formData.sha_rate}
+                    <textarea
+                      value={formData.description}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          sha_rate: parseFloat(e.target.value) || 0,
+                          description: e.target.value,
                         })
                       }
+                      rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter SHA rate"
+                      placeholder="Enter service description"
                     />
                   </div>
 
@@ -603,26 +571,7 @@ const ServiceManagement: React.FC = () => {
                     />
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="is_capitated"
-                      checked={formData.is_capitated}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          is_capitated: e.target.checked,
-                        })
-                      }
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <label
-                      htmlFor="is_capitated"
-                      className="text-sm font-medium text-gray-700"
-                    >
-                      Capitated Service
-                    </label>
-                  </div>
+
 
                   <div className="flex gap-3 pt-4">
                     <button

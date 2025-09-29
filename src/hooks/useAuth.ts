@@ -1,16 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { 
-  loginFetcher, 
-  getAuthData, 
-  setAuthData, 
-  clearAuthData, 
+import {
+  loginFetcher,
+  getAuthData,
+  setAuthData,
+  clearAuthData,
   fetchUserProfile,
   LoginResponse,
   AuthState,
   User,
-  Facility
+  Facility,
 } from "../services/apiAuth";
 
 // Query keys for consistent cache management
@@ -28,10 +28,10 @@ export const useLogin = () => {
     mutationFn: loginFetcher,
     onSuccess: (data: LoginResponse) => {
       const { user, facility, token } = data;
-      
+
       // Store auth data (including cookies for middleware)
       setAuthData(user, facility, token);
-      
+
       // Update React Query cache
       queryClient.setQueryData(authKeys.auth, {
         user,
@@ -39,10 +39,10 @@ export const useLogin = () => {
         token,
         isAuthenticated: true,
       });
-      
+
       // Show success message
       toast.success("Login successful!");
-      
+
       // Don't redirect here - let the component handle it or middleware will handle it
     },
     onError: (error: Error) => {
@@ -64,13 +64,13 @@ export const useLogout = () => {
     onSuccess: () => {
       // Clear auth data (including cookies)
       clearAuthData();
-      
+
       // Clear all queries
       queryClient.clear();
-      
+
       // Show success message
       toast.success("Logged out successfully");
-      
+
       // Force a page reload to trigger middleware redirect
       window.location.href = "/login";
     },
@@ -95,7 +95,7 @@ export const useAuth = () => {
 // Custom hook for getting user profile (for future use)
 export const useUserProfile = () => {
   const { data: auth } = useAuth();
-  
+
   return useQuery({
     queryKey: authKeys.profile,
     queryFn: fetchUserProfile,
@@ -107,7 +107,7 @@ export const useUserProfile = () => {
 // Custom hook to check if user is authenticated
 export const useIsAuthenticated = (): boolean => {
   const { data: auth, isLoading } = useAuth();
-  
+
   if (isLoading) return false;
   return auth?.isAuthenticated ?? false;
 };

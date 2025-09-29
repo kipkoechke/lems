@@ -511,7 +511,6 @@ const SyncedBookingsReport: React.FC = () => {
                       total={vendorPagination.total}
                       from={vendorPagination.from}
                       to={vendorPagination.to}
-                      links={[]}
                       onPageChange={handlePageChange}
                     />
                   </div>
@@ -682,7 +681,6 @@ const SyncedBookingsReport: React.FC = () => {
                         total={facilityPaymentsData.total}
                         from={facilityPaymentsData.from}
                         to={facilityPaymentsData.to}
-                        links={facilityPaymentsData.links}
                         onPageChange={handlePageChange}
                       />
                     </div>
@@ -932,7 +930,6 @@ const SyncedBookingsReport: React.FC = () => {
                   total={pagination.total}
                   from={pagination.from}
                   to={pagination.to}
-                  links={[]}
                   onPageChange={handlePageChange}
                 />
               </div>

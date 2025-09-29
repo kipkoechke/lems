@@ -13,13 +13,13 @@ import {
 } from "@/services/apiEquipment";
 import {
   FaCogs,
-  FaEllipsisV,
   FaEdit,
   FaPlus,
   FaTrash,
   FaChevronDown,
   FaSearch,
 } from "react-icons/fa";
+import { ActionMenu } from "@/components/ActionMenu";
 
 type ModalType = "create" | "edit";
 
@@ -32,7 +32,6 @@ const Equipments: React.FC = () => {
 
   const [search, setSearch] = useState("");
   // Location filters removed
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<ModalType>("create");
   const [form, setForm] = useState<EquipmentCreateRequest>({
@@ -115,7 +114,6 @@ const Equipments: React.FC = () => {
       vendor_id: e.vendor_id,
     });
     setShowModal(true);
-    setActiveDropdown(null);
     setIsVendorDropdownOpen(false);
     setVendorSearch("");
   };
@@ -141,7 +139,6 @@ const Equipments: React.FC = () => {
 
   const onDelete = (id: string) => {
     setShowDeleteConfirm(id);
-    setActiveDropdown(null);
   };
 
   const confirmDelete = () => {
@@ -319,43 +316,20 @@ const Equipments: React.FC = () => {
                         {e.vendor?.name || e.vendor_id}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <div className="relative">
-                          <button
-                            onClick={() =>
-                              setActiveDropdown(
-                                activeDropdown === e.id ? null : e.id
-                              )
-                            }
-                            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                          >
-                            <FaEllipsisV />
-                          </button>
-
-                          {activeDropdown === e.id && (
-                            <>
-                              <div
-                                className="fixed inset-0 z-30"
-                                onClick={() => setActiveDropdown(null)}
-                              ></div>
-                              <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
-                                <div className="p-1">
-                                  <button
-                                    onClick={() => openEdit(e)}
-                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
-                                  >
-                                    <FaEdit className="text-yellow-500" /> Edit
-                                  </button>
-                                  <button
-                                    onClick={() => onDelete(e.id)}
-                                    className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded flex items-center gap-2"
-                                  >
-                                    <FaTrash className="text-red-500" /> Delete
-                                  </button>
-                                </div>
-                              </div>
-                            </>
-                          )}
-                        </div>
+                        <ActionMenu menuId={`equipment-${e.id}`}>
+                          <ActionMenu.Trigger />
+                          <ActionMenu.Content>
+                            <ActionMenu.Item onClick={() => openEdit(e)}>
+                              <FaEdit className="text-yellow-500" /> Edit
+                            </ActionMenu.Item>
+                            <ActionMenu.Item
+                              onClick={() => onDelete(e.id)}
+                              className="text-red-600 hover:bg-red-50"
+                            >
+                              <FaTrash className="text-red-500" /> Delete
+                            </ActionMenu.Item>
+                          </ActionMenu.Content>
+                        </ActionMenu>
                       </td>
                     </tr>
                   ))
@@ -390,43 +364,20 @@ const Equipments: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     {statusBadge(e.status)}
-                    <div className="relative">
-                      <button
-                        onClick={() =>
-                          setActiveDropdown(
-                            activeDropdown === e.id ? null : e.id
-                          )
-                        }
-                        className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                      >
-                        <FaEllipsisV />
-                      </button>
-
-                      {activeDropdown === e.id && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-30"
-                            onClick={() => setActiveDropdown(null)}
-                          ></div>
-                          <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
-                            <div className="p-1">
-                              <button
-                                onClick={() => openEdit(e)}
-                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2"
-                              >
-                                <FaEdit className="text-yellow-500" /> Edit
-                              </button>
-                              <button
-                                onClick={() => onDelete(e.id)}
-                                className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded flex items-center gap-2"
-                              >
-                                <FaTrash className="text-red-500" /> Delete
-                              </button>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                    <ActionMenu menuId={`equipment-mobile-${e.id}`}>
+                      <ActionMenu.Trigger />
+                      <ActionMenu.Content>
+                        <ActionMenu.Item onClick={() => openEdit(e)}>
+                          <FaEdit className="text-yellow-500" /> Edit
+                        </ActionMenu.Item>
+                        <ActionMenu.Item
+                          onClick={() => onDelete(e.id)}
+                          className="text-red-600 hover:bg-red-50"
+                        >
+                          <FaTrash className="text-red-500" /> Delete
+                        </ActionMenu.Item>
+                      </ActionMenu.Content>
+                    </ActionMenu>
                   </div>
                 </div>
 

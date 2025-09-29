@@ -21,14 +21,13 @@ export const LoginForm = () => {
     reset,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    mode: "onBlur", // Validate on blur for better UX
+    mode: "onBlur",
   });
 
   const onSubmit = (data: LoginFormData) => {
     loginMutation.mutate(data, {
       onSuccess: () => {
-        reset(); // Clear form on success
-        // Middleware will handle the redirect
+        reset();
         window.location.href = redirectUrl;
       },
     });
@@ -45,7 +44,7 @@ export const LoginForm = () => {
         required
         disabled={loginMutation.isPending}
       />
-      
+
       <PasswordField
         label="Password"
         placeholder="Enter your password"
@@ -63,7 +62,9 @@ export const LoginForm = () => {
 
       {loginMutation.isSuccess && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-md">
-          <p className="text-green-600 text-sm">Login successful! Redirecting...</p>
+          <p className="text-green-600 text-sm">
+            Login successful! Redirecting...
+          </p>
         </div>
       )}
 

@@ -13,12 +13,12 @@ import {
   DollarSign,
   Eye,
   MinusSquare,
-  MoreVertical,
   Square,
   User,
   X,
 } from "lucide-react";
-import React, { useMemo, useState, useEffect } from "react";
+import { ActionMenu } from "@/components/ActionMenu";
+import React, { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 const BookingReport: React.FC = () => {
@@ -32,20 +32,8 @@ const BookingReport: React.FC = () => {
   const [selectedBookings, setSelectedBookings] = useState<Set<string>>(
     new Set()
   );
-  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  // Removed dropdownOpen state - replaced with ActionMenu
   // Removed location filters from bookings page
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setDropdownOpen(null);
-    };
-
-    if (dropdownOpen) {
-      document.addEventListener("click", handleClickOutside);
-      return () => document.removeEventListener("click", handleClickOutside);
-    }
-  }, [dropdownOpen]);
 
   // Filter bookings based on active tab
   const filteredBookings = useMemo(() => {
@@ -697,82 +685,58 @@ const BookingReport: React.FC = () => {
                         {getStatusBadge(booking.approval_status || "pending")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="relative">
-                          <button
-                            onClick={() =>
-                              setDropdownOpen(
-                                dropdownOpen === booking.id ? null : booking.id
-                              )
-                            }
-                            className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </button>
+                        <ActionMenu menuId={`booking-${booking.id}`}>
+                          <ActionMenu.Trigger />
+                          <ActionMenu.Content>
+                            <ActionMenu.Item
+                              onClick={() => toggleExpandRow(booking.id)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              {expandedRows.has(booking.id)
+                                ? "Hide Details"
+                                : "View Details"}
+                            </ActionMenu.Item>
 
-                          {dropdownOpen === booking.id && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                              <div className="py-2 px-2">
-                                <button
-                                  onClick={() => {
-                                    toggleExpandRow(booking.id);
-                                    setDropdownOpen(null);
-                                  }}
-                                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                            {booking.approval_status === "pending" && (
+                              <>
+                                <ActionMenu.Item
+                                  onClick={() => handleApproval(booking.id)}
+                                  disabled={approvingIds.has(booking.id)}
+                                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white my-1"
                                 >
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  {expandedRows.has(booking.id)
-                                    ? "Hide Details"
-                                    : "View Details"}
-                                </button>
-
-                                {booking.approval_status === "pending" && (
-                                  <>
-                                    <button
-                                      onClick={() => {
-                                        handleApproval(booking.id);
-                                        setDropdownOpen(null);
-                                      }}
-                                      disabled={approvingIds.has(booking.id)}
-                                      className="flex items-center w-full px-3 py-2 text-sm bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white my-1 rounded"
-                                    >
-                                      {approvingIds.has(booking.id) ? (
-                                        <>
-                                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                          Approving...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Check className="h-4 w-4 mr-2" />
-                                          Approve
-                                        </>
-                                      )}
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        handleRejection(booking.id);
-                                        setDropdownOpen(null);
-                                      }}
-                                      disabled={isRejecting}
-                                      className="flex items-center w-full px-3 py-2 text-sm bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white my-1 rounded"
-                                    >
-                                      {isRejecting ? (
-                                        <>
-                                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                          Rejecting...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <X className="h-4 w-4 mr-2" />
-                                          Reject
-                                        </>
-                                      )}
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                                  {approvingIds.has(booking.id) ? (
+                                    <>
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                      Approving...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Check className="h-4 w-4 mr-2" />
+                                      Approve
+                                    </>
+                                  )}
+                                </ActionMenu.Item>
+                                <ActionMenu.Item
+                                  onClick={() => handleRejection(booking.id)}
+                                  disabled={isRejecting}
+                                  className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white my-1"
+                                >
+                                  {isRejecting ? (
+                                    <>
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                      Rejecting...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <X className="h-4 w-4 mr-2" />
+                                      Reject
+                                    </>
+                                  )}
+                                </ActionMenu.Item>
+                              </>
+                            )}
+                          </ActionMenu.Content>
+                        </ActionMenu>
                       </td>
                     </tr>
 

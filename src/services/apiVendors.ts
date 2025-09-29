@@ -150,14 +150,14 @@ export const getVendorWithEquipments = async (
 export const createVendor = async (
   data: VendorCreateRequest
 ): Promise<Vendor> => {
-  const response = await axios.post<Vendor>("/vendors/upsert", data);
+  const response = await axios.post<Vendor>("/vendors", data);
   return response.data;
 };
 
 export const updateVendor = async (
   data: VendorUpdateRequest
 ): Promise<Vendor> => {
-  const response = await axios.post<Vendor>("/vendors/upsert", data);
+  const response = await axios.post<Vendor>("/vendors", data);
   return response.data;
 };
 

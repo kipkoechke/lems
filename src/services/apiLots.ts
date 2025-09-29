@@ -5,24 +5,16 @@ export interface Lot {
   number: string;
   name: string;
   is_active: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
 }
 
 export interface Service {
   id: string;
-  lot_id: string;
   name: string;
   code: string;
-  is_capitated: boolean;
-  sha_rate: number;
-  vendor_share: number;
-  facility_share: number;
+  description: string | null;
+  vendor_share: string;
+  facility_share: string;
   is_active: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
 }
 
 export interface LotCreateRequest {
@@ -42,8 +34,7 @@ export interface ServiceCreateRequest {
   lot_id: string;
   name: string;
   code?: string;
-  is_capitated: boolean;
-  sha_rate: number;
+  description?: string;
   vendor_share: number;
   facility_share: number;
 }
@@ -53,55 +44,33 @@ export interface ServiceUpdateRequest {
   lot_id: string;
   name: string;
   code?: string;
-  is_capitated: boolean;
-  sha_rate: number;
+  description?: string;
   vendor_share: number;
   facility_share: number;
 }
 
-export interface PaginatedLotsResponse {
-  lots: {
-    current_page: number;
-    data: Lot[];
-    first_page_url: string;
-    from: number;
-    last_page: number;
-    last_page_url: string;
-    links: Array<{
-      url: string | null;
-      label: string;
-      active: boolean;
-    }>;
-    next_page_url: string | null;
-    path: string;
-    per_page: number;
-    prev_page_url: string | null;
-    to: number;
-    total: number;
-  };
-}
-
-export interface LotsResponse {
-  lots: Lot[];
-}
+export type LotsResponse = Lot[];
 
 export interface ServicesResponse {
   services: Service[];
 }
 
 export interface LotWithServicesResponse {
-  lot: Lot;
+  id: string;
+  number: string;
+  name: string;
+  is_active: string;
   services: Service[];
 }
 
 // Lot CRUD operations
 export const getLots = async (): Promise<Lot[]> => {
-  const response = await axios.get<PaginatedLotsResponse>("/lots");
-  return response.data.lots.data;
+  const response = await axios.get<LotsResponse>("/lots");
+  return response.data;
 };
 
 export const createLot = async (data: LotCreateRequest): Promise<Lot> => {
-  const response = await axios.post<Lot>("/lots/upsert", data);
+  const response = await axios.post<Lot>("/lots", data);
   return response.data;
 };
 
@@ -123,14 +92,14 @@ export const getServices = async (): Promise<Service[]> => {
 export const createService = async (
   data: ServiceCreateRequest
 ): Promise<Service> => {
-  const response = await axios.post<Service>("/services/upsert", data);
+  const response = await axios.post<Service>("/services", data);
   return response.data;
 };
 
 export const updateService = async (
   data: ServiceUpdateRequest
 ): Promise<Service> => {
-  const response = await axios.post<Service>("/services/upsert", data);
+  const response = await axios.post<Service>("/services", data);
   return response.data;
 };
 
@@ -140,10 +109,8 @@ export const deleteService = async (serviceCode: string): Promise<void> => {
 
 // Get lot with its services
 export const getLotWithServices = async (
-  lotNumber: string
+  id: string
 ): Promise<LotWithServicesResponse> => {
-  const response = await axios.get<LotWithServicesResponse>(
-    `/lots?lot_number=${lotNumber}`
-  );
+  const response = await axios.get<LotWithServicesResponse>(`/lots/${id}`);
   return response.data;
 };
