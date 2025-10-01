@@ -7,16 +7,9 @@ import { useCreateVendor } from "@/features/vendors/useCreateVendor";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { FaBuilding, FaSave, FaTimes } from "react-icons/fa";
-
-const vendorSchema = z.object({
-  code: z.string().min(1, "Vendor code is required"),
-  name: z.string().min(2, "Vendor name must be at least 2 characters"),
-  is_active: z.boolean(),
-});
-
-type VendorFormData = z.infer<typeof vendorSchema>;
+import { vendorSchema, VendorFormData } from "@/lib/validations";
+import { InputField } from "@/components/login/InputField";
 
 function NewVendorContent() {
   const router = useRouter();
@@ -80,22 +73,15 @@ function NewVendorContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Vendor Code */}
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Vendor Code *
-                </label>
-                <input
+                <InputField
+                  label="Vendor Code"
                   type="text"
-                  {...register("code")}
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                    errors.code
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-300 hover:border-gray-400"
-                  }`}
                   placeholder="Enter vendor code"
+                  register={register("code")}
+                  error={errors.code?.message}
+                  required
+                  disabled={isCreating}
                 />
-                {errors.code && (
-                  <p className="text-red-600 text-sm">{errors.code.message}</p>
-                )}
               </div>
 
               {/* Status */}
@@ -129,22 +115,15 @@ function NewVendorContent() {
 
               {/* Vendor Name */}
               <div className="space-y-2 md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Vendor Name *
-                </label>
-                <input
+                <InputField
+                  label="Vendor Name"
                   type="text"
-                  {...register("name")}
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                    errors.name
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-300 hover:border-gray-400"
-                  }`}
                   placeholder="Enter vendor name"
+                  register={register("name")}
+                  error={errors.name?.message}
+                  required
+                  disabled={isCreating}
                 />
-                {errors.name && (
-                  <p className="text-red-600 text-sm">{errors.name.message}</p>
-                )}
               </div>
             </div>
 

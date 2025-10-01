@@ -79,8 +79,6 @@ const EditEquipment: React.FC = () => {
     });
   };
 
-
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
@@ -142,7 +140,10 @@ const EditEquipment: React.FC = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={onSubmit} className="p-4 md:p-8 space-y-4 md:space-y-6">
+          <form
+            onSubmit={onSubmit}
+            className="p-4 md:p-8 space-y-4 md:space-y-6"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -328,9 +329,9 @@ const EditEquipment: React.FC = () => {
             </div>
 
             <div className="flex flex-col md:flex-row gap-3 pt-4 md:pt-6">
-              <BackButton 
+              <BackButton
                 onClick={() => router.push(`/equipments/${params.id}`)}
-                className="w-full md:flex-1" 
+                className="w-full md:flex-1"
               />
               <button
                 type="submit"

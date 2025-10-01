@@ -8,7 +8,6 @@ import { useState } from "react";
 import {
   FaLayerGroup,
   FaPlus,
-  FaSearch,
   FaFilter,
   FaEye,
   FaStethoscope,
@@ -17,6 +16,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { ActionMenu } from "@/components/ActionMenu";
+import { SearchField } from "@/components/SearchField";
 
 export default function LotsPage() {
   const router = useRouter();
@@ -108,16 +108,11 @@ export default function LotsPage() {
           {/* Search and Filters */}
           <div className="p-4 md:p-6 bg-gray-50 border-b space-y-4">
             <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search lots by name or number..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
+              <SearchField
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="Search lots by name or number..."
+              />
               <div className="flex items-center gap-2">
                 <FaFilter className="text-gray-500" />
                 <select

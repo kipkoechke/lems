@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -16,34 +17,9 @@ import {
   SubCounty,
   Ward,
 } from "@/services/apiCounty";
-
-interface FacilityFormData {
-  // Required fields
-  name: string;
-  code: string;
-  ward_code: string;
-
-  // Optional fields
-  regulatory_status: string;
-  facility_type: string;
-  owner: string;
-  keph_level: string;
-  operation_status: string;
-
-  // DHA credentials (optional)
-  dha_pass_id: string;
-  dha_username: string;
-  dha_code: string;
-  dha_agent: string;
-  dha_key: string;
-  dha_secret: string;
-  public_key: string;
-  private_key: string;
-
-  // For UI only - will be converted to ward_code
-  county_id: string;
-  sub_county_id: string;
-}
+import { facilitySchema, FacilityFormData } from "@/lib/validations";
+import { InputField } from "@/components/login/InputField";
+import { SelectField } from "@/components/SelectField";
 
 export default function NewFacilityPage() {
   const router = useRouter();
@@ -61,7 +37,10 @@ export default function NewFacilityPage() {
     formState: { errors },
     watch,
     setValue,
-  } = useForm<FacilityFormData>();
+  } = useForm<FacilityFormData>({
+    resolver: zodResolver(facilitySchema),
+    mode: "onBlur",
+  });
 
   const selectedCounty = watch("county_id");
   const selectedSubCounty = watch("sub_county_id");
@@ -223,41 +202,27 @@ export default function NewFacilityPage() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Facility Name *
-                  </label>
-                  <input
+                  <InputField
+                    label="Facility Name"
                     type="text"
-                    {...register("name", {
-                      required: "Facility name is required",
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter facility name"
+                    register={register("name")}
+                    error={errors.name?.message}
+                    required
+                    disabled={isCreating}
                   />
-                  {errors.name && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {errors.name.message}
-                    </p>
-                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Facility Code *
-                  </label>
-                  <input
+                  <InputField
+                    label="Facility Code"
                     type="text"
-                    {...register("code", {
-                      required: "Facility code is required",
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter facility code"
+                    register={register("code")}
+                    error={errors.code?.message}
+                    required
+                    disabled={isCreating}
                   />
-                  {errors.code && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {errors.code.message}
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
@@ -269,28 +234,18 @@ export default function NewFacilityPage() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    County *
-                  </label>
-                  <select
-                    {...register("county_id", {
-                      required: "County is required",
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={loadingLocations}
-                  >
-                    <option value="">Select County</option>
-                    {counties.map((county) => (
-                      <option key={county.id} value={county.id}>
-                        {county.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.county_id && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {errors.county_id.message}
-                    </p>
-                  )}
+                  <SelectField
+                    label="County"
+                    register={register("county_id")}
+                    error={errors.county_id?.message}
+                    required
+                    disabled={loadingLocations || isCreating}
+                    placeholder="Select County"
+                    options={counties.map((county) => ({
+                      value: county.id,
+                      label: county.name,
+                    }))}
+                  />
                 </div>
 
                 <div>
@@ -448,38 +403,35 @@ export default function NewFacilityPage() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    DHA Pass ID
-                  </label>
-                  <input
+                  <InputField
+                    label="DHA Pass ID"
                     type="text"
-                    {...register("dha_pass_id")}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter DHA Pass ID"
+                    register={register("dha_pass_id")}
+                    error={errors.dha_pass_id?.message}
+                    disabled={isCreating}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    DHA Username
-                  </label>
-                  <input
+                  <InputField
+                    label="DHA Username"
                     type="text"
-                    {...register("dha_username")}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter DHA Username"
+                    register={register("dha_username")}
+                    error={errors.dha_username?.message}
+                    disabled={isCreating}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    DHA Code
-                  </label>
-                  <input
+                  <InputField
+                    label="DHA Code"
                     type="text"
-                    {...register("dha_code")}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter DHA Code"
+                    register={register("dha_code")}
+                    error={errors.dha_code?.message}
+                    disabled={isCreating}
                   />
                 </div>
 

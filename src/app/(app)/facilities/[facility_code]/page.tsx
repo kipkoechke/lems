@@ -21,7 +21,7 @@ export default function FacilityDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const facilityCode = params.facility_code as string;
-  
+
   const [editForm, setEditForm] = useState({
     name: "",
     regulatory_status: "",
@@ -29,7 +29,7 @@ export default function FacilityDetailsPage() {
     owner: "",
     operation_status: "",
     keph_level: "",
-    is_active: "1"
+    is_active: "1",
   });
 
   const {
@@ -39,7 +39,7 @@ export default function FacilityDetailsPage() {
   } = useFacilityByCode({
     facilityCode,
   });
-  
+
   const { updateFacility, isUpdating } = useUpdateFacility();
 
   const handleEditClick = () => {
@@ -51,7 +51,7 @@ export default function FacilityDetailsPage() {
         owner: facility.owner,
         operation_status: facility.operation_status || "",
         keph_level: facility.keph_level,
-        is_active: facility.is_active || "1"
+        is_active: facility.is_active || "1",
       });
     }
   };
@@ -60,15 +60,15 @@ export default function FacilityDetailsPage() {
     if (facility) {
       updateFacility({
         id: facility.id,
-        data: editForm
+        data: editForm,
       });
     }
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setEditForm(prev => ({
+    setEditForm((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -182,7 +182,9 @@ export default function FacilityDetailsPage() {
               </Modal.Open>
               <Modal.Window name="edit-facility">
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Facility</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Edit Facility
+                  </h3>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -191,7 +193,9 @@ export default function FacilityDetailsPage() {
                       <input
                         type="text"
                         value={editForm.name}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("name", e.target.value)
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
@@ -202,12 +206,16 @@ export default function FacilityDetailsPage() {
                       </label>
                       <select
                         value={editForm.regulatory_status}
-                        onChange={(e) => handleInputChange('regulatory_status', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("regulatory_status", e.target.value)
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select Status</option>
                         <option value="licensed">Licensed</option>
-                        <option value="pending registration">Pending Registration</option>
+                        <option value="pending registration">
+                          Pending Registration
+                        </option>
                         <option value="suspended">Suspended</option>
                         <option value="revoked">Revoked</option>
                       </select>
@@ -220,7 +228,9 @@ export default function FacilityDetailsPage() {
                       <input
                         type="text"
                         value={editForm.facility_type}
-                        onChange={(e) => handleInputChange('facility_type', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("facility_type", e.target.value)
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
@@ -232,7 +242,9 @@ export default function FacilityDetailsPage() {
                       <input
                         type="text"
                         value={editForm.owner}
-                        onChange={(e) => handleInputChange('owner', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("owner", e.target.value)
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
@@ -243,13 +255,17 @@ export default function FacilityDetailsPage() {
                       </label>
                       <select
                         value={editForm.operation_status}
-                        onChange={(e) => handleInputChange('operation_status', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("operation_status", e.target.value)
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select Status</option>
                         <option value="operational">Operational</option>
                         <option value="closed">Closed</option>
-                        <option value="under construction">Under Construction</option>
+                        <option value="under construction">
+                          Under Construction
+                        </option>
                       </select>
                     </div>
 
@@ -260,7 +276,9 @@ export default function FacilityDetailsPage() {
                       <input
                         type="text"
                         value={editForm.keph_level}
-                        onChange={(e) => handleInputChange('keph_level', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("keph_level", e.target.value)
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
@@ -271,7 +289,9 @@ export default function FacilityDetailsPage() {
                       </label>
                       <select
                         value={editForm.is_active}
-                        onChange={(e) => handleInputChange('is_active', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("is_active", e.target.value)
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="1">Active</option>
@@ -431,19 +451,25 @@ export default function FacilityDetailsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 County
               </label>
-              <p className="text-gray-900">{facility.county?.name || 'Not specified'}</p>
+              <p className="text-gray-900">
+                {facility.county?.name || "Not specified"}
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Sub County
               </label>
-              <p className="text-gray-900">{facility.county?.subcounty?.name || 'Not specified'}</p>
+              <p className="text-gray-900">
+                {facility.county?.subcounty?.name || "Not specified"}
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Ward
               </label>
-              <p className="text-gray-900">{facility.county?.subcounty?.ward?.name || 'Not specified'}</p>
+              <p className="text-gray-900">
+                {facility.county?.subcounty?.ward?.name || "Not specified"}
+              </p>
             </div>
           </div>
         </div>
@@ -460,10 +486,9 @@ export default function FacilityDetailsPage() {
                 Created At
               </label>
               <p className="text-gray-900">
-                {facility.created_at 
+                {facility.created_at
                   ? new Date(facility.created_at).toLocaleDateString()
-                  : 'Not available'
-                }
+                  : "Not available"}
               </p>
             </div>
             <div>
@@ -471,10 +496,9 @@ export default function FacilityDetailsPage() {
                 Last Updated
               </label>
               <p className="text-gray-900">
-                {facility.updated_at 
+                {facility.updated_at
                   ? new Date(facility.updated_at).toLocaleDateString()
-                  : 'Not available'
-                }
+                  : "Not available"}
               </p>
             </div>
             <div>
@@ -522,7 +546,9 @@ export default function FacilityDetailsPage() {
         </Modal.Open>
         <Modal.Window name="edit-facility">
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Facility</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Edit Facility
+            </h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -531,7 +557,7 @@ export default function FacilityDetailsPage() {
                 <input
                   type="text"
                   value={editForm.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -542,12 +568,16 @@ export default function FacilityDetailsPage() {
                 </label>
                 <select
                   value={editForm.regulatory_status}
-                  onChange={(e) => handleInputChange('regulatory_status', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("regulatory_status", e.target.value)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select Status</option>
                   <option value="licensed">Licensed</option>
-                  <option value="pending registration">Pending Registration</option>
+                  <option value="pending registration">
+                    Pending Registration
+                  </option>
                   <option value="suspended">Suspended</option>
                   <option value="revoked">Revoked</option>
                 </select>
@@ -560,7 +590,9 @@ export default function FacilityDetailsPage() {
                 <input
                   type="text"
                   value={editForm.facility_type}
-                  onChange={(e) => handleInputChange('facility_type', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("facility_type", e.target.value)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -572,7 +604,7 @@ export default function FacilityDetailsPage() {
                 <input
                   type="text"
                   value={editForm.owner}
-                  onChange={(e) => handleInputChange('owner', e.target.value)}
+                  onChange={(e) => handleInputChange("owner", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -583,7 +615,9 @@ export default function FacilityDetailsPage() {
                 </label>
                 <select
                   value={editForm.operation_status}
-                  onChange={(e) => handleInputChange('operation_status', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("operation_status", e.target.value)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select Status</option>
@@ -600,7 +634,9 @@ export default function FacilityDetailsPage() {
                 <input
                   type="text"
                   value={editForm.keph_level}
-                  onChange={(e) => handleInputChange('keph_level', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("keph_level", e.target.value)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -611,7 +647,9 @@ export default function FacilityDetailsPage() {
                 </label>
                 <select
                   value={editForm.is_active}
-                  onChange={(e) => handleInputChange('is_active', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("is_active", e.target.value)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="1">Active</option>

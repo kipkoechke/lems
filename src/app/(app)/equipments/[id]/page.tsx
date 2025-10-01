@@ -4,7 +4,14 @@ import React, { useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useEquipments } from "@/features/equipments/useEquipments";
 import { useDeleteEquipment } from "@/features/equipments/useDeleteEquipment";
-import { FaCogs, FaEdit, FaTrash, FaCalendar, FaBarcode, FaIndustry } from "react-icons/fa";
+import {
+  FaCogs,
+  FaEdit,
+  FaTrash,
+  FaCalendar,
+  FaBarcode,
+  FaIndustry,
+} from "react-icons/fa";
 import BackButton from "@/components/BackButton";
 
 const EquipmentDetails: React.FC = () => {
@@ -108,7 +115,7 @@ const EquipmentDetails: React.FC = () => {
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 md:gap-4">
-                <BackButton 
+                <BackButton
                   onClick={() => router.push("/equipments")}
                   className="bg-white/20 hover:bg-white/30 text-white border-white/30"
                 />
@@ -124,7 +131,7 @@ const EquipmentDetails: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex gap-2">
                 <button
                   onClick={() => router.push(`/equipments/${params.id}/edit`)}
@@ -147,11 +154,17 @@ const EquipmentDetails: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Basic Info */}
               <div className="bg-gray-50 rounded-xl p-4 md:p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Basic Information
+                </h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Name</label>
-                    <p className="text-gray-900 font-medium">{equipment.name}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Name
+                    </label>
+                    <p className="text-gray-900 font-medium">
+                      {equipment.name}
+                    </p>
                   </div>
                   {equipment.serial_number && (
                     <div>
@@ -165,21 +178,25 @@ const EquipmentDetails: React.FC = () => {
                     </div>
                   )}
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Status</label>
-                    <div className="mt-1">
-                      {statusBadge(equipment.status)}
-                    </div>
+                    <label className="text-sm font-medium text-gray-500">
+                      Status
+                    </label>
+                    <div className="mt-1">{statusBadge(equipment.status)}</div>
                   </div>
                 </div>
               </div>
 
               {/* Technical Specs */}
               <div className="bg-gray-50 rounded-xl p-4 md:p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Technical Specifications</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Technical Specifications
+                </h3>
                 <div className="space-y-3">
                   {equipment.model && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Model</label>
+                      <label className="text-sm font-medium text-gray-500">
+                        Model
+                      </label>
                       <p className="text-gray-900">{equipment.model}</p>
                     </div>
                   )}
@@ -208,23 +225,35 @@ const EquipmentDetails: React.FC = () => {
             {/* Description */}
             {equipment.description && (
               <div className="bg-gray-50 rounded-xl p-4 md:p-6 mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Description</h3>
-                <p className="text-gray-700 leading-relaxed">{equipment.description}</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Description
+                </h3>
+                <p className="text-gray-700 leading-relaxed">
+                  {equipment.description}
+                </p>
               </div>
             )}
 
             {/* Vendor Information */}
             {equipment.vendor && (
               <div className="bg-gray-50 rounded-xl p-4 md:p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Vendor Information</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Vendor Information
+                </h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Vendor Name</label>
-                    <p className="text-gray-900 font-medium">{equipment.vendor.name}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Vendor Name
+                    </label>
+                    <p className="text-gray-900 font-medium">
+                      {equipment.vendor.name}
+                    </p>
                   </div>
                   {equipment.vendor.code && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Vendor Code</label>
+                      <label className="text-sm font-medium text-gray-500">
+                        Vendor Code
+                      </label>
                       <p className="text-gray-900 font-mono bg-white px-3 py-1 rounded border">
                         {equipment.vendor.code}
                       </p>
@@ -250,7 +279,8 @@ const EquipmentDetails: React.FC = () => {
                   Delete Equipment
                 </h3>
                 <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">
-                  Are you sure you want to delete &quot;{equipment.name}&quot;? This action cannot be undone.
+                  Are you sure you want to delete &quot;{equipment.name}&quot;?
+                  This action cannot be undone.
                 </p>
 
                 <div className="flex flex-col md:flex-row gap-3">

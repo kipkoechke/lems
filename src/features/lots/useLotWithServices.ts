@@ -9,7 +9,14 @@ export const useLotWithServices = (id: string) => {
   });
 
   return {
-    lot: data ? { id: data.id, number: data.number, name: data.name, is_active: data.is_active } : undefined,
+    lot: data
+      ? {
+          id: data.id,
+          number: data.number,
+          name: data.name,
+          is_active: data.is_active,
+        }
+      : undefined,
     services: data?.services || [],
     isLoading,
     error,

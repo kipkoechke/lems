@@ -6,16 +6,9 @@ import { useCreateLot } from "@/features/lots/useCreateLot";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { lotCreationSchema, LotCreationFormData } from "@/lib/validations";
+import { InputField } from "@/components/login/InputField";
 import { FaLayerGroup, FaSave, FaTimes } from "react-icons/fa";
-
-const lotSchema = z.object({
-  number: z.string().min(1, "Lot number is required"),
-  name: z.string().min(2, "Lot name must be at least 2 characters"),
-  is_active: z.boolean(),
-});
-
-type LotFormData = z.infer<typeof lotSchema>;
 
 export default function NewLotPage() {
   const router = useRouter();
@@ -25,15 +18,22 @@ export default function NewLotPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LotFormData>({
-    resolver: zodResolver(lotSchema),
+  } = useForm<LotCreationFormData>({
+    resolver: zodResolver(lotCreationSchema),
     defaultValues: {
       is_active: true,
     },
   });
 
-  const onSubmit = (data: LotFormData) => {
-    createLot(data, {
+  const onSubmit = (data: LotCreationFormData) => {
+    // Transform to match API expectations
+    const lotData = {
+      number: data.number,
+      name: data.name,
+      is_active: data.is_active ?? true,
+    };
+
+    createLot(lotData, {
       onSuccess: (newLot) => {
         router.push(`/lots/${newLot.id}`);
       },
@@ -77,55 +77,25 @@ export default function NewLotPage() {
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                  <div>
-                    <label
-                      htmlFor="number"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Lot Number *
-                    </label>
-                    <input
-                      type="text"
-                      id="number"
-                      {...register("number")}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                        errors.number
-                          ? "border-red-300 focus:ring-red-500"
-                          : "border-gray-300"
-                      }`}
-                      placeholder="Enter lot number (e.g., LOT001)"
-                    />
-                    {errors.number && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.number.message}
-                      </p>
-                    )}
-                  </div>
+                  <InputField
+                    label="Lot Number"
+                    type="text"
+                    placeholder="Enter lot number (e.g., LOT001)"
+                    register={register("number")}
+                    error={errors.number?.message}
+                    required
+                    disabled={isCreating}
+                  />
 
-                  <div>
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Lot Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      {...register("name")}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                        errors.name
-                          ? "border-red-300 focus:ring-red-500"
-                          : "border-gray-300"
-                      }`}
-                      placeholder="Enter lot name"
-                    />
-                    {errors.name && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.name.message}
-                      </p>
-                    )}
-                  </div>
+                  <InputField
+                    label="Lot Name"
+                    type="text"
+                    placeholder="Enter lot name"
+                    register={register("name")}
+                    error={errors.name?.message}
+                    required
+                    disabled={isCreating}
+                  />
 
                   <div className="md:col-span-2">
                     <label className="flex items-center gap-3">

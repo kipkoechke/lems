@@ -3,13 +3,14 @@
 import { Service } from "@/services/apiLots";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   FaArrowLeft,
   FaEdit,
   FaEllipsisV,
   FaEye,
   FaPlus,
-  FaSearch,
   FaTimes,
   FaTrash,
 } from "react-icons/fa";
@@ -17,14 +18,9 @@ import { useCreateService } from "./useCreateService";
 import { useDeleteService } from "./useDeleteService";
 import { useLotWithServices } from "./useLotWithServices";
 import { useUpdateService } from "./useUpdateService";
-
-interface ServiceFormData {
-  name: string;
-  code: string;
-  description?: string;
-  vendor_share: number;
-  facility_share: number;
-}
+import { serviceSchema, ServiceFormData } from "@/lib/validations";
+import { InputField } from "@/components/login/InputField";
+import { SearchField } from "@/components/SearchField";
 
 const ServiceManagement: React.FC = () => {
   const router = useRouter();
@@ -52,13 +48,16 @@ const ServiceManagement: React.FC = () => {
     null
   );
 
-  // Form state
-  const [formData, setFormData] = useState<ServiceFormData>({
-    name: "",
-    code: "",
-    description: "",
-    vendor_share: 0,
-    facility_share: 0,
+  // Form setup
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+  } = useForm<ServiceFormData>({
+    resolver: zodResolver(serviceSchema),
+    mode: "onBlur",
   });
 
   // Filter services based on search and status for this lot
@@ -79,22 +78,14 @@ const ServiceManagement: React.FC = () => {
     setModalType(type);
     if (service) {
       setSelectedService(service);
-      setFormData({
-        name: service.name,
-        code: service.code,
-        description: service.description || "",
-        vendor_share: parseInt(service.vendor_share) || 0,
-        facility_share: parseInt(service.facility_share) || 0,
-      });
+      setValue("name", service.name);
+      setValue("code", service.code);
+      setValue("description", service.description || "");
+      setValue("vendor_share", parseInt(service.vendor_share) || 0);
+      setValue("facility_share", parseInt(service.facility_share) || 0);
     } else {
       setSelectedService(null);
-      setFormData({
-        name: "",
-        code: "",
-        description: "",
-        vendor_share: 0,
-        facility_share: 0,
-      });
+      reset();
     }
     setShowModal(true);
   };
@@ -102,30 +93,22 @@ const ServiceManagement: React.FC = () => {
   const closeModal = () => {
     setShowModal(false);
     setSelectedService(null);
-    setFormData({
-      name: "",
-      code: "",
-      description: "",
-      vendor_share: 0,
-      facility_share: 0,
-    });
+    reset();
   };
 
   // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const onSubmit = async (data: ServiceFormData) => {
     try {
       if (modalType === "create") {
         await createServiceMutation.mutateAsync({
           lot_id: lot?.id || "",
-          ...formData,
+          ...data,
         });
       } else if (modalType === "edit" && selectedService) {
         await updateServiceMutation.mutateAsync({
           id: selectedService.id,
           lot_id: lot?.id || "",
-          ...formData,
+          ...data,
         });
       }
       closeModal();
@@ -240,16 +223,12 @@ const ServiceManagement: React.FC = () => {
         {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-xl mb-6 p-6">
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search services..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+            <SearchField
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Search services..."
+              className="flex-1"
+            />
             <div className="flex gap-4">
               <select
                 value={statusFilter}
@@ -440,7 +419,9 @@ const ServiceManagement: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Description
                     </label>
-                    <p className="text-gray-900">{selectedService?.description || "No description"}</p>
+                    <p className="text-gray-900">
+                      {selectedService?.description || "No description"}
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -476,102 +457,83 @@ const ServiceManagement: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Service Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter service name"
-                    />
-                  </div>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <InputField
+                    label="Service Name"
+                    type="text"
+                    placeholder="Enter service name"
+                    register={register("name")}
+                    error={errors.name?.message}
+                    required
+                    disabled={
+                      createServiceMutation.isPending ||
+                      updateServiceMutation.isPending
+                    }
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Service Code <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.code}
-                      onChange={(e) =>
-                        setFormData({ ...formData, code: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter service code"
-                    />
-                  </div>
+                  <InputField
+                    label="Service Code"
+                    type="text"
+                    placeholder="Enter service code"
+                    register={register("code")}
+                    error={errors.code?.message}
+                    required
+                    disabled={
+                      createServiceMutation.isPending ||
+                      updateServiceMutation.isPending
+                    }
+                  />
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Description
                     </label>
                     <textarea
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          description: e.target.value,
-                        })
-                      }
+                      {...register("description")}
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter service description"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Vendor Share <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      required
-                      value={formData.vendor_share}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          vendor_share: parseFloat(e.target.value) || 0,
-                        })
+                      disabled={
+                        createServiceMutation.isPending ||
+                        updateServiceMutation.isPending
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter vendor share"
                     />
+                    {errors.description && (
+                      <p className="text-red-600 text-sm mt-1">
+                        {errors.description.message}
+                      </p>
+                    )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Facility Share <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      required
-                      value={formData.facility_share}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          facility_share: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter facility share"
-                    />
-                  </div>
+                  <InputField
+                    label="Vendor Share"
+                    type="number"
+                    placeholder="Enter vendor share"
+                    register={register("vendor_share", {
+                      setValueAs: (value) => parseFloat(value) || 0,
+                    })}
+                    error={errors.vendor_share?.message}
+                    required
+                    disabled={
+                      createServiceMutation.isPending ||
+                      updateServiceMutation.isPending
+                    }
+                  />
 
-
+                  <InputField
+                    label="Facility Share"
+                    type="number"
+                    placeholder="Enter facility share"
+                    register={register("facility_share", {
+                      setValueAs: (value) => parseFloat(value) || 0,
+                    })}
+                    error={errors.facility_share?.message}
+                    required
+                    disabled={
+                      createServiceMutation.isPending ||
+                      updateServiceMutation.isPending
+                    }
+                  />
 
                   <div className="flex gap-3 pt-4">
                     <button

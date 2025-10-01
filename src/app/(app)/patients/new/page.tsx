@@ -2,26 +2,14 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
-
-interface PatientFormData {
-  firstName: string;
-  lastName: string;
-  idNumber: string;
-  phone: string;
-  email?: string;
-  dateOfBirth: string;
-  gender: string;
-  address: string;
-  emergencyContact?: string;
-  emergencyPhone?: string;
-  medicalHistory?: string;
-  allergies?: string;
-  currentMedications?: string;
-}
+import { patientSchema, PatientFormData } from "@/lib/validations";
+import { InputField } from "@/components/login/InputField";
+import { SelectField } from "@/components/SelectField";
 
 export default function NewPatientPage() {
   const router = useRouter();
@@ -31,7 +19,10 @@ export default function NewPatientPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<PatientFormData>();
+  } = useForm<PatientFormData>({
+    resolver: zodResolver(patientSchema),
+    mode: "onBlur",
+  });
 
   const onSubmit = async (data: PatientFormData) => {
     setIsSubmitting(true);
@@ -100,100 +91,58 @@ export default function NewPatientPage() {
                 Personal Information
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    First Name *
-                  </label>
-                  <input
-                    type="text"
-                    {...register("firstName", {
-                      required: "First name is required",
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter first name"
-                  />
-                  {errors.firstName && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {errors.firstName.message}
-                    </p>
-                  )}
-                </div>
+                <InputField
+                  label="First Name"
+                  type="text"
+                  placeholder="Enter first name"
+                  register={register("first_name")}
+                  error={errors.first_name?.message}
+                  required
+                  disabled={isSubmitting}
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Last Name *
-                  </label>
-                  <input
-                    type="text"
-                    {...register("lastName", {
-                      required: "Last name is required",
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter last name"
-                  />
-                  {errors.lastName && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {errors.lastName.message}
-                    </p>
-                  )}
-                </div>
+                <InputField
+                  label="Last Name"
+                  type="text"
+                  placeholder="Enter last name"
+                  register={register("last_name")}
+                  error={errors.last_name?.message}
+                  required
+                  disabled={isSubmitting}
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    ID Number *
-                  </label>
-                  <input
-                    type="text"
-                    {...register("idNumber", {
-                      required: "ID number is required",
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter ID number"
-                  />
-                  {errors.idNumber && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {errors.idNumber.message}
-                    </p>
-                  )}
-                </div>
+                <InputField
+                  label="ID Number"
+                  type="text"
+                  placeholder="Enter ID number"
+                  register={register("id_number")}
+                  error={errors.id_number?.message}
+                  disabled={isSubmitting}
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Date of Birth *
-                  </label>
-                  <input
-                    type="date"
-                    {...register("dateOfBirth", {
-                      required: "Date of birth is required",
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {errors.dateOfBirth && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {errors.dateOfBirth.message}
-                    </p>
-                  )}
-                </div>
+                <InputField
+                  label="Date of Birth"
+                  type="date"
+                  placeholder="Select date of birth"
+                  register={register("date_of_birth")}
+                  error={errors.date_of_birth?.message}
+                  required
+                  disabled={isSubmitting}
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Gender *
-                  </label>
-                  <select
-                    {...register("gender", { required: "Gender is required" })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  {errors.gender && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {errors.gender.message}
-                    </p>
-                  )}
-                </div>
+                <SelectField
+                  label="Gender"
+                  register={register("gender")}
+                  error={errors.gender?.message}
+                  required
+                  disabled={isSubmitting}
+                  placeholder="Select gender"
+                  options={[
+                    { value: "male", label: "Male" },
+                    { value: "female", label: "Female" },
+                    { value: "other", label: "Other" },
+                  ]}
+                />
               </div>
             </div>
 
@@ -203,47 +152,34 @@ export default function NewPatientPage() {
                 Contact Information
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    {...register("phone", {
-                      required: "Phone number is required",
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter phone number"
-                  />
-                  {errors.phone && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {errors.phone.message}
-                    </p>
-                  )}
-                </div>
+                <InputField
+                  label="Phone Number"
+                  type="tel"
+                  placeholder="Enter phone number"
+                  register={register("phone")}
+                  error={errors.phone?.message}
+                  required
+                  disabled={isSubmitting}
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    {...register("email")}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter email address"
-                  />
-                </div>
+                <InputField
+                  label="Email Address"
+                  type="email"
+                  placeholder="Enter email address"
+                  register={register("email")}
+                  error={errors.email?.message}
+                  disabled={isSubmitting}
+                />
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address *
+                    Address
                   </label>
                   <textarea
-                    {...register("address", {
-                      required: "Address is required",
-                    })}
+                    {...register("address")}
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="Enter residential address"
                   />
                   {errors.address && (
@@ -251,82 +187,6 @@ export default function NewPatientPage() {
                       {errors.address.message}
                     </p>
                   )}
-                </div>
-              </div>
-            </div>
-
-            {/* Emergency Contact */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Emergency Contact
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Emergency Contact Name
-                  </label>
-                  <input
-                    type="text"
-                    {...register("emergencyContact")}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter emergency contact name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Emergency Contact Phone
-                  </label>
-                  <input
-                    type="tel"
-                    {...register("emergencyPhone")}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter emergency contact phone"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Medical Information */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Medical Information
-              </h2>
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Medical History
-                  </label>
-                  <textarea
-                    {...register("medicalHistory")}
-                    rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter relevant medical history"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Allergies
-                  </label>
-                  <textarea
-                    {...register("allergies")}
-                    rows={2}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter known allergies"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Current Medications
-                  </label>
-                  <textarea
-                    {...register("currentMedications")}
-                    rows={2}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter current medications"
-                  />
                 </div>
               </div>
             </div>

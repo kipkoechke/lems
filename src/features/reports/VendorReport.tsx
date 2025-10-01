@@ -1,9 +1,12 @@
 "use client";
 
-import { IVendorReport, ReportForm } from "@/services/apiReport";
+import { IVendorReport } from "@/services/apiReport";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateVendorReport } from "./useCreateVendorReport";
+import { reportFormSchema, ReportFormData } from "@/lib/validations";
+import { InputField } from "@/components/login/InputField";
 
 const VendorReport: React.FC = () => {
   const { isCreatingVendorReport, generateVendorReport } =
@@ -14,26 +17,21 @@ const VendorReport: React.FC = () => {
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
-  } = useForm<ReportForm>();
+  } = useForm<ReportFormData>({
+    resolver: zodResolver(reportFormSchema),
+    mode: "onBlur",
+  });
 
-  const getChartData = (data: IVendorReport[]) => {
-    if (!data) return [];
-    return data.flatMap((vendor: IVendorReport) =>
-      (vendor.equipments ?? []).map((eq: any) => ({
-        vendor_equipment: `${vendor.vendor} - ${eq.equipment}`,
-        equipment_total_revenue: eq.equipment_total_revenue,
-      }))
-    );
-  };
-
-  const onSubmit = (data: ReportForm) => {
+  const onSubmit = (data: ReportFormData) => {
     setError(null);
     setReportData(null);
 
     generateVendorReport(
-      { start_date: data.start_date, end_date: data.end_date },
+      {
+        start_date: new Date(data.start_date),
+        end_date: new Date(data.end_date),
+      },
       {
         onSuccess: (result: IVendorReport[]) => setReportData(result),
         onError: (err: any) =>
@@ -51,30 +49,26 @@ const VendorReport: React.FC = () => {
         className="flex items-end gap-4 mb-8"
       >
         <div>
-          <label className="block text-sm font-medium mb-1">Start Date</label>
-          <input
+          <InputField
+            label="Start Date"
             type="date"
-            {...register("start_date", { required: "Start date is required" })}
-            className="border rounded px-2 py-1"
+            placeholder="Select start date"
+            register={register("start_date")}
+            error={errors.start_date?.message}
+            required
+            disabled={isCreatingVendorReport}
           />
-          {errors.start_date && (
-            <span className="text-red-500 text-xs">
-              {errors.start_date.message}
-            </span>
-          )}
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">End Date</label>
-          <input
+          <InputField
+            label="End Date"
             type="date"
-            {...register("end_date", { required: "End date is required" })}
-            className="border rounded px-2 py-1"
+            placeholder="Select end date"
+            register={register("end_date")}
+            error={errors.end_date?.message}
+            required
+            disabled={isCreatingVendorReport}
           />
-          {errors.end_date && (
-            <span className="text-red-500 text-xs">
-              {errors.end_date.message}
-            </span>
-          )}
         </div>
         <button
           type="submit"

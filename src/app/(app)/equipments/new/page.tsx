@@ -2,9 +2,14 @@
 
 import React, { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateEquipment } from "@/features/equipments/useCreateEquipment";
 import { useVendors } from "@/features/vendors/useVendors";
 import { EquipmentCreateRequest } from "@/services/apiEquipment";
+import { equipmentSchema, EquipmentFormData } from "@/lib/validations";
+import { InputField } from "@/components/login/InputField";
+import { SelectField } from "@/components/SelectField";
 import { FaCogs, FaChevronDown, FaSearch, FaArrowLeft } from "react-icons/fa";
 import BackButton from "@/components/BackButton";
 
@@ -17,16 +22,22 @@ const NewEquipment: React.FC = () => {
   const [vendorSearch, setVendorSearch] = useState("");
   const vendorSearchRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState<EquipmentCreateRequest>({
-    name: "",
-    description: "",
-    serial_number: "",
-    model: "",
-    manufacturer: "",
-    year: "",
-    status: "available",
-    vendor_id: "",
+  // Form setup
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+    setValue,
+  } = useForm<EquipmentFormData>({
+    resolver: zodResolver(equipmentSchema),
+    mode: "onBlur",
+    defaultValues: {
+      status: "active",
+    },
   });
+
+  const watchedVendorCode = watch("vendor_code");
 
   const filteredVendors = useMemo(() => {
     const q = vendorSearch.toLowerCase();
@@ -39,13 +50,24 @@ const NewEquipment: React.FC = () => {
   }, [vendors, vendorSearch]);
 
   const selectedVendor = useMemo(
-    () => vendors?.find((v) => v.id === form.vendor_id),
-    [vendors, form.vendor_id]
+    () => vendors?.find((v) => v.code === watchedVendorCode),
+    [vendors, watchedVendorCode]
   );
 
-  const onSubmit = (ev: React.FormEvent) => {
-    ev.preventDefault();
-    createEquipment(form, {
+  const onSubmit = (data: EquipmentFormData) => {
+    // Transform data to match API expectations
+    const equipmentData: EquipmentCreateRequest = {
+      name: data.name,
+      model: data.model || "",
+      serial_number: data.serial_number || "",
+      vendor_id: selectedVendor?.id || "",
+      status: data.status === "active" ? "available" : "unavailable",
+      description: data.description || "",
+      manufacturer: data.manufacturer || "",
+      year: data.year || "",
+    };
+
+    createEquipment(equipmentData, {
       onSuccess: () => {
         router.push("/equipments");
       },
@@ -81,90 +103,68 @@ const NewEquipment: React.FC = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={onSubmit} className="p-4 md:p-8 space-y-4 md:space-y-6">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="p-4 md:p-8 space-y-4 md:space-y-6"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name *
-                </label>
-                <input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                  required
-                  placeholder="Equipment name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Serial Number
-                </label>
-                <input
-                  value={form.serial_number || ""}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      serial_number: e.target.value || null,
-                    })
-                  }
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                  placeholder="Serial number (optional)"
-                />
-              </div>
+              <InputField
+                label="Equipment Name"
+                type="text"
+                placeholder="Enter equipment name"
+                register={register("name")}
+                error={errors.name?.message}
+                required
+                disabled={isCreating}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Model
-                </label>
-                <input
-                  value={form.model ?? ""}
-                  onChange={(e) => setForm({ ...form, model: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                  placeholder="Model"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Manufacturer
-                </label>
-                <input
-                  value={form.manufacturer ?? ""}
-                  onChange={(e) =>
-                    setForm({ ...form, manufacturer: e.target.value })
-                  }
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                  placeholder="Manufacturer"
-                />
-              </div>
+              <InputField
+                label="Serial Number"
+                type="text"
+                placeholder="Enter serial number (optional)"
+                register={register("serial_number")}
+                error={errors.serial_number?.message}
+                disabled={isCreating}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Year
-                </label>
-                <input
-                  type="number"
-                  value={form.year as any}
-                  onChange={(e) => setForm({ ...form, year: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                  placeholder="Year"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status *
-                </label>
-                <select
-                  value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                  required
-                >
-                  <option value="available">Available</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="unavailable">Unavailable</option>
-                  <option value="retired">Retired</option>
-                </select>
-              </div>
+              <InputField
+                label="Model"
+                type="text"
+                placeholder="Enter model"
+                register={register("model")}
+                error={errors.model?.message}
+                disabled={isCreating}
+              />
+              <InputField
+                label="Manufacturer"
+                type="text"
+                placeholder="Enter manufacturer"
+                register={register("manufacturer")}
+                error={errors.manufacturer?.message}
+                disabled={isCreating}
+              />
+
+              <InputField
+                label="Year"
+                type="number"
+                placeholder="Enter year"
+                register={register("year")}
+                error={errors.year?.message}
+                disabled={isCreating}
+              />
+              <SelectField
+                label="Status"
+                register={register("status")}
+                error={errors.status?.message}
+                required
+                disabled={isCreating}
+                placeholder="Select status"
+                options={[
+                  { value: "active", label: "Active" },
+                  { value: "inactive", label: "Inactive" },
+                  { value: "maintenance", label: "Maintenance" },
+                ]}
+              />
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -223,7 +223,7 @@ const NewEquipment: React.FC = () => {
                               key={v.id}
                               className="px-3 md:px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors"
                               onClick={() => {
-                                setForm({ ...form, vendor_id: v.id });
+                                setValue("vendor_code", v.code);
                                 setIsVendorDropdownOpen(false);
                                 setVendorSearch("");
                               }}
@@ -255,10 +255,8 @@ const NewEquipment: React.FC = () => {
                   Description
                 </label>
                 <textarea
-                  value={form.description ?? ""}
-                  onChange={(e) =>
-                    setForm({ ...form, description: e.target.value })
-                  }
+                  {...register("description")}
+                  disabled={isCreating}
                   className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                   placeholder="Description (optional)"
                   rows={3}
@@ -267,9 +265,9 @@ const NewEquipment: React.FC = () => {
             </div>
 
             <div className="flex flex-col md:flex-row gap-3 pt-4 md:pt-6">
-              <BackButton 
+              <BackButton
                 onClick={() => router.push("/equipments")}
-                className="w-full md:flex-1" 
+                className="w-full md:flex-1"
               />
               <button
                 type="submit"
