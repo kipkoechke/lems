@@ -17,7 +17,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { ActionMenu } from "@/components/ActionMenu";
+import { ActionMenu } from "@/components/common/ActionMenu";
 import React, { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 

@@ -7,7 +7,7 @@ import { useEquipments } from "@/features/equipments/useEquipments";
 import { useVendors } from "@/features/vendors/useVendors";
 import { EquipmentUpdateRequest } from "@/services/apiEquipment";
 import { FaCogs, FaChevronDown, FaSearch, FaArrowLeft } from "react-icons/fa";
-import BackButton from "@/components/BackButton";
+import BackButton from "@/components/common/BackButton";
 
 const EditEquipment: React.FC = () => {
   const router = useRouter();

@@ -1,19 +1,13 @@
 "use client";
-import Pagination from "@/components/Pagination";
+import Pagination from "@/components/common/Pagination";
 import { usePatientsPaginated } from "@/features/patients/usePatients";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Patient } from "@/services/apiPatient";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaCalendar, FaPhone, FaSearch, FaUser } from "react-icons/fa";
-import { ActionMenu } from "@/components/ActionMenu";
-
-// Removed unused PatientBookingsModal
-
-// Removed ActionsDropdown component - replaced with ActionMenu
-
-// Breadcrumb Component
-// Removed PatientBreadcrumb (unused)
+import { ActionMenu } from "@/components/common/ActionMenu";
+import { Table } from "@/components/Table";
 
 function Patients() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -208,104 +202,90 @@ function Patients() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto overflow-y-visible">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Patient
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Contact Info
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Date of Birth
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      SHA Number
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Registration Date
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {patientData.map((patient: Patient) => (
-                    <tr
-                      key={patient.id}
-                      className="hover:bg-gray-50 transition-colors cursor-pointer"
-                      onClick={() => handlePatientClick(patient)}
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <FaUser className="w-5 h-5 text-blue-600" />
+            <Table className="w-full">
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell>Patient</Table.HeaderCell>
+                  <Table.HeaderCell>Contact Info</Table.HeaderCell>
+                  <Table.HeaderCell>Date of Birth</Table.HeaderCell>
+                  <Table.HeaderCell>SHA Number</Table.HeaderCell>
+                  <Table.HeaderCell>Registration Date</Table.HeaderCell>
+                  <Table.HeaderCell align="center">Actions</Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {patientData.map((patient: Patient) => (
+                  <Table.Row
+                    key={patient.id}
+                    onClick={() => handlePatientClick(patient)}
+                    className="cursor-pointer"
+                  >
+                    <Table.Cell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <FaUser className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {patient.name}
                           </div>
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {patient.name}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              ID: {patient.id.slice(-8)}
-                            </div>
+                          <div className="text-sm text-gray-500">
+                            ID: {patient.id.slice(-8)}
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <FaPhone className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-900">{patient.phone}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {new Date(patient.date_of_birth).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          }
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        {patient.sha_number ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            {patient.sha_number}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 text-sm">No SHA</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {new Date(patient.created_at).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          }
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <ActionMenu menuId={`patient-${patient.id}`}>
-                          <ActionMenu.Trigger />
-                          <ActionMenu.Content>
-                            <ActionMenu.Item
-                              onClick={() => handleViewBookings(patient)}
-                            >
-                              <FaCalendar className="w-4 h-4" /> View Bookings
-                            </ActionMenu.Item>
-                          </ActionMenu.Content>
-                        </ActionMenu>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="flex items-center gap-2">
+                        <FaPhone className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-900">{patient.phone}</span>
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell className="text-gray-600">
+                      {new Date(patient.date_of_birth).toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        }
+                      )}
+                    </Table.Cell>
+                    <Table.Cell>
+                      {patient.sha_number ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {patient.sha_number}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-sm">No SHA</span>
+                      )}
+                    </Table.Cell>
+                    <Table.Cell className="text-gray-600">
+                      {new Date(patient.created_at).toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        }
+                      )}
+                    </Table.Cell>
+                    <Table.Cell align="center">
+                      <ActionMenu menuId={`patient-${patient.id}`}>
+                        <ActionMenu.Trigger />
+                        <ActionMenu.Content>
+                          <ActionMenu.Item
+                            onClick={() => handleViewBookings(patient)}
+                          >
+                            <FaCalendar className="w-4 h-4" /> View Bookings
+                          </ActionMenu.Item>
+                        </ActionMenu.Content>
+                      </ActionMenu>
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table>
           )}
 
           {/* Pagination */}

@@ -8,10 +8,10 @@ import { useCreateEquipment } from "@/features/equipments/useCreateEquipment";
 import { useVendors } from "@/features/vendors/useVendors";
 import { EquipmentCreateRequest } from "@/services/apiEquipment";
 import { equipmentSchema, EquipmentFormData } from "@/lib/validations";
-import { InputField } from "@/components/login/InputField";
-import { SelectField } from "@/components/SelectField";
+import { InputField } from "@/components/common/InputField";
+import { SelectField } from "@/components/common/SelectField";
 import { FaCogs, FaChevronDown, FaSearch, FaArrowLeft } from "react-icons/fa";
-import BackButton from "@/components/BackButton";
+import BackButton from "@/components/common/BackButton";
 
 const NewEquipment: React.FC = () => {
   const router = useRouter();

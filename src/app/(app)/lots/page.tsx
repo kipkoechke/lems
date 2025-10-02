@@ -8,37 +8,29 @@ import { useState } from "react";
 import {
   FaLayerGroup,
   FaPlus,
-  FaFilter,
   FaEye,
   FaStethoscope,
   FaEdit,
   FaCogs,
   FaTrash,
 } from "react-icons/fa";
-import { ActionMenu } from "@/components/ActionMenu";
-import { SearchField } from "@/components/SearchField";
+import { ActionMenu } from "@/components/common/ActionMenu";
+import { SearchField } from "@/components/common/SearchField";
+import { Table } from "@/components/Table";
 
 export default function LotsPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "active" | "inactive"
-  >("all");
 
   const { lots, isLoading, error } = useLots();
 
-  // Filter lots based on search and status
+  // Filter lots based on search
   const filteredLots = lots?.filter((lot: Lot) => {
     const matchesSearch =
       lot.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lot.number.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" && lot.is_active) ||
-      (statusFilter === "inactive" && !lot.is_active);
-
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
   if (isLoading) {
@@ -77,7 +69,7 @@ export default function LotsPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6">
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-2 md:mb-3">
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 md:gap-4">
@@ -106,25 +98,13 @@ export default function LotsPage() {
           </div>
 
           {/* Search and Filters */}
-          <div className="p-4 md:p-6 bg-gray-50 border-b space-y-4">
+          <div className="p-4 md:p-6 bg-gray-50 space-y-4">
             <div className="flex flex-col md:flex-row gap-4">
               <SearchField
                 value={searchTerm}
                 onChange={setSearchTerm}
                 placeholder="Search lots by name or number..."
               />
-              <div className="flex items-center gap-2">
-                <FaFilter className="text-gray-500" />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
             </div>
           </div>
         </div>
@@ -183,107 +163,94 @@ export default function LotsPage() {
           {filteredLots?.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-gray-500 text-xl mb-4">
-                {searchTerm || statusFilter !== "all"
+                {searchTerm
                   ? "No lots match your search criteria"
                   : "No lots found"}
               </div>
               <p className="text-gray-400">
-                {searchTerm || statusFilter !== "all"
-                  ? "Try adjusting your search terms or filters"
+                {searchTerm
+                  ? "Try adjusting your search terms"
                   : "Create your first lot to get started"}
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Lot Number
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Lot Name
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredLots?.map((lot: Lot) => (
-                    <tr
-                      key={lot.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="font-mono text-sm font-medium text-gray-900">
-                          LOT {lot.number}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-gray-900">
-                          {lot.name}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                            lot.is_active
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {lot.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <ActionMenu menuId={`lot-${lot.id}`}>
-                          <ActionMenu.Trigger />
-                          <ActionMenu.Content>
-                            <ActionMenu.Item
-                              onClick={() => {
-                                router.push(`/lots/${lot.id}`);
-                              }}
-                            >
-                              <FaEye className="w-4 h-4" />
-                              View Details
-                            </ActionMenu.Item>
-                            <ActionMenu.Item
-                              onClick={() => {
-                                router.push(`/lots/${lot.id}/edit`);
-                              }}
-                            >
-                              <FaEdit className="w-4 h-4" />
-                              Edit
-                            </ActionMenu.Item>
-                            <ActionMenu.Item
-                              onClick={() => {
-                                router.push(`/lots/${lot.id}/services`);
-                              }}
-                            >
-                              <FaCogs className="w-4 h-4" />
-                              Manage Services
-                            </ActionMenu.Item>
-                            <ActionMenu.Item
-                              onClick={() => {
-                                // Handle delete action - you might want to add a delete hook/modal
-                                console.log("Delete lot:", lot.id);
-                              }}
-                            >
-                              <FaTrash className="w-4 h-4 text-red-500" />
-                              Delete
-                            </ActionMenu.Item>
-                          </ActionMenu.Content>
-                        </ActionMenu>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table className="w-full">
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell>Lot Number</Table.HeaderCell>
+                  <Table.HeaderCell>Lot Name</Table.HeaderCell>
+                  <Table.HeaderCell>Status</Table.HeaderCell>
+                  <Table.HeaderCell align="center">Actions</Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {filteredLots?.map((lot: Lot) => (
+                  <Table.Row key={lot.id}>
+                    <Table.Cell>
+                      <div className="font-mono text-sm font-medium text-gray-900">
+                        LOT {lot.number}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="font-medium text-gray-900">
+                        {lot.name}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          lot.is_active
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {lot.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell align="center">
+                      <ActionMenu menuId={`lot-${lot.id}`}>
+                        <ActionMenu.Trigger />
+                        <ActionMenu.Content>
+                          <ActionMenu.Item
+                            onClick={() => {
+                              router.push(`/lots/${lot.id}`);
+                            }}
+                          >
+                            <FaEye className="w-4 h-4" />
+                            View Details
+                          </ActionMenu.Item>
+                          <ActionMenu.Item
+                            onClick={() => {
+                              router.push(`/lots/${lot.id}/edit`);
+                            }}
+                          >
+                            <FaEdit className="w-4 h-4" />
+                            Edit
+                          </ActionMenu.Item>
+                          <ActionMenu.Item
+                            onClick={() => {
+                              router.push(`/lots/${lot.id}/services`);
+                            }}
+                          >
+                            <FaCogs className="w-4 h-4" />
+                            Manage Services
+                          </ActionMenu.Item>
+                          <ActionMenu.Item
+                            onClick={() => {
+                              // Handle delete action - you might want to add a delete hook/modal
+                              console.log("Delete lot:", lot.id);
+                            }}
+                          >
+                            <FaTrash className="w-4 h-4 text-red-500" />
+                            Delete
+                          </ActionMenu.Item>
+                        </ActionMenu.Content>
+                      </ActionMenu>
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table>
           )}
         </div>
 
@@ -291,7 +258,7 @@ export default function LotsPage() {
         <div className="md:hidden space-y-3">
           {filteredLots?.length === 0 ? (
             <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
-              {searchTerm || statusFilter !== "all"
+              {searchTerm
                 ? "No lots match your search criteria"
                 : "No lots found. Create your first lot!"}
             </div>

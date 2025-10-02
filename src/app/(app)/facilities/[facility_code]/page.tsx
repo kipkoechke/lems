@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useFacilityByCode } from "@/features/facilities/useFacilityByCode";
 import { useUpdateFacility } from "@/features/facilities/useUpdateFacility";
-import Modal from "@/components/Modal";
+import Modal from "@/components/common/Modal";
 import {
   FaArrowLeft,
   FaBuilding,

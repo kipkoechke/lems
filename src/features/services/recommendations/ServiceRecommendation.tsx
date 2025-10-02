@@ -12,7 +12,7 @@ import {
   setServiceDate,
   setOverrideMode,
 } from "@/context/workflowSlice";
-import BackButton from "@/components/BackButton";
+import BackButton from "@/components/common/BackButton";
 import { usePatients } from "@/features/patients/usePatients";
 import { useCreateBooking } from "@/features/services/bookings/useCreateBooking";
 import { useServicesByFacilityCode } from "@/features/services/useServicesByFacilityCode";

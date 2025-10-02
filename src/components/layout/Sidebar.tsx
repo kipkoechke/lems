@@ -10,10 +10,8 @@ import {
   HiOutlineDocumentText,
   HiOutlineCog6Tooth,
   HiOutlineClipboardDocumentList,
-  HiOutlineCurrencyDollar,
 } from "react-icons/hi2";
 import { useAccessibleNavItems } from "@/lib/navigation";
-import { Permission } from "@/lib/rbac";
 
 interface SidebarProps {
   isMobileMenuOpen?: boolean;
@@ -31,7 +29,6 @@ const getIconForRoute = (href: string) => {
   if (href.startsWith("/lots")) return <HiOutlineClipboardDocumentList />;
   if (href.startsWith("/bookings")) return <HiOutlineClipboardDocumentList />;
   if (href.startsWith("/services")) return <HiOutlineCog6Tooth />;
-  if (href.startsWith("/payments")) return <HiOutlineCurrencyDollar />;
   if (href.startsWith("/reports")) return <HiOutlineDocumentText />;
   if (href.startsWith("/trends")) return <HiOutlineChartBarSquare />;
   return <HiOutlineUser />;
@@ -59,28 +56,28 @@ function Sidebar({ isMobileMenuOpen, onClose }: SidebarProps) {
       transition-transform duration-300 ease-in-out
     `}
     >
-      <div className="bg-white rounded-lg shadow p-4 h-full">
+      <div className="bg-white rounded-lg shadow p-2 h-full">
         {/* Mobile close button */}
         {isMobileMenuOpen && (
-          <div className="flex justify-end mb-4 md:hidden">
+          <div className="flex justify-end mb-2 md:hidden">
             <button
               onClick={onClose}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               aria-label="Close menu"
             >
-              <HiXMark className="w-6 h-6" />
+              <HiXMark className="w-5 h-5" />
             </button>
           </div>
         )}
 
         <nav>
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-1">
             {accessibleNavItems.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
                   onClick={handleLinkClick}
-                  className={`flex items-center gap-3 text-gray-600 text-base font-medium px-4 md:px-6 py-3 rounded transition-all ${
+                  className={`flex items-center gap-2 text-gray-600 text-sm font-medium px-4 py-2 rounded transition-all ${
                     pathname === item.href
                       ? "bg-gray-200 text-gray-800"
                       : "hover:bg-gray-300 hover:text-gray-800"
@@ -88,7 +85,7 @@ function Sidebar({ isMobileMenuOpen, onClose }: SidebarProps) {
                   title={item.description}
                 >
                   <span
-                    className={`w-6 h-6 ${
+                    className={`w-5 h-5 ${
                       pathname === item.href
                         ? "text-brand-600"
                         : "text-gray-400"
@@ -96,7 +93,7 @@ function Sidebar({ isMobileMenuOpen, onClose }: SidebarProps) {
                   >
                     {getIconForRoute(item.href)}
                   </span>
-                  <span className="text-sm md:text-base">{item.label}</span>
+                  <span className="text-sm">{item.label}</span>
                 </Link>
               </li>
             ))}

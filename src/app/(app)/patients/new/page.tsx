@@ -8,8 +8,8 @@ import Link from "next/link";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { patientSchema, PatientFormData } from "@/lib/validations";
-import { InputField } from "@/components/login/InputField";
-import { SelectField } from "@/components/SelectField";
+import { InputField } from "@/components/common/InputField";
+import { SelectField } from "@/components/common/SelectField";
 
 export default function NewPatientPage() {
   const router = useRouter();

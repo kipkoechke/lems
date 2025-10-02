@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { HiBars3, HiXMark } from "react-icons/hi2";
-import { LogoutButton } from "./LogoutButton";
+import { LogoutButton } from "../LogoutButton";
 
 interface HeaderProps {
   onMenuToggle?: () => void;

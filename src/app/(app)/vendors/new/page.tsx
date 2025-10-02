@@ -1,6 +1,6 @@
 "use client";
 
-import BackButton from "@/components/BackButton";
+import BackButton from "@/components/common/BackButton";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useCreateVendor } from "@/features/vendors/useCreateVendor";
@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FaBuilding, FaSave, FaTimes } from "react-icons/fa";
 import { vendorSchema, VendorFormData } from "@/lib/validations";
-import { InputField } from "@/components/login/InputField";
+import { InputField } from "@/components/common/InputField";
 
 function NewVendorContent() {
   const router = useRouter();

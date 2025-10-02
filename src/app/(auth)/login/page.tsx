@@ -13,7 +13,7 @@ export default function LoginPage() {
             <div className="flex items-center justify-center mb-4">
               <Image
                 src="/assets/cog-logo.png"
-                alt="LEMS Logo"
+                alt="VEMS Logo"
                 width={40}
                 height={40}
                 className="mr-2"

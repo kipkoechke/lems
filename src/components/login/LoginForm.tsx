@@ -3,8 +3,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "next/navigation";
-import { InputField } from "./InputField";
-import Button from "./Button";
+import { InputField } from "../common/InputField";
+import Button from "../common/Button";
 import { loginSchema, LoginFormData } from "../../lib/validations";
 import { useLogin } from "../../hooks/useAuth";
 import Link from "next/link";

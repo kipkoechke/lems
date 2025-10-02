@@ -12,7 +12,7 @@ import {
   FaBarcode,
   FaIndustry,
 } from "react-icons/fa";
-import BackButton from "@/components/BackButton";
+import BackButton from "@/components/common/BackButton";
 
 const EquipmentDetails: React.FC = () => {
   const router = useRouter();

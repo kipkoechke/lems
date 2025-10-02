@@ -85,12 +85,7 @@ const PatientConsent: React.FC = () => {
       bookingAny.id ||
       bookingAny.number;
 
-    console.log("PatientConsent - Selected booking number:", bookingNumber);
-
     if (!bookingNumber) {
-      console.log(
-        "PatientConsent - No booking identifier found in booking object"
-      );
       toast.error("Booking ID is missing from booking data.");
       return;
     }

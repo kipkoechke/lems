@@ -4,7 +4,7 @@ import { useSyncedBookings } from "@/features/services/bookings/useSyncedBooking
 import { useCreateBatch } from "@/features/services/bookings/useCreateBatch";
 import { useVendorBatches } from "@/features/services/bookings/useVendorBatches";
 import { useFacilityPayments } from "@/features/services/bookings/useFacilityPayments";
-import Pagination from "@/components/Pagination";
+import Pagination from "@/components/common/Pagination";
 import {
   CheckCircle,
   CheckSquare,

@@ -19,8 +19,8 @@ import { useDeleteService } from "./useDeleteService";
 import { useLotWithServices } from "./useLotWithServices";
 import { useUpdateService } from "./useUpdateService";
 import { serviceSchema, ServiceFormData } from "@/lib/validations";
-import { InputField } from "@/components/login/InputField";
-import { SearchField } from "@/components/SearchField";
+import { InputField } from "@/components/common/InputField";
+import { SearchField } from "@/components/common/SearchField";
 
 const ServiceManagement: React.FC = () => {
   const router = useRouter();

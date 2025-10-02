@@ -82,15 +82,12 @@ function Clinicians() {
   };
 
   return (
-    <div className="container mx-auto p-2 md:p-6">
+    <div className="container mx-auto p-2 md:px-6 md:py-2">
       <UserInfo />
       <div className="mt-6">
         <RoleBasedDashboard />
       </div>
-      <div className="mt-8">
-        <h3 className="text-xl font-semibold mb-4">Patient Workflow</h3>
-        {renderStepComponent()}
-      </div>
+      <div className="mt-8">{renderStepComponent()}</div>
     </div>
   );
 }

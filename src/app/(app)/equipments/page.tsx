@@ -19,7 +19,8 @@ import {
   FaChevronDown,
   FaSearch,
 } from "react-icons/fa";
-import { ActionMenu } from "@/components/ActionMenu";
+import { Table } from "@/components/Table";
+import { ActionMenu } from "@/components/common/ActionMenu";
 
 type ModalType = "create" | "edit";
 
@@ -202,7 +203,7 @@ const Equipments: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6 overflow-visible">
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-2 md:mb-3 overflow-visible">
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 md:gap-4">
@@ -228,9 +229,7 @@ const Equipments: React.FC = () => {
           </div>
 
           {/* Filters */}
-          <div className="p-4 md:p-6 bg-gray-50 space-y-4 overflow-visible rounded-xl md:rounded-2xl">
-            {/* Location Filters removed */}
-
+          <div className="p-4 md:p-6 bg-gray-50 space-y-4 overflow-visible">
             {/* Search Filters */}
             <div className="flex flex-col gap-4">
               <div className="flex-1 relative">
@@ -249,94 +248,66 @@ const Equipments: React.FC = () => {
 
         {/* Table - Desktop */}
         <div className="bg-white rounded-xl md:rounded-2xl shadow-xl hidden md:block">
-          <div className="overflow-x-auto overflow-y-visible">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Serial
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Model
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Manufacturer
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Vendor
-                  </th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-6 py-12 text-center text-gray-500"
-                    >
-                      No equipments found
-                    </td>
-                  </tr>
-                ) : (
-                  filtered.map((e: Equipment) => (
-                    <tr
-                      key={e.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4 font-mono text-sm bg-gray-50 rounded">
-                        {e.serial_number || "-"}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-gray-900">
-                          {e.name}
+          <Table className="w-full">
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell>Serial</Table.HeaderCell>
+                <Table.HeaderCell>Name</Table.HeaderCell>
+                <Table.HeaderCell>Model</Table.HeaderCell>
+                <Table.HeaderCell>Manufacturer</Table.HeaderCell>
+                <Table.HeaderCell>Status</Table.HeaderCell>
+                <Table.HeaderCell>Vendor</Table.HeaderCell>
+                <Table.HeaderCell align="center">Actions</Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {filtered.length === 0 ? (
+                <Table.Empty colSpan={7}>No equipments found</Table.Empty>
+              ) : (
+                filtered.map((e: Equipment) => (
+                  <Table.Row key={e.id}>
+                    <Table.Cell className="font-mono text-sm bg-gray-50 rounded">
+                      {e.serial_number || "-"}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="font-medium text-gray-900">{e.name}</div>
+                      {e.description && (
+                        <div className="text-sm text-gray-600 line-clamp-1">
+                          {e.description}
                         </div>
-                        {e.description && (
-                          <div className="text-sm text-gray-600 line-clamp-1">
-                            {e.description}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {e.model || "-"}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {e.manufacturer || "-"}
-                      </td>
-                      <td className="px-6 py-4">{statusBadge(e.status)}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {e.vendor?.name || e.vendor_id}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <ActionMenu menuId={`equipment-${e.id}`}>
-                          <ActionMenu.Trigger />
-                          <ActionMenu.Content>
-                            <ActionMenu.Item onClick={() => openEdit(e)}>
-                              <FaEdit className="text-yellow-500" /> Edit
-                            </ActionMenu.Item>
-                            <ActionMenu.Item
-                              onClick={() => onDelete(e.id)}
-                              className="text-red-600 hover:bg-red-50"
-                            >
-                              <FaTrash className="text-red-500" /> Delete
-                            </ActionMenu.Item>
-                          </ActionMenu.Content>
-                        </ActionMenu>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                      )}
+                    </Table.Cell>
+                    <Table.Cell className="text-sm text-gray-700">
+                      {e.model || "-"}
+                    </Table.Cell>
+                    <Table.Cell className="text-sm text-gray-700">
+                      {e.manufacturer || "-"}
+                    </Table.Cell>
+                    <Table.Cell>{statusBadge(e.status)}</Table.Cell>
+                    <Table.Cell className="text-sm text-gray-700">
+                      {e.vendor?.name || e.vendor_id}
+                    </Table.Cell>
+                    <Table.Cell align="center">
+                      <ActionMenu menuId={`equipment-${e.id}`}>
+                        <ActionMenu.Trigger />
+                        <ActionMenu.Content>
+                          <ActionMenu.Item onClick={() => openEdit(e)}>
+                            <FaEdit className="text-yellow-500" /> Edit
+                          </ActionMenu.Item>
+                          <ActionMenu.Item
+                            onClick={() => onDelete(e.id)}
+                            className="text-red-600 hover:bg-red-50"
+                          >
+                            <FaTrash className="text-red-500" /> Delete
+                          </ActionMenu.Item>
+                        </ActionMenu.Content>
+                      </ActionMenu>
+                    </Table.Cell>
+                  </Table.Row>
+                ))
+              )}
+            </Table.Body>
+          </Table>
         </div>
 
         {/* Mobile Cards */}

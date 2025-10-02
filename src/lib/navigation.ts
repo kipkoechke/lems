@@ -47,12 +47,6 @@ export const NAV_ITEMS: NavItem[] = [
     description: "Manage medical equipment",
   },
   {
-    label: "Services",
-    href: "/services",
-    permission: Permission.VIEW_SERVICES,
-    description: "Manage available services",
-  },
-  {
     label: "Lots",
     href: "/lots",
     permission: Permission.VIEW_LOTS,
@@ -67,25 +61,25 @@ export const NAV_ITEMS: NavItem[] = [
     description: "Manage patient records",
   },
   {
-    label: "Bookings",
+    label: "Services",
     href: "/bookings",
     permission: Permission.VIEW_BOOKINGS,
     description: "Manage patient bookings",
   },
   {
-    label: "Payments",
-    href: "/payments",
-    permission: Permission.VIEW_PAYMENTS,
-    description: "Process payments and eligibility",
+    label: "Sync to SHA",
+    href: "/bookings/synced",
+    permission: Permission.SYNC_TO_SHA,
+    description: "Synchronize bookings to SHA",
   },
 
   // Reports and Analytics
-  {
-    label: "Reports",
-    href: "/reports",
-    permission: Permission.VIEW_REPORTS,
-    description: "View system reports",
-  },
+  // {
+  //   label: "Reports",
+  //   href: "/reports",
+  //   permission: Permission.VIEW_REPORTS,
+  //   description: "View system reports",
+  // },
   {
     label: "Trends",
     href: "/trends",
@@ -150,19 +144,7 @@ export const ROLE_QUICK_ACTIONS = {
     className: "bg-indigo-600 hover:bg-indigo-700",
   },
 
-  // Finance staff actions
-  check_eligibility: {
-    label: "Check Eligibility",
-    href: "/payments/eligibility",
-    permission: Permission.CHECK_SHA_ELIGIBILITY,
-    className: "bg-yellow-600 hover:bg-yellow-700",
-  },
-  patient_queue: {
-    label: "Patient Queue",
-    href: "/patients/queue",
-    permission: Permission.VIEW_PATIENT_QUEUE,
-    className: "bg-orange-600 hover:bg-orange-700",
-  },
+  // Finance staff actions - removed payments-related actions
 };
 
 export const useAccessibleQuickActions = () => {

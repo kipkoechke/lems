@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateVendorReport } from "./useCreateVendorReport";
 import { reportFormSchema, ReportFormData } from "@/lib/validations";
-import { InputField } from "@/components/login/InputField";
+import { InputField } from "@/components/common/InputField";
 
 const VendorReport: React.FC = () => {
   const { isCreatingVendorReport, generateVendorReport } =

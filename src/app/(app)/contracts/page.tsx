@@ -9,35 +9,30 @@ import {
   FaFileContract,
   FaPlus,
   FaSearch,
-  FaFilter,
   FaEye,
   FaBuilding,
   FaUserTie,
   FaBox,
+  FaEdit,
+  FaTrash,
 } from "react-icons/fa";
+import { Table } from "@/components/Table";
+import { ActionMenu } from "@/components/common/ActionMenu";
 
 export default function ContractsPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "active" | "inactive"
-  >("all");
 
   const { contracts, isLoading, error } = useContracts();
 
-  // Filter contracts based on search and status
+  // Filter contracts based on search
   const filteredContracts = contracts?.filter((contract: Contract) => {
     const matchesSearch =
       contract.vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contract.facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contract.lot.name.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" && contract.is_active === "1") ||
-      (statusFilter === "inactive" && contract.is_active === "0");
-
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
   if (isLoading) {
@@ -76,7 +71,7 @@ export default function ContractsPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6">
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-2 md:mb-3">
           <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 md:gap-4">
@@ -105,7 +100,7 @@ export default function ContractsPage() {
           </div>
 
           {/* Search and Filters */}
-          <div className="p-4 md:p-6 bg-gray-50 border-b space-y-4">
+          <div className="p-4 md:p-6 bg-gray-50 space-y-4">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -116,18 +111,6 @@ export default function ContractsPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
-              </div>
-              <div className="flex items-center gap-2">
-                <FaFilter className="text-gray-500" />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
               </div>
             </div>
           </div>
@@ -190,134 +173,136 @@ export default function ContractsPage() {
           {filteredContracts?.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-gray-500 text-xl mb-4">
-                {searchTerm || statusFilter !== "all"
+                {searchTerm
                   ? "No contracts match your search criteria"
                   : "No contracts found"}
               </div>
               <p className="text-gray-400">
-                {searchTerm || statusFilter !== "all"
-                  ? "Try adjusting your search terms or filters"
+                {searchTerm
+                  ? "Try adjusting your search terms"
                   : "Create your first contract to get started"}
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Vendor
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Facility
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Lot
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Services
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredContracts?.map((contract: Contract) => (
-                    <tr
-                      key={contract.id}
-                      className="hover:bg-gray-50 transition-colors cursor-pointer"
-                      onClick={() => router.push(`/contracts/${contract.id}`)}
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <FaUserTie className="w-5 h-5 text-purple-600" />
+            <Table className="w-full">
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell>Vendor</Table.HeaderCell>
+                  <Table.HeaderCell>Facility</Table.HeaderCell>
+                  <Table.HeaderCell>Lot</Table.HeaderCell>
+                  <Table.HeaderCell>Services</Table.HeaderCell>
+                  <Table.HeaderCell>Status</Table.HeaderCell>
+                  <Table.HeaderCell align="center">Actions</Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {filteredContracts?.map((contract: Contract) => (
+                  <Table.Row
+                    key={contract.id}
+                    onClick={() => router.push(`/contracts/${contract.id}`)}
+                    className="cursor-pointer"
+                  >
+                    <Table.Cell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                          <FaUserTie className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {contract.vendor.name}
                           </div>
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {contract.vendor.name}
-                            </div>
-                            <div className="text-sm text-gray-500 font-mono">
-                              {contract.vendor.code}
-                            </div>
+                          <div className="text-sm text-gray-500 font-mono">
+                            {contract.vendor.code}
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <FaBuilding className="w-4 h-4 text-blue-600" />
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <FaBuilding className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {contract.facility.name}
                           </div>
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {contract.facility.name}
-                            </div>
-                            <div className="text-sm text-gray-500 font-mono">
-                              {contract.facility.code}
-                            </div>
+                          <div className="text-sm text-gray-500 font-mono">
+                            {contract.facility.code}
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                            <FaBox className="w-4 h-4 text-orange-600" />
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                          <FaBox className="w-4 h-4 text-orange-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            LOT {contract.lot.number}
                           </div>
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              LOT {contract.lot.number}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {contract.lot.name}
-                            </div>
+                          <div className="text-sm text-gray-500">
+                            {contract.lot.name}
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                            {contract.services?.length || 0} services
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            (
-                            {contract.services?.filter(
-                              (s) => s.is_active === "1"
-                            ).length || 0}{" "}
-                            active)
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                            contract.is_active === "1"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {contract.is_active === "1" ? "Active" : "Inactive"}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                          {contract.services?.length || 0} services
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/contracts/${contract.id}`);
-                          }}
-                          className="inline-flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                        >
-                          <FaEye className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <span className="text-sm text-gray-500">
+                          (
+                          {contract.services?.filter((s) => s.is_active === "1")
+                            .length || 0}{" "}
+                          active)
+                        </span>
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          contract.is_active === "1"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {contract.is_active === "1" ? "Active" : "Inactive"}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell align="center">
+                      <ActionMenu menuId={`contract-${contract.id}`}>
+                        <ActionMenu.Trigger />
+                        <ActionMenu.Content>
+                          <ActionMenu.Item
+                            onClick={() => router.push(`/contracts/${contract.id}`)}
+                          >
+                            <FaEye className="h-4 w-4 text-blue-500" />
+                            View Details
+                          </ActionMenu.Item>
+                          <ActionMenu.Item
+                            onClick={() => router.push(`/contracts/${contract.id}/edit`)}
+                          >
+                            <FaEdit className="h-4 w-4 text-yellow-500" />
+                            Edit Contract
+                          </ActionMenu.Item>
+                          <ActionMenu.Item
+                            onClick={() => {
+                              // Handle delete action - you might want to add a delete hook/modal
+                              console.log("Delete contract:", contract.id);
+                            }}
+                          >
+                            <FaTrash className="h-4 w-4 text-red-500" />
+                            Delete
+                          </ActionMenu.Item>
+                        </ActionMenu.Content>
+                      </ActionMenu>
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table>
           )}
         </div>
 
@@ -325,7 +310,7 @@ export default function ContractsPage() {
         <div className="md:hidden space-y-3">
           {filteredContracts?.length === 0 ? (
             <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
-              {searchTerm || statusFilter !== "all"
+              {searchTerm
                 ? "No contracts match your search criteria"
                 : "No contracts found. Create your first contract!"}
             </div>
@@ -345,15 +330,42 @@ export default function ContractsPage() {
                       {contract.vendor.code}
                     </div>
                   </div>
-                  <span
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      contract.is_active === "1"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {contract.is_active === "1" ? "Active" : "Inactive"}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        contract.is_active === "1"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {contract.is_active === "1" ? "Active" : "Inactive"}
+                    </span>
+                    <ActionMenu menuId={`contract-mobile-${contract.id}`}>
+                      <ActionMenu.Trigger />
+                      <ActionMenu.Content>
+                        <ActionMenu.Item
+                          onClick={() => router.push(`/contracts/${contract.id}`)}
+                        >
+                          <FaEye className="h-4 w-4 text-blue-500" />
+                          View Details
+                        </ActionMenu.Item>
+                        <ActionMenu.Item
+                          onClick={() => router.push(`/contracts/${contract.id}/edit`)}
+                        >
+                          <FaEdit className="h-4 w-4 text-yellow-500" />
+                          Edit Contract
+                        </ActionMenu.Item>
+                        <ActionMenu.Item
+                          onClick={() => {
+                            console.log("Delete contract:", contract.id);
+                          }}
+                        >
+                          <FaTrash className="h-4 w-4 text-red-500" />
+                          Delete
+                        </ActionMenu.Item>
+                      </ActionMenu.Content>
+                    </ActionMenu>
+                  </div>
                 </div>
 
                 <div className="space-y-2 text-sm">

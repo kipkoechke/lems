@@ -6,14 +6,14 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useVendors } from "@/features/vendors/useVendors";
 import { useDeleteVendor } from "@/features/vendors/useDeleteVendor";
-import { ActionMenu } from "@/components/ActionMenu";
+import { ActionMenu } from "@/components/common/ActionMenu";
+import { Table } from "@/components/Table";
 import {
   FaBuilding,
   FaCheck,
   FaEdit,
   FaEye,
   FaFileContract,
-  FaFilter,
   FaPlus,
   FaSearch,
   FaTimes,
@@ -27,25 +27,17 @@ function VendorsContent() {
 
   // State management
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "active" | "inactive"
-  >("all");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null
   );
 
-  // Filter vendors based on search and status
+  // Filter vendors based on search
   const filteredVendors = vendors?.filter((vendor) => {
     const matchesSearch =
       vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       vendor.code.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" && vendor.is_active === "1") ||
-      (statusFilter === "inactive" && vendor.is_active === "0");
-
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
   const handleDelete = (vendorId: string) => {
@@ -110,7 +102,7 @@ function VendorsContent() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6 overflow-hidden">
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-2 md:mb-3 overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 md:px-8 py-4 md:py-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 md:gap-4">
@@ -138,7 +130,7 @@ function VendorsContent() {
           </div>
 
           {/* Filters */}
-          <div className="p-4 md:p-6 bg-gray-50 border-b">
+          <div className="p-4 md:p-6 bg-gray-50">
             <div className="flex flex-col gap-4">
               <div className="flex-1 relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -149,18 +141,6 @@ function VendorsContent() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                 />
-              </div>
-              <div className="flex items-center gap-2">
-                <FaFilter className="text-gray-500" />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="w-full md:w-auto px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
               </div>
             </div>
           </div>
@@ -221,126 +201,104 @@ function VendorsContent() {
 
         {/* Table - Desktop */}
         <div className="bg-white rounded-xl md:rounded-2xl shadow-xl hidden md:block">
-          <div className="overflow-x-auto overflow-y-visible">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Code
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Created At
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Updated At
-                  </th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredVendors?.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-6 py-12 text-center text-gray-500"
-                    >
-                      {searchTerm || statusFilter !== "all"
-                        ? "No vendors match your search criteria"
-                        : "No vendors found. Create your first vendor!"}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredVendors?.map((vendor) => (
-                    <tr
-                      key={vendor.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                          {vendor.code}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-gray-900">
-                          {vendor.name}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                            vendor.is_active === "1"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {vendor.is_active === "1" ? <FaCheck /> : <FaTimes />}
-                          {vendor.is_active === "1" ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {formatDate(vendor.created_at)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {formatDate(vendor.updated_at)}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <ActionMenu menuId={`vendor-${vendor.id}`}>
-                          <ActionMenu.Trigger />
-                          <ActionMenu.Content>
-                            <ActionMenu.Item
-                              onClick={() =>
-                                router.push(`/vendors/${vendor.code}`)
-                              }
-                            >
-                              <FaEye className="h-4 w-4 text-blue-500" />
-                              View Details
-                            </ActionMenu.Item>
-                            <ActionMenu.Item
-                              onClick={() =>
-                                router.push(`/vendors/${vendor.code}/edit`)
-                              }
-                            >
-                              <FaEdit className="h-4 w-4 text-yellow-500" />
-                              Edit
-                            </ActionMenu.Item>
-                            <ActionMenu.Item
-                              onClick={() =>
-                                router.push(`/contracts?vendor=${vendor.code}`)
-                              }
-                            >
-                              <FaFileContract className="h-4 w-4 text-purple-500" />
-                              Contracts
-                            </ActionMenu.Item>
-                            <ActionMenu.Item
-                              onClick={() => setShowDeleteConfirm(vendor.id)}
-                            >
-                              <FaTrash className="h-4 w-4 text-red-500" />
-                              Delete
-                            </ActionMenu.Item>
-                          </ActionMenu.Content>
-                        </ActionMenu>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Table className="w-full">
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell>Code</Table.HeaderCell>
+                <Table.HeaderCell>Name</Table.HeaderCell>
+                <Table.HeaderCell>Status</Table.HeaderCell>
+                <Table.HeaderCell>Created At</Table.HeaderCell>
+                <Table.HeaderCell>Updated At</Table.HeaderCell>
+                <Table.HeaderCell align="center">Actions</Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {filteredVendors?.length === 0 ? (
+                <Table.Empty colSpan={6}>
+                  {searchTerm
+                    ? "No vendors match your search criteria"
+                    : "No vendors found. Create your first vendor!"}
+                </Table.Empty>
+              ) : (
+                filteredVendors?.map((vendor) => (
+                  <Table.Row key={vendor.id}>
+                    <Table.Cell>
+                      <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                        {vendor.code}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="font-medium text-gray-900">
+                        {vendor.name}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                          vendor.is_active === "1"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {vendor.is_active === "1" ? <FaCheck /> : <FaTimes />}
+                        {vendor.is_active === "1" ? "Active" : "Inactive"}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell className="text-sm text-gray-600">
+                      {formatDate(vendor.created_at)}
+                    </Table.Cell>
+                    <Table.Cell className="text-sm text-gray-600">
+                      {formatDate(vendor.updated_at)}
+                    </Table.Cell>
+                    <Table.Cell align="center">
+                      <ActionMenu menuId={`vendor-${vendor.id}`}>
+                        <ActionMenu.Trigger />
+                        <ActionMenu.Content>
+                          <ActionMenu.Item
+                            onClick={() =>
+                              router.push(`/vendors/${vendor.code}`)
+                            }
+                          >
+                            <FaEye className="h-4 w-4 text-blue-500" />
+                            View Details
+                          </ActionMenu.Item>
+                          <ActionMenu.Item
+                            onClick={() =>
+                              router.push(`/vendors/${vendor.code}/edit`)
+                            }
+                          >
+                            <FaEdit className="h-4 w-4 text-yellow-500" />
+                            Edit
+                          </ActionMenu.Item>
+                          <ActionMenu.Item
+                            onClick={() =>
+                              router.push(`/contracts?vendor=${vendor.code}`)
+                            }
+                          >
+                            <FaFileContract className="h-4 w-4 text-purple-500" />
+                            Contracts
+                          </ActionMenu.Item>
+                          <ActionMenu.Item
+                            onClick={() => setShowDeleteConfirm(vendor.id)}
+                          >
+                            <FaTrash className="h-4 w-4 text-red-500" />
+                            Delete
+                          </ActionMenu.Item>
+                        </ActionMenu.Content>
+                      </ActionMenu>
+                    </Table.Cell>
+                  </Table.Row>
+                ))
+              )}
+            </Table.Body>
+          </Table>
         </div>
 
         {/* Mobile Cards */}
         <div className="md:hidden space-y-3">
           {filteredVendors?.length === 0 ? (
             <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
-              {searchTerm || statusFilter !== "all"
+              {searchTerm
                 ? "No vendors match your search criteria"
                 : "No vendors found. Create your first vendor!"}
             </div>

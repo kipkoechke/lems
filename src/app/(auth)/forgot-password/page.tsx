@@ -6,7 +6,7 @@ import {
   forgotPasswordSchema,
   ForgotPasswordFormData,
 } from "@/lib/validations";
-import { InputField } from "@/components/login/InputField";
+import { InputField } from "@/components/common/InputField";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
@@ -49,12 +49,12 @@ export default function ForgotPasswordPage() {
             <div className="flex items-center justify-center mb-4">
               <Image
                 src="/assets/cog-logo.png"
-                alt="LEMS Logo"
+                alt="VEMS Logo"
                 width={40}
                 height={40}
                 className="mr-2"
               />
-              <h1 className="text-2xl font-bold text-gray-900">LEMS</h1>
+              <h1 className="text-2xl font-bold text-gray-900">VEMS</h1>
             </div>
             <h2 className="text-xl font-bold text-gray-900">Forgot Password</h2>
             <p className="mt-1 text-sm text-gray-600">

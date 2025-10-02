@@ -34,6 +34,7 @@ export enum Permission {
   SEND_PATIENT_TO_EQUIPMENT_ROOM = "send_patient_to_equipment_room",
   CANCEL_BOOKING = "cancel_booking",
   VIEW_PATIENT_QUEUE = "view_patient_queue",
+  SYNC_TO_SHA = "sync_to_sha",
 
   // Common permissions
   VIEW_DASHBOARD = "view_dashboard",
@@ -114,6 +115,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_PATIENTS,
     Permission.VIEW_BOOKINGS,
     Permission.VIEW_PAYMENTS,
+    Permission.SYNC_TO_SHA,
   ],
 
   [UserRole.F_LAB]: [
@@ -140,6 +142,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_BOOKINGS,
     Permission.VIEW_PAYMENTS,
     Permission.VIEW_REPORTS,
+    Permission.SYNC_TO_SHA,
   ],
 
   [UserRole.USER]: [

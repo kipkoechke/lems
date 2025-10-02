@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLots } from "@/features/lots/useLots";
 import { useUpdateLot } from "@/features/lots/useUpdateLot";
-import BackButton from "@/components/BackButton";
+import BackButton from "@/components/common/BackButton";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useState, useEffect } from "react";

@@ -1,7 +1,8 @@
 "use client";
-import Modal from "@/components/Modal";
-import Pagination from "@/components/Pagination";
-import { ActionMenu } from "@/components/ActionMenu";
+import Modal from "@/components/common/Modal";
+import Pagination from "@/components/common/Pagination";
+import { ActionMenu } from "@/components/common/ActionMenu";
+import { Table } from "@/components/Table";
 import {
   useFacilitiesPaginated,
   useUpdateFacility,
@@ -792,54 +793,45 @@ function FacilitiesContent() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto overflow-y-visible shadow-sm rounded-2xl">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Facility
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Code
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+            <div className="shadow-sm rounded-2xl">
+              <Table className="w-full">
+                <Table.Header>
+                  <Table.Row>
+                    <Table.HeaderCell>Facility</Table.HeaderCell>
+                    <Table.HeaderCell>Code</Table.HeaderCell>
+                    <Table.HeaderCell className="whitespace-nowrap">
                       KEPH Level
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                    </Table.HeaderCell>
+                    <Table.HeaderCell className="whitespace-nowrap">
                       Facility Type
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
+                    </Table.HeaderCell>
+                    <Table.HeaderCell align="center">Actions</Table.HeaderCell>
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
                   {facilityData?.map((facility: Facility) => (
-                    <tr
-                      key={facility.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
+                    <Table.Row key={facility.id}>
+                      <Table.Cell>
                         <div className="font-medium text-gray-900">
                           {facility.name}
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
+                      </Table.Cell>
+                      <Table.Cell>
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                           {facility.code}
                         </span>
-                      </td>
-                      <td className="px-6 py-4">
+                      </Table.Cell>
+                      <Table.Cell>
                         <span className="inline-flex items-center px-2.5 py-1.25 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           {facility.keph_level}
                         </span>
-                      </td>
-                      <td className="px-6 py-4">
+                      </Table.Cell>
+                      <Table.Cell>
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           {facility.facility_type}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
+                      </Table.Cell>
+                      <Table.Cell align="center">
                         <ActionMenu menuId={`facility-${facility.id}`}>
                           <ActionMenu.Trigger />
                           <ActionMenu.Content>
@@ -903,11 +895,11 @@ function FacilitiesContent() {
                             </ActionMenu.Item>
                           </ActionMenu.Content>
                         </ActionMenu>
-                      </td>
-                    </tr>
+                      </Table.Cell>
+                    </Table.Row>
                   ))}
-                </tbody>
-              </table>
+                </Table.Body>
+              </Table>
             </div>
           )}
         </div>

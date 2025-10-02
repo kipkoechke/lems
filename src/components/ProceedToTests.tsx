@@ -1,6 +1,6 @@
 import { goToNextStep, goToPreviousStep } from "@/context/workflowSlice";
 import { useAppDispatch } from "@/hooks/hooks";
-import BackButton from "@/components/BackButton";
+import BackButton from "@/components/common/BackButton";
 import React from "react";
 import { FaCheckCircle, FaVial } from "react-icons/fa";
 

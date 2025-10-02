@@ -48,8 +48,6 @@ export const MultiplePermissionGate = ({
   return hasAccess ? <>{children}</> : <>{fallback}</>;
 };
 
-// Convenience components for common permission scenarios
-
 // Show content only to admins
 export const AdminGate = ({
   children,

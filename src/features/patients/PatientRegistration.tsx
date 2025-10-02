@@ -1,6 +1,6 @@
 "use client";
 
-import Modal from "@/components/Modal";
+import Modal from "@/components/common/Modal";
 import { useAppSelector } from "@/hooks/hooks";
 import { useFacilities } from "@/features/facilities/useFacilities";
 import { Facility } from "@/services/apiFacility";
@@ -338,18 +338,8 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-2">
-      <div className="max-w-6xl mx-auto px-2">
-        {/* Header */}
-        <div className="text-center mb-2">
-          <h1 className="text-lg md:text-2xl font-bold text-gray-900 mb-1">
-            Patient Registration
-          </h1>
-          <p className="text-xs md:text-sm text-gray-600 max-w-2xl mx-auto">
-            Complete your registration to access our healthcare services
-          </p>
-        </div>
-
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 ">
+      <div className="">
         <form onSubmit={handleProceed} className="space-y-2">
           {/* Main Layout: Facility on Left, Patient + Payment on Right */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-4">

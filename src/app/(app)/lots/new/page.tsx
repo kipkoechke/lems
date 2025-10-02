@@ -1,5 +1,5 @@
 "use client";
-import BackButton from "@/components/BackButton";
+import BackButton from "@/components/common/BackButton";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useCreateLot } from "@/features/lots/useCreateLot";
@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { lotCreationSchema, LotCreationFormData } from "@/lib/validations";
-import { InputField } from "@/components/login/InputField";
+import { InputField } from "@/components/common/InputField";
 import { FaLayerGroup, FaSave, FaTimes } from "react-icons/fa";
 
 export default function NewLotPage() {

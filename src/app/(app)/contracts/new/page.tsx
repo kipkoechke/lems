@@ -1,5 +1,5 @@
 "use client";
-import BackButton from "@/components/BackButton";
+import BackButton from "@/components/common/BackButton";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useCreateContract } from "@/features/vendors/useCreateContract";

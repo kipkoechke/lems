@@ -18,8 +18,8 @@ import {
   Ward,
 } from "@/services/apiCounty";
 import { facilitySchema, FacilityFormData } from "@/lib/validations";
-import { InputField } from "@/components/login/InputField";
-import { SelectField } from "@/components/SelectField";
+import { InputField } from "@/components/common/InputField";
+import { SelectField } from "@/components/common/SelectField";
 
 export default function NewFacilityPage() {
   const router = useRouter();
