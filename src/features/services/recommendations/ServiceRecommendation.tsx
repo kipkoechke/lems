@@ -76,7 +76,7 @@ const ServiceRecommendation: React.FC = () => {
 
   // Get available services for the selected contract
   const availableServices =
-    selectedContract?.services.filter((s) => s.is_active === "1") || [];
+    selectedContract?.services?.filter((s) => s.is_active === "1") || [];
 
   // Handle contract selection (diagnostic service category)
   const handleContractChange = (contractId: string) => {
@@ -119,7 +119,7 @@ const ServiceRecommendation: React.FC = () => {
 
     if (selectedContractId) {
       selectedContract = contracts?.find((c) => c.id === selectedContractId);
-      if (selectedContract) {
+      if (selectedContract && selectedContract.services) {
         for (const serviceId of selectedServiceIds) {
           const service = selectedContract.services.find(
             (s) => s.service_code === serviceId
@@ -391,8 +391,8 @@ const ServiceRecommendation: React.FC = () => {
                       <option key={contract.id} value={contract.id}>
                         LOT {contract.lot_number} - {contract.lot_name}(
                         {
-                          contract.services.filter((s) => s.is_active === "1")
-                            .length
+                          contract.services?.filter((s) => s.is_active === "1")
+                            .length || 0
                         }{" "}
                         services)
                       </option>
@@ -406,9 +406,9 @@ const ServiceRecommendation: React.FC = () => {
                       </div>
                       <div className="text-xs text-blue-700">
                         {
-                          selectedContract.services.filter(
+                          selectedContract.services?.filter(
                             (s) => s.is_active === "1"
-                          ).length
+                          ).length || 0
                         }{" "}
                         available services
                       </div>
