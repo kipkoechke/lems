@@ -77,12 +77,14 @@ const ServiceRecommendation: React.FC = () => {
 
   console.log("🎯 Selected contract:", selectedContract);
   console.log("📋 Contracts array:", contracts);
+  console.log("🔍 Selected contract services:", selectedContract?.services);
 
   // Get available services for the selected contract
   const availableServices =
     selectedContract?.services?.filter((s) => s.is_active === "1") || [];
 
-  console.log("✅ Available services:", availableServices);
+  console.log("✅ Available services (filtered):", availableServices);
+  console.log("📊 Available services count:", availableServices.length);
 
   // Handle contract selection (diagnostic service category)
   const handleContractChange = (contractId: string) => {
@@ -443,6 +445,10 @@ const ServiceRecommendation: React.FC = () => {
                   {!selectedContractId ? (
                     <div className="p-3 bg-gray-100 rounded-xl text-gray-500 text-center text-sm">
                       First select a diagnostic service category
+                    </div>
+                  ) : availableServices.length === 0 ? (
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-700 text-center text-sm">
+                      No services available for this diagnostic category
                     </div>
                   ) : (
                     <div className="space-y-2">

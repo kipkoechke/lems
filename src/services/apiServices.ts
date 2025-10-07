@@ -78,78 +78,59 @@ export const getServicesByFacilityCode = async (
   console.log("🔍 Fetching contracts for facility:", facilityCode);
   const response = await axios.get(`contracts?facility_code=${facilityCode}`);
 
-  // Handle new response structure: data array is in response.data.data
+  // Handle response structure: data array is in response.data.data
   const contracts = response.data?.data || [];
   console.log("📋 Contracts received:", contracts.length, contracts);
 
-  // Fetch services for each lot and normalize the data
-  const contractsWithServices = await Promise.all(
-    contracts.map(async (contract: any) => {
-      try {
-        // Fetch services for this lot
-        const lotId = contract.lot?.id || contract.lot_id;
-        if (!lotId) {
-          console.warn("⚠️ Contract missing lot_id:", contract);
-          return null;
-        }
+  // Services are now included in the contract response, no need for separate API calls
+  const normalizedContracts = contracts.map((contract: any) => {
+    // Get services from lot.services (they're now included in the response)
+    const rawServices = contract.lot?.services || [];
+    console.log(
+      "✅ Services found:",
+      rawServices.length,
+      "for lot:",
+      contract.lot?.name
+    );
 
-        console.log("🔍 Fetching services for lot:", lotId, contract.lot?.name);
-        const lotResponse = await axios.get(`/lots/${lotId}`);
-        console.log("📦 Lot response:", lotResponse.data);
-        const rawServices = lotResponse.data.services || [];
-        console.log(
-          "✅ Services found:",
-          rawServices.length,
-          "for lot:",
-          contract.lot?.name
-        );
+    // Normalize service structure to match component expectations
+    // Note: Service fields are now directly on each item (flattened structure)
+    const normalizedServices = rawServices.map((item: any) => ({
+      service_id: item.id,
+      service_code: item.code,
+      service_name: item.name,
+      is_active: "1", // All services from API are active
+      sha_rate: item.sha_rate,
+      vendor_share: item.vendor_share,
+      facility_share: item.facility_share,
+      is_capitated: item.is_capitated,
+      equipment: item.equipment,
+    }));
 
-        // Normalize service structure to match component expectations
-        const normalizedServices = rawServices.map((service: any) => ({
-          service_id: service.id,
-          service_code: service.code,
-          service_name: service.name,
-          is_active: service.is_active,
-          vendor_share: service.vendor_share,
-          facility_share: service.facility_share,
-          description: service.description,
-        }));
+    // Normalize contract structure
+    const normalized = {
+      id: contract.id,
+      vendor_code: contract.vendor?.code || contract.vendor_code,
+      vendor_name: contract.vendor?.name || contract.vendor_name,
+      facility_code: contract.facility?.code || contract.facility_code,
+      facility_name: contract.facility?.name || contract.facility_name,
+      lot_number: contract.lot?.number || contract.lot_number,
+      lot_name: contract.lot?.name || contract.lot_name,
+      is_active: contract.is_active,
+      services: normalizedServices,
+    } as FacilityContract;
 
-        // Normalize contract structure
-        const normalized = {
-          id: contract.id,
-          vendor_code: contract.vendor?.code || contract.vendor_code,
-          vendor_name: contract.vendor?.name || contract.vendor_name,
-          facility_code: contract.facility?.code || contract.facility_code,
-          facility_name: contract.facility?.name || contract.facility_name,
-          lot_number: contract.lot?.number || contract.lot_number,
-          lot_name: contract.lot?.name || contract.lot_name,
-          is_active: contract.is_active,
-          services: normalizedServices,
-        } as FacilityContract;
+    console.log("🎯 Normalized contract:", normalized);
+    return normalized;
+  });
 
-        console.log("🎯 Normalized contract:", normalized);
-        return normalized;
-      } catch (error) {
-        console.error(
-          "❌ Error fetching services for contract:",
-          contract.id,
-          error
-        );
-        return null;
-      }
-    })
-  );
-
-  // Filter out any failed requests
-  const result = contractsWithServices.filter(Boolean) as FacilityContract[];
   console.log(
     "✨ Final result:",
-    result.length,
+    normalizedContracts.length,
     "contracts with services",
-    result
+    normalizedContracts
   );
-  return result;
+  return normalizedContracts;
 };
 
 export const getServiceInfo = async (): Promise<ServiceInfo[]> => {
