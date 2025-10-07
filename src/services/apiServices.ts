@@ -29,14 +29,32 @@ export interface ServiceWithCategory {
 
 interface FacilityContract {
   id: string;
-  vendor_code: string;
-  vendor_name: string;
-  facility_code: string;
-  facility_name: string;
-  lot_number: string;
-  lot_name: string;
+  vendor_id?: string;
+  vendor_code?: string;
+  vendor_name?: string;
+  vendor?: {
+    id: string;
+    code: string;
+    name: string;
+  };
+  facility_id?: string;
+  facility_code?: string;
+  facility_name?: string;
+  facility?: {
+    id: string;
+    code: string;
+    name: string;
+  };
+  lot_id?: string;
+  lot_number?: string;
+  lot_name?: string;
+  lot?: {
+    id: string;
+    number: string;
+    name: string;
+  };
   is_active: string;
-  services: Array<{
+  services?: Array<{
     service_id: string;
     service_code: string;
     service_name: string;
@@ -60,7 +78,45 @@ export const getServicesByFacilityCode = async (
   const response = await axios.get(
     `contracts?facility_code=${facilityCode}`
   );
-  return response.data;
+  
+  // Handle paginated response structure
+  const contracts = response.data.data || [];
+  
+  // Fetch services for each lot and normalize the data
+  const contractsWithServices = await Promise.all(
+    contracts.map(async (contract: any) => {
+      try {
+        // Fetch services for this lot
+        const lotId = contract.lot?.id || contract.lot_id;
+        if (!lotId) {
+          console.warn('Contract missing lot_id:', contract);
+          return null;
+        }
+        
+        const lotResponse = await axios.get(`/lots/${lotId}`);
+        const services = lotResponse.data.services || [];
+        
+        // Normalize contract structure
+        return {
+          id: contract.id,
+          vendor_code: contract.vendor?.code || contract.vendor_code,
+          vendor_name: contract.vendor?.name || contract.vendor_name,
+          facility_code: contract.facility?.code || contract.facility_code,
+          facility_name: contract.facility?.name || contract.facility_name,
+          lot_number: contract.lot?.number || contract.lot_number,
+          lot_name: contract.lot?.name || contract.lot_name,
+          is_active: contract.is_active,
+          services: services,
+        } as FacilityContract;
+      } catch (error) {
+        console.error('Error fetching services for contract:', contract.id, error);
+        return null;
+      }
+    })
+  );
+  
+  // Filter out any failed requests
+  return contractsWithServices.filter(Boolean) as FacilityContract[];
 };
 
 export const getServiceInfo = async (): Promise<ServiceInfo[]> => {
