@@ -75,13 +75,11 @@ export const createServiceInfo = async (
 export const getServicesByFacilityCode = async (
   facilityCode: string
 ): Promise<FacilityContract[]> => {
-  const response = await axios.get(
-    `contracts?facility_code=${facilityCode}`
-  );
-  
-  // Handle paginated response structure
-  const contracts = response.data.data || [];
-  
+  const response = await axios.get(`contracts?facility_code=${facilityCode}`);
+
+  // Handle new response structure: data is directly in response.data
+  const contracts = response.data || [];
+
   // Fetch services for each lot and normalize the data
   const contractsWithServices = await Promise.all(
     contracts.map(async (contract: any) => {
@@ -89,13 +87,13 @@ export const getServicesByFacilityCode = async (
         // Fetch services for this lot
         const lotId = contract.lot?.id || contract.lot_id;
         if (!lotId) {
-          console.warn('Contract missing lot_id:', contract);
+          console.warn("Contract missing lot_id:", contract);
           return null;
         }
-        
+
         const lotResponse = await axios.get(`/lots/${lotId}`);
         const services = lotResponse.data.services || [];
-        
+
         // Normalize contract structure
         return {
           id: contract.id,
@@ -109,12 +107,16 @@ export const getServicesByFacilityCode = async (
           services: services,
         } as FacilityContract;
       } catch (error) {
-        console.error('Error fetching services for contract:', contract.id, error);
+        console.error(
+          "Error fetching services for contract:",
+          contract.id,
+          error
+        );
         return null;
       }
     })
   );
-  
+
   // Filter out any failed requests
   return contractsWithServices.filter(Boolean) as FacilityContract[];
 };

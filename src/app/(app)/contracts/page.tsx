@@ -276,13 +276,17 @@ export default function ContractsPage() {
                         <ActionMenu.Trigger />
                         <ActionMenu.Content>
                           <ActionMenu.Item
-                            onClick={() => router.push(`/contracts/${contract.id}`)}
+                            onClick={() =>
+                              router.push(`/contracts/${contract.id}`)
+                            }
                           >
                             <FaEye className="h-4 w-4 text-blue-500" />
                             View Details
                           </ActionMenu.Item>
                           <ActionMenu.Item
-                            onClick={() => router.push(`/contracts/${contract.id}/edit`)}
+                            onClick={() =>
+                              router.push(`/contracts/${contract.id}/edit`)
+                            }
                           >
                             <FaEdit className="h-4 w-4 text-yellow-500" />
                             Edit Contract
@@ -344,13 +348,17 @@ export default function ContractsPage() {
                       <ActionMenu.Trigger />
                       <ActionMenu.Content>
                         <ActionMenu.Item
-                          onClick={() => router.push(`/contracts/${contract.id}`)}
+                          onClick={() =>
+                            router.push(`/contracts/${contract.id}`)
+                          }
                         >
                           <FaEye className="h-4 w-4 text-blue-500" />
                           View Details
                         </ActionMenu.Item>
                         <ActionMenu.Item
-                          onClick={() => router.push(`/contracts/${contract.id}/edit`)}
+                          onClick={() =>
+                            router.push(`/contracts/${contract.id}/edit`)
+                          }
                         >
                           <FaEdit className="h-4 w-4 text-yellow-500" />
                           Edit Contract

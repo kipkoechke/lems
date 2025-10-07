@@ -390,10 +390,8 @@ const ServiceRecommendation: React.FC = () => {
                     {contracts?.map((contract) => (
                       <option key={contract.id} value={contract.id}>
                         LOT {contract.lot_number} - {contract.lot_name}(
-                        {
-                          contract.services?.filter((s) => s.is_active === "1")
-                            .length || 0
-                        }{" "}
+                        {contract.services?.filter((s) => s.is_active === "1")
+                          .length || 0}{" "}
                         services)
                       </option>
                     ))}
@@ -405,11 +403,9 @@ const ServiceRecommendation: React.FC = () => {
                         {selectedContract.lot_name}
                       </div>
                       <div className="text-xs text-blue-700">
-                        {
-                          selectedContract.services?.filter(
-                            (s) => s.is_active === "1"
-                          ).length || 0
-                        }{" "}
+                        {selectedContract.services?.filter(
+                          (s) => s.is_active === "1"
+                        ).length || 0}{" "}
                         available services
                       </div>
                     </div>
