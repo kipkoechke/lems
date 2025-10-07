@@ -56,7 +56,8 @@ const ServiceRecommendation: React.FC = () => {
   });
 
   // Get services based on facility code - now returns FacilityContract[]
-  const { contracts } = useServicesByFacilityCode(facilityCode);
+  const { contracts, isServicesLoading } =
+    useServicesByFacilityCode(facilityCode);
 
   // Initialize contract selection if not set and contracts are available
   useEffect(() => {
@@ -74,9 +75,14 @@ const ServiceRecommendation: React.FC = () => {
   // Get the selected contract (diagnostic service category)
   const selectedContract = contracts?.find((c) => c.id === selectedContractId);
 
+  console.log("🎯 Selected contract:", selectedContract);
+  console.log("📋 Contracts array:", contracts);
+
   // Get available services for the selected contract
   const availableServices =
     selectedContract?.services?.filter((s) => s.is_active === "1") || [];
+
+  console.log("✅ Available services:", availableServices);
 
   // Handle contract selection (diagnostic service category)
   const handleContractChange = (contractId: string) => {
@@ -384,12 +390,18 @@ const ServiceRecommendation: React.FC = () => {
                     onChange={(e) => handleContractChange(e.target.value)}
                     className="w-full p-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all border-2 border-gray-200 hover:border-gray-300 text-sm"
                     required
-                    disabled={bookingCreated}
+                    disabled={bookingCreated || isServicesLoading}
                   >
-                    <option value="">Select a diagnostic service</option>
+                    <option value="">
+                      {isServicesLoading
+                        ? "Loading diagnostic services..."
+                        : contracts.length === 0
+                        ? "No diagnostic services available"
+                        : "Select a diagnostic service"}
+                    </option>
                     {contracts?.map((contract) => (
                       <option key={contract.id} value={contract.id}>
-                        LOT {contract.lot_number} - {contract.lot_name}(
+                        LOT {contract.lot_number} - {contract.lot_name} (
                         {contract.services?.filter((s) => s.is_active === "1")
                           .length || 0}{" "}
                         services)
@@ -444,22 +456,26 @@ const ServiceRecommendation: React.FC = () => {
                           }`}
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <label className="flex items-center gap-2 cursor-pointer">
+                            <div className="flex items-center gap-2">
                               <input
                                 type="checkbox"
+                                id={`service-${service.service_code}`}
                                 checked={selectedServiceIds.includes(
                                   service.service_code
                                 )}
                                 onChange={() =>
                                   handleServiceToggle(service.service_code)
                                 }
-                                className="w-4 h-4 text-green-600 rounded"
+                                className="w-4 h-4 text-green-600 rounded cursor-pointer"
                                 disabled={bookingCreated}
                               />
-                              <span className="font-medium text-gray-900 text-sm">
+                              <label
+                                htmlFor={`service-${service.service_code}`}
+                                className="font-medium text-gray-900 text-sm cursor-pointer"
+                              >
                                 {service.service_name}
-                              </span>
-                            </label>
+                              </label>
+                            </div>
                             <span className="text-xs text-gray-500">
                               {service.service_code}
                             </span>
