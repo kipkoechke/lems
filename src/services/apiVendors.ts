@@ -66,11 +66,36 @@ export interface Contract {
     id: string;
     number: string;
     name: string;
+    services?: Array<{
+      id: string;
+      name: string;
+      code: string;
+      sha_rate: string;
+      vendor_share: string;
+      facility_share: string;
+      is_capitated: string;
+      equipment: {
+        id: string;
+        name: string;
+        serial_number: string;
+        status: string;
+      };
+    }>;
   };
   services?: ContractService[];
 }
 
 export interface PaginatedContractsResponse {
+  data: Contract[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}
+
+export interface PaginatedContractsResponseOld {
   data: {
     current_page: number;
     data: Contract[];
@@ -180,7 +205,21 @@ export const getContracts = async (
     queryParams.toString() ? `?${queryParams.toString()}` : ""
   }`;
   const response = await axios.get<PaginatedContractsResponse>(url);
-  return response.data.data.data;
+
+  // Normalize the data: copy lot.services to contract.services for backward compatibility
+  const normalizedContracts = response.data.data.map((contract) => ({
+    ...contract,
+    services:
+      contract.lot.services?.map((service) => ({
+        service_id: service.id,
+        service_code: service.code,
+        service_name: service.name,
+        is_active: "1", // All services from API are active
+        equipment_id: service.equipment?.id,
+      })) || [],
+  }));
+
+  return normalizedContracts;
 };
 
 export const createContract = async (
