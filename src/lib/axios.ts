@@ -7,14 +7,16 @@ const instance = axios.create({
   timeout: 10000,
 });
 
-// instance.interceptors.request.use((config) => {
-//   const token = store.getState().auth.token;
-//   if (token) {
-//     config.headers.Authorization = `Bearer ${token}`;
-//   }
-//   return config;
-// });
+// Request interceptor to attach bearer token
+instance.interceptors.request.use((config) => {
+  const token = localStorage.getItem("authToken");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
+// Response interceptor for error handling
 instance.interceptors.response.use(
   (res) => res,
   (err) => {
