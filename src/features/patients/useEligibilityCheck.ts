@@ -1,5 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
-import { checkEligibility, EligibilityRequest, EligibilityResponse } from "@/services/apiEligibility";
+import {
+  checkEligibility,
+  EligibilityRequest,
+  EligibilityResponse,
+} from "@/services/apiEligibility";
 import toast from "react-hot-toast";
 
 export function useEligibilityCheck() {
@@ -11,10 +15,15 @@ export function useEligibilityCheck() {
   } = useMutation<EligibilityResponse, Error, EligibilityRequest>({
     mutationFn: checkEligibility,
     onSuccess: (data) => {
-      if (data.eligible === 1) {
-        toast.success("Patient is eligible for SHA coverage");
+      if (data.eligible) {
+        const coverageMsg = data.coverage_end_date
+          ? ` Coverage valid until ${new Date(
+              data.coverage_end_date
+            ).toLocaleDateString()}`
+          : "";
+        toast.success(`${data.message}${coverageMsg}`);
       } else {
-        toast.error(`Not eligible: ${data.reason}`);
+        toast.error(`Not eligible: ${data.message}`);
       }
     },
     onError: (error) => {

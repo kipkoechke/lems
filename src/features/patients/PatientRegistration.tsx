@@ -175,26 +175,40 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
 
   // Handle SHA eligibility check
   const handleEligibilityCheck = useCallback(() => {
-    if (selectedPatient?.sha_number && selectedPaymentModeId === "sha") {
+    if (
+      selectedPatient?.identification_no &&
+      selectedPatient?.identification_type &&
+      selectedPaymentModeId === "sha"
+    ) {
       checkSHAEligibility({
-        identification_type: "National ID",
-        identification_number: selectedPatient.sha_number,
+        identificationType: selectedPatient.identification_type,
+        identificationNumber: selectedPatient.identification_no,
       });
     } else if (selectedPaymentModeId === "sha") {
       toast.error(
-        "Please select a patient with SHA number for eligibility check"
+        "Please select a patient with identification details for eligibility check"
       );
     }
-  }, [selectedPatient?.sha_number, selectedPaymentModeId, checkSHAEligibility]);
+  }, [
+    selectedPatient?.identification_no,
+    selectedPatient?.identification_type,
+    selectedPaymentModeId,
+    checkSHAEligibility,
+  ]);
 
-  // Auto-trigger eligibility check when SHA is selected and patient has SHA number
+  // Auto-trigger eligibility check when SHA is selected and patient has identification details
   useEffect(() => {
-    if (selectedPaymentModeId === "sha" && selectedPatient?.sha_number) {
+    if (
+      selectedPaymentModeId === "sha" &&
+      selectedPatient?.identification_no &&
+      selectedPatient?.identification_type
+    ) {
       handleEligibilityCheck();
     }
   }, [
     selectedPaymentModeId,
-    selectedPatient?.sha_number,
+    selectedPatient?.identification_no,
+    selectedPatient?.identification_type,
     handleEligibilityCheck,
   ]);
 
@@ -816,9 +830,9 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                       <div className="flex items-center gap-1">
                         {isCheckingEligibility ? (
                           <FaSpinner className="w-4 h-4 animate-spin text-blue-600" />
-                        ) : eligibilityResult?.eligible === 1 ? (
+                        ) : eligibilityResult?.eligible === true ? (
                           <FaCheckCircle className="w-4 h-4 text-green-600" />
-                        ) : eligibilityResult?.eligible === 0 ? (
+                        ) : eligibilityResult?.eligible === false ? (
                           <FaExclamationTriangle className="w-4 h-4 text-red-600" />
                         ) : (
                           <FaSearch className="w-4 h-4 text-gray-400" />
@@ -837,18 +851,21 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                       <div>
                         <p
                           className={`text-xs ${
-                            eligibilityResult.eligible === 1
+                            eligibilityResult.eligible
                               ? "text-green-700"
                               : "text-red-700"
                           }`}
                         >
-                          {eligibilityResult.eligible === 1
-                            ? "✅ Patient is eligible for SHA coverage"
-                            : `❌ ${eligibilityResult.reason}`}
+                          {eligibilityResult.eligible
+                            ? `✅ ${eligibilityResult.message}`
+                            : `❌ ${eligibilityResult.message}`}
                         </p>
-                        {eligibilityResult.possible_solution && (
+                        {eligibilityResult.coverage_end_date && (
                           <p className="text-xs text-blue-700 mt-1">
-                            💡 {eligibilityResult.possible_solution}
+                            � Coverage valid until{" "}
+                            {new Date(
+                              eligibilityResult.coverage_end_date
+                            ).toLocaleDateString()}
                           </p>
                         )}
                       </div>
