@@ -1,45 +1,45 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
-import { patientSchema, PatientFormData } from "@/lib/validations";
 import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
+import { useRegisterPatient } from "@/features/patients/useRegisterPatient";
+
+interface PatientFormData {
+  identificationType: string;
+  identificationNumber: string;
+}
 
 export default function NewPatientPage() {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { registerPatients, isRegistering } = useRegisterPatient();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<PatientFormData>({
-    resolver: zodResolver(patientSchema),
     mode: "onBlur",
   });
 
   const onSubmit = async (data: PatientFormData) => {
-    setIsSubmitting(true);
-    try {
-      // TODO: Replace with actual API call
-      console.log("Registering patient:", data);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Redirect to patients list
-      router.push("/patients");
-    } catch (error) {
-      console.error("Error registering patient:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    registerPatients(data, {
+      onSuccess: (patient) => {
+        toast.success(
+          `Patient ${patient.name} fetched and registered successfully!`
+        );
+        // Redirect to patients list or patient detail page
+        router.push(`/patients/${patient.id}`);
+      },
+      onError: (error: any) => {
+        toast.error(error.message || "Failed to register patient");
+      },
+    });
   };
 
   return (
@@ -74,139 +74,85 @@ export default function NewPatientPage() {
             <span>/</span>
             <span className="text-gray-900">New Patient</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Patient Registration
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Register a new patient in the system
-          </p>
         </div>
 
         {/* Form */}
         <div className="bg-white rounded-lg shadow-lg p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Personal Information */}
+            {/* Identification Information */}
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Personal Information
+                Patient Identification
               </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                Enter the patient&apos;s identification details to fetch their
+                information from the national registry.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField
-                  label="First Name"
-                  type="text"
-                  placeholder="Enter first name"
-                  register={register("first_name")}
-                  error={errors.first_name?.message}
-                  required
-                  disabled={isSubmitting}
-                />
-
-                <InputField
-                  label="Last Name"
-                  type="text"
-                  placeholder="Enter last name"
-                  register={register("last_name")}
-                  error={errors.last_name?.message}
-                  required
-                  disabled={isSubmitting}
-                />
-
-                <InputField
-                  label="ID Number"
-                  type="text"
-                  placeholder="Enter ID number"
-                  register={register("id_number")}
-                  error={errors.id_number?.message}
-                  disabled={isSubmitting}
-                />
-
-                <InputField
-                  label="Date of Birth"
-                  type="date"
-                  placeholder="Select date of birth"
-                  register={register("date_of_birth")}
-                  error={errors.date_of_birth?.message}
-                  required
-                  disabled={isSubmitting}
-                />
-
                 <SelectField
-                  label="Gender"
-                  register={register("gender")}
-                  error={errors.gender?.message}
+                  label="Identification Type"
+                  register={register("identificationType", {
+                    required: "Identification type is required",
+                  })}
+                  error={errors.identificationType?.message}
                   required
-                  disabled={isSubmitting}
-                  placeholder="Select gender"
+                  disabled={isRegistering}
+                  placeholder="Select identification type"
                   options={[
-                    { value: "male", label: "Male" },
-                    { value: "female", label: "Female" },
-                    { value: "other", label: "Other" },
+                    { value: "CR ID", label: "CR ID" },
+                    { value: "National ID", label: "National ID" },
+                    {
+                      value: "Birth Certificate",
+                      label: "Birth Certificate",
+                    },
+                    { value: "Temporary ID", label: "Temporary ID" },
+                    { value: "Alien ID", label: "Alien ID" },
+                    { value: "Passport", label: "Passport" },
                   ]}
                 />
-              </div>
-            </div>
 
-            {/* Contact Information */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Contact Information
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <InputField
-                  label="Phone Number"
-                  type="tel"
-                  placeholder="Enter phone number"
-                  register={register("phone")}
-                  error={errors.phone?.message}
+                  label="Identification Number"
+                  type="text"
+                  placeholder="Enter identification number"
+                  register={register("identificationNumber", {
+                    required: "Identification number is required",
+                    minLength: {
+                      value: 5,
+                      message:
+                        "Identification number must be at least 5 characters",
+                    },
+                  })}
+                  error={errors.identificationNumber?.message}
                   required
-                  disabled={isSubmitting}
+                  disabled={isRegistering}
                 />
-
-                <InputField
-                  label="Email Address"
-                  type="email"
-                  placeholder="Enter email address"
-                  register={register("email")}
-                  error={errors.email?.message}
-                  disabled={isSubmitting}
-                />
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address
-                  </label>
-                  <textarea
-                    {...register("address")}
-                    rows={3}
-                    disabled={isSubmitting}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="Enter residential address"
-                  />
-                  {errors.address && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {errors.address.message}
-                    </p>
-                  )}
-                </div>
               </div>
             </div>
 
             {/* Form Actions */}
-            <div className="flex gap-4 pt-6 border-t">
+            <div className="flex gap-4">
               <button
                 type="button"
                 onClick={() => router.push("/patients")}
                 className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={isSubmitting}
+                disabled={isRegistering}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isRegistering}
                 className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? "Registering..." : "Register Patient"}
+                {isRegistering ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Registering Patient...
+                  </div>
+                ) : (
+                  "Register Patient"
+                )}
               </button>
             </div>
           </form>

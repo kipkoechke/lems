@@ -4,20 +4,91 @@ import { Bookings } from "./apiBooking";
 export interface Patient {
   id: string;
   name: string;
+  first_name: string | null;
+  middle_name: string | null;
+  last_name: string | null;
   phone: string;
+  email: string | null;
   date_of_birth: string;
+  gender: string | null;
+  citizenship: string | null;
+  civil_status: string | null;
+  identification_no: string | null;
+  identification_type: string | null;
   sha_number: string | null;
+  wallet_id: string | null;
+  cr_no: string | null;
+  hh_no: string | null;
+  county_id: string | null;
+  sub_county_id: string | null;
+  ward_id: string | null;
+  village_estate: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
 }
 
 export type PatientRegistrationForm = {
-  name: string;
-  phone: string;
-  date_of_birth: string;
-  sha_number?: string;
+  identificationType: string;
+  identificationNumber: string;
 };
+
+// Identification type options
+export const IDENTIFICATION_TYPES = [
+  "CR ID",
+  "National ID",
+  "Birth Certificate",
+  "Temporary ID",
+  "Alien ID",
+  "Passport",
+] as const;
+
+export type IdentificationType = (typeof IDENTIFICATION_TYPES)[number];
+
+// County interface
+export interface County {
+  id: string;
+  name: string;
+  code: string;
+  is_active: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+// SubCounty interface
+export interface SubCounty {
+  id: string;
+  name: string;
+  code: string;
+  county_id: string;
+  is_active: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+// Ward interface
+export interface Ward {
+  id: string;
+  code: string;
+  name: string;
+  sub_county_id: string;
+  is_active: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+// Patient creation response interface
+export interface PatientCreateResponse {
+  message: string;
+  patient: Patient & {
+    county?: County;
+    sub_county?: SubCounty;
+    ward?: Ward;
+  };
+}
 
 // Pagination link interface
 export interface PaginationLink {
@@ -26,8 +97,24 @@ export interface PaginationLink {
   active: boolean;
 }
 
-// Paginated response interface for patients
+// API Pagination structure (as returned by the backend)
+export interface ApiPagination {
+  total: number;
+  per_page: number;
+  current_page: number;
+  last_page: number;
+  from: number;
+  to: number;
+}
+
+// Paginated response interface for patients (API format)
 export interface PaginatedPatientResponse {
+  data: Patient[];
+  pagination: ApiPagination;
+}
+
+// Legacy Laravel pagination format (for compatibility)
+export interface LegacyPaginatedPatientResponse {
   current_page: number;
   data: Patient[];
   first_page_url: string;
@@ -63,8 +150,8 @@ export interface PatientQueryParams extends PaginationParams, SearchParams {}
 export const registerPatient = async (
   data: PatientRegistrationForm
 ): Promise<Patient> => {
-  const response = await axios.post("/patients", data);
-  return response.data;
+  const response = await axios.post<PatientCreateResponse>("/patients", data);
+  return response.data.patient;
 };
 
 export const getRegisteredPatients = async (
@@ -96,8 +183,8 @@ export const getPatientByBooking = async (id: string): Promise<Bookings[]> => {
 };
 
 export const getPatientById = async (id: string): Promise<Patient> => {
-  const response = await axios.get(`/patient/${id}`);
-  return response.data.data;
+  const response = await axios.get(`/patients/${id}`);
+  return response.data;
 };
 
 export interface PatientUpdateRequest {

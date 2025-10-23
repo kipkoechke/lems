@@ -918,17 +918,13 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
     reset,
     formState: { errors },
   } = useForm<{
-    name: string;
-    phone: string;
-    date_of_birth: string;
-    sha_number?: string;
+    identificationType: string;
+    identificationNumber: string;
   }>();
 
   const handleAddPatient = (data: {
-    name: string;
-    phone: string;
-    date_of_birth: string;
-    sha_number?: string;
+    identificationType: string;
+    identificationNumber: string;
   }) => {
     registerPatients(data, {
       onSuccess: (newPatient: Patient) => {
@@ -967,74 +963,50 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
         <div className="grid grid-cols-1 gap-3">
           <div>
             <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-              Full Name *
+              Identification Type *
             </label>
-            <input
-              {...register("name", {
-                required: "Name is required",
+            <select
+              {...register("identificationType", {
+                required: "Identification type is required",
               })}
               className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
-              placeholder="Enter patient's full name"
-            />
-            {errors.name && (
+            >
+              <option value="">Select identification type</option>
+              <option value="CR ID">CR ID</option>
+              <option value="National ID">National ID</option>
+              <option value="Birth Certificate">Birth Certificate</option>
+              <option value="Temporary ID">Temporary ID</option>
+              <option value="Alien ID">Alien ID</option>
+              <option value="Passport">Passport</option>
+            </select>
+            {errors.identificationType && (
               <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                <span>⚠️</span> {errors.name.message}
+                <span>⚠️</span> {errors.identificationType.message}
               </p>
             )}
           </div>
 
           <div>
             <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-              Phone Number *
+              Identification Number *
             </label>
             <input
-              {...register("phone", {
-                required: "Phone number is required",
-                pattern: {
-                  value: /^\d{10}$/,
-                  message: "Please enter a valid 10-digit phone number",
+              {...register("identificationNumber", {
+                required: "Identification number is required",
+                minLength: {
+                  value: 5,
+                  message:
+                    "Identification number must be at least 5 characters",
                 },
               })}
               className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
-              placeholder="10-digit phone number"
+              placeholder="Enter identification number"
             />
-            {errors.phone && (
+            {errors.identificationNumber && (
               <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                <span>⚠️</span> {errors.phone.message}
+                <span>⚠️</span> {errors.identificationNumber.message}
               </p>
             )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-              Date of Birth *
-            </label>
-            <input
-              {...register("date_of_birth", {
-                required: "Date of birth is required",
-              })}
-              type="date"
-              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
-            />
-            {errors.date_of_birth && (
-              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                <span>⚠️</span> {errors.date_of_birth.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-              SHA Number{" "}
-              <span className="text-gray-400 text-xs">(Optional)</span>
-            </label>
-            <input
-              {...register("sha_number")}
-              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
-              placeholder="Enter SHA number if available"
-            />
           </div>
         </div>
 
@@ -1047,10 +1019,10 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
             {isRegistering ? (
               <div className="flex items-center justify-center gap-2">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Registering...
+                Fetching Patient...
               </div>
             ) : (
-              "Register Patient"
+              "Fetch Patient"
             )}
           </button>
         </div>

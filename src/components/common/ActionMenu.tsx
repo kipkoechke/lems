@@ -205,7 +205,7 @@ const Content: React.FC<ContentProps> = ({
 const Item: React.FC<ItemProps> = ({
   children,
   onClick,
-  className = "w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2",
+  className = "w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3 transition-colors",
   disabled = false,
 }) => {
   const { closeMenu } = useMenuContext();

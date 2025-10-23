@@ -136,9 +136,9 @@ const TableHeaderCell = ({
 
   return (
     <th
-      className={`px-6 py-3 ${
+      className={`px-6 py-2 ${
         alignClasses[align]
-      } text-xs font-medium text-gray-500 uppercase tracking-wider ${
+      } text-xs font-semibold text-gray-700 tracking-wide ${
         sortable ? "cursor-pointer hover:bg-gray-100" : ""
       } ${className}`}
       onClick={handleSort}
@@ -171,7 +171,7 @@ const TableCell = ({
 
   return (
     <td
-      className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${alignClasses[align]} ${className}`}
+      className={`px-6 py-2.5 whitespace-nowrap text-sm text-gray-900 ${alignClasses[align]} ${className}`}
     >
       {children}
     </td>

@@ -36,17 +36,17 @@ export function usePatientsPaginated(params?: PatientQueryParams) {
   return {
     isLoading,
     patients: paginatedData?.data || [],
-    pagination: paginatedData
+    pagination: paginatedData?.pagination
       ? {
-          currentPage: paginatedData.current_page,
-          lastPage: paginatedData.last_page,
-          perPage: paginatedData.per_page,
-          total: paginatedData.total,
-          from: paginatedData.from,
-          to: paginatedData.to,
-          links: paginatedData.links,
-          nextPageUrl: paginatedData.next_page_url,
-          prevPageUrl: paginatedData.prev_page_url,
+          currentPage: paginatedData.pagination.current_page,
+          lastPage: paginatedData.pagination.last_page,
+          perPage: paginatedData.pagination.per_page,
+          total: paginatedData.pagination.total,
+          from: paginatedData.pagination.from,
+          to: paginatedData.pagination.to,
+          links: [],
+          nextPageUrl: null,
+          prevPageUrl: null,
         }
       : null,
     error,

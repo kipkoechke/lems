@@ -4,8 +4,25 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { usePatient } from "@/features/patients/usePatient";
 import { useRouter, useParams } from "next/navigation";
-import { FaUser, FaPhone, FaCalendar, FaEdit, FaMedkit } from "react-icons/fa";
-import PatientBookings from "@/features/patients/PatientBookings";
+import {
+  FaUser,
+  FaPhone,
+  FaCalendar,
+  FaEdit,
+  FaMedkit,
+  FaEnvelope,
+  FaIdCard,
+  FaMapMarkerAlt,
+  FaVenusMars,
+  FaHeart,
+  FaFlag,
+  FaWallet,
+  FaHome,
+  FaFileAlt,
+  FaClipboardList,
+} from "react-icons/fa";
+import { maskPhoneNumber, maskEmail, maskIdNumber } from "@/lib/maskUtils";
+import { formatDateOnlyNairobi } from "@/lib/dateUtils";
 
 export default function PatientDetailsPage() {
   const router = useRouter();
@@ -93,27 +110,66 @@ export default function PatientDetailsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name
                 </label>
-                <p className="text-gray-900 font-medium">{patient.name}</p>
+                <p className="text-gray-900 font-medium text-lg">
+                  {patient.name}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  First Name
+                </label>
+                <p className="text-gray-900">{patient.first_name || "-"}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Middle Name
+                </label>
+                <p className="text-gray-900">{patient.middle_name || "-"}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name
+                </label>
+                <p className="text-gray-900">{patient.last_name || "-"}</p>
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <FaCalendar className="w-3 h-3 text-gray-500" />
                   Date of Birth
                 </label>
                 <p className="text-gray-900">
-                  {new Date(patient.date_of_birth).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                  {formatDateOnlyNairobi(patient.date_of_birth)}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Age:{" "}
+                  {Math.floor(
+                    (new Date().getTime() -
+                      new Date(patient.date_of_birth).getTime()) /
+                      (365.25 * 24 * 60 * 60 * 1000)
+                  )}{" "}
+                  years
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Patient ID
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <FaVenusMars className="w-3 h-3 text-gray-500" />
+                  Gender
                 </label>
-                <p className="text-gray-900 font-mono">
-                  {patient.id.slice(-8)}
-                </p>
+                <p className="text-gray-900">{patient.gender || "-"}</p>
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <FaHeart className="w-3 h-3 text-gray-500" />
+                  Civil Status
+                </label>
+                <p className="text-gray-900">{patient.civil_status || "-"}</p>
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <FaFlag className="w-3 h-3 text-gray-500" />
+                  Citizenship
+                </label>
+                <p className="text-gray-900">{patient.citizenship || "-"}</p>
               </div>
             </div>
           </div>
@@ -128,36 +184,145 @@ export default function PatientDetailsPage() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <FaPhone className="w-3 h-3 text-gray-500" />
                   Phone Number
                 </label>
-                <div className="flex items-center gap-2">
-                  <FaPhone className="w-4 h-4 text-gray-400" />
-                  <p className="text-gray-900">{patient.phone}</p>
-                </div>
+                <p className="text-gray-900 font-mono">
+                  {patient.phone ? maskPhoneNumber(patient.phone) : "-"}
+                </p>
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <FaEnvelope className="w-3 h-3 text-gray-500" />
+                  Email Address
+                </label>
+                <p className="text-gray-900">
+                  {patient.email ? maskEmail(patient.email) : "-"}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* SHA Information */}
+          {/* Identification Information */}
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 flex items-center gap-3">
+              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <FaIdCard className="w-4 h-4 text-indigo-600" />
+              </div>
+              Identification Information
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Identification Type
+                </label>
+                <p className="text-gray-900">
+                  {patient.identification_type || "-"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Identification Number
+                </label>
+                <p className="text-gray-900 font-mono">
+                  {patient.identification_no
+                    ? maskIdNumber(patient.identification_no)
+                    : "-"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* SHA & Insurance Information */}
           <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
             <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 flex items-center gap-3">
               <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                 <FaMedkit className="w-4 h-4 text-purple-600" />
               </div>
-              SHA Information
+              Medical & Insurance Information
             </h2>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                SHA Number
-              </label>
-              {patient.sha_number ? (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                  {patient.sha_number}
-                </span>
-              ) : (
-                <p className="text-gray-400">No SHA number provided</p>
-              )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  SHA Number
+                </label>
+                {patient.sha_number ? (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    {patient.sha_number}
+                  </span>
+                ) : (
+                  <p className="text-gray-400">Not assigned</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  CR Number
+                </label>
+                <p className="text-gray-900 font-mono">
+                  {patient.cr_no || "-"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  HH Number
+                </label>
+                <p className="text-gray-900 font-mono">
+                  {patient.hh_no || "-"}
+                </p>
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <FaWallet className="w-3 h-3 text-gray-500" />
+                  Wallet ID
+                </label>
+                <p className="text-gray-900 font-mono">
+                  {patient.wallet_id || "-"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Location Information */}
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 flex items-center gap-3">
+              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                <FaMapMarkerAlt className="w-4 h-4 text-orange-600" />
+              </div>
+              Location Information
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  County ID
+                </label>
+                <p className="text-gray-900 font-mono text-sm">
+                  {patient.county_id || "-"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sub County ID
+                </label>
+                <p className="text-gray-900 font-mono text-sm">
+                  {patient.sub_county_id || "-"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ward ID
+                </label>
+                <p className="text-gray-900 font-mono text-sm">
+                  {patient.ward_id || "-"}
+                </p>
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <FaHome className="w-3 h-3 text-gray-500" />
+                  Village/Estate
+                </label>
+                <p className="text-gray-900">{patient.village_estate || "-"}</p>
+              </div>
             </div>
           </div>
 
@@ -165,16 +330,18 @@ export default function PatientDetailsPage() {
           <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
             <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 flex items-center gap-3">
               <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                <FaCalendar className="w-4 h-4 text-gray-600" />
+                <FaFileAlt className="w-4 h-4 text-gray-600" />
               </div>
-              Registration Information
+              System Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Patient ID
                 </label>
-                <p className="text-gray-900 font-mono">{patient.id}</p>
+                <p className="text-gray-900 font-mono text-sm break-all">
+                  {patient.id}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -204,11 +371,50 @@ export default function PatientDetailsPage() {
                   })}
                 </p>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                    patient.deleted_at
+                      ? "bg-red-100 text-red-800"
+                      : "bg-green-100 text-green-800"
+                  }`}
+                >
+                  {patient.deleted_at ? "Inactive" : "Active"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 flex items-center gap-3">
+              <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
+                <FaClipboardList className="w-4 h-4 text-teal-600" />
+              </div>
+              Quick Actions
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button
+                onClick={() => router.push(`/patients/${params.id}/bookings`)}
+                className="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg"
+              >
+                <FaCalendar className="w-5 h-5" />
+                <span className="font-medium">View Bookings</span>
+              </button>
+              <button
+                onClick={() => router.push(`/patients/${params.id}/edit`)}
+                className="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-md hover:shadow-lg"
+              >
+                <FaEdit className="w-5 h-5" />
+                <span className="font-medium">Edit Patient</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
-      <PatientBookings />
     </div>
   );
 }
