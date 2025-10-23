@@ -396,13 +396,22 @@ export default function PatientDetailsPage() {
               </div>
               Quick Actions
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <button
                 onClick={() => router.push(`/patients/${params.id}/bookings`)}
                 className="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg"
               >
                 <FaCalendar className="w-5 h-5" />
                 <span className="font-medium">View Bookings</span>
+              </button>
+              <button
+                onClick={() =>
+                  router.push(`/patients/${params.id}/eligibility`)
+                }
+                className="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all shadow-md hover:shadow-lg"
+              >
+                <FaMedkit className="w-5 h-5" />
+                <span className="font-medium">Check Eligibility</span>
               </button>
               <button
                 onClick={() => router.push(`/patients/${params.id}/edit`)}

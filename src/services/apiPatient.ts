@@ -178,7 +178,7 @@ export const getRegisteredPatientsPaginated = async (
 };
 
 export const getPatientByBooking = async (id: string): Promise<Bookings[]> => {
-  const response = await axios.get(`/patient/bookings/${id}`);
+  const response = await axios.get(`/patients/${id}/bookings`);
   return response.data.data;
 };
 

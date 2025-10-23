@@ -423,9 +423,7 @@ function Patients() {
                               <ActionMenu.Content>
                                 <ActionMenu.Item
                                   onClick={() => {
-                                    router.push(
-                                      `/patients/${patient.id}/bookings`
-                                    );
+                                    router.push(`/patients/${patient.id}`);
                                   }}
                                 >
                                   <FiEye className="h-4 w-4" />
