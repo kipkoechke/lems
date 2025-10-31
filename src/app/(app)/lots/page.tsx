@@ -1,276 +1,342 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+﻿"use client";
+import { PermissionGate } from "@/components/PermissionGate";
+import { Permission } from "@/lib/rbac";
 import { useLots } from "@/features/lots/useLots";
 import { Lot } from "@/services/apiLots";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
-  FaSearch,
-  FaMicrophone,
-  FaHeart,
-  FaUser,
-  FaUserPlus,
-  FaCamera,
-  FaShoppingCart,
-  FaCheckCircle,
+  FaLayerGroup,
+  FaPlus,
+  FaEye,
+  FaStethoscope,
+  FaEdit,
+  FaCogs,
+  FaTrash,
 } from "react-icons/fa";
-import { MdClose } from "react-icons/md";
+import { ActionMenu } from "@/components/common/ActionMenu";
+import { SearchField } from "@/components/common/SearchField";
+import { Table } from "@/components/Table";
 
-export default function ServicesPage() {
+export default function LotsPage() {
   const router = useRouter();
-  const { lots, isLoading } = useLots();
-
   const [searchTerm, setSearchTerm] = useState("");
-  const [showFavorites, setShowFavorites] = useState(false);
 
-  // Mock patient data - replace with actual patient selection
-  const mockPatient = {
-    name: "James Anderson",
-    age: 32,
-    phone: "+254*****789",
-    crNo: "CR0xxxxx89-6",
-    identificationType: "NATIONAL ID",
-    identificationNo: "123XXXX7",
-  };
+  const { lots, isLoading, error } = useLots();
 
-  const mockServices = [
-    { name: "Diagnostic Imaging CT", cost: 11200 },
-    { name: "Diagnostic Imaging MRI", cost: 11200 },
-    { name: "Diagnostic Imaging Sonography", cost: 11200 },
-  ];
+  // Filter lots based on search
+  const filteredLots = lots?.filter((lot: Lot) => {
+    const matchesSearch =
+      lot.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lot.number.toLowerCase().includes(searchTerm.toLowerCase());
 
-  const handleServiceClick = (lot: Lot) => {
-    router.push(`/lots/${lot.id}/services`);
-  };
+    return matchesSearch;
+  });
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 md:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading lots...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 md:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="text-red-600 text-xl mb-2">ΓÜá∩╕Å</div>
+              <p className="text-red-600">
+                Error loading lots: {error?.message || "Unknown error"}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex bg-gray-50">
-      {/* Services Section */}
-      <div className="flex-1 flex flex-col bg-gray-100 overflow-hidden h-full">
-        {/* Services Header */}
-        <div className="bg-white px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold text-gray-900">Services</h2>
-            <button
-              onClick={() => setShowFavorites(!showFavorites)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                showFavorites
-                  ? "bg-green-600 text-white"
-                  : "bg-white border border-gray-300 text-gray-700"
-              }`}
-            >
-              <FaHeart className="w-4 h-4" />
-              <span className="text-sm font-medium">Favorites</span>
-            </button>
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <FaMicrophone className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          </div>
-        </div>
-
-        {/* Service Categories/Lots */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* All Lots Card */}
-            <button
-              onClick={() => router.push("/lots/all")}
-              className="bg-white rounded-lg p-6 hover:shadow-lg transition-shadow border border-gray-200 text-left"
-            >
-              <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-                <svg
-                  className="w-8 h-8 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 md:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-2 md:mb-3">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <FaLayerGroup className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold text-white mb-1">
+                    Lot Management
+                  </h1>
+                  <p className="text-sm md:text-base text-indigo-100">
+                    Manage service lots and categories
+                  </p>
+                </div>
+              </div>
+              <PermissionGate permission={Permission.ONBOARD_LOTS}>
+                <button
+                  onClick={() => router.push("/lots/new")}
+                  className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
+                  <FaPlus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Add Lot</span>
+                </button>
+              </PermissionGate>
+            </div>
+          </div>
+
+          {/* Search and Filters */}
+          <div className="p-4 md:p-6 bg-gray-50 space-y-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <SearchField
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="Search lots by name or number..."
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                <FaLayerGroup className="w-5 h-5 md:w-6 md:h-6 text-indigo-600" />
               </div>
-              <h3 className="font-medium text-gray-900">All Lots</h3>
-            </button>
-
-            {/* Dynamic Lot Cards */}
-            {lots?.map((lot) => (
-              <button
-                key={lot.id}
-                onClick={() => handleServiceClick(lot)}
-                className="bg-white rounded-lg p-6 hover:shadow-lg transition-shadow border border-gray-200 text-left"
-              >
-                <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-                  <svg
-                    className="w-8 h-8 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
+              <div>
+                <div className="text-xl md:text-2xl font-bold text-gray-900">
+                  {lots?.length || 0}
                 </div>
-                <h3 className="font-medium text-gray-900">{lot.name}</h3>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Patient Information Sidebar */}
-      <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto self-start">
-        {/* Patient Header */}
-        <div className="px-4 py-3 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <FaUser className="w-4 h-4 text-gray-600" />
-              <h3 className="font-semibold text-gray-900">
-                Patient Information
-              </h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <button className="w-8 h-8 bg-green-600 text-white rounded flex items-center justify-center hover:bg-green-700">
-                <FaUserPlus className="w-4 h-4" />
-              </button>
-              <button className="w-8 h-8 bg-orange-500 text-white rounded flex items-center justify-center hover:bg-orange-600">
-                <FaCamera className="w-4 h-4" />
-              </button>
-              <button className="w-8 h-8 bg-red-500 text-white rounded flex items-center justify-center hover:bg-red-600">
-                <MdClose className="w-5 h-5" />
-              </button>
+                <div className="text-xs md:text-sm text-gray-600">
+                  Total Lots
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* Patient Selector */}
-          <select className="w-full px-3 py-2 border border-gray-300 rounded bg-white text-sm">
-            <option>{mockPatient.name}</option>
-          </select>
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <FaLayerGroup className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
+              </div>
+              <div>
+                <div className="text-xl md:text-2xl font-bold text-gray-900">
+                  {lots?.filter((l) => l.is_active).length || 0}
+                </div>
+                <div className="text-xs md:text-sm text-gray-600">
+                  Active Lots
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <FaStethoscope className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
+              </div>
+              <div>
+                <div className="text-xl md:text-2xl font-bold text-gray-900">
+                  --
+                </div>
+                <div className="text-xs md:text-sm text-gray-600">
+                  Available Services
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Patient Details */}
-        <div className="px-4 py-3 border-b border-gray-200 text-sm">
-          <div className="bg-white rounded-lg border border-gray-200 p-3 mb-3">
-            <p className="text-gray-900 font-semibold mb-1">
-              {mockPatient.name}
-            </p>
-            <div className="flex items-center gap-4 text-gray-600">
-              <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded text-xs font-medium">
-                {mockPatient.age} Years
-              </span>
-            </div>
-            <div className="mt-2 space-y-1 text-xs">
-              <p>
-                <span className="font-medium">Phone:</span> {mockPatient.phone}
-              </p>
-              <p>
-                <span className="font-medium">CR NO:</span> {mockPatient.crNo}
+        {/* Table - Desktop */}
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl hidden md:block">
+          {filteredLots?.length === 0 ? (
+            <div className="p-12 text-center">
+              <div className="text-gray-500 text-xl mb-4">
+                {searchTerm
+                  ? "No lots match your search criteria"
+                  : "No lots found"}
+              </div>
+              <p className="text-gray-400">
+                {searchTerm
+                  ? "Try adjusting your search terms"
+                  : "Create your first lot to get started"}
               </p>
             </div>
-          </div>
+          ) : (
+            <Table className="w-full">
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell>Lot Number</Table.HeaderCell>
+                  <Table.HeaderCell>Lot Name</Table.HeaderCell>
+                  <Table.HeaderCell>Status</Table.HeaderCell>
+                  <Table.HeaderCell align="center">Actions</Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {filteredLots?.map((lot: Lot) => (
+                  <Table.Row key={lot.id}>
+                    <Table.Cell>
+                      <div className="font-mono text-sm font-medium text-gray-900">
+                        LOT {lot.number}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="font-medium text-gray-900">
+                        {lot.name}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          lot.is_active
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {lot.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell align="center">
+                      <ActionMenu menuId={`lot-${lot.id}`}>
+                        <ActionMenu.Trigger />
+                        <ActionMenu.Content>
+                          <ActionMenu.Item
+                            onClick={() => {
+                              router.push(`/lots/${lot.id}`);
+                            }}
+                          >
+                            <FaEye className="w-4 h-4" />
+                            View Details
+                          </ActionMenu.Item>
+                          <ActionMenu.Item
+                            onClick={() => {
+                              router.push(`/lots/${lot.id}/edit`);
+                            }}
+                          >
+                            <FaEdit className="w-4 h-4" />
+                            Edit
+                          </ActionMenu.Item>
+                          <ActionMenu.Item
+                            onClick={() => {
+                              router.push(`/lots/${lot.id}/services`);
+                            }}
+                          >
+                            <FaCogs className="w-4 h-4" />
+                            Manage Services
+                          </ActionMenu.Item>
+                          <ActionMenu.Item
+                            onClick={() => {
+                              // Handle delete action - you might want to add a delete hook/modal
+                              console.log("Delete lot:", lot.id);
+                            }}
+                          >
+                            <FaTrash className="w-4 h-4 text-red-500" />
+                            Delete
+                          </ActionMenu.Item>
+                        </ActionMenu.Content>
+                      </ActionMenu>
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table>
+          )}
         </div>
 
-        {/* Selected Services */}
-        <div className="px-4 py-3">
-          <div className="mb-3">
-            <h4 className="text-sm font-semibold text-gray-900 mb-2">
-              Selected Service(s)
-              <span className="float-right">COST</span>
-            </h4>
-          </div>
-
-          <div className="space-y-2">
-            {mockServices.map((service, index) => (
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-3">
+          {filteredLots?.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
+              {searchTerm
+                ? "No lots match your search criteria"
+                : "No lots found. Create your first lot!"}
+            </div>
+          ) : (
+            filteredLots?.map((lot: Lot) => (
               <div
-                key={index}
-                className="flex items-center justify-between bg-green-50 rounded p-2 text-sm"
+                key={lot.id}
+                className="bg-white rounded-xl shadow-lg p-4 border border-gray-100"
               >
-                <div className="flex items-center gap-2 flex-1">
-                  <FaCheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                  <span className="text-gray-900">{service.name}</span>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 text-lg mb-1">
+                      {lot.name}
+                    </h3>
+                    <div className="text-sm text-gray-500 font-mono">
+                      LOT {lot.number}
+                    </div>
+                    <div className="mt-2">
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          lot.is_active
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {lot.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                  </div>
+                  <ActionMenu menuId={`lot-mobile-${lot.id}`}>
+                    <ActionMenu.Trigger />
+                    <ActionMenu.Content>
+                      <ActionMenu.Item
+                        onClick={() => {
+                          router.push(`/lots/${lot.id}`);
+                        }}
+                      >
+                        <FaEye className="w-4 h-4" />
+                        View Details
+                      </ActionMenu.Item>
+                      <ActionMenu.Item
+                        onClick={() => {
+                          router.push(`/lots/${lot.id}/edit`);
+                        }}
+                      >
+                        <FaEdit className="w-4 h-4" />
+                        Edit
+                      </ActionMenu.Item>
+                      <ActionMenu.Item
+                        onClick={() => {
+                          router.push(`/lots/${lot.id}/services`);
+                        }}
+                      >
+                        <FaCogs className="w-4 h-4" />
+                        Manage Services
+                      </ActionMenu.Item>
+                      <ActionMenu.Item
+                        onClick={() => {
+                          // Handle delete action
+                          console.log("Delete lot:", lot.id);
+                        }}
+                      >
+                        <FaTrash className="w-4 h-4 text-red-500" />
+                        Delete
+                      </ActionMenu.Item>
+                    </ActionMenu.Content>
+                  </ActionMenu>
                 </div>
-                <span className="font-semibold text-gray-900">
-                  KES {service.cost.toLocaleString()}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Identification Section */}
-        <div className="px-4 py-3 border-t border-gray-200">
-          <div className="bg-gray-50 rounded-lg p-3 mb-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-gray-700">
-                  Identifier:
-                </span>
-                <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-medium">
-                  {mockPatient.identificationType}
-                </span>
-                <span className="bg-green-600 text-white px-2 py-0.5 rounded text-xs font-medium">
-                  Eligible
-                </span>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-500 font-medium">Number:</span>
+                    <p className="text-gray-900 font-mono">LOT {lot.number}</p>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="text-xs">
-              <span className="font-medium">Identification No.</span>{" "}
-              {mockPatient.identificationNo}
-            </div>
-          </div>
-
-          {/* Payment Summary */}
-          <div className="bg-gray-50 rounded-lg p-3 mb-3">
-            <h4 className="font-semibold text-gray-900 mb-2 text-sm">
-              Payment Summary
-            </h4>
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Facility Share</span>
-                <span className="font-semibold">KES 3,600</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Vendor Share</span>
-                <span className="font-semibold">KES 30,000</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Total Cost */}
-          <div className="bg-gray-900 text-white rounded-lg p-3 mb-3">
-            <div className="flex justify-between items-center">
-              <span className="font-semibold">Total Cost</span>
-              <span className="text-xl font-bold">KES 33,600</span>
-            </div>
-          </div>
-
-          {/* Send to Fiance Button */}
-          <button className="w-full bg-blue-800 hover:bg-blue-900 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2">
-            <FaShoppingCart className="w-5 h-5" />
-            <span>Send to Fiance</span>
-          </button>
+            ))
+          )}
         </div>
       </div>
     </div>

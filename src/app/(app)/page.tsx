@@ -11,8 +11,8 @@ export default function HomePage() {
 
   useEffect(() => {
     if (user && user.role === "f_medical") {
-      // Clinicians go directly to services/lots page
-      router.replace("/lots");
+      // Clinicians go directly to clinician services page
+      router.replace("/clinician");
     }
   }, [user, router]);
 

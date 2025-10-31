@@ -28,16 +28,27 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const showSidebar = user?.role !== "f_medical";
 
   return (
-    <div className={`h-screen grid grid-cols-1 ${showSidebar ? 'md:grid-cols-[auto_1fr]' : ''} grid-rows-[auto_1fr]`}>
+    <div
+      className={`h-screen grid grid-cols-1 ${
+        showSidebar ? "md:grid-cols-[auto_1fr]" : ""
+      } grid-rows-[auto_1fr]`}
+    >
       <Header
         onMenuToggle={toggleMobileMenu}
         isMobileMenuOpen={isMobileMenuOpen}
       />
       {/* Sidebar - hidden for f_medical users */}
       {showSidebar && (
-        <Sidebar isMobileMenuOpen={isMobileMenuOpen} onClose={closeMobileMenu} />
+        <Sidebar
+          isMobileMenuOpen={isMobileMenuOpen}
+          onClose={closeMobileMenu}
+        />
       )}
-      <main className={`overflow-auto bg-gray-100 ${showSidebar ? 'md:col-start-2' : ''}`}>
+      <main
+        className={`overflow-auto bg-gray-100 ${
+          showSidebar ? "md:col-start-2" : ""
+        }`}
+      >
         <div className="mx-auto flex max-w-screen-xl flex-col gap-4 md:gap-8 p-4 md:p-0">
           {children}
         </div>
