@@ -62,9 +62,10 @@ export const setAuthData = (
   localStorage.setItem("facility", JSON.stringify(facility));
 
   // Set in cookies for middleware access
+  // Cookie should be accessible across the entire domain
   document.cookie = `authToken=${token}; path=/; max-age=${
     7 * 24 * 60 * 60
-  }; samesite=strict`;
+  }; samesite=lax`;
 };
 
 export const getAuthData = (): AuthState => {

@@ -8,7 +8,6 @@ const publicRoutes = ["/login", "/register", "/forgot-password"];
 const apiRoutes = ["/api"];
 
 export function middleware(request: NextRequest) {
-  console.log("Middleware - pathname:", request.nextUrl.pathname);
   const { pathname } = request.nextUrl;
 
   // Skip middleware for API routes
