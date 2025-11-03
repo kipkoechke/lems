@@ -5,6 +5,7 @@ import { useRegisterPatient } from "@/features/patients/useRegisterPatient";
 import { usePatients } from "@/features/patients/usePatients";
 import { useCurrentFacility } from "@/hooks/useAuth";
 import { useServicesByFacilityCode } from "@/features/services/useServicesByFacilityCode";
+import { useCreateBooking } from "@/features/services/bookings/useCreateBooking";
 import {
   FaSearch,
   FaMicrophone,
@@ -15,14 +16,20 @@ import {
   FaShoppingCart,
   FaCheckCircle,
   FaTimes,
+  FaCalendar,
+  FaClock,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
 import Modal from "@/components/common/Modal";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
+import ConsentVerification from "./ConsentVerification";
 
 export default function ClinicianServicesPage() {
   const { registerPatients, isRegistering } = useRegisterPatient();
   const { patients } = usePatients({});
   const facility = useCurrentFacility();
+  const { createBooking, isCreating } = useCreateBooking();
 
   // TODO: Replace with facility?.code once login returns facility code
   // For now, using demo facility code
@@ -37,6 +44,15 @@ export default function ClinicianServicesPage() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [selectedContractId, setSelectedContractId] = useState<string>("");
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+
+  // Booking date/time state - per service
+  const [serviceDates, setServiceDates] = useState<Record<string, Date>>({});
+  const [serviceTimes, setServiceTimes] = useState<Record<string, string>>({});
+
+  // Consent flow state
+  const [showConsent, setShowConsent] = useState(false);
+  const [createdBooking, setCreatedBooking] = useState<any>(null);
+  const [otpCode, setOtpCode] = useState<string>("");
 
   // Registration form state
   const [identificationType, setIdentificationType] = useState<string>(
@@ -107,10 +123,74 @@ export default function ClinicianServicesPage() {
   const handleServiceToggle = (serviceId: string) => {
     setSelectedServiceIds((prev) => {
       if (prev.includes(serviceId)) {
-        return prev.filter((id) => id !== serviceId);
+        // Remove service and its date/time
+        const newIds = prev.filter((id) => id !== serviceId);
+        const newDates = { ...serviceDates };
+        const newTimes = { ...serviceTimes };
+        delete newDates[serviceId];
+        delete newTimes[serviceId];
+        setServiceDates(newDates);
+        setServiceTimes(newTimes);
+        return newIds;
       } else {
+        // Add service with default time
+        setServiceTimes((prev) => ({ ...prev, [serviceId]: "09:00" }));
         return [...prev, serviceId];
       }
+    });
+  };
+
+  // Handle booking submission
+  const handleCreateBooking = () => {
+    if (!selectedPatient) {
+      toast.error("Please select a patient");
+      return;
+    }
+
+    if (selectedServices.length === 0) {
+      toast.error("Please select at least one service");
+      return;
+    }
+
+    // Check if all services have dates and times
+    const missingDates = selectedServices.filter(
+      (service) => !serviceDates[service.service_id]
+    );
+
+    if (missingDates.length > 0) {
+      toast.error("Please set appointment date and time for all services");
+      return;
+    }
+
+    // Create booking payload with per-service dates
+    const bookingData = {
+      patient_id: selectedPatient.id,
+      payment_mode: "sha", // You can make this selectable if needed
+      override: false,
+      services: selectedServices.map((service) => {
+        const date = serviceDates[service.service_id];
+        const time = serviceTimes[service.service_id] || "09:00";
+        const [hours, minutes] = time.split(":");
+        const bookingDateTime = new Date(date);
+        bookingDateTime.setHours(parseInt(hours), parseInt(minutes));
+
+        return {
+          service_id: service.service_id,
+          booking_date: bookingDateTime.toISOString(),
+        };
+      }),
+    };
+
+    createBooking(bookingData, {
+      onSuccess: (response) => {
+        toast.success("Booking created successfully!");
+        setCreatedBooking(response.booking);
+        setOtpCode(response.otp_code);
+        setShowConsent(true);
+      },
+      onError: () => {
+        toast.error("Failed to create booking");
+      },
     });
   };
 
@@ -225,29 +305,81 @@ export default function ClinicianServicesPage() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {availableServices.map((service) => (
-                    <button
+                    <div
                       key={service.service_id}
-                      onClick={() => handleServiceToggle(service.service_id)}
-                      className={`p-4 rounded-lg border-2 text-left transition-all ${
+                      className={`p-4 rounded-lg border-2 transition-all ${
                         selectedServiceIds.includes(service.service_id)
                           ? "border-green-600 bg-green-50"
-                          : "border-gray-200 bg-white hover:border-gray-300"
+                          : "border-gray-200 bg-white"
                       }`}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900 text-sm">
-                            {service.service_name}
-                          </h4>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Code: {service.service_code}
-                          </p>
+                      <button
+                        onClick={() => handleServiceToggle(service.service_id)}
+                        className="w-full text-left"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900 text-sm">
+                              {service.service_name}
+                            </h4>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Code: {service.service_code}
+                            </p>
+                          </div>
+                          {selectedServiceIds.includes(service.service_id) && (
+                            <FaCheckCircle className="w-5 h-5 text-green-600 ml-2" />
+                          )}
                         </div>
-                        {selectedServiceIds.includes(service.service_id) && (
-                          <FaCheckCircle className="w-5 h-5 text-green-600 ml-2" />
-                        )}
-                      </div>
-                    </button>
+                      </button>
+
+                      {/* Date and Time Picker - shown when service is selected */}
+                      {selectedServiceIds.includes(service.service_id) && (
+                        <div className="mt-3 pt-3 border-t border-green-200">
+                          <div className="text-xs font-medium text-gray-700 mb-2">
+                            Appointment Schedule
+                          </div>
+
+                          <Modal.Open
+                            opens={`date-picker-${service.service_id}`}
+                          >
+                            <button className="w-full mb-2 px-2 py-1.5 border border-gray-300 rounded text-left hover:border-blue-500 transition-colors bg-white">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-700">
+                                  {serviceDates[service.service_id]
+                                    ? serviceDates[
+                                        service.service_id
+                                      ].toLocaleDateString("en-US", {
+                                        weekday: "short",
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      })
+                                    : "Select date"}
+                                </span>
+                                <FaCalendar className="w-3 h-3 text-gray-400" />
+                              </div>
+                            </button>
+                          </Modal.Open>
+
+                          <div className="flex items-center gap-2">
+                            <FaClock className="w-3 h-3 text-gray-600" />
+                            <input
+                              type="time"
+                              value={
+                                serviceTimes[service.service_id] || "09:00"
+                              }
+                              onChange={(e) =>
+                                setServiceTimes((prev) => ({
+                                  ...prev,
+                                  [service.service_id]: e.target.value,
+                                }))
+                              }
+                              className="flex-1 px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -353,21 +485,34 @@ export default function ClinicianServicesPage() {
                   >
                     <div className="flex items-center gap-2 flex-1">
                       <FaCheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span className="text-gray-900">
-                        {service.service_name}
-                      </span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-gray-900 block truncate">
+                          {service.service_name}
+                        </span>
+                        {serviceDates[service.service_id] && (
+                          <span className="text-xs text-gray-600 block">
+                            {serviceDates[
+                              service.service_id
+                            ].toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            })}{" "}
+                            at {serviceTimes[service.service_id] || "09:00"}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <span className="font-semibold text-gray-900">
+                    <span className="font-semibold text-gray-900 ml-2">
                       KES 11,200
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="bg-red-100 rounded-lg p-4 text-center text-gray-500 text-sm">
+              <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm">
                 <p>No services selected</p>
                 <p className="text-xs mt-1">
-                  Click on a service category above to select services
+                  Select services from the list above
                 </p>
               </div>
             )}
@@ -419,11 +564,32 @@ export default function ClinicianServicesPage() {
                   KES {totalCost.toLocaleString()}
                 </span>
               </div>
-            </div>{" "}
-            {/* Send to Fiance Button */}
-            <button className="w-full bg-blue-800 hover:bg-blue-900 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2">
-              <FaShoppingCart className="w-5 h-5" />
-              <span>Send to Fiance</span>
+            </div>
+
+            {/* Create Booking Button */}
+            <button
+              onClick={handleCreateBooking}
+              disabled={
+                !selectedPatient ||
+                selectedServices.length === 0 ||
+                selectedServices.some(
+                  (service) => !serviceDates[service.service_id]
+                ) ||
+                isCreating
+              }
+              className="w-full bg-blue-800 hover:bg-blue-900 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            >
+              {isCreating ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Creating Booking...</span>
+                </>
+              ) : (
+                <>
+                  <FaShoppingCart className="w-5 h-5" />
+                  <span>Create Booking</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -446,6 +612,64 @@ export default function ClinicianServicesPage() {
           />
         </div>
       </Modal.Window>
+
+      {/* Date Picker Modals - one for each service */}
+      {selectedServices.map((service) => (
+        <Modal.Window
+          key={service.service_id}
+          name={`date-picker-${service.service_id}`}
+        >
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Select Appointment Date
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              for <span className="font-semibold">{service.service_name}</span>
+            </p>
+            <div className="flex justify-center">
+              <DayPicker
+                mode="single"
+                selected={serviceDates[service.service_id]}
+                onSelect={(date) => {
+                  if (date) {
+                    setServiceDates((prev) => ({
+                      ...prev,
+                      [service.service_id]: date,
+                    }));
+                  }
+                }}
+                disabled={{ before: new Date() }}
+                className="border rounded-lg p-4"
+              />
+            </div>
+          </div>
+        </Modal.Window>
+      ))}
+
+      {/* Consent Verification Modal */}
+      {showConsent && selectedPatient && createdBooking && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <ConsentVerification
+            patient={selectedPatient}
+            booking={createdBooking}
+            otpCode={otpCode}
+            onSuccess={() => {
+              toast.success("Booking completed successfully!");
+              // Reset form
+              setShowConsent(false);
+              setSelectedServiceIds([]);
+              setServiceDates({});
+              setServiceTimes({});
+              setCreatedBooking(null);
+              setOtpCode("");
+            }}
+            onCancel={() => {
+              setShowConsent(false);
+              toast("Consent verification cancelled");
+            }}
+          />
+        </div>
+      )}
     </Modal>
   );
 }
