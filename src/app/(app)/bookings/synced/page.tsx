@@ -766,7 +766,9 @@ const SyncedBookingsReport: React.FC = () => {
                             </div>
                             <div className="text-sm text-gray-500">
                               <span className="font-medium">Phone:</span>{" "}
-                              {maskPhoneNumber(syncedBooking.booking.patient.phone)}
+                              {maskPhoneNumber(
+                                syncedBooking.booking.patient.phone
+                              )}
                             </div>
                             <div className="text-sm text-gray-500">
                               <span className="font-medium">SHA Number:</span>{" "}

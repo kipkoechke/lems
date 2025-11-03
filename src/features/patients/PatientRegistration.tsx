@@ -700,7 +700,9 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                       }
                     >
                       {selectedPatient
-                        ? `${selectedPatient.name} (${maskPhoneNumber(selectedPatient.phone)})`
+                        ? `${selectedPatient.name} (${maskPhoneNumber(
+                            selectedPatient.phone
+                          )})`
                         : "Choose a patient"}
                     </span>
                     <FaChevronDown

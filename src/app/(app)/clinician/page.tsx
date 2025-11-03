@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Patient, IDENTIFICATION_TYPES } from "@/services/apiPatient";
 import { useRegisterPatient } from "@/features/patients/useRegisterPatient";
 import { usePatients } from "@/features/patients/usePatients";
@@ -23,7 +24,6 @@ import toast from "react-hot-toast";
 import Modal from "@/components/common/Modal";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
-import ConsentVerification from "./ConsentVerification";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 
 export default function ClinicianServicesPage() {
@@ -31,6 +31,7 @@ export default function ClinicianServicesPage() {
   const { patients } = usePatients({});
   const facility = useCurrentFacility();
   const { createBooking, isCreating } = useCreateBooking();
+  const router = useRouter();
 
   // TODO: Replace with facility?.code once login returns facility code
   // For now, using demo facility code
@@ -50,18 +51,11 @@ export default function ClinicianServicesPage() {
   const [serviceDates, setServiceDates] = useState<Record<string, Date>>({});
   const [serviceTimes, setServiceTimes] = useState<Record<string, string>>({});
 
-  // Consent flow state
-  const [showConsent, setShowConsent] = useState(false);
-  const [createdBooking, setCreatedBooking] = useState<any>(null);
-  const [otpCode, setOtpCode] = useState<string>("");
-
   // Registration form state
   const [identificationType, setIdentificationType] = useState<string>(
     IDENTIFICATION_TYPES[0]
   );
-  const [identificationNumber, setIdentificationNumber] = useState("");
-
-  // Auto-select first patient if available and none selected
+  const [identificationNumber, setIdentificationNumber] = useState(""); // Auto-select first patient if available and none selected
   useEffect(() => {
     if (patients && patients.length > 0 && !selectedPatient) {
       setSelectedPatient(patients[0]);
@@ -183,11 +177,23 @@ export default function ClinicianServicesPage() {
     };
 
     createBooking(bookingData, {
-      onSuccess: (response) => {
+      onSuccess: (response: any) => {
         toast.success("Booking created successfully!");
-        setCreatedBooking(response.booking);
-        setOtpCode(response.otp_code);
-        setShowConsent(true);
+        // Navigate to consent verification page with booking data
+        const bookingInfo = {
+          booking_number: response.booking.booking_number,
+          patient_name: selectedPatient.name,
+          patient_phone: selectedPatient.phone,
+          consent_id: response.consent_id || "",
+          expires_at: response.expires_at || "",
+          otp_message: response.otp_message || "",
+        };
+
+        // Store in sessionStorage to pass to next page
+        sessionStorage.setItem("pendingBooking", JSON.stringify(bookingInfo));
+
+        // Navigate to consent page
+        router.push("/clinician/consent");
       },
       onError: () => {
         toast.error("Failed to create booking");
@@ -648,31 +654,6 @@ export default function ClinicianServicesPage() {
           </div>
         </Modal.Window>
       ))}
-
-      {/* Consent Verification Modal */}
-      {showConsent && selectedPatient && createdBooking && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <ConsentVerification
-            patient={selectedPatient}
-            booking={createdBooking}
-            otpCode={otpCode}
-            onSuccess={() => {
-              toast.success("Booking completed successfully!");
-              // Reset form
-              setShowConsent(false);
-              setSelectedServiceIds([]);
-              setServiceDates({});
-              setServiceTimes({});
-              setCreatedBooking(null);
-              setOtpCode("");
-            }}
-            onCancel={() => {
-              setShowConsent(false);
-              toast("Consent verification cancelled");
-            }}
-          />
-        </div>
-      )}
     </Modal>
   );
 }

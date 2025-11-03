@@ -219,7 +219,11 @@ const PatientConsent: React.FC = () => {
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <OTPValidation
               title="Patient Consent Verification"
-              description={`Enter the OTP sent to ${patient.name} (${maskPhoneNumber(patient.phone)}) to confirm consent for ${selectedService.serviceName}.`}
+              description={`Enter the OTP sent to ${
+                patient.name
+              } (${maskPhoneNumber(patient.phone)}) to confirm consent for ${
+                selectedService.serviceName
+              }.`}
               onValidate={handleValidateOTP}
               onCancel={handleCancelOTP}
               processingLabel={isValidating ? "Verifying..." : "Verify Consent"}
@@ -267,7 +271,7 @@ const PatientConsent: React.FC = () => {
 
         {/* Patient Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gray-50 p-4 rounded-lg">
+          {/* <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-gray-800 mb-2">
               Patient Details
             </h3>
@@ -275,9 +279,10 @@ const PatientConsent: React.FC = () => {
               <span className="font-medium">Name:</span> {patient.name}
             </p>
             <p>
-              <span className="font-medium">Phone:</span> {maskPhoneNumber(patient.phone)}
+              <span className="font-medium">Phone:</span>{" "}
+              {maskPhoneNumber(patient.phone)}
             </p>
-          </div>
+          </div> */}
 
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-gray-800 mb-2">

@@ -101,7 +101,10 @@ export default function ConsentVerification({
           {patient.phone && (
             <>
               {" "}
-              at <span className="font-semibold">{maskPhoneNumber(patient.phone)}</span>
+              at{" "}
+              <span className="font-semibold">
+                {maskPhoneNumber(patient.phone)}
+              </span>
             </>
           )}
         </p>

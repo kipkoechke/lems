@@ -23,7 +23,9 @@ function PatientBreadcrumb({ patient }: { patient: any }) {
         <FaChevronRight className="w-4 h-4 text-gray-400" />
         <div className="flex items-center gap-2">
           <FaPhone className="w-4 h-4 text-green-600" />
-          <span className="text-gray-600">{maskPhoneNumber(patient.phone)}</span>
+          <span className="text-gray-600">
+            {maskPhoneNumber(patient.phone)}
+          </span>
         </div>
         <FaChevronRight className="w-4 h-4 text-gray-400" />
         <div className="text-gray-600">ID: {patient.id.slice(-8)}</div>
@@ -169,21 +171,16 @@ function PatientBookings() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          (booking.approval_status) ===
-                          "pending"
+                          booking.approval_status === "pending"
                             ? "bg-yellow-100 text-yellow-800"
-                            : (booking.approval_status) ===
-                              "approved"
+                            : booking.approval_status === "approved"
                             ? "bg-green-100 text-green-800"
-                            : (booking.approval_status) ===
-                              "rejected"
+                            : booking.approval_status === "rejected"
                             ? "bg-red-100 text-red-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {booking.approval_status ||
-                          
-                          "pending"}
+                        {booking.approval_status || "pending"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

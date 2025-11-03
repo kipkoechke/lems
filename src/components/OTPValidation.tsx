@@ -19,7 +19,7 @@ const OTPValidation: React.FC<OTPValidationProps> = ({
   initialOtp = "",
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [otp, setOtp] = useState<string[]>(new Array(6).fill(""));
+  const [otp, setOtp] = useState<string[]>(new Array(5).fill(""));
   const [activeOTPIndex, setActiveOTPIndex] = useState<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -29,8 +29,8 @@ const OTPValidation: React.FC<OTPValidationProps> = ({
 
   useEffect(() => {
     if (initialOtp) {
-      const otpArray = initialOtp.split("").slice(0, 6);
-      while (otpArray.length < 6) {
+      const otpArray = initialOtp.split("").slice(0, 5);
+      while (otpArray.length < 5) {
         otpArray.push("");
       }
       setOtp(otpArray);
@@ -63,7 +63,7 @@ const OTPValidation: React.FC<OTPValidationProps> = ({
     e.preventDefault();
     const otpValue = otp.join("");
 
-    if (otpValue.length !== 6) {
+    if (otpValue.length !== 5) {
       return;
     }
 
@@ -73,7 +73,7 @@ const OTPValidation: React.FC<OTPValidationProps> = ({
   };
 
   const isOtpComplete =
-    otp.every((digit) => digit !== "") && otp.join("").length === 6;
+    otp.every((digit) => digit !== "") && otp.join("").length === 5;
 
   return (
     <div className="fixed inset-0 bg-white/40 backdrop-blur-lg flex items-center justify-center z-[100] p-4 transition-all duration-300">
