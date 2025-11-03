@@ -1,11 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useLots } from "@/features/lots/useLots";
-import { Lot } from "@/services/apiLots";
 import { Patient, IDENTIFICATION_TYPES } from "@/services/apiPatient";
 import { useRegisterPatient } from "@/features/patients/useRegisterPatient";
 import { usePatients } from "@/features/patients/usePatients";
+import { useCurrentFacility } from "@/hooks/useAuth";
+import { useServicesByFacilityCode } from "@/features/services/useServicesByFacilityCode";
 import {
   FaSearch,
   FaMicrophone,
@@ -21,27 +20,29 @@ import toast from "react-hot-toast";
 import Modal from "@/components/common/Modal";
 
 export default function ClinicianServicesPage() {
-  const router = useRouter();
-  const { lots, isLoading } = useLots();
   const { registerPatients, isRegistering } = useRegisterPatient();
   const { patients } = usePatients({});
+  const facility = useCurrentFacility();
+
+  // TODO: Replace with facility?.code once login returns facility code
+  // For now, using demo facility code
+  const facilityCode = facility?.code || "13023";
+
+  // Fetch contracts based on facility code
+  const { contracts, isServicesLoading } =
+    useServicesByFacilityCode(facilityCode);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showFavorites, setShowFavorites] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedContractId, setSelectedContractId] = useState<string>("");
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
 
   // Registration form state
   const [identificationType, setIdentificationType] = useState<string>(
     IDENTIFICATION_TYPES[0]
   );
   const [identificationNumber, setIdentificationNumber] = useState("");
-
-  // Mock services - replace with actual service selection
-  const mockServices = [
-    { name: "Diagnostic Imaging CT", cost: 11200 },
-    { name: "Diagnostic Imaging MRI", cost: 11200 },
-    { name: "Diagnostic Imaging Sonography", cost: 11200 },
-  ];
 
   // Auto-select first patient if available and none selected
   useEffect(() => {
@@ -50,8 +51,15 @@ export default function ClinicianServicesPage() {
     }
   }, [patients, selectedPatient]);
 
-  const handleServiceClick = (lot: Lot) => {
-    router.push(`/lots/${lot.id}/services`);
+  // Initialize contract selection when contracts load
+  useEffect(() => {
+    if (!selectedContractId && contracts && contracts.length > 0) {
+      setSelectedContractId(contracts[0].id);
+    }
+  }, [selectedContractId, contracts]);
+
+  const handleServiceClick = (contractId: string) => {
+    setSelectedContractId(contractId);
   };
 
   const handleRegisterPatient = (
@@ -94,6 +102,33 @@ export default function ClinicianServicesPage() {
     }
     return age;
   };
+
+  // Handle service toggle
+  const handleServiceToggle = (serviceId: string) => {
+    setSelectedServiceIds((prev) => {
+      if (prev.includes(serviceId)) {
+        return prev.filter((id) => id !== serviceId);
+      } else {
+        return [...prev, serviceId];
+      }
+    });
+  };
+
+  // Get selected contract and its services
+  const selectedContract = contracts?.find((c) => c.id === selectedContractId);
+  const availableServices =
+    selectedContract?.services?.filter((s) => s.is_active === "1") || [];
+
+  // Get selected services with their details
+  const selectedServices = availableServices.filter((service) =>
+    selectedServiceIds.includes(service.service_id)
+  );
+
+  // Note: service_cost is not in the contract response, we'll need to fetch it separately
+  // For now, we'll use placeholder values
+  const totalCost = selectedServices.length * 11200; // Placeholder
+
+  const isLoading = isServicesLoading;
 
   if (isLoading) {
     return (
@@ -139,58 +174,84 @@ export default function ClinicianServicesPage() {
             </div>
           </div>
 
-          {/* Service Categories/Lots */}
+          {/* Service Categories/Contracts */}
           <div className="flex-1 overflow-y-auto px-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* All Lots Card */}
-              <button
-                onClick={() => router.push("/lots/all")}
-                className="bg-white rounded-lg p-6 hover:shadow-lg transition-shadow border border-gray-200 text-left"
-              >
-                <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-                  <svg
-                    className="w-8 h-8 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="font-medium text-gray-900">All Lots</h3>
-              </button>
-
-              {/* Dynamic Lot Cards */}
-              {lots?.map((lot) => (
+              {/* Dynamic Contract Cards */}
+              {contracts?.map((contract) => (
                 <button
-                  key={lot.id}
-                  onClick={() => handleServiceClick(lot)}
-                  className="bg-white rounded-lg p-6 hover:shadow-lg transition-shadow border border-gray-200 text-left"
+                  key={contract.id}
+                  onClick={() => handleServiceClick(contract.id)}
+                  className={`bg-white rounded-lg p-2 hover:shadow-lg transition-shadow border-2 text-left ${
+                    selectedContractId === contract.id
+                      ? "border-blue-600 shadow-lg"
+                      : "border-gray-200"
+                  }`}
                 >
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg
-                      className="w-8 h-8 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg
+                        className="w-6 h-6 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-gray-900 truncate">
+                        {contract.lot_name || "Service Category"}
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        {contract.services?.length || 0} services available
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="font-medium text-gray-900">{lot.name}</h3>
                 </button>
               ))}
             </div>
+
+            {/* Available Services from Selected Contract */}
+            {selectedContract && availableServices.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Available Services in {selectedContract.lot_name}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {availableServices.map((service) => (
+                    <button
+                      key={service.service_id}
+                      onClick={() => handleServiceToggle(service.service_id)}
+                      className={`p-4 rounded-lg border-2 text-left transition-all ${
+                        selectedServiceIds.includes(service.service_id)
+                          ? "border-green-600 bg-green-50"
+                          : "border-gray-200 bg-white hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900 text-sm">
+                            {service.service_name}
+                          </h4>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Code: {service.service_code}
+                          </p>
+                        </div>
+                        {selectedServiceIds.includes(service.service_id) && (
+                          <FaCheckCircle className="w-5 h-5 text-green-600 ml-2" />
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -237,7 +298,6 @@ export default function ClinicianServicesPage() {
               ))}
             </select>
           </div>
-
           {/* Patient Details */}
           <div className="px-4 py-3 border-b border-gray-200 text-sm">
             {selectedPatient ? (
@@ -275,7 +335,6 @@ export default function ClinicianServicesPage() {
               </div>
             )}
           </div>
-
           {/* Selected Services */}
           <div className="px-4 py-3">
             <div className="mb-3">
@@ -285,24 +344,34 @@ export default function ClinicianServicesPage() {
               </h4>
             </div>
 
-            <div className="space-y-2">
-              {mockServices.map((service, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between bg-green-50 rounded p-2 text-sm"
-                >
-                  <div className="flex items-center gap-2 flex-1">
-                    <FaCheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <span className="text-gray-900">{service.name}</span>
+            {selectedServices.length > 0 ? (
+              <div className="space-y-2">
+                {selectedServices.map((service) => (
+                  <div
+                    key={service.service_id}
+                    className="flex items-center justify-between bg-green-50 rounded p-2 text-sm"
+                  >
+                    <div className="flex items-center gap-2 flex-1">
+                      <FaCheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <span className="text-gray-900">
+                        {service.service_name}
+                      </span>
+                    </div>
+                    <span className="font-semibold text-gray-900">
+                      KES 11,200
+                    </span>
                   </div>
-                  <span className="font-semibold text-gray-900">
-                    KES {service.cost.toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
+                ))}
+              </div>
+            ) : (
+              <div className="bg-red-100 rounded-lg p-4 text-center text-gray-500 text-sm">
+                <p>No services selected</p>
+                <p className="text-xs mt-1">
+                  Click on a service category above to select services
+                </p>
+              </div>
+            )}
+          </div>{" "}
           {/* Identification Section */}
           <div className="px-4 py-3 border-t border-gray-200">
             {selectedPatient && (
@@ -326,7 +395,6 @@ export default function ClinicianServicesPage() {
                 </div>
               </div>
             )}
-
             {/* Payment Summary */}
             <div className="bg-gray-50 rounded-lg p-3 mb-3">
               <h4 className="font-semibold text-gray-900 mb-2 text-sm">
@@ -343,15 +411,15 @@ export default function ClinicianServicesPage() {
                 </div>
               </div>
             </div>
-
             {/* Total Cost */}
             <div className="bg-gray-900 text-white rounded-lg p-3 mb-3">
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Total Cost</span>
-                <span className="text-xl font-bold">KES 33,600</span>
+                <span className="text-xl font-bold">
+                  KES {totalCost.toLocaleString()}
+                </span>
               </div>
-            </div>
-
+            </div>{" "}
             {/* Send to Fiance Button */}
             <button className="w-full bg-blue-800 hover:bg-blue-900 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2">
               <FaShoppingCart className="w-5 h-5" />

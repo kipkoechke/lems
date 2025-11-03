@@ -75,3 +75,56 @@ body {
   min-height: 100vh;
   min-height: 100dvh; /* Use dynamic viewport height where supported */
 }
+
+/* Scrollbar Styling - Show on hover */
+/* Webkit browsers (Chrome, Safari, Edge) */
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar,
+.overflow-auto::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.overflow-y-auto:hover::-webkit-scrollbar,
+.overflow-x-auto:hover::-webkit-scrollbar,
+.overflow-auto:hover::-webkit-scrollbar {
+  opacity: 1;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track,
+.overflow-x-auto::-webkit-scrollbar-track,
+.overflow-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb,
+.overflow-x-auto::-webkit-scrollbar-thumb,
+.overflow-auto::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.overflow-x-auto::-webkit-scrollbar-thumb:hover,
+.overflow-auto::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Firefox */
+.overflow-y-auto,
+.overflow-x-auto,
+.overflow-auto {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+.overflow-y-auto:hover,
+.overflow-x-auto:hover,
+.overflow-auto:hover {
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
