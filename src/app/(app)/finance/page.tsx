@@ -214,25 +214,9 @@ interface BookingActionsCellProps {
 }
 
 function BookingActionsCell({ booking }: BookingActionsCellProps) {
-  const [isEligibilityModalOpen, setIsEligibilityModalOpen] = useState(false);
   const { approveFinance, isApproving } = useFinanceApproval();
   const { checkSHAEligibility, isCheckingEligibility, eligibilityResult } =
     useEligibilityCheck();
-
-  const handleCheckEligibility = () => {
-    setIsEligibilityModalOpen(true);
-
-    // Automatically check eligibility if patient has identification details
-    if (
-      booking.patient.identification_no &&
-      booking.patient.identification_type
-    ) {
-      checkSHAEligibility({
-        identificationType: booking.patient.identification_type,
-        identificationNumber: booking.patient.identification_no,
-      });
-    }
-  };
 
   const handleFinanceApproval = (
     actionType: "approve" | "cancel",
@@ -273,10 +257,12 @@ function BookingActionsCell({ booking }: BookingActionsCellProps) {
         <ActionMenu menuId={`booking-${booking.id}`}>
           <ActionMenu.Trigger />
           <ActionMenu.Content>
-            <ActionMenu.Item onClick={handleCheckEligibility}>
-              <FaCheckCircle className="w-4 h-4 flex-shrink-0" />
-              <span>Check SHA Eligibility</span>
-            </ActionMenu.Item>
+            <Modal.Open opens={`eligibility-${booking.id}`}>
+              <ActionMenu.Item className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3 transition-colors">
+                <FaCheckCircle className="w-4 h-4 flex-shrink-0" />
+                <span>Check SHA Eligibility</span>
+              </ActionMenu.Item>
+            </Modal.Open>
             <Modal.Open opens={`approve-${booking.id}`}>
               <ActionMenu.Item className="w-full text-left px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 flex items-center gap-3 transition-colors">
                 <FaCheck className="w-4 h-4 flex-shrink-0" />
@@ -291,6 +277,14 @@ function BookingActionsCell({ booking }: BookingActionsCellProps) {
             </Modal.Open>
           </ActionMenu.Content>
         </ActionMenu>
+        <Modal.Window name={`eligibility-${booking.id}`}>
+          <EligibilityCheckModal
+            booking={booking}
+            onCheck={checkSHAEligibility}
+            isChecking={isCheckingEligibility}
+            result={eligibilityResult}
+          />
+        </Modal.Window>
         <Modal.Window name={`approve-${booking.id}`}>
           <ConfirmApprovalModal
             booking={booking}
@@ -308,161 +302,168 @@ function BookingActionsCell({ booking }: BookingActionsCellProps) {
           />
         </Modal.Window>
       </Modal>
+    </>
+  );
+}
 
-      {/* Eligibility Check Modal */}
-      {isEligibilityModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6 space-y-4">
-              {/* Modal Header */}
-              <div className="flex items-center justify-between border-b pb-4">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  SHA Eligibility Check
-                </h2>
-                <button
-                  onClick={() => setIsEligibilityModalOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <FaTimes className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
+// Eligibility Check Modal Component
+interface EligibilityCheckModalProps {
+  booking: Bookings;
+  onCheck: (params: {
+    identificationType: string;
+    identificationNumber: string;
+  }) => void;
+  isChecking: boolean;
+  result: any;
+  onCloseModal?: () => void;
+}
 
-              {/* Patient Information */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-2">
-                  Patient Information
-                </h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-gray-600">Name:</span>
-                    <p className="font-medium text-gray-900">
-                      {booking.patient.name}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Phone:</span>
-                    <p className="font-medium text-gray-900">
-                      {maskPhoneNumber(booking.patient.phone)}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">ID Type:</span>
-                    <p className="font-medium text-gray-900">
-                      {booking.patient.identification_type || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">ID Number:</span>
-                    <p className="font-medium text-gray-900">
-                      {booking.patient.identification_no || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">SHA Number:</span>
-                    <p className="font-medium text-gray-900">
-                      {booking.patient.sha_number || "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </div>
+function EligibilityCheckModal({
+  booking,
+  onCheck,
+  isChecking,
+  result,
+  onCloseModal,
+}: EligibilityCheckModalProps) {
+  const handleCheckEligibility = () => {
+    if (
+      booking.patient.identification_no &&
+      booking.patient.identification_type
+    ) {
+      onCheck({
+        identificationType: booking.patient.identification_type,
+        identificationNumber: booking.patient.identification_no,
+      });
+    }
+  };
 
-              {/* Eligibility Status */}
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center gap-2">
-                    {isCheckingEligibility ? (
-                      <FaSpinner className="w-4 h-4 animate-spin text-blue-600" />
-                    ) : eligibilityResult?.eligible === true ? (
-                      <FaCheckCircle className="w-4 h-4 text-green-600" />
-                    ) : eligibilityResult?.eligible === false ? (
-                      <FaExclamationTriangle className="w-4 h-4 text-red-600" />
-                    ) : (
-                      <FaSearch className="w-4 h-4 text-gray-400" />
-                    )}
-                    <span className="text-sm font-medium text-gray-700">
-                      SHA Eligibility Status
-                    </span>
-                  </div>
-                </div>
+  return (
+    <div className="space-y-4">
+      {/* Icon and Title */}
+      <div className="flex flex-col items-center text-center mb-4">
+        <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+          <FaCheckCircle className="w-8 h-8 text-blue-600" />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          SHA Eligibility Check
+        </h3>
+        <p className="text-gray-600">
+          Verify patient&apos;s SHA coverage eligibility
+        </p>
+      </div>
 
-                {isCheckingEligibility ? (
-                  <p className="text-sm text-blue-600">
-                    Checking eligibility...
-                  </p>
-                ) : eligibilityResult ? (
-                  <div>
-                    <p
-                      className={`text-sm ${
-                        eligibilityResult.eligible
-                          ? "text-green-700"
-                          : "text-red-700"
-                      }`}
-                    >
-                      {eligibilityResult.eligible
-                        ? `✅ ${eligibilityResult.message}`
-                        : `❌ ${eligibilityResult.message}`}
-                    </p>
-                    {eligibilityResult.coverage_end_date && (
-                      <p className="text-sm text-blue-700 mt-1">
-                        📅 Coverage valid until{" "}
-                        {new Date(
-                          eligibilityResult.coverage_end_date
-                        ).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                ) : booking.patient.sha_number ? (
-                  <p className="text-sm text-gray-600">
-                    Click check button to verify eligibility
-                  </p>
-                ) : (
-                  <p className="text-sm text-orange-600">
-                    ⚠️ Patient does not have a SHA number
-                  </p>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                {booking.patient.identification_no &&
-                  booking.patient.identification_type && (
-                    <button
-                      onClick={() => {
-                        checkSHAEligibility({
-                          identificationType:
-                            booking.patient.identification_type!,
-                          identificationNumber:
-                            booking.patient.identification_no!,
-                        });
-                      }}
-                      disabled={isCheckingEligibility}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                      {isCheckingEligibility ? (
-                        <>
-                          <FaSpinner className="w-4 h-4 animate-spin" />
-                          Checking...
-                        </>
-                      ) : (
-                        <>
-                          <FaCheckCircle className="w-4 h-4" />
-                          Check Eligibility
-                        </>
-                      )}
-                    </button>
-                  )}
-                <button
-                  onClick={() => setIsEligibilityModalOpen(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
+      {/* Patient Information */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <h4 className="text-sm font-medium text-gray-900 mb-3">
+          Patient Information
+        </h4>
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <span className="text-gray-600">Name:</span>
+            <p className="font-medium text-gray-900">{booking.patient.name}</p>
+          </div>
+          <div>
+            <span className="text-gray-600">Phone:</span>
+            <p className="font-medium text-gray-900">
+              {maskPhoneNumber(booking.patient.phone)}
+            </p>
+          </div>
+          <div>
+            <span className="text-gray-600">ID Type:</span>
+            <p className="font-medium text-gray-900">
+              {booking.patient.identification_type || "N/A"}
+            </p>
+          </div>
+          <div>
+            <span className="text-gray-600">ID Number:</span>
+            <p className="font-medium text-gray-900">
+              {booking.patient.identification_no || "N/A"}
+            </p>
+          </div>
+          <div className="col-span-2">
+            <span className="text-gray-600">SHA Number:</span>
+            <p className="font-medium text-gray-900">
+              {booking.patient.sha_number || "N/A"}
+            </p>
           </div>
         </div>
+      </div>
+
+      {/* Eligibility Status */}
+      {result && (
+        <div
+          className={`p-4 rounded-lg border ${
+            result.eligible
+              ? "bg-green-50 border-green-200"
+              : "bg-red-50 border-red-200"
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            {result.eligible ? (
+              <FaCheckCircle className="w-5 h-5 text-green-600" />
+            ) : (
+              <FaExclamationTriangle className="w-5 h-5 text-red-600" />
+            )}
+            <span className="font-medium text-gray-900">
+              {result.eligible ? "Eligible" : "Not Eligible"}
+            </span>
+          </div>
+          <p
+            className={`text-sm ${
+              result.eligible ? "text-green-700" : "text-red-700"
+            }`}
+          >
+            {result.message}
+          </p>
+          {result.coverage_end_date && (
+            <p className="text-sm text-gray-700 mt-2">
+              📅 Coverage valid until{" "}
+              {new Date(result.coverage_end_date).toLocaleDateString()}
+            </p>
+          )}
+        </div>
       )}
-    </>
+
+      {/* Warning if no SHA number */}
+      {!booking.patient.sha_number && (
+        <div className="p-3 rounded-lg border bg-orange-50 border-orange-200">
+          <p className="text-sm text-orange-700">
+            ⚠️ Patient does not have a SHA number on record
+          </p>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex gap-3 pt-4">
+        <button
+          onClick={onCloseModal}
+          disabled={isChecking}
+          className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Close
+        </button>
+        {booking.patient.identification_no &&
+          booking.patient.identification_type && (
+            <button
+              onClick={handleCheckEligibility}
+              disabled={isChecking}
+              className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+            >
+              {isChecking ? (
+                <>
+                  <FaSpinner className="w-4 h-4 animate-spin" />
+                  Checking...
+                </>
+              ) : (
+                <>
+                  <FaCheckCircle className="w-4 h-4" />
+                  Check Eligibility
+                </>
+              )}
+            </button>
+          )}
+      </div>
+    </div>
   );
 }
 
