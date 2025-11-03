@@ -260,7 +260,7 @@ export interface FinanceApprovalResponse {
 export interface BookingCreationResponse {
   message: string;
   otp_message: string;
-  otp_code: string;
+  consent_id: string;
   expires_at: string;
   booking: Bookings;
   services: {

@@ -6,7 +6,6 @@ import {
   selectService,
   setBooking,
   setBookingServices,
-  setOtpCode,
   setSelectedContract,
   setSelectedServices,
   setServiceDate,
@@ -225,23 +224,41 @@ const ServiceRecommendation: React.FC = () => {
 
     createBooking(bookingData, {
       onSuccess: (response) => {
+        console.log("Booking creation response:", response);
         toast.success("Booking created successfully!");
+
         // Store the booking and services separately
         dispatch(setBooking(response.booking));
         dispatch(setBookingServices(response.services)); // Store services with vendor/facility shares
-        dispatch(setOtpCode(response.otp_code));
-        setBookingCreated(true);
 
-        // Handle OTP that comes directly from booking creation
-        if (response.otp_code) {
-          // Just store the OTP and go to consent step for validation
-          dispatch(goToNextStep()); // Go to consent step where OTP validation will happen
+        // New flow: OTP is sent to patient's phone, not returned in response
+        if (response.expires_at) {
+          // Store consent_id and expires_at for OTP validation
+          const bookingWithConsent = {
+            ...response.booking,
+            consent_id: response.consent_id,
+            expires_at: response.expires_at,
+            otp_message: response.otp_message,
+          };
+          dispatch(setBooking(bookingWithConsent));
+
+          // Show OTP sent message
+          toast.success(response.otp_message || "OTP sent to patient's phone");
+
+          // Go to consent step for OTP validation
+          dispatch(goToNextStep());
         } else {
-          toast.error("No OTP code received from booking creation.");
+          console.error("No expiry time in response:", response);
+          toast.error(
+            "Booking created but OTP not sent. Please contact support."
+          );
         }
       },
-      onError: () => {
-        toast.error("Failed to create booking");
+      onError: (error: any) => {
+        console.error("Booking creation error:", error);
+        toast.error(
+          error?.response?.data?.message || "Failed to create booking"
+        );
       },
     });
   };

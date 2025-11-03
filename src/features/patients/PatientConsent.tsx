@@ -10,13 +10,14 @@ import { useResendConsentOtp } from "./useResendConsentOtp";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 
 const PatientConsent: React.FC = () => {
-  const { patient, selectedService, booking, bookingServices, otp_code } =
-    useAppSelector((store) => store.workflow);
+  const { patient, selectedService, booking, bookingServices } = useAppSelector(
+    (store) => store.workflow
+  );
 
   console.log("PatientConsent - Workflow state:", {
     patient: patient?.name,
     booking: booking?.id,
-    otp_code,
+    booking_object: booking,
   });
 
   const dispatch = useAppDispatch();
@@ -25,7 +26,6 @@ const PatientConsent: React.FC = () => {
   const { resendOtpMutation, isResending } = useResendConsentOtp();
 
   const [showOTP, setShowOTP] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState<string | null>(null);
   const [consentStatus, setConsentStatus] = useState<
     "pending" | "approved" | "rejected"
   >("pending");
@@ -42,7 +42,6 @@ const PatientConsent: React.FC = () => {
     console.log("handleSendOTP called", {
       booking,
       patient,
-      otp_code,
       isBookingOverridden,
     });
 
@@ -51,25 +50,20 @@ const PatientConsent: React.FC = () => {
       return;
     }
 
-    // OTP should already be available from booking creation (both normal and override)
-    if (otp_code) {
-      console.log("OTP found:", otp_code);
-      setGeneratedOtp(otp_code);
+    // OTP has already been sent when booking was created
+    // Just show the OTP modal
+    const bookingAny = booking as any;
 
-      if (isBookingOverridden) {
-        toast.success(`Emergency Override OTP: ${otp_code}`);
-      } else {
-        toast.success(`Patient Consent OTP: ${otp_code}`);
-      }
-
+    if (bookingAny.otp_message) {
+      toast.success(bookingAny.otp_message);
       setTimeout(() => setShowOTP(true), 1000);
       setOtpSent(true);
     } else {
-      console.log("No OTP available in workflow state");
-      toast.error("No OTP available. Please contact support.");
-      setOtpSent(false);
+      toast.success("OTP has been sent to patient's phone");
+      setTimeout(() => setShowOTP(true), 1000);
+      setOtpSent(true);
     }
-  }, [booking, patient, otp_code, isBookingOverridden]);
+  }, [booking, patient, isBookingOverridden]);
 
   const handleValidateOTP = (otp: string) => {
     console.log("PatientConsent - handleValidateOTP called");
@@ -139,7 +133,6 @@ const PatientConsent: React.FC = () => {
 
   const handleCancelOTP = () => {
     setShowOTP(false);
-    setGeneratedOtp(null);
 
     if (isBookingOverridden) {
       toast("Emergency override cancelled");
@@ -162,41 +155,38 @@ const PatientConsent: React.FC = () => {
     console.log("PatientConsent useEffect triggered", {
       booking,
       patient,
-      otp_code,
       otpSent,
     });
 
     if (booking && patient && !otpSent) {
-      // Check if OTP is available from booking creation (stored in workflow state)
-      if (otp_code) {
-        console.log("OTP found in workflow state:", otp_code);
-        setGeneratedOtp(otp_code);
+      // OTP has been sent when booking was created
+      // Check if we have the booking details with otp_message
+      const bookingAny = booking as any;
 
-        // Try to get expires_at from booking object
-        const bookingAny = booking as any;
-        const expiryTime = bookingAny.expires_at;
+      // Try to get expires_at from booking object
+      const expiryTime = bookingAny.expires_at;
 
-        if (expiryTime) {
-          setExpiresAt(expiryTime);
-          const expiryTimestamp = new Date(expiryTime).getTime();
-          const now = Date.now();
-          const remaining = Math.max(
-            0,
-            Math.floor((expiryTimestamp - now) / 1000)
-          );
-          setTimeRemaining(remaining);
-        }
-
-        toast.success(`Patient Consent OTP: ${otp_code}`);
-        setTimeout(() => setShowOTP(true), 1000);
-        setOtpSent(true);
-      } else {
-        console.log("No OTP in workflow state, trying fallback");
-        // Fallback: if no OTP in workflow state, request one (shouldn't happen in new flow)
-        handleSendOTP();
+      if (expiryTime) {
+        setExpiresAt(expiryTime);
+        const expiryTimestamp = new Date(expiryTime).getTime();
+        const now = Date.now();
+        const remaining = Math.max(
+          0,
+          Math.floor((expiryTimestamp - now) / 1000)
+        );
+        setTimeRemaining(remaining);
       }
+
+      if (bookingAny.otp_message) {
+        toast.success(bookingAny.otp_message);
+      } else {
+        toast.success("OTP has been sent to patient's phone");
+      }
+
+      setTimeout(() => setShowOTP(true), 1000);
+      setOtpSent(true);
     }
-  }, [booking, patient, otp_code, handleSendOTP, otpSent]);
+  }, [booking, patient, handleSendOTP, otpSent]);
 
   // Countdown timer effect
   useEffect(() => {
@@ -308,7 +298,7 @@ const PatientConsent: React.FC = () => {
               onValidate={handleValidateOTP}
               onCancel={handleCancelOTP}
               processingLabel={isValidating ? "Verifying..." : "Verify Consent"}
-              initialOtp={generatedOtp ?? ""}
+              initialOtp=""
               timeRemaining={timeRemaining}
               onResend={handleResendOtp}
               isResending={isResending}
