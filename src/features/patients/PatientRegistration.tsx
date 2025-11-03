@@ -24,6 +24,7 @@ import {
 import { usePatients } from "./usePatients";
 import { useRegisterPatient } from "./useRegisterPatient";
 import { useEligibilityCheck } from "./useEligibilityCheck";
+import { maskPhoneNumber } from "@/lib/maskUtils";
 
 interface PatientRegistrationProps {
   onStepOneComplete?: (
@@ -699,7 +700,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                       }
                     >
                       {selectedPatient
-                        ? `${selectedPatient.name} (${selectedPatient.phone})`
+                        ? `${selectedPatient.name} (${maskPhoneNumber(selectedPatient.phone)})`
                         : "Choose a patient"}
                     </span>
                     <FaChevronDown
@@ -750,7 +751,7 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                                 {patient.name}
                               </div>
                               <div className="text-xs md:text-sm text-gray-500">
-                                Phone: {patient.phone}
+                                Phone: {maskPhoneNumber(patient.phone)}
                               </div>
                               {patient.sha_number && (
                                 <div className="text-xs md:text-sm text-gray-500">

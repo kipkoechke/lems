@@ -20,6 +20,7 @@ import {
 import { ActionMenu } from "@/components/common/ActionMenu";
 import React, { useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { maskPhoneNumber } from "@/lib/maskUtils";
 
 const BookingReport: React.FC = () => {
   const { isLoading, bookings, error, refetchBookings } = useBookings();
@@ -497,7 +498,7 @@ const BookingReport: React.FC = () => {
                               {booking.patient.name}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {booking.patient.phone}
+                              {maskPhoneNumber(booking.patient.phone)}
                             </div>
                             <div className="text-xs text-gray-400">
                               {booking.booking_date

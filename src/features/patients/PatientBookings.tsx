@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 import { usePatient } from "./usePatient";
 import { usePatientBookings } from "./usePatientBookings";
+import { maskPhoneNumber } from "@/lib/maskUtils";
 
 // Breadcrumb Component
 function PatientBreadcrumb({ patient }: { patient: any }) {
@@ -22,7 +23,7 @@ function PatientBreadcrumb({ patient }: { patient: any }) {
         <FaChevronRight className="w-4 h-4 text-gray-400" />
         <div className="flex items-center gap-2">
           <FaPhone className="w-4 h-4 text-green-600" />
-          <span className="text-gray-600">{patient.phone}</span>
+          <span className="text-gray-600">{maskPhoneNumber(patient.phone)}</span>
         </div>
         <FaChevronRight className="w-4 h-4 text-gray-400" />
         <div className="text-gray-600">ID: {patient.id.slice(-8)}</div>

@@ -24,6 +24,7 @@ import Modal from "@/components/common/Modal";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import ConsentVerification from "./ConsentVerification";
+import { maskPhoneNumber } from "@/lib/maskUtils";
 
 export default function ClinicianServicesPage() {
   const { registerPatients, isRegistering } = useRegisterPatient();
@@ -448,7 +449,9 @@ export default function ClinicianServicesPage() {
                 <div className="mt-2 space-y-1 text-xs">
                   <p>
                     <span className="font-medium">Phone:</span>{" "}
-                    {selectedPatient.phone || "N/A"}
+                    {selectedPatient.phone
+                      ? maskPhoneNumber(selectedPatient.phone)
+                      : "N/A"}
                   </p>
                   <p>
                     <span className="font-medium">CR NO:</span>{" "}

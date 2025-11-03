@@ -26,6 +26,7 @@ import {
   FaHospital,
 } from "react-icons/fa";
 import { FaStethoscope } from "react-icons/fa6";
+import { maskPhoneNumber } from "@/lib/maskUtils";
 
 const ServiceRecommendation: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -299,7 +300,7 @@ const ServiceRecommendation: React.FC = () => {
                           Patient: {workflow.patient.name}
                         </div>
                         <div className="text-xs text-green-700">
-                          Phone: {workflow.patient.phone}
+                          Phone: {maskPhoneNumber(workflow.patient.phone)}
                         </div>
                       </div>
                     </div>

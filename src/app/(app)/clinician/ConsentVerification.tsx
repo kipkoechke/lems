@@ -4,6 +4,7 @@ import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import toast from "react-hot-toast";
 import OTPValidation from "@/components/OTPValidation";
 import { useOtpValidation } from "@/features/patients/useValidateOtp";
+import { maskPhoneNumber } from "@/lib/maskUtils";
 
 interface ConsentVerificationProps {
   patient: {
@@ -100,7 +101,7 @@ export default function ConsentVerification({
           {patient.phone && (
             <>
               {" "}
-              at <span className="font-semibold">{patient.phone}</span>
+              at <span className="font-semibold">{maskPhoneNumber(patient.phone)}</span>
             </>
           )}
         </p>

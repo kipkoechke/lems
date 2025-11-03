@@ -10,6 +10,7 @@ import {
   useCurrentUser,
   useCurrentFacility,
 } from "../../hooks/useAuth";
+import { maskPhoneNumber } from "@/lib/maskUtils";
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -204,7 +205,7 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
                   <div className="flex items-center justify-between py-2 border-b border-gray-100">
                     <span className="text-sm text-gray-600">Phone:</span>
                     <span className="text-sm font-medium text-gray-900">
-                      {user.phone || "N/A"}
+                      {user.phone ? maskPhoneNumber(user.phone) : "N/A"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between py-2 border-b border-gray-100">

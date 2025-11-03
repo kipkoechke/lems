@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import OTPValidation from "../../components/OTPValidation";
 import StatusCard from "../../components/StatusCard";
 import { useOtpValidation } from "./useValidateOtp";
+import { maskPhoneNumber } from "@/lib/maskUtils";
 
 const PatientConsent: React.FC = () => {
   const { patient, selectedService, booking, bookingServices, otp_code } =
@@ -218,7 +219,7 @@ const PatientConsent: React.FC = () => {
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <OTPValidation
               title="Patient Consent Verification"
-              description={`Enter the OTP sent to ${patient.name} (${patient.phone}) to confirm consent for ${selectedService.serviceName}.`}
+              description={`Enter the OTP sent to ${patient.name} (${maskPhoneNumber(patient.phone)}) to confirm consent for ${selectedService.serviceName}.`}
               onValidate={handleValidateOTP}
               onCancel={handleCancelOTP}
               processingLabel={isValidating ? "Verifying..." : "Verify Consent"}
@@ -274,7 +275,7 @@ const PatientConsent: React.FC = () => {
               <span className="font-medium">Name:</span> {patient.name}
             </p>
             <p>
-              <span className="font-medium">Phone:</span> {patient.phone}
+              <span className="font-medium">Phone:</span> {maskPhoneNumber(patient.phone)}
             </p>
           </div>
 
