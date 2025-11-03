@@ -174,6 +174,17 @@ export interface ValidateConsentRequest {
   booking_number: string;
 }
 
+export interface ResendConsentOtpRequest {
+  booking_number: string;
+}
+
+export interface ResendConsentOtpResponse {
+  message: string;
+  otp_message: string;
+  expires_at: string;
+  consent_id?: string;
+}
+
 export interface RequestConsentResponse {
   message: string;
   otp_code: string;
@@ -264,6 +275,13 @@ export const verifyPatientConsent = async (
   data: ValidateConsentRequest
 ): Promise<ValidateOtpResponse> => {
   const response = await axios.post("/booking/verify/consent", data);
+  return response.data;
+};
+
+export const resendConsentOtp = async (
+  data: ResendConsentOtpRequest
+): Promise<ResendConsentOtpResponse> => {
+  const response = await axios.post("/api/v1/booking/resend/consent", data);
   return response.data;
 };
 

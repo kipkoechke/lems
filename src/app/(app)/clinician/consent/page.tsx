@@ -1,18 +1,26 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaCheckCircle, FaArrowLeft, FaShieldAlt } from "react-icons/fa";
+import {
+  FaCheckCircle,
+  FaArrowLeft,
+  FaShieldAlt,
+  FaClock,
+  FaRedo,
+} from "react-icons/fa";
 import toast from "react-hot-toast";
 import { useOtpValidation } from "@/features/patients/useValidateOtp";
-import { maskPhoneNumber } from "@/lib/maskUtils";
+import { useResendConsentOtp } from "@/features/patients/useResendConsentOtp";
 
 export default function ConsentVerificationPage() {
   const router = useRouter();
   const { validateOtpMutation, isValidating } = useOtpValidation();
+  const { resendOtpMutation, isResending } = useResendConsentOtp();
 
   const [bookingInfo, setBookingInfo] = useState<any>(null);
   const [otp, setOtp] = useState(["", "", "", "", ""]);
   const [consentVerified, setConsentVerified] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
 
   useEffect(() => {
     // Load booking info from sessionStorage
@@ -26,11 +34,36 @@ export default function ConsentVerificationPage() {
     try {
       const parsed = JSON.parse(stored);
       setBookingInfo(parsed);
+
+      // Calculate initial time remaining
+      if (parsed.expires_at) {
+        const expiryTime = new Date(parsed.expires_at).getTime();
+        const now = Date.now();
+        const remaining = Math.max(0, Math.floor((expiryTime - now) / 1000));
+        setTimeRemaining(remaining);
+      }
     } catch {
       toast.error("Invalid booking data");
       router.push("/clinician");
     }
   }, [router]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (timeRemaining === null || timeRemaining <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeRemaining]);
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) return;
@@ -98,6 +131,56 @@ export default function ConsentVerificationPage() {
   const handleCancel = () => {
     sessionStorage.removeItem("pendingBooking");
     router.push("/clinician");
+  };
+
+  const handleResendOtp = () => {
+    if (!bookingInfo?.booking_number) {
+      toast.error("Booking information missing");
+      return;
+    }
+
+    resendOtpMutation(
+      { booking_number: bookingInfo.booking_number },
+      {
+        onSuccess: (response) => {
+          // Update booking info with new expiry time
+          const updatedInfo = {
+            ...bookingInfo,
+            otp_message:
+              response.otp_message || "OTP has been resent successfully",
+            expires_at: response.expires_at || bookingInfo.expires_at,
+          };
+          setBookingInfo(updatedInfo);
+          sessionStorage.setItem("pendingBooking", JSON.stringify(updatedInfo));
+
+          // Reset countdown
+          if (response.expires_at) {
+            const expiryTime = new Date(response.expires_at).getTime();
+            const now = Date.now();
+            const remaining = Math.max(
+              0,
+              Math.floor((expiryTime - now) / 1000)
+            );
+            setTimeRemaining(remaining);
+          }
+
+          // Clear OTP inputs
+          setOtp(["", "", "", "", ""]);
+          document.getElementById("otp-0")?.focus();
+
+          toast.success("OTP has been resent successfully!");
+        },
+        onError: (error: any) => {
+          toast.error(error.response?.data?.message || "Failed to resend OTP");
+        },
+      }
+    );
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   if (!bookingInfo) {
@@ -222,13 +305,57 @@ export default function ConsentVerificationPage() {
             </p>
           </div>
 
+          {/* Countdown Timer and Resend */}
+          <div className="mb-6 flex items-center justify-center gap-4">
+            {timeRemaining !== null && timeRemaining > 0 ? (
+              <div className="flex items-center gap-2 text-sm">
+                <FaClock className="w-4 h-4 text-blue-600" />
+                <span className="font-semibold text-gray-700">
+                  Expires in:{" "}
+                  <span
+                    className={`${
+                      timeRemaining <= 60 ? "text-red-600" : "text-blue-600"
+                    }`}
+                  >
+                    {formatTime(timeRemaining)}
+                  </span>
+                </span>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 text-sm text-red-600">
+                  <FaClock className="w-4 h-4" />
+                  <span className="font-semibold">OTP Expired</span>
+                </div>
+
+                <button
+                  onClick={handleResendOtp}
+                  disabled={isResending || isValidating}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isResending ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Resending...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaRedo className="w-4 h-4" />
+                      <span>Resend OTP</span>
+                    </>
+                  )}
+                </button>
+              </>
+            )}
+          </div>
+
           {/* Expiry Info */}
-          {bookingInfo.expires_at && (
+          {/* {bookingInfo.expires_at && (
             <p className="text-xs text-gray-500 text-center mb-6">
               OTP expires at:{" "}
               {new Date(bookingInfo.expires_at).toLocaleString()}
             </p>
-          )}
+          )} */}
 
           {/* Actions */}
           <div className="flex gap-4">
