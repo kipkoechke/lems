@@ -222,12 +222,6 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
                       </span>
                     </div>
                   )}
-                  <div className="flex items-center justify-between py-2">
-                    <span className="text-sm text-gray-600">User ID:</span>
-                    <span className="text-sm font-mono text-gray-900">
-                      {user.id}
-                    </span>
-                  </div>
                 </div>
 
                 {/* Logout Button */}

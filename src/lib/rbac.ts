@@ -35,6 +35,7 @@ export enum Permission {
   CANCEL_BOOKING = "cancel_booking",
   VIEW_PATIENT_QUEUE = "view_patient_queue",
   SYNC_TO_SHA = "sync_to_sha",
+  FINANCE_APPROVAL = "finance_approval",
 
   // Common permissions
   VIEW_DASHBOARD = "view_dashboard",
@@ -116,6 +117,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_BOOKINGS,
     Permission.VIEW_PAYMENTS,
     Permission.SYNC_TO_SHA,
+    Permission.FINANCE_APPROVAL,
   ],
 
   [UserRole.F_LAB]: [

@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import OTPValidation from "../../components/OTPValidation";
 import StatusCard from "../../components/StatusCard";
 import { useOtpValidation } from "./useValidateOtp";
+import { useResendConsentOtp } from "./useResendConsentOtp";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 
 const PatientConsent: React.FC = () => {
@@ -21,6 +22,7 @@ const PatientConsent: React.FC = () => {
   const dispatch = useAppDispatch();
   const { validateOtpMutation, isValidating, setConsentApproved } =
     useOtpValidation();
+  const { resendOtpMutation, isResending } = useResendConsentOtp();
 
   const [showOTP, setShowOTP] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState<string | null>(null);
@@ -29,6 +31,8 @@ const PatientConsent: React.FC = () => {
   >("pending");
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
 
   // Check if booking was created with override
   const isBookingOverridden =
@@ -167,6 +171,22 @@ const PatientConsent: React.FC = () => {
       if (otp_code) {
         console.log("OTP found in workflow state:", otp_code);
         setGeneratedOtp(otp_code);
+
+        // Try to get expires_at from booking object
+        const bookingAny = booking as any;
+        const expiryTime = bookingAny.expires_at;
+
+        if (expiryTime) {
+          setExpiresAt(expiryTime);
+          const expiryTimestamp = new Date(expiryTime).getTime();
+          const now = Date.now();
+          const remaining = Math.max(
+            0,
+            Math.floor((expiryTimestamp - now) / 1000)
+          );
+          setTimeRemaining(remaining);
+        }
+
         toast.success(`Patient Consent OTP: ${otp_code}`);
         setTimeout(() => setShowOTP(true), 1000);
         setOtpSent(true);
@@ -177,6 +197,67 @@ const PatientConsent: React.FC = () => {
       }
     }
   }, [booking, patient, otp_code, handleSendOTP, otpSent]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (timeRemaining === null || timeRemaining <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeRemaining]);
+
+  const handleResendOtp = () => {
+    if (!booking) {
+      toast.error("Booking information is missing");
+      return;
+    }
+
+    const bookingAny = booking as any;
+    const bookingNumber =
+      booking.booking_number ||
+      booking.id ||
+      bookingAny.booking_id ||
+      bookingAny.id ||
+      bookingAny.number;
+
+    if (!bookingNumber) {
+      toast.error("Booking number is missing");
+      return;
+    }
+
+    resendOtpMutation(
+      { booking_number: bookingNumber },
+      {
+        onSuccess: (response) => {
+          toast.success("OTP has been resent successfully");
+
+          // Update expiry time and reset countdown
+          if (response.expires_at) {
+            setExpiresAt(response.expires_at);
+            const expiryTimestamp = new Date(response.expires_at).getTime();
+            const now = Date.now();
+            const remaining = Math.max(
+              0,
+              Math.floor((expiryTimestamp - now) / 1000)
+            );
+            setTimeRemaining(remaining);
+          }
+        },
+        onError: (error: any) => {
+          toast.error(error.response?.data?.message || "Failed to resend OTP");
+        },
+      }
+    );
+  };
 
   if (!patient || !selectedService) {
     return (
@@ -228,6 +309,9 @@ const PatientConsent: React.FC = () => {
               onCancel={handleCancelOTP}
               processingLabel={isValidating ? "Verifying..." : "Verify Consent"}
               initialOtp={generatedOtp ?? ""}
+              timeRemaining={timeRemaining}
+              onResend={handleResendOtp}
+              isResending={isResending}
             />
           </div>
         </div>

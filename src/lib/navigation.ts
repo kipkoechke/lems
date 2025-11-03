@@ -67,6 +67,12 @@ export const NAV_ITEMS: NavItem[] = [
     description: "Manage patient bookings",
   },
   {
+    label: "Finance Approval",
+    href: "/finance",
+    permission: Permission.FINANCE_APPROVAL,
+    description: "Approve pending bookings",
+  },
+  {
     label: "Sync to SHA",
     href: "/bookings/synced",
     permission: Permission.SYNC_TO_SHA,

@@ -8,6 +8,9 @@ interface OTPValidationProps {
   onCancel: () => void;
   processingLabel?: string;
   initialOtp?: string;
+  timeRemaining?: number | null;
+  onResend?: () => void;
+  isResending?: boolean;
 }
 
 const OTPValidation: React.FC<OTPValidationProps> = ({
@@ -17,6 +20,9 @@ const OTPValidation: React.FC<OTPValidationProps> = ({
   onCancel,
   processingLabel = "Validate",
   initialOtp = "",
+  timeRemaining,
+  onResend,
+  isResending = false,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [otp, setOtp] = useState<string[]>(new Array(5).fill(""));
@@ -75,6 +81,14 @@ const OTPValidation: React.FC<OTPValidationProps> = ({
   const isOtpComplete =
     otp.every((digit) => digit !== "") && otp.join("").length === 5;
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
   return (
     <div className="fixed inset-0 bg-white/40 backdrop-blur-lg flex items-center justify-center z-[100] p-4 transition-all duration-300">
       <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border border-gray-100">
@@ -96,6 +110,23 @@ const OTPValidation: React.FC<OTPValidationProps> = ({
                 Enter 6-digit code
               </span>
             </div>
+
+            {/* Countdown Timer */}
+            {timeRemaining !== null && timeRemaining !== undefined && (
+              <div className="text-center mb-2">
+                <p
+                  className={`text-sm font-medium ${
+                    timeRemaining < 60 ? "text-red-600" : "text-gray-600"
+                  }`}
+                >
+                  {timeRemaining > 0 ? (
+                    <>Time remaining: {formatTime(timeRemaining)}</>
+                  ) : (
+                    <>OTP expired. Please request a new one.</>
+                  )}
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-center gap-3">
               {otp.map((_, index) => (
@@ -175,16 +206,31 @@ const OTPValidation: React.FC<OTPValidationProps> = ({
           {/* Helper text */}
           <div className="text-center text-sm text-gray-500">
             Didn&apos;t receive the code?{" "}
-            <button
-              type="button"
-              className="text-blue-600 hover:text-blue-700 font-medium"
-              onClick={() => {
-                // Add resend functionality here
-                console.log("Resend OTP");
-              }}
-            >
-              Resend
-            </button>
+            {onResend &&
+            (timeRemaining === null ||
+              timeRemaining === undefined ||
+              timeRemaining <= 0) ? (
+              <button
+                type="button"
+                disabled={isResending}
+                className={`font-medium transition-colors ${
+                  isResending
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-blue-600 hover:text-blue-700"
+                }`}
+                onClick={onResend}
+              >
+                {isResending ? "Sending..." : "Resend"}
+              </button>
+            ) : timeRemaining !== null &&
+              timeRemaining !== undefined &&
+              timeRemaining > 0 ? (
+              <span className="text-gray-400">
+                Resend available in {formatTime(timeRemaining)}
+              </span>
+            ) : (
+              <span className="text-gray-400">Not available</span>
+            )}
           </div>
         </form>
       </div>

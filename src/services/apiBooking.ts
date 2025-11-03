@@ -201,7 +201,7 @@ export interface ValidateOtpResponse {
 }
 
 export interface BookingsResponse {
-  bookings: {
+  bookings?: {
     current_page: number;
     data: Bookings[];
     first_page_url: string;
@@ -220,6 +220,15 @@ export interface BookingsResponse {
     to: number;
     total: number;
   };
+  // New response format
+  data?: Bookings[];
+  pagination?: {
+    total: number;
+    count: number;
+    per_page: number;
+    current_page: number;
+    total_pages: number;
+  };
 }
 
 export interface BookingFilters {
@@ -230,10 +239,22 @@ export interface BookingFilters {
   sub_county_id?: string;
   service_completion?: string;
   approval_status?: string; // Updated from 'approval' to 'approval_status'
+  booking_status?: string; // pending, confirmed, completed, cancelled
+  code?: string; // Finance facility code
   start_date?: string; // "YYYY-MM-DD HH:mm:ss"
   end_date?: string; // "YYYY-MM-DD HH:mm:ss"
   page?: number;
   per_page?: number;
+}
+
+export interface FinanceApprovalRequest {
+  payment_mode: string;
+  status: "confirmed" | "cancelled";
+}
+
+export interface FinanceApprovalResponse {
+  message: string;
+  booking: Bookings;
 }
 
 export interface BookingCreationResponse {
@@ -331,7 +352,11 @@ export const getBookings = async (
   const response = await axios.get<BookingsResponse>("/bookings", {
     params: filters,
   });
-  return response.data.bookings.data;
+  // Handle both old and new response formats
+  if (response.data.bookings) {
+    return response.data.bookings.data;
+  }
+  return response.data.data || [];
 };
 
 export const getBookingsWithPagination = async (
@@ -361,6 +386,14 @@ export const rejectBooking = async (
     decision: "reject",
   });
   return response.data.booking;
+};
+
+export const financeApproval = async (
+  bookingId: string,
+  data: FinanceApprovalRequest
+): Promise<FinanceApprovalResponse> => {
+  const response = await axios.post(`/booking/${bookingId}/finance`, data);
+  return response.data;
 };
 
 export const getServiceBookingFacility = async (

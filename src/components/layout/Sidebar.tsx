@@ -28,6 +28,7 @@ const getIconForRoute = (href: string) => {
   if (href.startsWith("/contracts")) return <HiOutlineDocumentText />;
   if (href.startsWith("/lots")) return <HiOutlineClipboardDocumentList />;
   if (href.startsWith("/bookings")) return <HiOutlineClipboardDocumentList />;
+  if (href.startsWith("/finance")) return <HiOutlineDocumentText />;
   if (href.startsWith("/services")) return <HiOutlineCog6Tooth />;
   if (href.startsWith("/reports")) return <HiOutlineDocumentText />;
   if (href.startsWith("/trends")) return <HiOutlineChartBarSquare />;
