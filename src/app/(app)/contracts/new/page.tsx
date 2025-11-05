@@ -10,14 +10,17 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   FaFileContract,
   FaSave,
   FaTimes,
   FaSearch,
   FaChevronDown,
+  FaSpinner,
+  FaHospital,
 } from "react-icons/fa";
+import { Facility } from "@/services/apiFacility";
 
 const contractSchema = z.object({
   vendor_id: z.string().min(1, "Vendor is required"),
@@ -34,16 +37,21 @@ export default function NewContractPage() {
 
   const [vendorSearch, setVendorSearch] = useState("");
   const [facilitySearch, setFacilitySearch] = useState("");
+  const [facilitySearchQuery, setFacilitySearchQuery] = useState("");
+  const [selectedFacilityObj, setSelectedFacilityObj] =
+    useState<Facility | null>(null);
   const [lotSearch, setLotSearch] = useState("");
   const [isVendorDropdownOpen, setIsVendorDropdownOpen] = useState(false);
   const [isFacilityDropdownOpen, setIsFacilityDropdownOpen] = useState(false);
   const [isLotDropdownOpen, setIsLotDropdownOpen] = useState(false);
 
+  const facilitySearchRef = useRef<HTMLInputElement>(null);
+
   // Load data
   const { vendors, isLoading: vendorsLoading } = useVendors();
-  const { facilities, isLoading: facilitiesLoading } = useFacilities({
-    search: facilitySearch || undefined,
-  });
+  const { facilities, isLoading: facilitiesLoading } = useFacilities(
+    facilitySearchQuery ? { search: facilitySearchQuery } : undefined
+  );
   const { lots, isLoading: lotsLoading } = useLots();
 
   const {
@@ -65,7 +73,9 @@ export default function NewContractPage() {
 
   // Get selected items for display
   const selectedVendor = vendors?.find((v) => v.id === selectedVendorId);
-  const selectedFacility = facilities?.find((f) => f.id === selectedFacilityId);
+  // Use selectedFacilityObj if available, otherwise try to find in facilities list
+  const selectedFacility =
+    selectedFacilityObj || facilities?.find((f) => f.id === selectedFacilityId);
   const selectedLot = lots?.find((l) => l.id === selectedLotId);
 
   // Filter data based on search terms
@@ -77,13 +87,7 @@ export default function NewContractPage() {
     )
     .slice(0, 50);
 
-  const filteredFacilities = facilities
-    ?.filter(
-      (facility) =>
-        facility.name?.toLowerCase().includes(facilitySearch.toLowerCase()) ||
-        facility.code?.toLowerCase().includes(facilitySearch.toLowerCase())
-    )
-    .slice(0, 50);
+  const filteredFacilities = facilities?.slice(0, 50);
 
   const filteredLots = lots
     ?.filter(
@@ -92,6 +96,42 @@ export default function NewContractPage() {
         lot.number?.toLowerCase().includes(lotSearch.toLowerCase())
     )
     .slice(0, 50);
+
+  // Handle facility search with API request
+  const handleFacilitySearch = () => {
+    if (facilitySearch.trim()) {
+      setFacilitySearchQuery(facilitySearch.trim());
+    } else {
+      setFacilitySearchQuery("");
+    }
+  };
+
+  // Handle facility selection
+  const handleFacilitySelect = (facility: Facility) => {
+    setValue("facility_id", facility.id);
+    setSelectedFacilityObj(facility); // Store the full facility object
+    setIsFacilityDropdownOpen(false);
+    // Clear search after a short delay
+    setTimeout(() => {
+      setFacilitySearch("");
+      setFacilitySearchQuery("");
+    }, 100);
+  };
+
+  // Clear facility selection
+  const clearFacilitySelection = () => {
+    setValue("facility_id", "");
+    setSelectedFacilityObj(null);
+    setFacilitySearch("");
+    setFacilitySearchQuery("");
+  };
+
+  // Focus facility search input when dropdown opens
+  useEffect(() => {
+    if (isFacilityDropdownOpen && facilitySearchRef.current) {
+      facilitySearchRef.current.focus();
+    }
+  }, [isFacilityDropdownOpen]);
 
   const onSubmit = (data: ContractFormData) => {
     createContract(data, {
@@ -283,11 +323,25 @@ export default function NewContractPage() {
                             ? `${selectedFacility.name} (${selectedFacility.code})`
                             : "Select a facility"}
                         </span>
-                        <FaChevronDown
-                          className={`text-gray-400 transition-transform ${
-                            isFacilityDropdownOpen ? "rotate-180" : ""
-                          }`}
-                        />
+                        <div className="flex items-center gap-2">
+                          {selectedFacility && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                clearFacilitySelection();
+                              }}
+                              className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-all"
+                            >
+                              <FaTimes className="w-3 h-3" />
+                            </button>
+                          )}
+                          <FaChevronDown
+                            className={`text-gray-400 transition-transform ${
+                              isFacilityDropdownOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </div>
                       </button>
 
                       {isFacilityDropdownOpen && (
@@ -296,29 +350,46 @@ export default function NewContractPage() {
                             <div className="relative">
                               <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                               <input
+                                ref={facilitySearchRef}
                                 type="text"
                                 placeholder="Search facilities..."
                                 value={facilitySearch}
                                 onChange={(e) =>
                                   setFacilitySearch(e.target.value)
                                 }
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+                                className="w-full pl-10 pr-20 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
                                 onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    handleFacilitySearch();
+                                  }
+                                }}
                               />
+                              <button
+                                type="button"
+                                onClick={handleFacilitySearch}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-xs font-medium"
+                              >
+                                Search
+                              </button>
                             </div>
                           </div>
                           <div className="max-h-60 overflow-y-auto">
-                            {filteredFacilities &&
-                            filteredFacilities.length > 0 ? (
+                            {facilitiesLoading ? (
+                              <div className="px-4 py-8 text-center text-gray-500">
+                                <FaSpinner className="w-6 h-6 mx-auto mb-2 text-purple-500 animate-spin" />
+                                <div className="text-sm">
+                                  Loading facilities...
+                                </div>
+                              </div>
+                            ) : filteredFacilities &&
+                              filteredFacilities.length > 0 ? (
                               filteredFacilities.map((facility) => (
                                 <div
                                   key={facility.id}
                                   className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
-                                  onClick={() => {
-                                    setValue("facility_id", facility.id);
-                                    setIsFacilityDropdownOpen(false);
-                                    setFacilitySearch("");
-                                  }}
+                                  onClick={() => handleFacilitySelect(facility)}
                                 >
                                   <div className="font-semibold text-gray-900">
                                     {facility.name}
@@ -330,9 +401,24 @@ export default function NewContractPage() {
                               ))
                             ) : (
                               <div className="px-4 py-8 text-center text-gray-500">
-                                {facilitiesLoading
-                                  ? "Loading..."
-                                  : "No facilities found"}
+                                <FaHospital className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                                <div className="text-sm">
+                                  {facilitySearchQuery
+                                    ? "No facilities found"
+                                    : "Enter search term and click Search"}
+                                </div>
+                                {facilitySearchQuery && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setFacilitySearchQuery("");
+                                      setFacilitySearch("");
+                                    }}
+                                    className="mt-2 text-purple-600 hover:text-purple-800 text-sm underline"
+                                  >
+                                    Clear search
+                                  </button>
+                                )}
                               </div>
                             )}
                           </div>

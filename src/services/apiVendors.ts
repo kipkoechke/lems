@@ -87,7 +87,7 @@ export interface Contract {
 
 export interface PaginatedContractsResponse {
   data: Contract[];
-  meta: {
+  pagination: {
     current_page: number;
     last_page: number;
     per_page: number;
@@ -146,6 +146,8 @@ export interface ContractFilterParams {
   facility_code?: string;
   lot_number?: string;
   vendor_code?: string;
+  page?: number;
+  per_page?: number;
 }
 
 // Vendor CRUD operations
@@ -193,13 +195,16 @@ export const deleteVendor = async (id: string): Promise<void> => {
 // Contract operations
 export const getContracts = async (
   params?: ContractFilterParams
-): Promise<Contract[]> => {
+): Promise<PaginatedContractsResponse> => {
   const queryParams = new URLSearchParams();
   if (params?.facility_code)
     queryParams.append("facility_code", params.facility_code);
   if (params?.lot_number) queryParams.append("lot_number", params.lot_number);
   if (params?.vendor_code)
     queryParams.append("vendor_code", params.vendor_code);
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.per_page)
+    queryParams.append("per_page", params.per_page.toString());
 
   const url = `contracts${
     queryParams.toString() ? `?${queryParams.toString()}` : ""
@@ -219,7 +224,10 @@ export const getContracts = async (
       })) || [],
   }));
 
-  return normalizedContracts;
+  return {
+    data: normalizedContracts,
+    pagination: response.data.pagination,
+  };
 };
 
 export const createContract = async (
