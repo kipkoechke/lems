@@ -19,7 +19,7 @@ export default function LotDetailPage() {
   } = useLotWithServices(id);
 
   const {
-    data: contracts = [],
+    data: contractsData,
     isLoading: contractsLoading,
     error: contractsError,
   } = useQuery({
@@ -27,6 +27,8 @@ export default function LotDetailPage() {
     queryFn: () => getContracts({ lot_number: lot?.number }),
     enabled: !!lot?.number,
   });
+
+  const contracts = contractsData?.data || [];
 
   if (lotLoading || contractsLoading) {
     return (
