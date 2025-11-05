@@ -17,7 +17,7 @@ export default function VendorDetailPage() {
   } = useVendor(vendorCode);
 
   const {
-    data: contracts = [],
+    data: contractsData,
     isLoading: contractsLoading,
     error: contractsError,
   } = useQuery({
@@ -25,6 +25,8 @@ export default function VendorDetailPage() {
     queryFn: () => getContracts({ vendor_code: vendorCode }),
     enabled: !!vendorCode,
   });
+
+  const contracts = contractsData?.data || [];
 
   if (vendorLoading || contractsLoading) {
     return (

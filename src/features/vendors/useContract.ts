@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useContract = (contractId: string) => {
   const {
-    data: contracts = [],
+    data: contractsData,
     isLoading,
     error,
     refetch,
@@ -13,6 +13,7 @@ export const useContract = (contractId: string) => {
     enabled: !!contractId,
   });
 
+  const contracts = contractsData?.data || [];
   const contract = contracts.find((c) => c.id === contractId);
 
   return {
