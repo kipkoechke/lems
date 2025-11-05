@@ -250,7 +250,8 @@ export default function ContractsPage() {
                               {contract.services?.length || 0} svc
                             </span>
                             <span className="text-xs text-gray-500 whitespace-nowrap">
-                              ({contract.services?.filter(
+                              (
+                              {contract.services?.filter(
                                 (s) => s.is_active === "1"
                               ).length || 0}{" "}
                               active)

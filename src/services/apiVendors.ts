@@ -230,6 +230,29 @@ export const getContracts = async (
   };
 };
 
+// Get a single contract by ID
+export const getContract = async (contractId: string): Promise<Contract> => {
+  const response = await axios.get<{ data: Contract }>(
+    `contracts/${contractId}`
+  );
+
+  // Normalize the data: copy lot.services to contract.services for backward compatibility
+  const contract = response.data.data;
+  const normalizedContract = {
+    ...contract,
+    services:
+      contract.lot.services?.map((service) => ({
+        service_id: service.id,
+        service_code: service.code,
+        service_name: service.name,
+        is_active: "1", // All services from API are active
+        equipment_id: service.equipment?.id,
+      })) || [],
+  };
+
+  return normalizedContract;
+};
+
 export const createContract = async (
   data: ContractCreateRequest
 ): Promise<Contract> => {

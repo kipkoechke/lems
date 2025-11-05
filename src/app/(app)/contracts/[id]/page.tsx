@@ -16,7 +16,7 @@ import {
 } from "react-icons/fa";
 
 interface ContractDetailsPageProps {
-  params: Promise<{ contractId: string }>;
+  params: Promise<{ id: string }>;
 }
 
 const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
@@ -27,7 +27,7 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
 
   React.useEffect(() => {
     params.then((resolvedParams) => {
-      setContractId(resolvedParams.contractId);
+      setContractId(resolvedParams.id);
     });
   }, [params]);
 
