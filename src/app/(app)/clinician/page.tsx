@@ -211,9 +211,22 @@ export default function ClinicianServicesPage() {
     selectedServiceIds.includes(service.service_id)
   );
 
-  // Note: service_cost is not in the contract response, we'll need to fetch it separately
-  // For now, we'll use placeholder values
-  const totalCost = selectedServices.length * 11200; // Placeholder
+  // Calculate total cost from actual service rates
+  const totalCost = selectedServices.reduce((sum, service) => {
+    const shaRate = parseFloat(service.sha_rate || "0");
+    return sum + shaRate;
+  }, 0);
+
+  // Calculate facility and vendor shares
+  const facilityShare = selectedServices.reduce((sum, service) => {
+    const facilityShare = parseFloat(service.facility_share || "0");
+    return sum + facilityShare;
+  }, 0);
+
+  const vendorShare = selectedServices.reduce((sum, service) => {
+    const vendorShare = parseFloat(service.vendor_share || "0");
+    return sum + vendorShare;
+  }, 0);
 
   const isLoading = isServicesLoading;
 
@@ -512,7 +525,7 @@ export default function ClinicianServicesPage() {
                       </div>
                     </div>
                     <span className="font-semibold text-gray-900 ml-2">
-                      KES 11,200
+                      KES {parseFloat(service.sha_rate || "0").toLocaleString()}
                     </span>
                   </div>
                 ))}
@@ -526,6 +539,67 @@ export default function ClinicianServicesPage() {
               </div>
             )}
           </div>{" "}
+          {/* Equipment Information */}
+          {selectedServices.length > 0 &&
+            selectedServices.some((s) => s.equipment) && (
+              <div className="px-4 py-3 border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                  Equipment Information
+                </h4>
+                <div className="space-y-2">
+                  {selectedServices
+                    .filter((service) => service.equipment)
+                    .map((service) => (
+                      <div
+                        key={service.service_id}
+                        className="bg-blue-50 rounded-lg p-3 border border-blue-200"
+                      >
+                        <div className="flex items-start gap-2">
+                          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center flex-shrink-0">
+                            <svg
+                              className="w-4 h-4 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                              />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">
+                              {service.equipment?.name}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-0.5">
+                              Serial: {service.equipment?.serial_number}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-gray-700">
+                                For: {service.service_name}
+                              </span>
+                              {service.equipment?.status && (
+                                <span
+                                  className={`text-xs px-1.5 py-0.5 rounded ${
+                                    service.equipment.status === "available"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-red-100 text-red-800"
+                                  }`}
+                                >
+                                  {service.equipment.status}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           {/* Identification Section */}
           <div className="px-4 py-3 border-t border-gray-200">
             {selectedPatient && (
@@ -557,18 +631,22 @@ export default function ClinicianServicesPage() {
               <div className="space-y-1 text-xs">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Facility Share</span>
-                  <span className="font-semibold">KES 3,600</span>
+                  <span className="font-semibold">
+                    KES {facilityShare.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Vendor Share</span>
-                  <span className="font-semibold">KES 30,000</span>
+                  <span className="font-semibold">
+                    KES {vendorShare.toLocaleString()}
+                  </span>
                 </div>
               </div>
             </div>
             {/* Total Cost */}
             <div className="bg-gray-900 text-white rounded-lg p-3 mb-3">
               <div className="flex justify-between items-center">
-                <span className="font-semibold">Total Cost</span>
+                <span className="font-semibold">SHA Rate (Total)</span>
                 <span className="text-xl font-bold">
                   KES {totalCost.toLocaleString()}
                 </span>

@@ -27,6 +27,13 @@ export interface ServiceWithCategory {
   category: ServiceCategory;
 }
 
+interface Equipment {
+  id: string;
+  name: string;
+  serial_number: string;
+  status: string;
+}
+
 interface FacilityContract {
   id: string;
   vendor_id?: string;
@@ -59,6 +66,11 @@ interface FacilityContract {
     service_code: string;
     service_name: string;
     is_active: string;
+    sha_rate?: string;
+    vendor_share?: string;
+    facility_share?: string;
+    is_capitated?: string;
+    equipment?: Equipment | null;
   }>;
 }
 
@@ -85,6 +97,7 @@ export const getServicesByFacilityCode = async (
   // Services are now included in the contract response, no need for separate API calls
   const normalizedContracts = contracts.map((contract: any) => {
     // Get services from lot.services (they're now included in the response)
+    // Using exact field names from API: lot.services[]
     const rawServices = contract.lot?.services || [];
     console.log(
       "✅ Services found:",
@@ -94,28 +107,39 @@ export const getServicesByFacilityCode = async (
     );
 
     // Normalize service structure to match component expectations
-    // Note: Service fields are now directly on each item (flattened structure)
-    const normalizedServices = rawServices.map((item: any) => ({
-      service_id: item.id,
-      service_code: item.code,
-      service_name: item.name,
+    // API returns: { id, name, code, sha_rate, vendor_share, facility_share, is_capitated, equipment }
+    const normalizedServices = rawServices.map((service: any) => ({
+      service_id: service.id,
+      service_code: service.code,
+      service_name: service.name,
       is_active: "1", // All services from API are active
-      sha_rate: item.sha_rate,
-      vendor_share: item.vendor_share,
-      facility_share: item.facility_share,
-      is_capitated: item.is_capitated,
-      equipment: item.equipment,
+      sha_rate: service.sha_rate,
+      vendor_share: service.vendor_share,
+      facility_share: service.facility_share,
+      is_capitated: service.is_capitated,
+      equipment: service.equipment
+        ? {
+            id: service.equipment.id,
+            name: service.equipment.name,
+            serial_number: service.equipment.serial_number,
+            status: service.equipment.status,
+          }
+        : null,
     }));
 
     // Normalize contract structure
+    // API structure: { id, vendor: {id, code, name}, facility: {id, code, name}, lot: {id, number, name, services}, is_active, created_at, updated_at }
     const normalized = {
       id: contract.id,
-      vendor_code: contract.vendor?.code || contract.vendor_code,
-      vendor_name: contract.vendor?.name || contract.vendor_name,
-      facility_code: contract.facility?.code || contract.facility_code,
-      facility_name: contract.facility?.name || contract.facility_name,
-      lot_number: contract.lot?.number || contract.lot_number,
-      lot_name: contract.lot?.name || contract.lot_name,
+      vendor_code: contract.vendor?.code,
+      vendor_name: contract.vendor?.name,
+      vendor_id: contract.vendor?.id,
+      facility_code: contract.facility?.code,
+      facility_name: contract.facility?.name,
+      facility_id: contract.facility?.id,
+      lot_number: contract.lot?.number,
+      lot_name: contract.lot?.name,
+      lot_id: contract.lot?.id,
       is_active: contract.is_active,
       services: normalizedServices,
     } as FacilityContract;
