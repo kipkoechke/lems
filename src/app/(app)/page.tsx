@@ -35,6 +35,9 @@ export default function HomePage() {
     if (user && user.role === "f_medical") {
       // Clinicians go directly to clinician services page
       router.replace("/clinician");
+    } else if (user && user.role === "f_lab") {
+      // Lab staff go directly to lab services page
+      router.replace("/lab");
     }
   }, [user, router]);
 
@@ -50,8 +53,8 @@ export default function HomePage() {
     );
   }
 
-  // If f_medical, show loading while redirecting
-  if (user.role === "f_medical") {
+  // If f_medical or f_lab, show loading while redirecting
+  if (user.role === "f_medical" || user.role === "f_lab") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50">
         <div className="text-center">
