@@ -40,6 +40,11 @@ export enum Permission {
   // Facility Lab permissions
   SERVICE_COMPLETION = "service_completion",
 
+  // Medical staff specific permissions
+  VIEW_BOOKED_SERVICES = "view_booked_services",
+  VIEW_APPROVED_SERVICES = "view_approved_services",
+  VIEW_COMPLETED_SERVICES = "view_completed_services",
+
   // Common permissions
   VIEW_DASHBOARD = "view_dashboard",
   VIEW_REPORTS = "view_reports",
@@ -100,9 +105,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.PATIENT_BOOKING_CONSENT,
     Permission.SEND_PATIENT_TO_FINANCE,
     Permission.VIEW_PATIENTS,
-    Permission.VIEW_BOOKINGS,
     Permission.VIEW_SERVICES,
     Permission.VIEW_EQUIPMENTS,
+    Permission.VIEW_BOOKED_SERVICES,
   ],
 
   [UserRole.F_FINANCE]: [
@@ -112,19 +117,19 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.SEND_PATIENT_TO_EQUIPMENT_ROOM,
     Permission.CANCEL_BOOKING,
     Permission.VIEW_PATIENT_QUEUE,
-    Permission.VIEW_BOOKINGS,
     Permission.VIEW_PAYMENTS,
     Permission.SYNC_TO_SHA,
     Permission.FINANCE_APPROVAL,
+    Permission.VIEW_APPROVED_SERVICES,
   ],
 
   [UserRole.F_LAB]: [
     // Facility Lab permissions
     Permission.SERVICE_COMPLETION,
     Permission.VIEW_PATIENTS,
-    Permission.VIEW_BOOKINGS,
     Permission.VIEW_EQUIPMENTS,
     Permission.VIEW_SERVICES,
+    Permission.VIEW_COMPLETED_SERVICES,
   ],
 
   [UserRole.C_REC]: [

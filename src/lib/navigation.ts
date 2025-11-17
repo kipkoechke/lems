@@ -61,10 +61,22 @@ export const NAV_ITEMS: NavItem[] = [
     description: "Manage patient records",
   },
   {
-    label: "Services",
-    href: "/bookings",
-    permission: Permission.VIEW_BOOKINGS,
-    description: "Manage patient bookings",
+    label: "Booked Services",
+    href: "/bookings/booked",
+    permission: Permission.VIEW_BOOKED_SERVICES,
+    description: "View pending bookings",
+  },
+  {
+    label: "Approved Services",
+    href: "/bookings/approved",
+    permission: Permission.VIEW_APPROVED_SERVICES,
+    description: "View approved services",
+  },
+  {
+    label: "Completed Services",
+    href: "/bookings/completed",
+    permission: Permission.VIEW_COMPLETED_SERVICES,
+    description: "View completed services",
   },
   {
     label: "Finance Approval",

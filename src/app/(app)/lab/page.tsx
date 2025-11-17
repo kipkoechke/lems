@@ -20,11 +20,18 @@ export default function LabServicesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBooking, setSelectedBooking] = useState<Bookings | null>(null);
 
-  // Fetch bookings with booking_status=confirmed and approval_status=pending
+  // Fetch bookings with booking_status=confirmed
   // Note: facility filter handled on backend based on user's facility
-  const { bookings, isLoading } = useBookings({
+  const { bookings: allBookings, isLoading } = useBookings({
     booking_status: "confirmed",
     approval_status: "pending",
+  });
+
+  // Filter bookings to show only those with at least one service having service_status="not_started"
+  const bookings = allBookings?.filter((booking: Bookings) => {
+    return booking.services?.some(
+      (service) => service.service_status === "not_started"
+    );
   });
 
   const filteredBookings = bookings?.filter((booking: Bookings) => {
@@ -82,7 +89,7 @@ export default function LabServicesPage() {
                 Service Completion
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Confirmed bookings pending service completion
+                Confirmed bookings with services pending completion
               </p>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
@@ -130,7 +137,7 @@ export default function LabServicesPage() {
                           {booking.booking_number}
                         </span>
                         <span className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs font-medium">
-                          Pending Completion
+                          Services Pending
                         </span>
                       </div>
 
