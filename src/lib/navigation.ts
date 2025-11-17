@@ -78,6 +78,12 @@ export const NAV_ITEMS: NavItem[] = [
     permission: Permission.SYNC_TO_SHA,
     description: "Synchronize bookings to SHA",
   },
+  {
+    label: "Service Completion",
+    href: "/lab",
+    permission: Permission.SERVICE_COMPLETION,
+    description: "Complete lab services",
+  },
 
   // Reports and Analytics
   // {

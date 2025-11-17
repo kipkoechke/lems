@@ -37,6 +37,9 @@ export enum Permission {
   SYNC_TO_SHA = "sync_to_sha",
   FINANCE_APPROVAL = "finance_approval",
 
+  // Facility Lab permissions
+  SERVICE_COMPLETION = "service_completion",
+
   // Common permissions
   VIEW_DASHBOARD = "view_dashboard",
   VIEW_REPORTS = "view_reports",
@@ -68,7 +71,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.CREATE_CONTRACTS,
     Permission.ONBOARD_LOTS,
     Permission.ONBOARD_SERVICES,
-    Permission.VIEW_DASHBOARD,
     Permission.VIEW_REPORTS,
     Permission.VIEW_FACILITIES,
     Permission.VIEW_VENDORS,
@@ -82,7 +84,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   [UserRole.F_ADMIN]: [
     // Facility admin permissions
     Permission.CREATE_FACILITY_USERS,
-    Permission.VIEW_DASHBOARD,
     Permission.VIEW_REPORTS,
     Permission.VIEW_PATIENTS,
     Permission.VIEW_BOOKINGS,
@@ -98,7 +99,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.SELECT_SERVICES,
     Permission.PATIENT_BOOKING_CONSENT,
     Permission.SEND_PATIENT_TO_FINANCE,
-    Permission.VIEW_DASHBOARD,
     Permission.VIEW_PATIENTS,
     Permission.VIEW_BOOKINGS,
     Permission.VIEW_SERVICES,
@@ -112,8 +112,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.SEND_PATIENT_TO_EQUIPMENT_ROOM,
     Permission.CANCEL_BOOKING,
     Permission.VIEW_PATIENT_QUEUE,
-    Permission.VIEW_DASHBOARD,
-    Permission.VIEW_PATIENTS,
     Permission.VIEW_BOOKINGS,
     Permission.VIEW_PAYMENTS,
     Permission.SYNC_TO_SHA,
@@ -122,7 +120,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 
   [UserRole.F_LAB]: [
     // Facility Lab permissions
-    Permission.VIEW_DASHBOARD,
+    Permission.SERVICE_COMPLETION,
     Permission.VIEW_PATIENTS,
     Permission.VIEW_BOOKINGS,
     Permission.VIEW_EQUIPMENTS,
@@ -131,7 +129,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 
   [UserRole.C_REC]: [
     // Claim Records permissions
-    Permission.VIEW_DASHBOARD,
     Permission.VIEW_PATIENTS,
     Permission.VIEW_BOOKINGS,
     Permission.VIEW_REPORTS,
@@ -140,7 +137,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 
   [UserRole.B_APPROVER]: [
     // Batch Approver permissions
-    Permission.VIEW_DASHBOARD,
     Permission.VIEW_BOOKINGS,
     Permission.VIEW_PAYMENTS,
     Permission.VIEW_REPORTS,
@@ -149,7 +145,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 
   [UserRole.USER]: [
     // Regular user permissions
-    Permission.VIEW_DASHBOARD,
     Permission.VIEW_PATIENTS,
     Permission.VIEW_BOOKINGS,
   ],
