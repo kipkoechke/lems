@@ -29,7 +29,8 @@ export default function FinanceApprovalPage() {
   const code = facility?.code || "";
 
   const { bookings, isLoading } = useBookings({
-    booking_status: "pending",
+    booking_status: "confirmed",
+    approval_status: "pending",
     code: code,
     page,
     per_page: 20,

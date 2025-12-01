@@ -44,6 +44,7 @@ export enum Permission {
   VIEW_BOOKED_SERVICES = "view_booked_services",
   VIEW_APPROVED_SERVICES = "view_approved_services",
   VIEW_COMPLETED_SERVICES = "view_completed_services",
+  VIEW_CONFIRMED_BOOKINGS = "view_confirmed_bookings",
 
   // Common permissions
   VIEW_DASHBOARD = "view_dashboard",
@@ -108,6 +109,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_SERVICES,
     Permission.VIEW_EQUIPMENTS,
     Permission.VIEW_BOOKED_SERVICES,
+    Permission.VIEW_CONFIRMED_BOOKINGS,
   ],
 
   [UserRole.F_FINANCE]: [

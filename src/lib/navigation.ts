@@ -67,6 +67,12 @@ export const NAV_ITEMS: NavItem[] = [
     description: "View pending bookings",
   },
   {
+    label: "Confirmed Bookings",
+    href: "/bookings/confirmed",
+    permission: Permission.VIEW_CONFIRMED_BOOKINGS,
+    description: "View confirmed bookings",
+  },
+  {
     label: "Approved Services",
     href: "/bookings/approved",
     permission: Permission.VIEW_APPROVED_SERVICES,
