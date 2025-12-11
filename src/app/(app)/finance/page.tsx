@@ -150,12 +150,12 @@ export default function FinanceApprovalPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {booking.patient.name}
+                        {booking.patient?.name || "N/A"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {maskPhoneNumber(booking.patient.phone)}
+                        {maskPhoneNumber(booking.patient?.phone || "")}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -328,8 +328,8 @@ function EligibilityCheckModal({
 }: EligibilityCheckModalProps) {
   const handleCheckEligibility = () => {
     if (
-      booking.patient.identification_no &&
-      booking.patient.identification_type
+      booking.patient?.identification_no &&
+      booking.patient?.identification_type
     ) {
       onCheck({
         identificationType: booking.patient.identification_type,
@@ -361,30 +361,30 @@ function EligibilityCheckModal({
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <span className="text-gray-600">Name:</span>
-            <p className="font-medium text-gray-900">{booking.patient.name}</p>
+            <p className="font-medium text-gray-900">{booking.patient?.name || "N/A"}</p>
           </div>
           <div>
             <span className="text-gray-600">Phone:</span>
             <p className="font-medium text-gray-900">
-              {maskPhoneNumber(booking.patient.phone)}
+              {maskPhoneNumber(booking.patient?.phone || "")}
             </p>
           </div>
           <div>
             <span className="text-gray-600">ID Type:</span>
             <p className="font-medium text-gray-900">
-              {booking.patient.identification_type || "N/A"}
+              {booking.patient?.identification_type || "N/A"}
             </p>
           </div>
           <div>
             <span className="text-gray-600">ID Number:</span>
             <p className="font-medium text-gray-900">
-              {booking.patient.identification_no || "N/A"}
+              {booking.patient?.identification_no || "N/A"}
             </p>
           </div>
           <div className="col-span-2">
             <span className="text-gray-600">SHA Number:</span>
             <p className="font-medium text-gray-900">
-              {booking.patient.sha_number || "N/A"}
+              {booking.patient?.sha_number || "N/A"}
             </p>
           </div>
         </div>
@@ -426,7 +426,7 @@ function EligibilityCheckModal({
       )}
 
       {/* Warning if no SHA number */}
-      {!booking.patient.sha_number && (
+      {!booking.patient?.sha_number && (
         <div className="p-3 rounded-lg border bg-orange-50 border-orange-200">
           <p className="text-sm text-orange-700">
             ⚠️ Patient does not have a SHA number on record
@@ -443,8 +443,8 @@ function EligibilityCheckModal({
         >
           Close
         </button>
-        {booking.patient.identification_no &&
-          booking.patient.identification_type && (
+        {booking.patient?.identification_no &&
+          booking.patient?.identification_type && (
             <button
               onClick={handleCheckEligibility}
               disabled={isChecking}
@@ -522,13 +522,13 @@ function ConfirmApprovalModal({
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Patient:</span>
           <span className="font-medium text-gray-900">
-            {booking.patient.name}
+            {booking.patient?.name || "N/A"}
           </span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Phone:</span>
           <span className="font-medium text-gray-900">
-            {maskPhoneNumber(booking.patient.phone)}
+            {maskPhoneNumber(booking.patient?.phone || "")}
           </span>
         </div>
         <div className="flex justify-between text-sm">
