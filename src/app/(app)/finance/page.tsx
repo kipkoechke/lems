@@ -45,8 +45,8 @@ export default function FinanceApprovalPage() {
     return bookings.filter(
       (booking: Bookings) =>
         booking.booking_number.toLowerCase().includes(lowerSearch) ||
-        booking.patient.name.toLowerCase().includes(lowerSearch) ||
-        booking.patient.phone.toLowerCase().includes(lowerSearch)
+        booking.patient?.name?.toLowerCase().includes(lowerSearch) ||
+        booking.patient?.phone?.toLowerCase().includes(lowerSearch)
     );
   }, [bookings, searchTerm]);
 
