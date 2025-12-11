@@ -140,10 +140,10 @@ const ApprovedServicesPage: React.FC = () => {
                       <div className="flex items-center">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            {booking.patient.name}
+                            {booking.patient?.name || "N/A"}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {maskPhoneNumber(booking.patient.phone)}
+                            {maskPhoneNumber(booking.patient?.phone || "")}
                           </div>
                           <div className="text-xs text-gray-400">
                             {formatDate(booking.created_at)}
@@ -281,21 +281,23 @@ const ApprovedServicesPage: React.FC = () => {
                               <div className="text-sm space-y-1">
                                 <p>
                                   <span className="text-gray-500">DOB: </span>
-                                  {new Date(
-                                    booking.patient.date_of_birth
-                                  ).toLocaleDateString()}
+                                  {booking.patient?.date_of_birth
+                                    ? new Date(
+                                        booking.patient.date_of_birth
+                                      ).toLocaleDateString()
+                                    : "N/A"}
                                 </p>
                                 <p>
                                   <span className="text-gray-500">
                                     SHA Number:{" "}
                                   </span>
-                                  {booking.patient.sha_number || "N/A"}
+                                  {booking.patient?.sha_number || "N/A"}
                                 </p>
                                 <p>
                                   <span className="text-gray-500">
                                     ID Number:{" "}
                                   </span>
-                                  {booking.patient.identification_no || "N/A"}
+                                  {booking.patient?.identification_no || "N/A"}
                                 </p>
                               </div>
                             </div>
