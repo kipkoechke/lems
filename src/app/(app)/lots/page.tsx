@@ -38,7 +38,8 @@ export default function LotsPage() {
   });
 
   // Calculate total services count
-  const totalServicesCount = lots?.reduce((acc, lot) => acc + (lot.services_count || 0), 0) || 0;
+  const totalServicesCount =
+    lots?.reduce((acc, lot) => acc + (lot.services_count || 0), 0) || 0;
 
   const handleDeleteLot = (lotId: string) => {
     if (window.confirm("Are you sure you want to delete this lot?")) {
@@ -214,7 +215,8 @@ export default function LotsPage() {
                     </Table.Cell>
                     <Table.Cell>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {lot.services_count} service{lot.services_count !== 1 ? "s" : ""}
+                        {lot.services_count} service
+                        {lot.services_count !== 1 ? "s" : ""}
                       </span>
                     </Table.Cell>
                     <Table.Cell>
@@ -278,7 +280,10 @@ export default function LotsPage() {
             <div className="p-4 border-t border-gray-200">
               <Pagination
                 currentPage={pagination.current_page}
-                totalPages={pagination.last_page}
+                lastPage={pagination.last_page}
+                total={pagination.total}
+                from={pagination.from}
+                to={pagination.to}
                 onPageChange={setCurrentPage}
               />
             </div>
@@ -318,7 +323,8 @@ export default function LotsPage() {
                         {lot.is_active ? "Active" : "Inactive"}
                       </span>
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {lot.services_count} service{lot.services_count !== 1 ? "s" : ""}
+                        {lot.services_count} service
+                        {lot.services_count !== 1 ? "s" : ""}
                       </span>
                     </div>
                   </div>

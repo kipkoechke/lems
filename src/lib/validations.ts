@@ -133,7 +133,7 @@ export const serviceSchema = z.object({
   tariff: z.number().min(0, "Tariff must be positive"),
   vendor_share: z.number().min(0, "Vendor share must be positive"),
   facility_share: z.number().min(0, "Facility share must be positive"),
-  capitated: z.boolean().default(false),
+  capitated: z.boolean(),
 });
 
 // Type exports

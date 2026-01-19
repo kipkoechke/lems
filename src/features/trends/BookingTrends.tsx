@@ -106,8 +106,9 @@ const BookingTrends: React.FC = () => {
   const { counties } = useCounties();
   const { subCounties } = useSubCounties(tempFilters.county_code);
 
-  // Get services for the selected lot
-  const { data: lotServices = [] } = useLotServices(tempFilters.lot_number);
+  // Get services for the selected lot (find lot by number to get its id)
+  const selectedLot = lots?.find((l) => l.number === tempFilters.lot_number);
+  const { services: lotServices } = useLotServices(selectedLot?.id || "");
 
   // Filter data based on search
   const filteredCounties = counties?.filter((county) =>

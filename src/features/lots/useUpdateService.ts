@@ -11,13 +11,15 @@ export const useUpdateService = (lotId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ serviceId, data }: UpdateServiceParams) => 
+    mutationFn: ({ serviceId, data }: UpdateServiceParams) =>
       updateService(lotId, serviceId, data),
     onSuccess: () => {
       toast.success("Service updated successfully");
       queryClient.invalidateQueries({ queryKey: ["lot-services", lotId] });
     },
-    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+    onError: (
+      error: Error & { response?: { data?: { message?: string } } },
+    ) => {
       toast.error(error?.response?.data?.message || "Failed to update service");
     },
   });

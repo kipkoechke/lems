@@ -111,7 +111,7 @@ const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({
 
   const filteredOptions = searchable
     ? options.filter((opt) =>
-        opt.label.toLowerCase().includes(search.toLowerCase())
+        opt.label.toLowerCase().includes(search.toLowerCase()),
       )
     : options;
 
@@ -290,7 +290,7 @@ export const VendorDashboard: React.FC = () => {
   const filters = useMemo(() => {
     const dateRange = getDateRangeFromDuration(selectedDuration);
     const activeFilters: Partial<VendorTrendFilters> = {};
-    
+
     if (dateRange.start_date) activeFilters.start_date = dateRange.start_date;
     if (dateRange.end_date) activeFilters.end_date = dateRange.end_date;
     if (countyCode) activeFilters.county_code = countyCode;
@@ -298,9 +298,16 @@ export const VendorDashboard: React.FC = () => {
     if (facilityCode) activeFilters.facility_code = facilityCode;
     if (lotNumber) activeFilters.lot_number = lotNumber;
     if (serviceCode) activeFilters.service_code = serviceCode;
-    
+
     return activeFilters;
-  }, [selectedDuration, countyCode, subCountyCode, facilityCode, lotNumber, serviceCode]);
+  }, [
+    selectedDuration,
+    countyCode,
+    subCountyCode,
+    facilityCode,
+    lotNumber,
+    serviceCode,
+  ]);
 
   // Data hooks
   const {
@@ -310,7 +317,7 @@ export const VendorDashboard: React.FC = () => {
   } = useVendorStats(vendorCode);
   const { data: trendsData, isLoading: trendsLoading } = useVendorBookingTrends(
     vendorCode,
-    filters
+    filters,
   );
 
   // Filter data hooks
@@ -347,7 +354,7 @@ export const VendorDashboard: React.FC = () => {
         facilityShare:
           acc.facilityShare + parseFloat(trend.total_facility_share || "0"),
       }),
-      { total: 0, vendorShare: 0, facilityShare: 0 }
+      { total: 0, vendorShare: 0, facilityShare: 0 },
     );
   }, [trendsData]);
 
@@ -373,7 +380,7 @@ export const VendorDashboard: React.FC = () => {
     }, {});
 
     return Object.values(grouped).sort((a: any, b: any) =>
-      a.date.localeCompare(b.date)
+      a.date.localeCompare(b.date),
     );
   }, [trendsData]);
 
@@ -444,7 +451,7 @@ export const VendorDashboard: React.FC = () => {
             searchable
             placeholder="All Facilities"
           />
-          
+
           {/* Lot & Service Filters */}
           <TopFilterDropdown
             label="Lot"
@@ -488,9 +495,7 @@ export const VendorDashboard: React.FC = () => {
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Vendor Dashboard</h2>
-        <p className="text-gray-500">
-          Overview of your equipment and services
-        </p>
+        <p className="text-gray-500">Overview of your equipment and services</p>
       </div>
 
       {/* Stats Cards */}
@@ -539,7 +544,7 @@ export const VendorDashboard: React.FC = () => {
           title="Total Bookings"
           value={trendChartData.reduce(
             (acc: number, d: any) => acc + d.bookings,
-            0
+            0,
           )}
           icon={<FaClipboardList className="w-6 h-6" />}
           color="#EF4444"
@@ -607,8 +612,8 @@ export const VendorDashboard: React.FC = () => {
                     name === "bookings"
                       ? "Bookings"
                       : name === "vendorShare"
-                      ? "Vendor Share"
-                      : "Revenue",
+                        ? "Vendor Share"
+                        : "Revenue",
                   ]}
                 />
                 <Legend />

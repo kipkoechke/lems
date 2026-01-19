@@ -17,7 +17,9 @@ export const useUpdateLot = () => {
       queryClient.invalidateQueries({ queryKey: ["lots"] });
       queryClient.invalidateQueries({ queryKey: ["lot", variables.id] });
     },
-    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+    onError: (
+      error: Error & { response?: { data?: { message?: string } } },
+    ) => {
       toast.error(error?.response?.data?.message || "Failed to update lot");
     },
   });

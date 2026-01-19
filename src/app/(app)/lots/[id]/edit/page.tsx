@@ -105,7 +105,7 @@ function EditLotContent() {
         onSettled: () => {
           setIsSubmitting(false);
         },
-      }
+      },
     );
   };
 

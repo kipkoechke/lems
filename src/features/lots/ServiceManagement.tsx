@@ -36,7 +36,7 @@ const ServiceManagement: React.FC = () => {
   // State management
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<"create" | "edit" | "view">(
-    "create"
+    "create",
   );
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,7 +45,7 @@ const ServiceManagement: React.FC = () => {
   >("all");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
-    null
+    null,
   );
 
   // Form setup
@@ -55,7 +55,6 @@ const ServiceManagement: React.FC = () => {
     formState: { errors },
     reset,
     setValue,
-    watch,
   } = useForm<ServiceFormData>({
     resolver: zodResolver(serviceSchema),
     mode: "onBlur",
@@ -242,7 +241,7 @@ const ServiceManagement: React.FC = () => {
                 value={statusFilter}
                 onChange={(e) =>
                   setStatusFilter(
-                    e.target.value as "all" | "active" | "inactive"
+                    e.target.value as "all" | "active" | "inactive",
                   )
                 }
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -350,7 +349,7 @@ const ServiceManagement: React.FC = () => {
                               setActiveDropdown(
                                 activeDropdown === service.id
                                   ? null
-                                  : service.id
+                                  : service.id,
                               )
                             }
                             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -411,8 +410,8 @@ const ServiceManagement: React.FC = () => {
                   {modalType === "create"
                     ? "Add New Service"
                     : modalType === "edit"
-                    ? "Edit Service"
-                    : "Service Details"}
+                      ? "Edit Service"
+                      : "Service Details"}
                 </h3>
                 <button
                   onClick={closeModal}
@@ -434,7 +433,9 @@ const ServiceManagement: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Code
                     </label>
-                    <p className="text-gray-900 font-mono">{selectedService?.code}</p>
+                    <p className="text-gray-900 font-mono">
+                      {selectedService?.code}
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -471,9 +472,7 @@ const ServiceManagement: React.FC = () => {
                           : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {selectedService?.is_active
-                        ? "Active"
-                        : "Inactive"}
+                      {selectedService?.is_active ? "Active" : "Inactive"}
                     </span>
                   </div>
                   <div>
@@ -575,7 +574,10 @@ const ServiceManagement: React.FC = () => {
                         updateServiceMutation.isPending
                       }
                     />
-                    <label htmlFor="capitated" className="text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="capitated"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       Capitated Service
                     </label>
                   </div>
@@ -600,8 +602,8 @@ const ServiceManagement: React.FC = () => {
                       updateServiceMutation.isPending
                         ? "Saving..."
                         : modalType === "create"
-                        ? "Create Service"
-                        : "Update Service"}
+                          ? "Create Service"
+                          : "Update Service"}
                     </button>
                   </div>
                 </form>

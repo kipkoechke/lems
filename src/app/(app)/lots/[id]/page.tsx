@@ -474,12 +474,12 @@ export default function LotDetailPage() {
                         <td className="px-6 py-4">
                           <span
                             className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                              contract.is_active === "1" || contract.is_active === true
+                              contract.is_active === "1"
                                 ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {contract.is_active === "1" || contract.is_active === true ? "Active" : "Inactive"}
+                            {contract.is_active === "1" ? "Active" : "Inactive"}
                           </span>
                         </td>
                         <td className="px-6 py-4">
@@ -495,7 +495,7 @@ export default function LotDetailPage() {
                             <button
                               onClick={() =>
                                 router.push(
-                                  `/facilities/${contract.facility.code}`
+                                  `/facilities/${contract.facility.code}`,
                                 )
                               }
                               className="text-green-600 hover:text-green-800 text-sm font-medium transition-colors"

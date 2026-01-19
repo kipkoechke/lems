@@ -99,7 +99,10 @@ export const createLot = async (data: LotCreateRequest): Promise<Lot> => {
   return response.data.data;
 };
 
-export const updateLot = async (id: string, data: LotUpdateRequest): Promise<LotDetail> => {
+export const updateLot = async (
+  id: string,
+  data: LotUpdateRequest,
+): Promise<LotDetail> => {
   const response = await axios.patch<LotDetailResponse>(`/lots/${id}`, data);
   return response.data.data;
 };
@@ -109,28 +112,42 @@ export const deleteLot = async (id: string): Promise<void> => {
 };
 
 // Service CRUD operations for a specific lot
-export const getLotServices = async (lotId: string, page: number = 1): Promise<LotServicesResponse> => {
-  const response = await axios.get<LotServicesResponse>(`/lots/${lotId}/services?page=${page}`);
+export const getLotServices = async (
+  lotId: string,
+  page: number = 1,
+): Promise<LotServicesResponse> => {
+  const response = await axios.get<LotServicesResponse>(
+    `/lots/${lotId}/services?page=${page}`,
+  );
   return response.data;
 };
 
 export const createService = async (
   lotId: string,
-  data: ServiceCreateRequest
+  data: ServiceCreateRequest,
 ): Promise<Service> => {
-  const response = await axios.post<ServiceCreateResponse>(`/lots/${lotId}/services`, data);
+  const response = await axios.post<ServiceCreateResponse>(
+    `/lots/${lotId}/services`,
+    data,
+  );
   return response.data.service;
 };
 
 export const updateService = async (
   lotId: string,
   serviceId: string,
-  data: ServiceUpdateRequest
+  data: ServiceUpdateRequest,
 ): Promise<Service> => {
-  const response = await axios.patch<{ data: Service }>(`/lots/${lotId}/services/${serviceId}`, data);
+  const response = await axios.patch<{ data: Service }>(
+    `/lots/${lotId}/services/${serviceId}`,
+    data,
+  );
   return response.data.data;
 };
 
-export const deleteService = async (lotId: string, serviceId: string): Promise<void> => {
+export const deleteService = async (
+  lotId: string,
+  serviceId: string,
+): Promise<void> => {
   await axios.delete(`/lots/${lotId}/services/${serviceId}`);
 };

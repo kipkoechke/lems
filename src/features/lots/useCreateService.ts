@@ -12,7 +12,9 @@ export const useCreateService = (lotId: string) => {
       queryClient.invalidateQueries({ queryKey: ["lot-services", lotId] });
       queryClient.invalidateQueries({ queryKey: ["lots"] });
     },
-    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+    onError: (
+      error: Error & { response?: { data?: { message?: string } } },
+    ) => {
       toast.error(error?.response?.data?.message || "Failed to create service");
     },
   });

@@ -11,7 +11,9 @@ export const useDeleteLot = () => {
       toast.success("Lot deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["lots"] });
     },
-    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+    onError: (
+      error: Error & { response?: { data?: { message?: string } } },
+    ) => {
       toast.error(error?.response?.data?.message || "Failed to delete lot");
     },
   });
