@@ -1,21 +1,5 @@
-import { getServices } from "@/services/apiLots";
-import { useQuery } from "@tanstack/react-query";
+// This file is deprecated. Use useLotServices hook instead.
+// Services are now fetched per lot using /lots/{id}/services endpoint.
+// See useLotServices.ts for the new implementation.
 
-export const useServices = () => {
-  const {
-    data: services = [],
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["services"],
-    queryFn: getServices,
-  });
-
-  return {
-    services,
-    isLoading,
-    error,
-    refetch,
-  };
-};
+export {};

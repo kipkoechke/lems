@@ -1,6 +1,8 @@
 "use client";
 
 import { useAccessibleQuickActions } from "@/lib/navigation";
+import { useCurrentUser } from "@/hooks/useAuth";
+import VendorDashboard from "./VendorDashboard";
 
 // Quick action button component
 interface QuickActionButtonProps {
@@ -25,7 +27,13 @@ const QuickActionButton = ({
 
 // Simplified dashboard component with only quick actions
 export const RoleBasedDashboard = () => {
+  const user = useCurrentUser();
   const quickActions = useAccessibleQuickActions();
+
+  // Show vendor dashboard for vendor users
+  if (user?.role === "vendor") {
+    return <VendorDashboard />;
+  }
 
   return (
     <div className="space-y-6">

@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useLots } from "@/features/lots/useLots";
+import { useLotWithServices } from "@/features/lots/useLotWithServices";
 import { useUpdateLot } from "@/features/lots/useUpdateLot";
 import BackButton from "@/components/common/BackButton";
 import { PermissionGate } from "@/components/PermissionGate";
@@ -25,11 +25,8 @@ function EditLotContent() {
   const lotId = params.id as string;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { lots, isLoading, error } = useLots();
+  const { lot, isLoading, error } = useLotWithServices(lotId);
   const { updateLot, isUpdating, error: updateError } = useUpdateLot();
-
-  // Find the specific lot from the lots array
-  const lot = lots.find((l) => l.id === lotId);
 
   const {
     register,
@@ -51,7 +48,7 @@ function EditLotContent() {
     if (lot) {
       setValue("name", lot.name);
       setValue("number", lot.number);
-      setValue("is_active", lot.is_active === "1");
+      setValue("is_active", lot.is_active);
     }
   }, [lot, setValue]);
 
@@ -95,9 +92,11 @@ function EditLotContent() {
     updateLot(
       {
         id: lot.id,
-        number: data.number,
-        name: data.name,
-        is_active: data.is_active,
+        data: {
+          number: data.number,
+          name: data.name,
+          is_active: data.is_active,
+        },
       },
       {
         onSuccess: () => {

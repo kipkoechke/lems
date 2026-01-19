@@ -52,6 +52,12 @@ export const NAV_ITEMS: NavItem[] = [
     permission: Permission.VIEW_LOTS,
     description: "Manage equipment lots",
   },
+  {
+    label: "Services",
+    href: "/services",
+    permission: Permission.VIEW_SERVICES,
+    description: "View services offered",
+  },
 
   // Patient workflow items (Medical and Finance staff)
   {
@@ -115,6 +121,14 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/trends",
     permission: Permission.VIEW_TRENDS,
     description: "Analytics and trends",
+  },
+
+  // Payments - for Facility Admin and Vendor
+  {
+    label: "Payments",
+    href: "/finance/payments",
+    permission: Permission.VIEW_PAYMENTS,
+    description: "View payment status and history",
   },
 ];
 

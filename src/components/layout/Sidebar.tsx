@@ -10,6 +10,8 @@ import {
   HiOutlineDocumentText,
   HiOutlineCog6Tooth,
   HiOutlineClipboardDocumentList,
+  HiOutlineCurrencyDollar,
+  HiOutlineWrenchScrewdriver,
 } from "react-icons/hi2";
 import { useAccessibleNavItems } from "@/lib/navigation";
 
@@ -28,10 +30,12 @@ const getIconForRoute = (href: string) => {
   if (href.startsWith("/contracts")) return <HiOutlineDocumentText />;
   if (href.startsWith("/lots")) return <HiOutlineClipboardDocumentList />;
   if (href.startsWith("/bookings")) return <HiOutlineClipboardDocumentList />;
+  if (href.startsWith("/finance/payments")) return <HiOutlineCurrencyDollar />;
   if (href.startsWith("/finance")) return <HiOutlineDocumentText />;
-  if (href.startsWith("/services")) return <HiOutlineCog6Tooth />;
+  if (href.startsWith("/services")) return <HiOutlineWrenchScrewdriver />;
   if (href.startsWith("/reports")) return <HiOutlineDocumentText />;
   if (href.startsWith("/trends")) return <HiOutlineChartBarSquare />;
+  if (href.startsWith("/lab")) return <HiOutlineWrenchScrewdriver />;
   return <HiOutlineUser />;
 };
 

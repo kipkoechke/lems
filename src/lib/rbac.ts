@@ -9,6 +9,7 @@ export enum UserRole {
   F_MEDICAL = "f_medical", // Facility medical (Clinician/Practitioner)
   C_REC = "c_rec", // Claim records
   B_APPROVER = "b_approver", // Batch approver
+  VENDOR = "vendor", // Vendor user
 }
 
 // Permission actions enum
@@ -59,6 +60,15 @@ export enum Permission {
   VIEW_SERVICES = "view_services",
   VIEW_PAYMENTS = "view_payments",
   VIEW_TRENDS = "view_trends",
+
+  // Vendor-specific permissions
+  VIEW_MAINTENANCE_HISTORY = "view_maintenance_history",
+  VIEW_VENDOR_REVENUE = "view_vendor_revenue",
+  VIEW_VENDOR_PAYMENTS = "view_vendor_payments",
+
+  // Facility Admin-specific permissions
+  REQUEST_MAINTENANCE = "request_maintenance",
+  VIEW_FACILITY_PAYMENTS = "view_facility_payments",
 }
 
 // Role to permissions mapping
@@ -89,12 +99,14 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 
   [UserRole.F_ADMIN]: [
     // Facility admin permissions
+    Permission.VIEW_DASHBOARD,
     Permission.CREATE_FACILITY_USERS,
     Permission.VIEW_REPORTS,
-    Permission.VIEW_PATIENTS,
-    Permission.VIEW_BOOKINGS,
+    Permission.VIEW_CONTRACTS,
     Permission.VIEW_EQUIPMENTS,
+    Permission.REQUEST_MAINTENANCE,
     Permission.VIEW_SERVICES,
+    Permission.VIEW_FACILITY_PAYMENTS,
     Permission.VIEW_PAYMENTS,
     Permission.VIEW_TRENDS,
   ],
@@ -150,6 +162,18 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.SYNC_TO_SHA,
   ],
 
+  [UserRole.VENDOR]: [
+    // Vendor permissions
+    Permission.VIEW_DASHBOARD,
+    Permission.VIEW_EQUIPMENTS,
+    Permission.VIEW_MAINTENANCE_HISTORY,
+    Permission.VIEW_CONTRACTS,
+    Permission.VIEW_SERVICES,
+    Permission.VIEW_VENDOR_REVENUE,
+    Permission.VIEW_VENDOR_PAYMENTS,
+    Permission.VIEW_PAYMENTS,
+  ],
+
   [UserRole.USER]: [
     // Regular user permissions
     Permission.VIEW_PATIENTS,
@@ -194,6 +218,7 @@ export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   [UserRole.F_LAB]: "Facility Lab",
   [UserRole.C_REC]: "Claim Records",
   [UserRole.B_APPROVER]: "Batch Approver",
+  [UserRole.VENDOR]: "Vendor User",
   [UserRole.USER]: "Regular User",
 };
 

@@ -130,9 +130,10 @@ export const lotCreationSchema = z.object({
 export const serviceSchema = z.object({
   name: z.string().min(1, "Service name is required"),
   code: z.string().min(1, "Service code is required"),
-  description: z.string().optional(),
+  tariff: z.number().min(0, "Tariff must be positive"),
   vendor_share: z.number().min(0, "Vendor share must be positive"),
   facility_share: z.number().min(0, "Facility share must be positive"),
+  capitated: z.boolean().default(false),
 });
 
 // Type exports

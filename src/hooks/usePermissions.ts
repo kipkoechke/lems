@@ -80,6 +80,12 @@ export const useIsFacilityStaff = (): boolean => {
   ].includes(role!);
 };
 
+// Hook to check if user is a vendor
+export const useIsVendor = (): boolean => {
+  const role = useUserRole();
+  return role === UserRole.VENDOR;
+};
+
 // Hook to check if user can access a specific route
 export const useCanAccessRoute = (routePermissions: Permission[]): boolean => {
   return useHasAnyPermission(routePermissions);

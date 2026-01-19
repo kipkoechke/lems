@@ -16,7 +16,7 @@ import { Bookings } from "@/services/apiBooking";
 const ApprovedServicesPage: React.FC = () => {
   const { isLoading, bookings, error } = useBookings({
     booking_status: "confirmed",
-    approval_status: "pending",
+    approval_status: "approved",
   });
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 

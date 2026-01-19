@@ -118,6 +118,12 @@ export const useCurrentUser = (): User | null => {
   return auth?.user ?? null;
 };
 
+// Custom hook for getting current user with loading state
+export const useCurrentUserWithLoading = () => {
+  const { data: auth, isLoading } = useAuth();
+  return { user: auth?.user ?? null, isLoading };
+};
+
 // Custom hook for getting current facility
 export const useCurrentFacility = (): Facility | null => {
   const { data: auth } = useAuth();

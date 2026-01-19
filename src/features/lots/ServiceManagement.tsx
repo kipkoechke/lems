@@ -29,9 +29,9 @@ const ServiceManagement: React.FC = () => {
   const id = params.id as string;
 
   const { lot, services, isLoading, error, refetch } = useLotWithServices(id);
-  const createServiceMutation = useCreateService();
-  const updateServiceMutation = useUpdateService();
-  const deleteServiceMutation = useDeleteService();
+  const createServiceMutation = useCreateService(id);
+  const updateServiceMutation = useUpdateService(id);
+  const deleteServiceMutation = useDeleteService(id);
 
   // State management
   const [showModal, setShowModal] = useState(false);
@@ -55,9 +55,13 @@ const ServiceManagement: React.FC = () => {
     formState: { errors },
     reset,
     setValue,
+    watch,
   } = useForm<ServiceFormData>({
     resolver: zodResolver(serviceSchema),
     mode: "onBlur",
+    defaultValues: {
+      capitated: false,
+    },
   });
 
   // Filter services based on search and status for this lot
@@ -68,8 +72,8 @@ const ServiceManagement: React.FC = () => {
         service.code.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus =
         statusFilter === "all" ||
-        (statusFilter === "active" && service.is_active === "1") ||
-        (statusFilter === "inactive" && service.is_active === "0");
+        (statusFilter === "active" && service.is_active) ||
+        (statusFilter === "inactive" && !service.is_active);
       return matchesSearch && matchesStatus;
     }) || [];
 
@@ -80,12 +84,20 @@ const ServiceManagement: React.FC = () => {
       setSelectedService(service);
       setValue("name", service.name);
       setValue("code", service.code);
-      setValue("description", service.description || "");
-      setValue("vendor_share", parseInt(service.vendor_share) || 0);
-      setValue("facility_share", parseInt(service.facility_share) || 0);
+      setValue("tariff", service.tariff);
+      setValue("vendor_share", service.vendor_share);
+      setValue("facility_share", service.facility_share);
+      setValue("capitated", service.capitated);
     } else {
       setSelectedService(null);
-      reset();
+      reset({
+        name: "",
+        code: "",
+        tariff: 0,
+        vendor_share: 0,
+        facility_share: 0,
+        capitated: false,
+      });
     }
     setShowModal(true);
   };
@@ -100,15 +112,11 @@ const ServiceManagement: React.FC = () => {
   const onSubmit = async (data: ServiceFormData) => {
     try {
       if (modalType === "create") {
-        await createServiceMutation.mutateAsync({
-          lot_id: lot?.id || "",
-          ...data,
-        });
+        await createServiceMutation.mutateAsync(data);
       } else if (modalType === "edit" && selectedService) {
         await updateServiceMutation.mutateAsync({
-          id: selectedService.id,
-          lot_id: lot?.id || "",
-          ...data,
+          serviceId: selectedService.id,
+          data,
         });
       }
       closeModal();
@@ -260,6 +268,9 @@ const ServiceManagement: React.FC = () => {
                     Code
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tariff
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Vendor Share
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -277,7 +288,7 @@ const ServiceManagement: React.FC = () => {
                 {filteredServices.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-6 py-8 text-center text-gray-500"
                     >
                       {searchTerm || statusFilter !== "all"
@@ -295,31 +306,41 @@ const ServiceManagement: React.FC = () => {
                         <div className="font-medium text-gray-900">
                           {service.name}
                         </div>
+                        {service.capitated && (
+                          <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800">
+                            Capitated
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-gray-900 font-mono">
                           {service.code}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {service.vendor_share}
+                          {service.tariff.toLocaleString()}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {service.facility_share}
+                          {service.vendor_share.toLocaleString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {service.facility_share.toLocaleString()}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            service.is_active === "1"
+                            service.is_active
                               ? "bg-green-100 text-green-800"
                               : "bg-red-100 text-red-800"
                           }`}
                         >
-                          {service.is_active === "1" ? "Active" : "Inactive"}
+                          {service.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -413,14 +434,14 @@ const ServiceManagement: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Code
                     </label>
-                    <p className="text-gray-900">{selectedService?.code}</p>
+                    <p className="text-gray-900 font-mono">{selectedService?.code}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description
+                      Tariff
                     </label>
                     <p className="text-gray-900">
-                      {selectedService?.description || "No description"}
+                      {selectedService?.tariff.toLocaleString()}
                     </p>
                   </div>
                   <div>
@@ -428,7 +449,7 @@ const ServiceManagement: React.FC = () => {
                       Vendor Share
                     </label>
                     <p className="text-gray-900">
-                      {selectedService?.vendor_share}
+                      {selectedService?.vendor_share.toLocaleString()}
                     </p>
                   </div>
                   <div>
@@ -436,7 +457,7 @@ const ServiceManagement: React.FC = () => {
                       Facility Share
                     </label>
                     <p className="text-gray-900">
-                      {selectedService?.facility_share}
+                      {selectedService?.facility_share.toLocaleString()}
                     </p>
                   </div>
                   <div>
@@ -445,14 +466,28 @@ const ServiceManagement: React.FC = () => {
                     </label>
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        selectedService?.is_active === "1"
+                        selectedService?.is_active
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {selectedService?.is_active === "1"
+                      {selectedService?.is_active
                         ? "Active"
                         : "Inactive"}
+                    </span>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Capitated
+                    </label>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        selectedService?.capitated
+                          ? "bg-purple-100 text-purple-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {selectedService?.capitated ? "Yes" : "No"}
                     </span>
                   </div>
                 </div>
@@ -474,7 +509,7 @@ const ServiceManagement: React.FC = () => {
                   <InputField
                     label="Service Code"
                     type="text"
-                    placeholder="Enter service code"
+                    placeholder="Enter service code (e.g., SHA-06-012)"
                     register={register("code")}
                     error={errors.code?.message}
                     required
@@ -484,26 +519,20 @@ const ServiceManagement: React.FC = () => {
                     }
                   />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description
-                    </label>
-                    <textarea
-                      {...register("description")}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter service description"
-                      disabled={
-                        createServiceMutation.isPending ||
-                        updateServiceMutation.isPending
-                      }
-                    />
-                    {errors.description && (
-                      <p className="text-red-600 text-sm mt-1">
-                        {errors.description.message}
-                      </p>
-                    )}
-                  </div>
+                  <InputField
+                    label="Tariff"
+                    type="number"
+                    placeholder="Enter tariff amount"
+                    register={register("tariff", {
+                      setValueAs: (value) => parseFloat(value) || 0,
+                    })}
+                    error={errors.tariff?.message}
+                    required
+                    disabled={
+                      createServiceMutation.isPending ||
+                      updateServiceMutation.isPending
+                    }
+                  />
 
                   <InputField
                     label="Vendor Share"
@@ -534,6 +563,22 @@ const ServiceManagement: React.FC = () => {
                       updateServiceMutation.isPending
                     }
                   />
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="capitated"
+                      {...register("capitated")}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      disabled={
+                        createServiceMutation.isPending ||
+                        updateServiceMutation.isPending
+                      }
+                    />
+                    <label htmlFor="capitated" className="text-sm font-medium text-gray-700">
+                      Capitated Service
+                    </label>
+                  </div>
 
                   <div className="flex gap-3 pt-4">
                     <button

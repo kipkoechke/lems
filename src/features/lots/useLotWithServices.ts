@@ -1,25 +1,29 @@
-import { getLotWithServices } from "@/services/apiLots";
+import { getLotById, getLotServices, LotDetail, Service, PaginationMeta } from "@/services/apiLots";
 import { useQuery } from "@tanstack/react-query";
 
-export const useLotWithServices = (id: string) => {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["lot-with-services", id],
-    queryFn: () => getLotWithServices(id),
+export const useLotWithServices = (id: string, servicesPage: number = 1) => {
+  const lotQuery = useQuery({
+    queryKey: ["lot", id],
+    queryFn: () => getLotById(id),
+    enabled: !!id,
+  });
+
+  const servicesQuery = useQuery({
+    queryKey: ["lot-services", id, servicesPage],
+    queryFn: () => getLotServices(id, servicesPage),
     enabled: !!id,
   });
 
   return {
-    lot: data
-      ? {
-          id: data.id,
-          number: data.number,
-          name: data.name,
-          is_active: data.is_active,
-        }
-      : undefined,
-    services: data?.services || [],
-    isLoading,
-    error,
-    refetch,
+    lot: lotQuery.data as LotDetail | undefined,
+    services: (servicesQuery.data?.data || []) as Service[],
+    servicesPagination: servicesQuery.data?.pagination as PaginationMeta | undefined,
+    isLoading: lotQuery.isLoading || servicesQuery.isLoading,
+    error: lotQuery.error || servicesQuery.error,
+    refetch: () => {
+      lotQuery.refetch();
+      servicesQuery.refetch();
+    },
+    refetchServices: servicesQuery.refetch,
   };
 };

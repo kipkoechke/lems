@@ -2,6 +2,7 @@
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useLots } from "@/features/lots/useLots";
+import { useDeleteLot } from "@/features/lots/useDeleteLot";
 import { Lot } from "@/services/apiLots";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -17,12 +18,15 @@ import {
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { SearchField } from "@/components/common/SearchField";
 import { Table } from "@/components/Table";
+import Pagination from "@/components/common/Pagination";
 
 export default function LotsPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const { lots, isLoading, error } = useLots();
+  const { lots, pagination, isLoading, error, refetch } = useLots(currentPage);
+  const { deleteLot, isDeleting } = useDeleteLot();
 
   // Filter lots based on search
   const filteredLots = lots?.filter((lot: Lot) => {
@@ -32,6 +36,17 @@ export default function LotsPage() {
 
     return matchesSearch;
   });
+
+  // Calculate total services count
+  const totalServicesCount = lots?.reduce((acc, lot) => acc + (lot.services_count || 0), 0) || 0;
+
+  const handleDeleteLot = (lotId: string) => {
+    if (window.confirm("Are you sure you want to delete this lot?")) {
+      deleteLot(lotId, {
+        onSuccess: () => refetch(),
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -118,7 +133,7 @@ export default function LotsPage() {
               </div>
               <div>
                 <div className="text-xl md:text-2xl font-bold text-gray-900">
-                  {lots?.length || 0}
+                  {pagination?.total || lots?.length || 0}
                 </div>
                 <div className="text-xs md:text-sm text-gray-600">
                   Total Lots
@@ -148,10 +163,10 @@ export default function LotsPage() {
               </div>
               <div>
                 <div className="text-xl md:text-2xl font-bold text-gray-900">
-                  --
+                  {totalServicesCount}
                 </div>
                 <div className="text-xs md:text-sm text-gray-600">
-                  Available Services
+                  Total Services
                 </div>
               </div>
             </div>
@@ -179,6 +194,7 @@ export default function LotsPage() {
                 <Table.Row>
                   <Table.HeaderCell>Lot Number</Table.HeaderCell>
                   <Table.HeaderCell>Lot Name</Table.HeaderCell>
+                  <Table.HeaderCell>Services</Table.HeaderCell>
                   <Table.HeaderCell>Status</Table.HeaderCell>
                   <Table.HeaderCell align="center">Actions</Table.HeaderCell>
                 </Table.Row>
@@ -195,6 +211,11 @@ export default function LotsPage() {
                       <div className="font-medium text-gray-900">
                         {lot.name}
                       </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {lot.services_count} service{lot.services_count !== 1 ? "s" : ""}
+                      </span>
                     </Table.Cell>
                     <Table.Cell>
                       <span
@@ -237,12 +258,11 @@ export default function LotsPage() {
                           </ActionMenu.Item>
                           <ActionMenu.Item
                             onClick={() => {
-                              // Handle delete action - you might want to add a delete hook/modal
-                              console.log("Delete lot:", lot.id);
+                              handleDeleteLot(lot.id);
                             }}
                           >
                             <FaTrash className="w-4 h-4 text-red-500" />
-                            Delete
+                            {isDeleting ? "Deleting..." : "Delete"}
                           </ActionMenu.Item>
                         </ActionMenu.Content>
                       </ActionMenu>
@@ -251,6 +271,17 @@ export default function LotsPage() {
                 ))}
               </Table.Body>
             </Table>
+          )}
+
+          {/* Pagination */}
+          {pagination && pagination.last_page > 1 && (
+            <div className="p-4 border-t border-gray-200">
+              <Pagination
+                currentPage={pagination.current_page}
+                totalPages={pagination.last_page}
+                onPageChange={setCurrentPage}
+              />
+            </div>
           )}
         </div>
 
@@ -276,7 +307,7 @@ export default function LotsPage() {
                     <div className="text-sm text-gray-500 font-mono">
                       LOT {lot.number}
                     </div>
-                    <div className="mt-2">
+                    <div className="mt-2 flex items-center gap-2">
                       <span
                         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           lot.is_active
@@ -285,6 +316,9 @@ export default function LotsPage() {
                         }`}
                       >
                         {lot.is_active ? "Active" : "Inactive"}
+                      </span>
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {lot.services_count} service{lot.services_count !== 1 ? "s" : ""}
                       </span>
                     </div>
                   </div>
@@ -317,12 +351,11 @@ export default function LotsPage() {
                       </ActionMenu.Item>
                       <ActionMenu.Item
                         onClick={() => {
-                          // Handle delete action
-                          console.log("Delete lot:", lot.id);
+                          handleDeleteLot(lot.id);
                         }}
                       >
                         <FaTrash className="w-4 h-4 text-red-500" />
-                        Delete
+                        {isDeleting ? "Deleting..." : "Delete"}
                       </ActionMenu.Item>
                     </ActionMenu.Content>
                   </ActionMenu>

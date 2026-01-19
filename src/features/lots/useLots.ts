@@ -1,19 +1,20 @@
-import { getLots } from "@/services/apiLots";
+import { getLots, Lot, PaginationMeta } from "@/services/apiLots";
 import { useQuery } from "@tanstack/react-query";
 
-export const useLots = () => {
+export const useLots = (page: number = 1) => {
   const {
-    data: lots = [],
+    data,
     isLoading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ["lots"],
-    queryFn: getLots,
+    queryKey: ["lots", page],
+    queryFn: () => getLots(page),
   });
 
   return {
-    lots,
+    lots: (data?.data || []) as Lot[],
+    pagination: data?.pagination as PaginationMeta | undefined,
     isLoading,
     error,
     refetch,

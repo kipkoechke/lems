@@ -1,13 +1,24 @@
 import { updateService, type ServiceUpdateRequest } from "@/services/apiLots";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
-export const useUpdateService = () => {
+interface UpdateServiceParams {
+  serviceId: string;
+  data: ServiceUpdateRequest;
+}
+
+export const useUpdateService = (lotId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: ServiceUpdateRequest) => updateService(data),
+    mutationFn: ({ serviceId, data }: UpdateServiceParams) => 
+      updateService(lotId, serviceId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["services"] });
+      toast.success("Service updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["lot-services", lotId] });
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      toast.error(error?.response?.data?.message || "Failed to update service");
     },
   });
 };

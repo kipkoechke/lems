@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useCurrentUser } from "@/hooks/useAuth";
+import { useCurrentUserWithLoading } from "@/hooks/useAuth";
 import { RoleBasedDashboard } from "@/components/RoleBasedDashboard";
 import UserInfo from "@/components/UserInfo";
 import ProceedToTests from "@/components/ProceedToTests";
@@ -23,7 +23,7 @@ import { Patient } from "@/services/apiPatient";
 
 export default function HomePage() {
   const router = useRouter();
-  const user = useCurrentUser();
+  const { user, isLoading } = useCurrentUserWithLoading();
   const { currentStep } = useAppSelector((store) => store.workflow);
   const dispatch = useAppDispatch();
 
@@ -38,11 +38,15 @@ export default function HomePage() {
     } else if (user && user.role === "f_lab") {
       // Lab staff go directly to lab services page
       router.replace("/lab");
+    } else if (user && user.role === "f_finance") {
+      // Finance staff go directly to finance approval page
+      router.replace("/finance");
     }
+    // Vendor and Facility Admin stay on dashboard - no redirect needed
   }, [user, router]);
 
   // Show loading while user data is being fetched
-  if (!user) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50">
         <div className="text-center">
@@ -53,6 +57,11 @@ export default function HomePage() {
     );
   }
 
+  // If not authenticated, middleware will redirect
+  if (!user) {
+    return null;
+  }
+
   // If f_medical or f_lab, show loading while redirecting
   if (user.role === "f_medical" || user.role === "f_lab") {
     return (
@@ -60,6 +69,30 @@ export default function HomePage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Redirecting to services...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // For vendor users, show only the dashboard (no workflow)
+  if (user.role === "vendor") {
+    return (
+      <div className="container mx-auto p-2 md:px-6 md:py-2">
+        <UserInfo />
+        <div className="mt-6">
+          <RoleBasedDashboard />
+        </div>
+      </div>
+    );
+  }
+
+  // For facility admin, show dashboard without workflow
+  if (user.role === "f_admin") {
+    return (
+      <div className="container mx-auto p-2 md:px-6 md:py-2">
+        <UserInfo />
+        <div className="mt-6">
+          <RoleBasedDashboard />
         </div>
       </div>
     );

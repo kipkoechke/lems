@@ -75,7 +75,7 @@ export default function LotDetailPage() {
     );
   }
 
-  const activeServices = services.filter((s) => s.is_active === "1");
+  const activeServices = services.filter((s) => s.is_active);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
@@ -111,12 +111,12 @@ export default function LotDetailPage() {
             <div className="text-right">
               <span
                 className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold shadow-sm ${
-                  lot.is_active === "1"
+                  lot.is_active
                     ? "bg-green-100 text-green-800 border-green-200"
                     : "bg-red-100 text-red-800 border-red-200"
                 }`}
               >
-                {lot.is_active === "1" ? "Active" : "Inactive"}
+                {lot.is_active ? "Active" : "Inactive"}
               </span>
             </div>
           </div>
@@ -255,10 +255,10 @@ export default function LotDetailPage() {
                 </label>
                 <p
                   className={`text-lg font-semibold ${
-                    lot.is_active === "1" ? "text-green-600" : "text-red-600"
+                    lot.is_active ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  {lot.is_active === "1" ? "Active" : "Inactive"}
+                  {lot.is_active ? "Active" : "Inactive"}
                 </p>
               </div>
             </div>
@@ -302,7 +302,7 @@ export default function LotDetailPage() {
                         Service
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Description
+                        Tariff
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                         Vendor Share
@@ -329,32 +329,37 @@ export default function LotDetailPage() {
                             <p className="text-sm text-gray-500 font-mono">
                               Code: {service.code}
                             </p>
+                            {service.capitated && (
+                              <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800 mt-1">
+                                Capitated
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <p className="text-sm text-gray-900">
-                            {service.description || "No description"}
-                          </p>
-                        </td>
-                        <td className="px-6 py-4">
                           <span className="text-sm font-medium text-gray-900">
-                            {service.vendor_share}
+                            {service.tariff.toLocaleString()}
                           </span>
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-sm font-medium text-gray-900">
-                            {service.facility_share}
+                            {service.vendor_share.toLocaleString()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-medium text-gray-900">
+                            {service.facility_share.toLocaleString()}
                           </span>
                         </td>
                         <td className="px-6 py-4">
                           <span
                             className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                              service.is_active === "1"
+                              service.is_active
                                 ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {service.is_active === "1" ? "Active" : "Inactive"}
+                            {service.is_active ? "Active" : "Inactive"}
                           </span>
                         </td>
                       </tr>
@@ -469,12 +474,12 @@ export default function LotDetailPage() {
                         <td className="px-6 py-4">
                           <span
                             className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                              contract.is_active === "1"
+                              contract.is_active === "1" || contract.is_active === true
                                 ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {contract.is_active === "1" ? "Active" : "Inactive"}
+                            {contract.is_active === "1" || contract.is_active === true ? "Active" : "Inactive"}
                           </span>
                         </td>
                         <td className="px-6 py-4">
