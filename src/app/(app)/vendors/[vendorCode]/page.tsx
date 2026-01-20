@@ -166,7 +166,7 @@ export default function VendorDetailPage() {
               </div>
               <div>
                 <p className="text-3xl font-bold text-green-600">
-                  {contracts.filter((c) => c.is_active === "1").length}
+                  {contracts.filter((c) => c.status === "active").length}
                 </p>
                 <p className="text-sm font-medium text-gray-600">
                   Active Contracts
@@ -277,13 +277,13 @@ export default function VendorDetailPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        Contract
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                         Facility
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Lot
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Services
+                        Period
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                         Status
@@ -302,6 +302,13 @@ export default function VendorDetailPage() {
                         <td className="px-6 py-4">
                           <div>
                             <p className="text-sm font-semibold text-gray-900">
+                              {contract.contract_number}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">
                               {contract.facility.name}
                             </p>
                             <p className="text-sm text-gray-500 font-mono">
@@ -310,75 +317,45 @@ export default function VendorDetailPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900">
-                              {contract.lot.name}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              Number: {contract.lot.number}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
                           <div className="text-sm text-gray-900">
-                            <span className="font-medium">
-                              {contract.services?.length || 0} service
-                              {(contract.services?.length || 0) !== 1
-                                ? "s"
-                                : ""}
-                            </span>
-                            {contract.services &&
-                              contract.services.length > 0 && (
-                                <div className="mt-2 flex flex-wrap gap-1">
-                                  {contract.services
-                                    .slice(0, 3)
-                                    .map((service) => (
-                                      <span
-                                        key={service.service_id}
-                                        className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium"
-                                      >
-                                        {service.service_name}
-                                      </span>
-                                    ))}
-                                  {contract.services.length > 3 && (
-                                    <span className="text-xs text-gray-500 py-1">
-                                      +{contract.services.length - 3} more
-                                    </span>
-                                  )}
-                                </div>
-                              )}
+                            <p>
+                              {contract.start_date} - {contract.end_date}
+                            </p>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <span
                             className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                              contract.is_active === "1"
+                              contract.status === "active"
                                 ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
+                                : contract.status === "expired"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-yellow-100 text-yellow-800"
                             }`}
                           >
-                            {contract.is_active === "1" ? "Active" : "Inactive"}
+                            {contract.status.charAt(0).toUpperCase() +
+                              contract.status.slice(1)}
                           </span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex space-x-3">
                             <button
                               onClick={() =>
-                                router.push(
-                                  `/facilities/${contract.facility.code}`
-                                )
+                                router.push(`/contracts/${contract.id}`)
                               }
                               className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
                             >
-                              View Facility
+                              View Contract
                             </button>
                             <button
                               onClick={() =>
-                                router.push(`/lots/${contract.lot.id}`)
+                                router.push(
+                                  `/facilities/${contract.facility.code}`,
+                                )
                               }
                               className="text-green-600 hover:text-green-800 text-sm font-medium transition-colors"
                             >
-                              View Lot
+                              View Facility
                             </button>
                           </div>
                         </td>

@@ -5,16 +5,8 @@ import { useContracts } from "@/features/vendors/useContracts";
 import { Contract } from "@/services/apiVendors";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  FaFileContract,
-  FaPlus,
-  FaSearch,
-  FaEye,
-  FaEdit,
-  FaTrash,
-} from "react-icons/fa";
+import { FaFileContract, FaPlus, FaSearch } from "react-icons/fa";
 import { Table } from "@/components/Table";
-import { ActionMenu } from "@/components/common/ActionMenu";
 import Pagination from "@/components/common/Pagination";
 
 export default function ContractsPage() {
@@ -32,10 +24,33 @@ export default function ContractsPage() {
     const matchesSearch =
       contract.vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contract.facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.lot.name.toLowerCase().includes(searchTerm.toLowerCase());
+      contract.contract_number
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
 
     return matchesSearch;
   });
+
+  // Helper function to format date
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Helper function to get status badge styles
+  const getStatusBadge = (status: string) => {
+    const statusStyles: Record<string, string> = {
+      active: "bg-green-100 text-green-800",
+      inactive: "bg-gray-100 text-gray-800",
+      expired: "bg-red-100 text-red-800",
+      pending: "bg-yellow-100 text-yellow-800",
+    };
+    return statusStyles[status] || statusStyles.inactive;
+  };
 
   if (isLoading) {
     return (
@@ -142,7 +157,7 @@ export default function ContractsPage() {
               </div>
               <div>
                 <div className="text-xl md:text-2xl font-bold text-gray-900">
-                  {contracts?.filter((c) => c.is_active === "1").length || 0}
+                  {contracts?.filter((c) => c.status === "active").length || 0}
                 </div>
                 <div className="text-xs md:text-sm text-gray-600">
                   Active Contracts
@@ -152,18 +167,15 @@ export default function ContractsPage() {
           </div>
           <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
             <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <FaFileContract className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                <FaFileContract className="w-5 h-5 md:w-6 md:h-6 text-red-600" />
               </div>
               <div>
                 <div className="text-xl md:text-2xl font-bold text-gray-900">
-                  {contracts?.reduce(
-                    (sum, c) => sum + (c.services?.length || 0),
-                    0
-                  ) || 0}
+                  {contracts?.filter((c) => c.status === "expired").length || 0}
                 </div>
                 <div className="text-xs md:text-sm text-gray-600">
-                  Total Services
+                  Expired Contracts
                 </div>
               </div>
             </div>
@@ -190,23 +202,26 @@ export default function ContractsPage() {
               <Table className="w-full table-fixed">
                 <Table.Header>
                   <Table.Row>
-                    <Table.HeaderCell className="w-[22%] px-6 py-4">
+                    <Table.HeaderCell className="w-[15%] px-6 py-4">
+                      Contract #
+                    </Table.HeaderCell>
+                    <Table.HeaderCell className="w-[20%] px-6 py-4">
                       Vendor
                     </Table.HeaderCell>
-                    <Table.HeaderCell className="w-[30%] px-6 py-4">
+                    <Table.HeaderCell className="w-[25%] px-6 py-4">
                       Facility
                     </Table.HeaderCell>
-                    <Table.HeaderCell className="w-[25%] px-6 py-4">
-                      Lot & Services
+                    <Table.HeaderCell className="w-[15%] px-4 py-4">
+                      Start Date
                     </Table.HeaderCell>
-                    <Table.HeaderCell className="w-[13%] px-6 py-4">
+                    <Table.HeaderCell className="w-[15%] px-4 py-4">
+                      End Date
+                    </Table.HeaderCell>
+                    <Table.HeaderCell className="w-[10%] px-4 py-4">
                       Status
                     </Table.HeaderCell>
-                    <Table.HeaderCell
-                      align="center"
-                      className="w-[10%] px-6 py-4"
-                    >
-                      Actions
+                    <Table.HeaderCell className="w-[10%] px-4 py-4">
+                      Status
                     </Table.HeaderCell>
                   </Table.Row>
                 </Table.Header>
@@ -217,6 +232,11 @@ export default function ContractsPage() {
                       onClick={() => router.push(`/contracts/${contract.id}`)}
                       className="cursor-pointer hover:bg-gray-50"
                     >
+                      <Table.Cell className="px-6 py-4">
+                        <div className="font-mono text-sm text-gray-900">
+                          {contract.contract_number || contract.id.slice(0, 8)}
+                        </div>
+                      </Table.Cell>
                       <Table.Cell className="px-6 py-4 !whitespace-normal">
                         <div className="min-w-0 max-w-full overflow-hidden">
                           <div className="font-medium text-gray-900 break-words leading-relaxed">
@@ -237,70 +257,24 @@ export default function ContractsPage() {
                           </div>
                         </div>
                       </Table.Cell>
-                      <Table.Cell className="px-4 py-4 !whitespace-normal">
-                        <div className="min-w-0 max-w-full overflow-hidden">
-                          <div className="font-medium text-gray-900 text-sm break-words">
-                            LOT {contract.lot.number}
-                          </div>
-                          <div className="text-xs text-gray-500 break-words leading-relaxed mt-1">
-                            {contract.lot.name}
-                          </div>
-                          <div className="flex flex-wrap items-center gap-1 mt-2">
-                            <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">
-                              {contract.services?.length || 0} svc
-                            </span>
-                            <span className="text-xs text-gray-500 whitespace-nowrap">
-                              (
-                              {contract.services?.filter(
-                                (s) => s.is_active === "1"
-                              ).length || 0}{" "}
-                              active)
-                            </span>
-                          </div>
-                        </div>
+                      <Table.Cell className="px-4 py-4">
+                        <span className="text-sm text-gray-900">
+                          {formatDate(contract.start_date)}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell className="px-4 py-4">
+                        <span className="text-sm text-gray-900">
+                          {formatDate(contract.end_date)}
+                        </span>
                       </Table.Cell>
                       <Table.Cell className="px-4 py-4">
                         <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            contract.is_active === "1"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(
+                            contract.status,
+                          )}`}
                         >
-                          {contract.is_active === "1" ? "Active" : "Inactive"}
+                          {contract.status}
                         </span>
-                      </Table.Cell>
-                      <Table.Cell align="center" className="px-6 py-4">
-                        <ActionMenu menuId={`contract-${contract.id}`}>
-                          <ActionMenu.Trigger />
-                          <ActionMenu.Content>
-                            <ActionMenu.Item
-                              onClick={() =>
-                                router.push(`/contracts/${contract.id}`)
-                              }
-                            >
-                              <FaEye className="h-4 w-4 text-blue-500" />
-                              View Details
-                            </ActionMenu.Item>
-                            <ActionMenu.Item
-                              onClick={() =>
-                                router.push(`/contracts/${contract.id}/edit`)
-                              }
-                            >
-                              <FaEdit className="h-4 w-4 text-yellow-500" />
-                              Edit Contract
-                            </ActionMenu.Item>
-                            <ActionMenu.Item
-                              onClick={() => {
-                                // Handle delete action - you might want to add a delete hook/modal
-                                console.log("Delete contract:", contract.id);
-                              }}
-                            >
-                              <FaTrash className="h-4 w-4 text-red-500" />
-                              Delete
-                            </ActionMenu.Item>
-                          </ActionMenu.Content>
-                        </ActionMenu>
                       </Table.Cell>
                     </Table.Row>
                   ))}
@@ -340,6 +314,9 @@ export default function ContractsPage() {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
+                      <div className="text-xs font-mono text-gray-500 mb-1">
+                        {contract.contract_number || contract.id.slice(0, 8)}
+                      </div>
                       <h3 className="font-semibold text-gray-900 text-lg mb-1">
                         {contract.vendor.name}
                       </h3>
@@ -347,46 +324,13 @@ export default function ContractsPage() {
                         {contract.vendor.code}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          contract.is_active === "1"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {contract.is_active === "1" ? "Active" : "Inactive"}
-                      </span>
-                      <ActionMenu menuId={`contract-mobile-${contract.id}`}>
-                        <ActionMenu.Trigger />
-                        <ActionMenu.Content>
-                          <ActionMenu.Item
-                            onClick={() =>
-                              router.push(`/contracts/${contract.id}`)
-                            }
-                          >
-                            <FaEye className="h-4 w-4 text-blue-500" />
-                            View Details
-                          </ActionMenu.Item>
-                          <ActionMenu.Item
-                            onClick={() =>
-                              router.push(`/contracts/${contract.id}/edit`)
-                            }
-                          >
-                            <FaEdit className="h-4 w-4 text-yellow-500" />
-                            Edit Contract
-                          </ActionMenu.Item>
-                          <ActionMenu.Item
-                            onClick={() => {
-                              console.log("Delete contract:", contract.id);
-                            }}
-                          >
-                            <FaTrash className="h-4 w-4 text-red-500" />
-                            Delete
-                          </ActionMenu.Item>
-                        </ActionMenu.Content>
-                      </ActionMenu>
-                    </div>
+                    <span
+                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(
+                        contract.status,
+                      )}`}
+                    >
+                      {contract.status}
+                    </span>
                   </div>
 
                   <div className="space-y-2 text-sm">
@@ -402,23 +346,20 @@ export default function ContractsPage() {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <span className="text-gray-500 font-medium">Lot:</span>
+                        <span className="text-gray-500 font-medium">
+                          Start Date:
+                        </span>
                         <p className="text-gray-900">
-                          LOT {contract.lot.number}
-                        </p>
-                        <p className="text-gray-500 text-xs">
-                          {contract.lot.name}
+                          {formatDate(contract.start_date)}
                         </p>
                       </div>
                       <div>
                         <span className="text-gray-500 font-medium">
-                          Services:
+                          End Date:
                         </span>
-                        <div className="flex items-center gap-1 mt-1">
-                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                            {contract.services?.length || 0} total
-                          </span>
-                        </div>
+                        <p className="text-gray-900">
+                          {formatDate(contract.end_date)}
+                        </p>
                       </div>
                     </div>
                   </div>

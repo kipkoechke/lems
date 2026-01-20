@@ -759,18 +759,21 @@ export const VendorDashboard: React.FC = () => {
                       {contract.facility?.name || "Unknown Facility"}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {contract.lot?.name || "Unknown Lot"}
+                      {contract.contract_number}
                     </p>
                   </div>
                 </div>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    contract.is_active === "1"
+                    contract.status === "active"
                       ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
+                      : contract.status === "expired"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  {contract.is_active === "1" ? "Active" : "Inactive"}
+                  {contract.status.charAt(0).toUpperCase() +
+                    contract.status.slice(1)}
                 </span>
               </div>
             ))}

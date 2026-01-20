@@ -5,7 +5,6 @@ import { Permission } from "@/lib/rbac";
 import { useCreateContract } from "@/features/vendors/useCreateContract";
 import { useFacilities } from "@/features/facilities/useFacilities";
 import { useVendors } from "@/features/vendors/useVendors";
-import { useLots } from "@/features/lots/useLots";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,15 +17,16 @@ import {
   FaSearch,
   FaChevronDown,
   FaSpinner,
-  FaHospital,
 } from "react-icons/fa";
 import { Facility } from "@/services/apiFacility";
 
 const contractSchema = z.object({
   vendor_id: z.string().min(1, "Vendor is required"),
   facility_id: z.string().min(1, "Facility is required"),
-  lot_id: z.string().min(1, "Lot is required"),
-  is_active: z.string(),
+  start_date: z.string().min(1, "Start date is required"),
+  end_date: z.string().min(1, "End date is required"),
+  status: z.string().min(1, "Status is required"),
+  notes: z.string().optional(),
 });
 
 type ContractFormData = z.infer<typeof contractSchema>;
@@ -40,19 +40,16 @@ export default function NewContractPage() {
   const [facilitySearchQuery, setFacilitySearchQuery] = useState("");
   const [selectedFacilityObj, setSelectedFacilityObj] =
     useState<Facility | null>(null);
-  const [lotSearch, setLotSearch] = useState("");
   const [isVendorDropdownOpen, setIsVendorDropdownOpen] = useState(false);
   const [isFacilityDropdownOpen, setIsFacilityDropdownOpen] = useState(false);
-  const [isLotDropdownOpen, setIsLotDropdownOpen] = useState(false);
 
   const facilitySearchRef = useRef<HTMLInputElement>(null);
 
   // Load data
   const { vendors, isLoading: vendorsLoading } = useVendors();
   const { facilities, isLoading: facilitiesLoading } = useFacilities(
-    facilitySearchQuery ? { search: facilitySearchQuery } : undefined
+    facilitySearchQuery ? { search: facilitySearchQuery } : undefined,
   );
-  const { lots, isLoading: lotsLoading } = useLots();
 
   const {
     register,
@@ -63,39 +60,28 @@ export default function NewContractPage() {
   } = useForm<ContractFormData>({
     resolver: zodResolver(contractSchema),
     defaultValues: {
-      is_active: "1",
+      status: "active",
     },
   });
 
   const selectedVendorId = watch("vendor_id");
   const selectedFacilityId = watch("facility_id");
-  const selectedLotId = watch("lot_id");
 
   // Get selected items for display
   const selectedVendor = vendors?.find((v) => v.id === selectedVendorId);
-  // Use selectedFacilityObj if available, otherwise try to find in facilities list
   const selectedFacility =
     selectedFacilityObj || facilities?.find((f) => f.id === selectedFacilityId);
-  const selectedLot = lots?.find((l) => l.id === selectedLotId);
 
   // Filter data based on search terms
   const filteredVendors = vendors
     ?.filter(
       (vendor) =>
         vendor.name?.toLowerCase().includes(vendorSearch.toLowerCase()) ||
-        vendor.code?.toLowerCase().includes(vendorSearch.toLowerCase())
+        vendor.code?.toLowerCase().includes(vendorSearch.toLowerCase()),
     )
     .slice(0, 50);
 
   const filteredFacilities = facilities?.slice(0, 50);
-
-  const filteredLots = lots
-    ?.filter(
-      (lot) =>
-        lot.name?.toLowerCase().includes(lotSearch.toLowerCase()) ||
-        lot.number?.toLowerCase().includes(lotSearch.toLowerCase())
-    )
-    .slice(0, 50);
 
   // Handle facility search with API request
   const handleFacilitySearch = () => {
@@ -109,9 +95,8 @@ export default function NewContractPage() {
   // Handle facility selection
   const handleFacilitySelect = (facility: Facility) => {
     setValue("facility_id", facility.id);
-    setSelectedFacilityObj(facility); // Store the full facility object
+    setSelectedFacilityObj(facility);
     setIsFacilityDropdownOpen(false);
-    // Clear search after a short delay
     setTimeout(() => {
       setFacilitySearch("");
       setFacilitySearchQuery("");
@@ -180,10 +165,7 @@ export default function NewContractPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   {/* Vendor Selection */}
                   <div>
-                    <label
-                      htmlFor="vendor"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Vendor *
                     </label>
                     <div className="relative">
@@ -192,7 +174,6 @@ export default function NewContractPage() {
                         onClick={() => {
                           setIsVendorDropdownOpen(!isVendorDropdownOpen);
                           setIsFacilityDropdownOpen(false);
-                          setIsLotDropdownOpen(false);
                         }}
                         disabled={vendorsLoading}
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between ${
@@ -209,8 +190,8 @@ export default function NewContractPage() {
                           {vendorsLoading
                             ? "Loading vendors..."
                             : selectedVendor
-                            ? `${selectedVendor.name} (${selectedVendor.code})`
-                            : "Select a vendor"}
+                              ? `${selectedVendor.name} (${selectedVendor.code})`
+                              : "Select a vendor"}
                         </span>
                         <FaChevronDown
                           className={`text-gray-400 transition-transform ${
@@ -274,27 +255,27 @@ export default function NewContractPage() {
 
                   {/* Status */}
                   <div>
-                    <label
-                      htmlFor="is_active"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Status *
                     </label>
                     <select
-                      {...register("is_active")}
+                      {...register("status")}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
-                      <option value="1">Active</option>
-                      <option value="0">Inactive</option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                      <option value="pending">Pending</option>
                     </select>
+                    {errors.status && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.status.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Facility Selection */}
                   <div>
-                    <label
-                      htmlFor="facility"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Facility *
                     </label>
                     <div className="relative">
@@ -303,7 +284,6 @@ export default function NewContractPage() {
                         onClick={() => {
                           setIsFacilityDropdownOpen(!isFacilityDropdownOpen);
                           setIsVendorDropdownOpen(false);
-                          setIsLotDropdownOpen(false);
                         }}
                         disabled={facilitiesLoading}
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between ${
@@ -320,8 +300,8 @@ export default function NewContractPage() {
                           {facilitiesLoading
                             ? "Loading facilities..."
                             : selectedFacility
-                            ? `${selectedFacility.name} (${selectedFacility.code})`
-                            : "Select a facility"}
+                              ? `${selectedFacility.name} (${selectedFacility.code})`
+                              : "Select a facility"}
                         </span>
                         <div className="flex items-center gap-2">
                           {selectedFacility && (
@@ -401,24 +381,9 @@ export default function NewContractPage() {
                               ))
                             ) : (
                               <div className="px-4 py-8 text-center text-gray-500">
-                                <FaHospital className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                                <div className="text-sm">
-                                  {facilitySearchQuery
-                                    ? "No facilities found"
-                                    : "Enter search term and click Search"}
-                                </div>
-                                {facilitySearchQuery && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setFacilitySearchQuery("");
-                                      setFacilitySearch("");
-                                    }}
-                                    className="mt-2 text-purple-600 hover:text-purple-800 text-sm underline"
-                                  >
-                                    Clear search
-                                  </button>
-                                )}
+                                {facilitySearchQuery
+                                  ? "No facilities found for your search"
+                                  : "Type and search for a facility"}
                               </div>
                             )}
                           </div>
@@ -432,96 +397,55 @@ export default function NewContractPage() {
                     )}
                   </div>
 
-                  {/* Lot Selection */}
+                  {/* Start Date */}
                   <div>
-                    <label
-                      htmlFor="lot"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Lot *
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Start Date *
                     </label>
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsLotDropdownOpen(!isLotDropdownOpen);
-                          setIsVendorDropdownOpen(false);
-                          setIsFacilityDropdownOpen(false);
-                        }}
-                        disabled={lotsLoading}
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-white flex items-center justify-between ${
-                          errors.lot_id
-                            ? "border-red-300 focus:ring-red-500"
-                            : "border-gray-300"
-                        }`}
-                      >
-                        <span
-                          className={
-                            selectedLot ? "text-gray-900" : "text-gray-500"
-                          }
-                        >
-                          {lotsLoading
-                            ? "Loading lots..."
-                            : selectedLot
-                            ? `${selectedLot.name} (Lot ${selectedLot.number})`
-                            : "Select a lot"}
-                        </span>
-                        <FaChevronDown
-                          className={`text-gray-400 transition-transform ${
-                            isLotDropdownOpen ? "rotate-180" : ""
-                          }`}
-                        />
-                      </button>
-
-                      {isLotDropdownOpen && (
-                        <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
-                          <div className="p-4 border-b border-gray-100">
-                            <div className="relative">
-                              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                              <input
-                                type="text"
-                                placeholder="Search lots..."
-                                value={lotSearch}
-                                onChange={(e) => setLotSearch(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            </div>
-                          </div>
-                          <div className="max-h-60 overflow-y-auto">
-                            {filteredLots && filteredLots.length > 0 ? (
-                              filteredLots.map((lot) => (
-                                <div
-                                  key={lot.id}
-                                  className="px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors"
-                                  onClick={() => {
-                                    setValue("lot_id", lot.id);
-                                    setIsLotDropdownOpen(false);
-                                    setLotSearch("");
-                                  }}
-                                >
-                                  <div className="font-semibold text-gray-900">
-                                    {lot.name}
-                                  </div>
-                                  <div className="text-sm text-gray-500">
-                                    Lot Number: {lot.number}
-                                  </div>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="px-4 py-8 text-center text-gray-500">
-                                {lotsLoading ? "Loading..." : "No lots found"}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    {errors.lot_id && (
+                    <input
+                      type="date"
+                      {...register("start_date")}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                        errors.start_date ? "border-red-300" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.start_date && (
                       <p className="mt-1 text-sm text-red-600">
-                        {errors.lot_id.message}
+                        {errors.start_date.message}
                       </p>
                     )}
+                  </div>
+
+                  {/* End Date */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      End Date *
+                    </label>
+                    <input
+                      type="date"
+                      {...register("end_date")}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                        errors.end_date ? "border-red-300" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.end_date && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.end_date.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Notes */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Notes
+                    </label>
+                    <textarea
+                      {...register("notes")}
+                      rows={3}
+                      placeholder="Add any notes about this contract..."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
                   </div>
                 </div>
               </div>

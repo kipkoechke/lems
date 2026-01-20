@@ -168,6 +168,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_EQUIPMENTS,
     Permission.VIEW_MAINTENANCE_HISTORY,
     Permission.VIEW_CONTRACTS,
+    Permission.VIEW_LOTS,
     Permission.VIEW_SERVICES,
     Permission.VIEW_VENDOR_REVENUE,
     Permission.VIEW_VENDOR_PAYMENTS,
@@ -188,7 +189,7 @@ export const getUserPermissions = (role: UserRole): Permission[] => {
 
 export const hasPermission = (
   userRole: UserRole,
-  permission: Permission
+  permission: Permission,
 ): boolean => {
   const permissions = getUserPermissions(userRole);
   return permissions.includes(permission);
@@ -196,14 +197,14 @@ export const hasPermission = (
 
 export const hasAnyPermission = (
   userRole: UserRole,
-  permissions: Permission[]
+  permissions: Permission[],
 ): boolean => {
   return permissions.some((permission) => hasPermission(userRole, permission));
 };
 
 export const hasAllPermissions = (
   userRole: UserRole,
-  permissions: Permission[]
+  permissions: Permission[],
 ): boolean => {
   return permissions.every((permission) => hasPermission(userRole, permission));
 };

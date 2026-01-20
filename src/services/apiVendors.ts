@@ -45,44 +45,31 @@ export interface VendorUpdateRequest {
 
 export interface Contract {
   id: string;
+  contract_number: string;
   vendor_id: string;
   facility_id: string;
-  lot_id: string;
-  is_active: string;
+  start_date: string;
+  end_date: string;
+  status: "active" | "inactive" | "expired" | "pending";
+  notes: string | null;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
   vendor: {
     id: string;
-    code: string;
     name: string;
+    code: string;
   };
   facility: {
     id: string;
+    name: string;
     code: string;
-    name: string;
   };
-  lot: {
+  creator: {
     id: string;
-    number: string;
     name: string;
-    services?: Array<{
-      id: string;
-      name: string;
-      code: string;
-      sha_rate: string;
-      vendor_share: string;
-      facility_share: string;
-      is_capitated: string;
-      equipment: {
-        id: string;
-        name: string;
-        serial_number: string;
-        status: string;
-      };
-    }>;
-  };
-  services?: ContractService[];
+  } | null;
 }
 
 export interface PaginatedContractsResponse {
@@ -92,7 +79,44 @@ export interface PaginatedContractsResponse {
     last_page: number;
     per_page: number;
     total: number;
+    from: number;
+    to: number;
   };
+}
+
+// Contract Services Types
+export interface ContractServiceItem {
+  id: string;
+  service: {
+    id: string;
+    code: string;
+    name: string;
+    tariff: number;
+  };
+  equipment: {
+    id: string;
+    code: string;
+    name: string;
+  };
+  is_active: boolean;
+}
+
+export interface ContractLotWithServices {
+  lot: {
+    id: string;
+    number: string;
+    name: string;
+  };
+  services: ContractServiceItem[];
+}
+
+export interface ContractServicesResponse {
+  contract: {
+    id: string;
+    contract_number: string;
+  };
+  total_services: number;
+  data: ContractLotWithServices[];
 }
 
 export interface PaginatedContractsResponseOld {
@@ -117,19 +141,25 @@ export interface PaginatedContractsResponseOld {
   };
 }
 
+// Legacy ContractService type (kept for backward compatibility)
 export interface ContractService {
   service_id: string;
   service_code: string;
   service_name: string;
-  is_active: string;
+  tariff?: number;
+  is_active: boolean;
   equipment_id?: string;
+  equipment_code?: string;
+  equipment_name?: string;
 }
 
 export interface ContractCreateRequest {
   vendor_id: string;
   facility_id: string;
-  lot_id: string;
-  is_active: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  notes?: string;
 }
 
 export interface ContractUpdateRequest {
@@ -166,23 +196,23 @@ export const getVendor = async (vendorCode: string): Promise<Vendor> => {
 };
 
 export const getVendorWithEquipments = async (
-  vendorId: string
+  vendorId: string,
 ): Promise<VendorWithEquipments> => {
   const response = await axios.get<VendorWithEquipments>(
-    `/vendors/${vendorId}`
+    `/vendors/${vendorId}`,
   );
   return response.data;
 };
 
 export const createVendor = async (
-  data: VendorCreateRequest
+  data: VendorCreateRequest,
 ): Promise<Vendor> => {
   const response = await axios.post<Vendor>("/vendors", data);
   return response.data;
 };
 
 export const updateVendor = async (
-  data: VendorUpdateRequest
+  data: VendorUpdateRequest,
 ): Promise<Vendor> => {
   const response = await axios.post<Vendor>("/vendors", data);
   return response.data;
@@ -194,7 +224,7 @@ export const deleteVendor = async (id: string): Promise<void> => {
 
 // Contract operations
 export const getContracts = async (
-  params?: ContractFilterParams
+  params?: ContractFilterParams,
 ): Promise<PaginatedContractsResponse> => {
   const queryParams = new URLSearchParams();
   if (params?.facility_code)
@@ -211,57 +241,36 @@ export const getContracts = async (
   }`;
   const response = await axios.get<PaginatedContractsResponse>(url);
 
-  // Normalize the data: copy lot.services to contract.services for backward compatibility
-  const normalizedContracts = response.data.data.map((contract) => ({
-    ...contract,
-    services:
-      contract.lot.services?.map((service) => ({
-        service_id: service.id,
-        service_code: service.code,
-        service_name: service.name,
-        is_active: "1", // All services from API are active
-        equipment_id: service.equipment?.id,
-      })) || [],
-  }));
-
-  return {
-    data: normalizedContracts,
-    pagination: response.data.pagination,
-  };
+  return response.data;
 };
 
 // Get a single contract by ID
 export const getContract = async (contractId: string): Promise<Contract> => {
   const response = await axios.get<{ data: Contract }>(
-    `contracts/${contractId}`
+    `contracts/${contractId}`,
   );
+  return response.data.data;
+};
 
-  // Normalize the data: copy lot.services to contract.services for backward compatibility
-  const contract = response.data.data;
-  const normalizedContract = {
-    ...contract,
-    services:
-      contract.lot.services?.map((service) => ({
-        service_id: service.id,
-        service_code: service.code,
-        service_name: service.name,
-        is_active: "1", // All services from API are active
-        equipment_id: service.equipment?.id,
-      })) || [],
-  };
-
-  return normalizedContract;
+// Get contract services grouped by lot
+export const getContractServices = async (
+  contractId: string,
+): Promise<ContractServicesResponse> => {
+  const response = await axios.get<ContractServicesResponse>(
+    `contracts/${contractId}/services`,
+  );
+  return response.data;
 };
 
 export const createContract = async (
-  data: ContractCreateRequest
+  data: ContractCreateRequest,
 ): Promise<Contract> => {
   const response = await axios.post<Contract>("contracts", data);
   return response.data;
 };
 
 export const updateContractServices = async (
-  data: ContractUpdateRequest
+  data: ContractUpdateRequest,
 ): Promise<Contract> => {
   const response = await axios.post<Contract>("/upsert/contract", data);
   return response.data;

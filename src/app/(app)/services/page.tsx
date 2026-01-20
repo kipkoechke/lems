@@ -3,10 +3,10 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useCurrentUser, useCurrentFacility } from "@/hooks/useAuth";
 import { useServicesByFacilityCode } from "@/features/services/useServicesByFacilityCode";
-import { useContracts } from "@/features/vendors/useContracts";
 import { useState, useMemo } from "react";
-import { FaStethoscope, FaMoneyBillWave, FaCog } from "react-icons/fa";
+import { FaStethoscope, FaCog } from "react-icons/fa";
 import { SearchField } from "@/components/common/SearchField";
+import Link from "next/link";
 
 export default function ServicesPage() {
   const user = useCurrentUser();
@@ -18,29 +18,22 @@ export default function ServicesPage() {
   // Get code from user's entity - for vendors use vendor code, for facilities use facility code
   const entityCode = facility?.code || "";
 
-  // For vendors, use contracts API with vendor_code, for facilities use services by facility code
-  const { contracts: vendorContracts, isLoading: vendorLoading } = useContracts(
-    isVendor
-      ? { vendor_code: entityCode, page: 1, per_page: 100 }
-      : { page: 1, per_page: 0 }
-  );
-
+  // For facilities, use services by facility code API
   const {
     contracts: facilityContracts,
     isServicesLoading: facilityLoading,
     error,
   } = useServicesByFacilityCode(!isVendor ? entityCode : "");
 
-  const isLoading = isVendor ? vendorLoading : facilityLoading;
-  const contracts = isVendor ? vendorContracts : facilityContracts;
+  const isLoading = facilityLoading;
+  const contracts = facilityContracts;
 
-  // Extract all services from contracts
+  // Extract all services from contracts (for facility view)
   const allServices = useMemo(() => {
     if (!contracts) return [];
 
     return contracts.flatMap((contract: any) => {
-      // For vendor contracts, services are in lot.services
-      // For facility contracts, services might be at contract.services
+      // For facility contracts, services are in lot.services or contract.services
       const services = contract.services || contract.lot?.services || [];
 
       return services.map((service: any) => ({
@@ -65,17 +58,9 @@ export default function ServicesPage() {
       (service: any) =>
         service.service_name?.toLowerCase().includes(lowerSearch) ||
         service.service_code?.toLowerCase().includes(lowerSearch) ||
-        service.vendorName?.toLowerCase().includes(lowerSearch)
+        service.vendorName?.toLowerCase().includes(lowerSearch),
     );
   }, [allServices, searchTerm]);
-
-  // Calculate revenue statistics for vendor view
-  const totalRevenue = useMemo(() => {
-    return filteredServices.reduce((acc: number, service: any) => {
-      const vendorShare = parseFloat(service.vendor_share || "0");
-      return acc + vendorShare;
-    }, 0);
-  }, [filteredServices]);
 
   const formatCurrency = (amount: number | string) => {
     const value = typeof amount === "string" ? parseFloat(amount) : amount;
@@ -84,6 +69,35 @@ export default function ServicesPage() {
       currency: "KES",
     }).format(value || 0);
   };
+
+  // For vendor users, show a message to use contracts page
+  if (isVendor) {
+    return (
+      <PermissionGate permission={Permission.VIEW_SERVICES}>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-8 text-center">
+              <FaStethoscope className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Services & Revenue
+              </h2>
+              <p className="text-gray-600 mb-6">
+                To view your services and revenue, please visit the Contracts
+                page and select a specific contract.
+              </p>
+              <Link
+                href="/contracts"
+                className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                <FaStethoscope />
+                View Contracts
+              </Link>
+            </div>
+          </div>
+        </div>
+      </PermissionGate>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -130,12 +144,10 @@ export default function ServicesPage() {
                 </div>
                 <div>
                   <h1 className="text-xl md:text-2xl font-bold text-white mb-1">
-                    {isVendor ? "Services & Revenue" : "Services Offered"}
+                    Services Offered
                   </h1>
                   <p className="text-sm md:text-base text-purple-100">
-                    {isVendor
-                      ? "View services you provide and associated revenue"
-                      : "View all services available at your facility"}
+                    View all services available at your facility
                   </p>
                 </div>
               </div>
@@ -143,7 +155,7 @@ export default function ServicesPage() {
 
             {/* Stats */}
             <div className="p-4 md:p-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
                   <div className="flex items-center justify-between">
                     <div>
@@ -171,22 +183,6 @@ export default function ServicesPage() {
                     <FaStethoscope className="w-10 h-10 text-green-400 opacity-50" />
                   </div>
                 </div>
-
-                {isVendor && (
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-blue-600 font-medium">
-                          Vendor Share Total
-                        </p>
-                        <p className="text-2xl font-bold text-blue-700">
-                          {formatCurrency(totalRevenue)}
-                        </p>
-                      </div>
-                      <FaMoneyBillWave className="w-10 h-10 text-blue-400 opacity-50" />
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Search */}
@@ -213,11 +209,6 @@ export default function ServicesPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           SHA Rate
                         </th>
-                        {isVendor && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Vendor Share
-                          </th>
-                        )}
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Facility Share
                         </th>
@@ -244,11 +235,6 @@ export default function ServicesPage() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                             {formatCurrency(service.sha_rate || 0)}
                           </td>
-                          {isVendor && (
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                              {formatCurrency(service.vendor_share || 0)}
-                            </td>
-                          )}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             {formatCurrency(service.facility_share || 0)}
                           </td>

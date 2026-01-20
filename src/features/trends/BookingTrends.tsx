@@ -112,25 +112,25 @@ const BookingTrends: React.FC = () => {
 
   // Filter data based on search
   const filteredCounties = counties?.filter((county) =>
-    county.name.toLowerCase().includes(countySearch.toLowerCase())
+    county.name.toLowerCase().includes(countySearch.toLowerCase()),
   );
 
   const filteredSubCounties = subCounties?.filter((subCounty) =>
-    subCounty.name.toLowerCase().includes(subCountySearch.toLowerCase())
+    subCounty.name.toLowerCase().includes(subCountySearch.toLowerCase()),
   );
 
   const filteredVendors = vendors?.filter((vendor) =>
-    vendor.name.toLowerCase().includes(vendorSearch.toLowerCase())
+    vendor.name.toLowerCase().includes(vendorSearch.toLowerCase()),
   );
 
   const filteredLots = lots?.filter((lot) =>
     `${lot.number} - ${lot.name}`
       .toLowerCase()
-      .includes(lotSearch.toLowerCase())
+      .includes(lotSearch.toLowerCase()),
   );
 
   const filteredServices = lotServices?.filter((service) =>
-    service.name.toLowerCase().includes(serviceSearch.toLowerCase())
+    service.name.toLowerCase().includes(serviceSearch.toLowerCase()),
   );
 
   // Use facilities from API search instead of client-side filtering
@@ -293,7 +293,7 @@ const BookingTrends: React.FC = () => {
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `booking-trends-${new Date().toISOString().split("T")[0]}.csv`
+      `booking-trends-${new Date().toISOString().split("T")[0]}.csv`,
     );
     link.style.visibility = "hidden";
     document.body.appendChild(link);
@@ -305,50 +305,53 @@ const BookingTrends: React.FC = () => {
   const chartData = useMemo(() => {
     if (!trends.length) return [];
 
-    const groupedByDate = trends.reduce((acc, item) => {
-      const date = item.date;
-      if (!acc[date]) {
-        acc[date] = {
-          date,
-          cash_total: 0,
-          cash_amount: 0,
-          cash_vendor_share: 0,
-          cash_facility_share: 0,
-          sha_total: 0,
-          sha_amount: 0,
-          sha_vendor_share: 0,
-          sha_facility_share: 0,
-          total_bookings: 0,
-          total_amount: 0,
-        };
-      }
+    const groupedByDate = trends.reduce(
+      (acc, item) => {
+        const date = item.date;
+        if (!acc[date]) {
+          acc[date] = {
+            date,
+            cash_total: 0,
+            cash_amount: 0,
+            cash_vendor_share: 0,
+            cash_facility_share: 0,
+            sha_total: 0,
+            sha_amount: 0,
+            sha_vendor_share: 0,
+            sha_facility_share: 0,
+            total_bookings: 0,
+            total_amount: 0,
+          };
+        }
 
-      const total = parseInt(item.total);
-      const amount = parseInt(item.total_amount);
-      const vendorShare = parseInt(item.total_vendor_share);
-      const facilityShare = parseInt(item.total_facility_share);
+        const total = parseInt(item.total);
+        const amount = parseInt(item.total_amount);
+        const vendorShare = parseInt(item.total_vendor_share);
+        const facilityShare = parseInt(item.total_facility_share);
 
-      if (item.payment_mode === "cash") {
-        acc[date].cash_total += total;
-        acc[date].cash_amount += amount;
-        acc[date].cash_vendor_share += vendorShare;
-        acc[date].cash_facility_share += facilityShare;
-      } else if (item.payment_mode === "sha") {
-        acc[date].sha_total += total;
-        acc[date].sha_amount += amount;
-        acc[date].sha_vendor_share += vendorShare;
-        acc[date].sha_facility_share += facilityShare;
-      }
+        if (item.payment_mode === "cash") {
+          acc[date].cash_total += total;
+          acc[date].cash_amount += amount;
+          acc[date].cash_vendor_share += vendorShare;
+          acc[date].cash_facility_share += facilityShare;
+        } else if (item.payment_mode === "sha") {
+          acc[date].sha_total += total;
+          acc[date].sha_amount += amount;
+          acc[date].sha_vendor_share += vendorShare;
+          acc[date].sha_facility_share += facilityShare;
+        }
 
-      acc[date].total_bookings += total;
-      acc[date].total_amount += amount;
+        acc[date].total_bookings += total;
+        acc[date].total_amount += amount;
 
-      return acc;
-    }, {} as Record<string, any>);
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 
     return Object.values(groupedByDate).sort(
       (a: any, b: any) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
+        new Date(a.date).getTime() - new Date(b.date).getTime(),
     );
   }, [trends]);
 
@@ -359,11 +362,11 @@ const BookingTrends: React.FC = () => {
 
     const cashTotal = cashData.reduce(
       (sum, item) => sum + parseInt(item.total),
-      0
+      0,
     );
     const shaTotal = shaData.reduce(
       (sum, item) => sum + parseInt(item.total),
-      0
+      0,
     );
 
     return [
@@ -376,19 +379,19 @@ const BookingTrends: React.FC = () => {
   const summary = useMemo(() => {
     const totalBookings = trends.reduce(
       (sum, item) => sum + parseInt(item.total),
-      0
+      0,
     );
     const totalAmount = trends.reduce(
       (sum, item) => sum + parseInt(item.total_amount),
-      0
+      0,
     );
     const totalVendorShare = trends.reduce(
       (sum, item) => sum + parseInt(item.total_vendor_share),
-      0
+      0,
     );
     const totalFacilityShare = trends.reduce(
       (sum, item) => sum + parseInt(item.total_facility_share),
-      0
+      0,
     );
 
     return {
@@ -474,7 +477,7 @@ const BookingTrends: React.FC = () => {
                           }
                         >
                           {counties?.find(
-                            (c) => c.code === tempFilters.county_code
+                            (c) => c.code === tempFilters.county_code,
                           )?.name || "All Counties"}
                         </span>
                         <FaChevronDown
@@ -522,7 +525,7 @@ const BookingTrends: React.FC = () => {
                                   onClick={() => {
                                     handleFilterChange(
                                       "county_code",
-                                      county.code
+                                      county.code,
                                     );
                                     setIsCountyDropdownOpen(false);
                                     setCountySearch("");
@@ -570,7 +573,7 @@ const BookingTrends: React.FC = () => {
                           }
                         >
                           {vendors?.find(
-                            (v) => v.code === tempFilters.vendor_code
+                            (v) => v.code === tempFilters.vendor_code,
                           )?.name || "All Vendors"}
                         </span>
                         <FaChevronDown
@@ -618,7 +621,7 @@ const BookingTrends: React.FC = () => {
                                   onClick={() => {
                                     handleFilterChange(
                                       "vendor_code",
-                                      vendor.code
+                                      vendor.code,
                                     );
                                     setIsVendorDropdownOpen(false);
                                     setVendorSearch("");
@@ -666,15 +669,15 @@ const BookingTrends: React.FC = () => {
                           }
                         >
                           {lots?.find(
-                            (l) => l.number === tempFilters.lot_number
+                            (l) => l.number === tempFilters.lot_number,
                           )
                             ? `${
                                 lots.find(
-                                  (l) => l.number === tempFilters.lot_number
+                                  (l) => l.number === tempFilters.lot_number,
                                 )?.number
                               } - ${
                                 lots.find(
-                                  (l) => l.number === tempFilters.lot_number
+                                  (l) => l.number === tempFilters.lot_number,
                                 )?.name
                               }`
                             : "All Lots"}
@@ -722,7 +725,7 @@ const BookingTrends: React.FC = () => {
                                   onClick={() => {
                                     handleFilterChange(
                                       "lot_number",
-                                      lot.number
+                                      lot.number,
                                     );
                                     setIsLotDropdownOpen(false);
                                     setLotSearch("");
@@ -775,7 +778,7 @@ const BookingTrends: React.FC = () => {
                           {!tempFilters.lot_number
                             ? "Select lot first"
                             : lotServices?.find(
-                                (s) => s.code === tempFilters.service_code
+                                (s) => s.code === tempFilters.service_code,
                               )?.name || "All Services"}
                         </span>
                         <FaChevronDown
@@ -823,7 +826,7 @@ const BookingTrends: React.FC = () => {
                                   onClick={() => {
                                     handleFilterChange(
                                       "service_code",
-                                      service.code
+                                      service.code,
                                     );
                                     setIsServiceDropdownOpen(false);
                                     setServiceSearch("");
@@ -873,15 +876,15 @@ const BookingTrends: React.FC = () => {
                           {tempFilters.facility_code && selectedFacilityDetails
                             ? `${selectedFacilityDetails.name} (${selectedFacilityDetails.code})`
                             : tempFilters.facility_code &&
-                              facilities?.find(
-                                (f) => f.code === tempFilters.facility_code
-                              )
-                            ? `${
-                                facilities.find(
-                                  (f) => f.code === tempFilters.facility_code
-                                )?.name
-                              } (${tempFilters.facility_code})`
-                            : "All Facilities"}
+                                facilities?.find(
+                                  (f) => f.code === tempFilters.facility_code,
+                                )
+                              ? `${
+                                  facilities.find(
+                                    (f) => f.code === tempFilters.facility_code,
+                                  )?.name
+                                } (${tempFilters.facility_code})`
+                              : "All Facilities"}
                         </span>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           {tempFilters.facility_code && (
@@ -971,7 +974,7 @@ const BookingTrends: React.FC = () => {
                                   onClick={() => {
                                     handleFilterChange(
                                       "facility_code",
-                                      facility.code
+                                      facility.code,
                                     );
                                     setSelectedFacilityDetails({
                                       code: facility.code,
@@ -1081,11 +1084,11 @@ const BookingTrends: React.FC = () => {
                             onClick={() => {
                               if (tempFilters.county_code) {
                                 setIsSubCountyDropdownOpen(
-                                  !isSubCountyDropdownOpen
+                                  !isSubCountyDropdownOpen,
                                 );
                                 closeAllDropdowns();
                                 setIsSubCountyDropdownOpen(
-                                  !isSubCountyDropdownOpen
+                                  !isSubCountyDropdownOpen,
                                 );
                               }
                             }}
@@ -1103,7 +1106,7 @@ const BookingTrends: React.FC = () => {
                                 ? "Select county first"
                                 : subCounties?.find(
                                     (s) =>
-                                      s.code === tempFilters.sub_county_code
+                                      s.code === tempFilters.sub_county_code,
                                   )?.name || "All Sub Counties"}
                             </span>
                             <FaChevronDown
@@ -1153,7 +1156,7 @@ const BookingTrends: React.FC = () => {
                                         onClick={() => {
                                           handleFilterChange(
                                             "sub_county_code",
-                                            subCounty.code
+                                            subCounty.code,
                                           );
                                           setIsSubCountyDropdownOpen(false);
                                           setSubCountySearch("");
@@ -1188,11 +1191,11 @@ const BookingTrends: React.FC = () => {
                             type="button"
                             onClick={() => {
                               setIsPaymentModeDropdownOpen(
-                                !isPaymentModeDropdownOpen
+                                !isPaymentModeDropdownOpen,
                               );
                               closeAllDropdowns();
                               setIsPaymentModeDropdownOpen(
-                                !isPaymentModeDropdownOpen
+                                !isPaymentModeDropdownOpen,
                               );
                             }}
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-left flex items-center justify-between"
@@ -1207,8 +1210,8 @@ const BookingTrends: React.FC = () => {
                               {tempFilters.payment_mode === "cash"
                                 ? "Cash"
                                 : tempFilters.payment_mode === "sha"
-                                ? "SHA"
-                                : "All Payment Modes"}
+                                  ? "SHA"
+                                  : "All Payment Modes"}
                             </span>
                             <FaChevronDown
                               className={`text-gray-400 transition-transform w-3 h-3 ${
@@ -1284,10 +1287,10 @@ const BookingTrends: React.FC = () => {
                               {tempFilters.approval_status === "pending"
                                 ? "Pending"
                                 : tempFilters.approval_status === "approved"
-                                ? "Approved"
-                                : tempFilters.approval_status === "rejected"
-                                ? "Rejected"
-                                : "All Statuses"}
+                                  ? "Approved"
+                                  : tempFilters.approval_status === "rejected"
+                                    ? "Rejected"
+                                    : "All Statuses"}
                             </span>
                             <FaChevronDown
                               className={`text-gray-400 transition-transform w-3 h-3 ${
@@ -1315,7 +1318,7 @@ const BookingTrends: React.FC = () => {
                                   onClick={() => {
                                     handleFilterChange(
                                       "approval_status",
-                                      "pending"
+                                      "pending",
                                     );
                                     setIsStatusDropdownOpen(false);
                                   }}
@@ -1329,7 +1332,7 @@ const BookingTrends: React.FC = () => {
                                   onClick={() => {
                                     handleFilterChange(
                                       "approval_status",
-                                      "approved"
+                                      "approved",
                                     );
                                     setIsStatusDropdownOpen(false);
                                   }}
@@ -1343,7 +1346,7 @@ const BookingTrends: React.FC = () => {
                                   onClick={() => {
                                     handleFilterChange(
                                       "approval_status",
-                                      "rejected"
+                                      "rejected",
                                     );
                                     setIsStatusDropdownOpen(false);
                                   }}

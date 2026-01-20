@@ -33,18 +33,13 @@ export const useVendorStats = (vendorCode: string) => {
   // Calculate stats from contracts
   const stats = {
     total_contracts: contracts.length,
-    active_contracts: contracts.filter((c) => c.is_active === "1").length,
+    active_contracts: contracts.filter((c) => c.status === "active").length,
     total_facilities_served: new Set(contracts.map((c) => c.facility?.code))
       .size,
-    total_lots: new Set(contracts.map((c) => c.lot?.number)).size,
-    total_services: contracts.reduce((acc, contract) => {
-      const services = contract.lot?.services || contract.services || [];
-      return acc + services.length;
-    }, 0),
-    total_equipments: contracts.reduce((acc, contract) => {
-      const services = contract.lot?.services || contract.services || [];
-      return acc + services.filter((s: any) => s.equipment).length;
-    }, 0),
+    // Note: lots and services counts removed as they're now separate endpoints
+    total_lots: 0,
+    total_services: 0,
+    total_equipments: 0,
   };
 
   return {
@@ -58,7 +53,7 @@ export const useVendorStats = (vendorCode: string) => {
 // Hook for vendor booking trends with filters
 export const useVendorBookingTrends = (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>
+  filters?: Partial<VendorTrendFilters>,
 ) => {
   return useQuery({
     queryKey: ["vendorBookingTrends", vendorCode, filters],
@@ -71,7 +66,7 @@ export const useVendorBookingTrends = (
 // Hook for revenue by facility
 export const useVendorRevenueByFacility = (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>
+  filters?: Partial<VendorTrendFilters>,
 ) => {
   return useQuery({
     queryKey: ["vendorRevenueByFacility", vendorCode, filters],
@@ -84,7 +79,7 @@ export const useVendorRevenueByFacility = (
 // Hook for revenue by lot
 export const useVendorRevenueByLot = (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>
+  filters?: Partial<VendorTrendFilters>,
 ) => {
   return useQuery({
     queryKey: ["vendorRevenueByLot", vendorCode, filters],
@@ -97,7 +92,7 @@ export const useVendorRevenueByLot = (
 // Hook for revenue by service
 export const useVendorRevenueByService = (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>
+  filters?: Partial<VendorTrendFilters>,
 ) => {
   return useQuery({
     queryKey: ["vendorRevenueByService", vendorCode, filters],

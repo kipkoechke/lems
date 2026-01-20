@@ -399,13 +399,16 @@ export default function LotDetailPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        Contract
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                         Vendor
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                         Facility
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Services
+                        Period
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                         Status
@@ -421,6 +424,13 @@ export default function LotDetailPage() {
                         key={contract.id}
                         className="hover:bg-gray-50 transition-colors"
                       >
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {contract.contract_number}
+                            </p>
+                          </div>
+                        </td>
                         <td className="px-6 py-4">
                           <div>
                             <p className="text-sm font-semibold text-gray-900">
@@ -443,43 +453,23 @@ export default function LotDetailPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900">
-                            <span className="font-medium">
-                              {contract.services?.length || 0} service
-                              {(contract.services?.length || 0) !== 1
-                                ? "s"
-                                : ""}
-                            </span>
-                            {contract.services &&
-                              contract.services.length > 0 && (
-                                <div className="mt-2 flex flex-wrap gap-1">
-                                  {contract.services
-                                    .slice(0, 3)
-                                    .map((service) => (
-                                      <span
-                                        key={service.service_id}
-                                        className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium"
-                                      >
-                                        {service.service_name}
-                                      </span>
-                                    ))}
-                                  {contract.services.length > 3 && (
-                                    <span className="text-xs text-gray-500 py-1">
-                                      +{contract.services.length - 3} more
-                                    </span>
-                                  )}
-                                </div>
-                              )}
+                            <p>
+                              {contract.start_date} - {contract.end_date}
+                            </p>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <span
                             className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                              contract.is_active === "1"
+                              contract.status === "active"
                                 ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
+                                : contract.status === "expired"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-yellow-100 text-yellow-800"
                             }`}
                           >
-                            {contract.is_active === "1" ? "Active" : "Inactive"}
+                            {contract.status.charAt(0).toUpperCase() +
+                              contract.status.slice(1)}
                           </span>
                         </td>
                         <td className="px-6 py-4">
