@@ -141,18 +141,6 @@ export interface PaginatedContractsResponseOld {
   };
 }
 
-// Legacy ContractService type (kept for backward compatibility)
-export interface ContractService {
-  service_id: string;
-  service_code: string;
-  service_name: string;
-  tariff?: number;
-  is_active: boolean;
-  equipment_id?: string;
-  equipment_code?: string;
-  equipment_name?: string;
-}
-
 export interface ContractCreateRequest {
   vendor_id: string;
   facility_id: string;

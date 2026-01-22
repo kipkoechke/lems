@@ -32,11 +32,17 @@ export const SelectField: React.FC<SelectFieldProps> = ({
       <select
         {...register}
         disabled={disabled}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900 bg-white"
       >
-        <option value="">{placeholder}</option>
+        <option value="" className="text-gray-500">
+          {placeholder}
+        </option>
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option
+            key={option.value}
+            value={option.value}
+            className="text-gray-900"
+          >
             {option.label}
           </option>
         ))}
