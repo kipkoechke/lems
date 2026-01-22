@@ -22,7 +22,13 @@ const equipmentSchema = z.object({
   brand: z.string().optional(),
   manufacture_date: z.string().optional(),
   description: z.string().optional(),
-  status: z.enum(["active", "inactive", "maintenance", "decommissioned", "pending_installation"]),
+  status: z.enum([
+    "active",
+    "inactive",
+    "maintenance",
+    "decommissioned",
+    "pending_installation",
+  ]),
 });
 
 type EquipmentFormData = z.infer<typeof equipmentSchema>;
@@ -74,7 +80,9 @@ export default function EditVendorEquipmentPage() {
   const updateEquipmentMutation = useUpdateVendorEquipment();
 
   // Specifications state
-  const [specifications, setSpecifications] = useState<Record<string, string>>({});
+  const [specifications, setSpecifications] = useState<Record<string, string>>(
+    {},
+  );
   const [newSpecKey, setNewSpecKey] = useState("");
   const [newSpecValue, setNewSpecValue] = useState("");
 
@@ -141,14 +149,15 @@ export default function EditVendorEquipmentPage() {
         equipmentId,
         data: {
           ...data,
-          specifications: Object.keys(specifications).length > 0 ? specifications : undefined,
+          specifications:
+            Object.keys(specifications).length > 0 ? specifications : undefined,
         },
       },
       {
         onSuccess: () => {
           router.push(`/vendors/${vendorCode}/equipments/${equipmentId}`);
         },
-      }
+      },
     );
   };
 

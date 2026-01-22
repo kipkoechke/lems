@@ -19,7 +19,13 @@ const equipmentSchema = z.object({
   brand: z.string().optional(),
   manufacture_date: z.string().optional(),
   description: z.string().optional(),
-  status: z.enum(["active", "inactive", "maintenance", "decommissioned", "pending_installation"]),
+  status: z.enum([
+    "active",
+    "inactive",
+    "maintenance",
+    "decommissioned",
+    "pending_installation",
+  ]),
 });
 
 type EquipmentFormData = z.infer<typeof equipmentSchema>;
@@ -65,7 +71,9 @@ export default function NewVendorEquipmentPage() {
   const createEquipmentMutation = useCreateVendorEquipment();
 
   // Specifications state
-  const [specifications, setSpecifications] = useState<Record<string, string>>({});
+  const [specifications, setSpecifications] = useState<Record<string, string>>(
+    {},
+  );
   const [newSpecKey, setNewSpecKey] = useState("");
   const [newSpecValue, setNewSpecValue] = useState("");
 
@@ -107,14 +115,15 @@ export default function NewVendorEquipmentPage() {
         vendorId: vendor.id,
         data: {
           ...data,
-          specifications: Object.keys(specifications).length > 0 ? specifications : undefined,
+          specifications:
+            Object.keys(specifications).length > 0 ? specifications : undefined,
         },
       },
       {
         onSuccess: () => {
           router.push(`/vendors/${vendorCode}/equipments`);
         },
-      }
+      },
     );
   };
 
@@ -152,7 +161,9 @@ export default function NewVendorEquipmentPage() {
       <div className="flex items-center gap-3">
         <BackButton onClick={() => router.back()} />
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Add New Equipment</h1>
+          <h1 className="text-xl font-bold text-slate-900">
+            Add New Equipment
+          </h1>
           <p className="text-sm text-slate-500">{vendor.name}</p>
         </div>
       </div>
@@ -303,7 +314,9 @@ export default function NewVendorEquipmentPage() {
             disabled={createEquipmentMutation.isPending}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            {createEquipmentMutation.isPending ? "Creating..." : "Create Equipment"}
+            {createEquipmentMutation.isPending
+              ? "Creating..."
+              : "Create Equipment"}
           </button>
         </div>
       </form>

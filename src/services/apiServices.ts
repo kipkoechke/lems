@@ -77,7 +77,7 @@ interface FacilityContract {
 export type ServiceInfoForm = Omit<ServiceInfo, "serviceId">;
 
 export const createServiceInfo = async (
-  data: ServiceInfoForm
+  data: ServiceInfoForm,
 ): Promise<ServiceInfo> => {
   const response = await axios.post(`/create-service`, data);
   return response.data.data;
@@ -85,7 +85,7 @@ export const createServiceInfo = async (
 
 // New function to get services by facility ID
 export const getServicesByFacilityId = async (
-  facilityId: string
+  facilityId: string,
 ): Promise<FacilityContract[]> => {
   console.log("🔍 Fetching contracts for facility:", facilityId);
   const response = await axios.get(`contracts?facility_id=${facilityId}`);
@@ -103,7 +103,7 @@ export const getServicesByFacilityId = async (
       "✅ Services found:",
       rawServices.length,
       "for lot:",
-      contract.lot?.name
+      contract.lot?.name,
     );
 
     // Normalize service structure to match component expectations
@@ -152,7 +152,7 @@ export const getServicesByFacilityId = async (
     "✨ Final result:",
     normalizedContracts.length,
     "contracts with services",
-    normalizedContracts
+    normalizedContracts,
   );
   return normalizedContracts;
 };
@@ -163,14 +163,14 @@ export const getServiceInfo = async (): Promise<ServiceInfo[]> => {
 };
 
 export const getServiceByCategory = async (
-  id: string
+  id: string,
 ): Promise<ServiceWithCategory[]> => {
   const response = await axios.get(`/category/services/${id}`);
   return response.data.data;
 };
 
 export const getServiceInfoById = async (
-  serviceId: string
+  serviceId: string,
 ): Promise<ServiceInfo> => {
   const response = await axios.get(`/service/${serviceId}`);
   return response.data.data;
@@ -178,7 +178,7 @@ export const getServiceInfoById = async (
 
 export const updateServiceInfo = async (
   serviceId: string,
-  data: Partial<ServiceInfo>
+  data: Partial<ServiceInfo>,
 ): Promise<ServiceInfo> => {
   const response = await axios.patch(`/ServiceInfo/${serviceId}`, data);
   return response.data.data;

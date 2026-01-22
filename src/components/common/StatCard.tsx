@@ -46,20 +46,26 @@ const StatCard: React.FC<StatCardProps> = ({
       <div className="flex items-center justify-between w-full h-full">
         <div className="w-full flex flex-col justify-between h-full">
           <div>
-            <h3 className={`${compact ? "text-xs" : "text-sm"} text-gray-800 mb-1 font-bold line-clamp-2`}>
+            <h3
+              className={`${compact ? "text-xs" : "text-sm"} text-gray-800 mb-1 font-bold line-clamp-2`}
+            >
               {title}
             </h3>
 
             <div className={`flex ${compact ? "gap-2" : "gap-4"} items-center`}>
               {children}
-              <div className={`${compact ? "text-xl" : "text-3xl"} font-bold text-gray-950`}>
+              <div
+                className={`${compact ? "text-xl" : "text-3xl"} font-bold text-gray-950`}
+              >
                 {mainValue}
               </div>
             </div>
 
             <div className="flex items-center gap-3">
               {subtitle && (
-                <div className={`${compact ? "text-[10px]" : "text-xs"} text-blue-900 font-bold mt-0.5`}>
+                <div
+                  className={`${compact ? "text-[10px]" : "text-xs"} text-blue-900 font-bold mt-0.5`}
+                >
                   {subtitle}
                 </div>
               )}

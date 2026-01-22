@@ -48,7 +48,7 @@ const calculateTotalAmounts = (services: any[]) => {
       totals.total = totals.vendorShare + totals.facilityShare;
       return totals;
     },
-    { vendorShare: 0, facilityShare: 0, total: 0 }
+    { vendorShare: 0, facilityShare: 0, total: 0 },
   );
 };
 
@@ -56,7 +56,7 @@ const SyncedBookingsReport: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedSyncIds, setSelectedSyncIds] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   // Location filters removed
 
@@ -93,14 +93,14 @@ const SyncedBookingsReport: React.FC = () => {
     if (!syncedBookings) return [];
     if (activeTab === "all") return syncedBookings;
     return syncedBookings.filter(
-      (syncedBooking) => syncedBooking.synch_status === activeTab
+      (syncedBooking) => syncedBooking.synch_status === activeTab,
     );
   }, [syncedBookings, activeTab]);
 
   // Get bookings eligible for batch creation (batch_id is null)
   const eligibleForBatch = useMemo(() => {
     return filteredBookings.filter(
-      (syncedBooking) => syncedBooking.batch_id === null
+      (syncedBooking) => syncedBooking.batch_id === null,
     );
   }, [filteredBookings]);
 
@@ -115,7 +115,7 @@ const SyncedBookingsReport: React.FC = () => {
         acc.all++;
         return acc;
       },
-      { all: 0, complete: 0, pending: 0, failed: 0 }
+      { all: 0, complete: 0, pending: 0, failed: 0 },
     );
 
     return counts;
@@ -174,7 +174,7 @@ const SyncedBookingsReport: React.FC = () => {
           setSelectedSyncIds(new Set());
           refetchSyncedBookings();
         },
-      }
+      },
     );
   };
 
@@ -322,8 +322,8 @@ const SyncedBookingsReport: React.FC = () => {
                   {selectedSyncIds.size === 0
                     ? "Select All"
                     : selectedSyncIds.size === eligibleForBatch.length
-                    ? "Deselect All"
-                    : `Select All (${selectedSyncIds.size} selected)`}
+                      ? "Deselect All"
+                      : `Select All (${selectedSyncIds.size} selected)`}
                 </button>
                 {selectedSyncIds.size > 0 && (
                   <span className="text-sm text-gray-500">
@@ -465,8 +465,8 @@ const SyncedBookingsReport: React.FC = () => {
                                       batch.status === "pending"
                                         ? "bg-yellow-100 text-yellow-800"
                                         : batch.status === "completed"
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-gray-100 text-gray-800"
+                                          ? "bg-green-100 text-green-800"
+                                          : "bg-gray-100 text-gray-800"
                                     }`}
                                   >
                                     {batch.status}
@@ -767,7 +767,7 @@ const SyncedBookingsReport: React.FC = () => {
                             <div className="text-sm text-gray-500">
                               <span className="font-medium">Phone:</span>{" "}
                               {maskPhoneNumber(
-                                syncedBooking.booking.patient.phone
+                                syncedBooking.booking.patient.phone,
                               )}
                             </div>
                             <div className="text-sm text-gray-500">
@@ -808,7 +808,7 @@ const SyncedBookingsReport: React.FC = () => {
                             <div className="text-xs text-gray-400">
                               <span className="font-medium">DOB:</span>{" "}
                               {new Date(
-                                syncedBooking.booking.patient.date_of_birth
+                                syncedBooking.booking.patient.date_of_birth,
                               ).toLocaleDateString()}
                             </div>
                           </div>
@@ -830,15 +830,15 @@ const SyncedBookingsReport: React.FC = () => {
                               <div className="text-gray-500">
                                 {syncedBooking.booking.booking_date
                                   ? formatDate(
-                                      syncedBooking.booking.booking_date
+                                      syncedBooking.booking.booking_date,
                                     )
                                   : syncedBooking.booking.services?.[0]
-                                      ?.booking_date
-                                  ? formatDate(
-                                      syncedBooking.booking.services[0]
-                                        .booking_date
-                                    )
-                                  : "Not Available"}
+                                        ?.booking_date
+                                    ? formatDate(
+                                        syncedBooking.booking.services[0]
+                                          .booking_date,
+                                      )
+                                    : "Not Available"}
                               </div>
                             </div>
                             <div>
@@ -856,7 +856,7 @@ const SyncedBookingsReport: React.FC = () => {
                           <div className="text-sm text-gray-900">
                             {(() => {
                               const totals = calculateTotalAmounts(
-                                syncedBooking.booking.services || []
+                                syncedBooking.booking.services || [],
                               );
                               return (
                                 <div className="bg-gray-50 p-3 rounded-lg space-y-2">

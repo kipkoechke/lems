@@ -13,7 +13,7 @@ import {
 // List hook with params
 export const useVendorEquipments = (
   vendorId: string,
-  params: VendorEquipmentsParams = {}
+  params: VendorEquipmentsParams = {},
 ) => {
   return useQuery({
     queryKey: ["vendorEquipments", vendorId, params],
@@ -74,7 +74,11 @@ export const useUpdateVendorEquipment = () => {
         queryKey: ["vendorEquipments", variables.vendorId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["vendorEquipment", variables.vendorId, variables.equipmentId],
+        queryKey: [
+          "vendorEquipment",
+          variables.vendorId,
+          variables.equipmentId,
+        ],
       });
       toast.success("Equipment updated successfully");
     },

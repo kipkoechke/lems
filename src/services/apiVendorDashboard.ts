@@ -129,7 +129,7 @@ export interface VendorDashboardFilters {
 // Get vendor dashboard data (NEW v2 endpoint)
 export const getVendorDashboard = async (
   vendorId: string,
-  filters?: VendorDashboardFilters
+  filters?: VendorDashboardFilters,
 ): Promise<VendorDashboardResponse> => {
   const params: Record<string, string> = {};
 
@@ -140,7 +140,9 @@ export const getVendorDashboard = async (
   if (filters?.service_id) params.service_id = filters.service_id;
   if (filters?.grouping) params.grouping = filters.grouping;
 
-  const response = await axios.get(`/vendors/${vendorId}/dashboard`, { params });
+  const response = await axios.get(`/vendors/${vendorId}/dashboard`, {
+    params,
+  });
   return response.data.data;
 };
 
@@ -217,7 +219,7 @@ export interface ServiceRevenue {
 
 // Get equipment usage trends
 export const getVendorEquipmentTrends = async (
-  filters: VendorTrendFilters
+  filters: VendorTrendFilters,
 ): Promise<VendorTrendsResponse> => {
   try {
     const response = await axios.get(`/vendor/equipment-trends`, {
@@ -240,7 +242,7 @@ export const getVendorEquipmentTrends = async (
 // Get revenue by facility
 export const getVendorRevenueByFacility = async (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>
+  filters?: Partial<VendorTrendFilters>,
 ): Promise<FacilityRevenue[]> => {
   try {
     const response = await axios.get(`/vendor/revenue-by-facility`, {
@@ -256,7 +258,7 @@ export const getVendorRevenueByFacility = async (
 // Get revenue by lot
 export const getVendorRevenueByLot = async (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>
+  filters?: Partial<VendorTrendFilters>,
 ): Promise<LotRevenue[]> => {
   try {
     const response = await axios.get(`/vendor/revenue-by-lot`, {
@@ -272,7 +274,7 @@ export const getVendorRevenueByLot = async (
 // Get revenue by service
 export const getVendorRevenueByService = async (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>
+  filters?: Partial<VendorTrendFilters>,
 ): Promise<ServiceRevenue[]> => {
   try {
     const response = await axios.get(`/vendor/revenue-by-service`, {
@@ -288,7 +290,7 @@ export const getVendorRevenueByService = async (
 // Use existing booking trends API filtered by vendor
 export const getVendorBookingTrends = async (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>
+  filters?: Partial<VendorTrendFilters>,
 ): Promise<any> => {
   const params: Record<string, string> = {
     vendor_code: vendorCode,

@@ -12,7 +12,7 @@ import {
 // NEW: Hook for vendor dashboard using the new /vendors/{id}/dashboard endpoint
 export const useVendorDashboard = (
   vendorId: string,
-  filters?: VendorDashboardFilters
+  filters?: VendorDashboardFilters,
 ) => {
   return useQuery({
     queryKey: ["vendorDashboard", vendorId, filters],
@@ -25,7 +25,7 @@ export const useVendorDashboard = (
 // Legacy hook for vendor booking trends with filters (kept for backward compatibility)
 export const useVendorBookingTrends = (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>
+  filters?: Partial<VendorTrendFilters>,
 ) => {
   return useQuery({
     queryKey: ["vendorBookingTrends", vendorCode, filters],
@@ -38,7 +38,7 @@ export const useVendorBookingTrends = (
 // Hook for revenue by facility
 export const useVendorRevenueByFacility = (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>
+  filters?: Partial<VendorTrendFilters>,
 ) => {
   return useQuery({
     queryKey: ["vendorRevenueByFacility", vendorCode, filters],
@@ -51,7 +51,7 @@ export const useVendorRevenueByFacility = (
 // Hook for revenue by lot
 export const useVendorRevenueByLot = (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>
+  filters?: Partial<VendorTrendFilters>,
 ) => {
   return useQuery({
     queryKey: ["vendorRevenueByLot", vendorCode, filters],
@@ -64,7 +64,7 @@ export const useVendorRevenueByLot = (
 // Hook for revenue by service
 export const useVendorRevenueByService = (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>
+  filters?: Partial<VendorTrendFilters>,
 ) => {
   return useQuery({
     queryKey: ["vendorRevenueByService", vendorCode, filters],

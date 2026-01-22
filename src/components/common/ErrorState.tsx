@@ -25,26 +25,26 @@ interface ErrorStateProps {
  */
 export const getErrorMessage = (err: unknown): string => {
   if (!err) return "An unexpected error occurred";
-  
+
   if (typeof err === "string") return err;
-  
+
   if (err && typeof err === "object") {
     // Axios error with response data
-    const axiosErr = err as { 
-      response?: { data?: { message?: string } }; 
-      message?: string 
+    const axiosErr = err as {
+      response?: { data?: { message?: string } };
+      message?: string;
     };
-    
+
     if (axiosErr.response?.data?.message) {
       return axiosErr.response.data.message;
     }
-    
+
     // Standard Error object
     if (axiosErr.message) {
       return axiosErr.message;
     }
   }
-  
+
   return "An unexpected error occurred";
 };
 
@@ -59,10 +59,14 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   fullScreen = false,
   className = "",
 }) => {
-  const errorMessage = message || (error ? getErrorMessage(error) : "An unexpected error occurred");
+  const errorMessage =
+    message ||
+    (error ? getErrorMessage(error) : "An unexpected error occurred");
 
   const content = (
-    <div className={`bg-white rounded-lg border border-slate-200 p-8 text-center ${className}`}>
+    <div
+      className={`bg-white rounded-lg border border-slate-200 p-8 text-center ${className}`}
+    >
       <div className="w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
         <svg
           className="w-6 h-6 text-red-600"
@@ -94,9 +98,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   if (fullScreen) {
     return (
       <div className="min-h-screen bg-slate-50 p-4">
-        <div className="max-w-5xl mx-auto">
-          {content}
-        </div>
+        <div className="max-w-5xl mx-auto">{content}</div>
       </div>
     );
   }

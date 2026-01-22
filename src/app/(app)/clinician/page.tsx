@@ -52,7 +52,7 @@ export default function ClinicianServicesPage() {
 
   // Registration form state
   const [identificationType, setIdentificationType] = useState<string>(
-    IDENTIFICATION_TYPES[0]
+    IDENTIFICATION_TYPES[0],
   );
   const [identificationNumber, setIdentificationNumber] = useState(""); // Auto-select first patient if available and none selected
   useEffect(() => {
@@ -74,7 +74,7 @@ export default function ClinicianServicesPage() {
 
   const handleRegisterPatient = (
     e: React.FormEvent,
-    onCloseModal?: () => void
+    onCloseModal?: () => void,
   ) => {
     e.preventDefault();
 
@@ -95,7 +95,7 @@ export default function ClinicianServicesPage() {
           setIdentificationNumber("");
           if (onCloseModal) onCloseModal();
         },
-      }
+      },
     );
   };
 
@@ -148,7 +148,7 @@ export default function ClinicianServicesPage() {
 
     // Check if all services have dates and times
     const missingDates = selectedServices.filter(
-      (service) => !serviceDates[service.service_id]
+      (service) => !serviceDates[service.service_id],
     );
 
     if (missingDates.length > 0) {
@@ -207,7 +207,7 @@ export default function ClinicianServicesPage() {
 
   // Get selected services with their details
   const selectedServices = availableServices.filter((service) =>
-    selectedServiceIds.includes(service.service_id)
+    selectedServiceIds.includes(service.service_id),
   );
 
   // Calculate total cost from actual service rates
@@ -659,7 +659,7 @@ export default function ClinicianServicesPage() {
                 !selectedPatient ||
                 selectedServices.length === 0 ||
                 selectedServices.some(
-                  (service) => !serviceDates[service.service_id]
+                  (service) => !serviceDates[service.service_id],
                 ) ||
                 isCreating
               }

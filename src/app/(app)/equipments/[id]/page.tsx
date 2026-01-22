@@ -62,7 +62,11 @@ export default function EquipmentDetailsPage() {
   const user = useCurrentUser();
   const vendorId = user?.entity?.id || "";
 
-  const { data: equipment, isLoading, error } = useVendorEquipment(vendorId, params.id);
+  const {
+    data: equipment,
+    isLoading,
+    error,
+  } = useVendorEquipment(vendorId, params.id);
   const deleteEquipmentMutation = useDeleteVendorEquipment();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -84,7 +88,7 @@ export default function EquipmentDetailsPage() {
         onSuccess: () => {
           router.push("/equipments");
         },
-      }
+      },
     );
   };
 
@@ -140,14 +144,16 @@ export default function EquipmentDetailsPage() {
                 </h1>
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadge(
-                    equipment.status
+                    equipment.status,
                   )}`}
                 >
                   {getStatusIcon(equipment.status)}
                   {equipment.status_label}
                 </span>
               </div>
-              <p className="text-sm text-slate-500 font-mono">{equipment.code}</p>
+              <p className="text-sm text-slate-500 font-mono">
+                {equipment.code}
+              </p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -266,7 +272,7 @@ export default function EquipmentDetailsPage() {
                           {String(value)}
                         </span>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               </div>

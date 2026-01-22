@@ -105,7 +105,7 @@ export const extractFacility = (apiUser: ApiUser): Facility => {
 
 // Login fetcher function for React Query
 export const loginFetcher = async (
-  credentials: LoginFormData
+  credentials: LoginFormData,
 ): Promise<LoginResponse> => {
   try {
     const response = await axios.post("/auth/login", credentials);
@@ -139,7 +139,7 @@ export const loginUser = loginFetcher;
 export const setAuthData = (
   user: User,
   facility: Facility,
-  token: string
+  token: string,
 ): void => {
   // Set in localStorage
   localStorage.setItem("authToken", token);

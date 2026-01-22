@@ -2,7 +2,18 @@
 
 import React, { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FaCog, FaPlus, FaSearch, FaWrench, FaCheckCircle, FaTimesCircle, FaClock, FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import {
+  FaCog,
+  FaPlus,
+  FaSearch,
+  FaWrench,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaClock,
+  FaEye,
+  FaEdit,
+  FaTrash,
+} from "react-icons/fa";
 import { useVendor } from "@/features/vendors/useVendor";
 import {
   useVendorEquipments,
@@ -54,14 +65,20 @@ export default function VendorEquipmentsPage() {
   const vendorCode = params.vendorCode as string;
 
   // Get vendor details to get the vendor ID
-  const { vendor, isLoading: vendorLoading, error: vendorError } = useVendor(vendorCode);
+  const {
+    vendor,
+    isLoading: vendorLoading,
+    error: vendorError,
+  } = useVendor(vendorCode);
 
   // State
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
+    null,
+  );
 
   // Fetch equipments
   const {
@@ -78,7 +95,10 @@ export default function VendorEquipmentsPage() {
 
   const deleteEquipmentMutation = useDeleteVendorEquipment();
 
-  const equipments = useMemo(() => equipmentsData?.data || [], [equipmentsData?.data]);
+  const equipments = useMemo(
+    () => equipmentsData?.data || [],
+    [equipmentsData?.data],
+  );
   const pagination = equipmentsData?.pagination;
 
   // Get unique categories for filter
@@ -101,7 +121,7 @@ export default function VendorEquipmentsPage() {
         eq.serial_number?.toLowerCase().includes(s) ||
         eq.brand?.toLowerCase().includes(s) ||
         eq.model?.toLowerCase().includes(s) ||
-        eq.category_label?.toLowerCase().includes(s)
+        eq.category_label?.toLowerCase().includes(s),
     );
   }, [equipments, search]);
 
@@ -111,7 +131,7 @@ export default function VendorEquipmentsPage() {
       { vendorId: vendor.id, equipmentId },
       {
         onSuccess: () => setShowDeleteConfirm(null),
-      }
+      },
     );
   };
 
@@ -362,7 +382,7 @@ export default function VendorEquipmentsPage() {
                       <Table.Cell>
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(
-                            equipment.status
+                            equipment.status,
                           )}`}
                         >
                           {getStatusIcon(equipment.status)}
@@ -376,7 +396,7 @@ export default function VendorEquipmentsPage() {
                             <ActionMenu.Item
                               onClick={() =>
                                 router.push(
-                                  `/vendors/${vendorCode}/equipments/${equipment.id}`
+                                  `/vendors/${vendorCode}/equipments/${equipment.id}`,
                                 )
                               }
                             >
@@ -385,7 +405,7 @@ export default function VendorEquipmentsPage() {
                             <ActionMenu.Item
                               onClick={() =>
                                 router.push(
-                                  `/vendors/${vendorCode}/equipments/${equipment.id}/edit`
+                                  `/vendors/${vendorCode}/equipments/${equipment.id}/edit`,
                                 )
                               }
                             >
@@ -424,7 +444,7 @@ export default function VendorEquipmentsPage() {
                     </div>
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(
-                        equipment.status
+                        equipment.status,
                       )}`}
                     >
                       {getStatusIcon(equipment.status)}
@@ -434,7 +454,9 @@ export default function VendorEquipmentsPage() {
                   <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                     <div>
                       <p className="text-slate-500 text-xs">Category</p>
-                      <p className="text-slate-900">{equipment.category_label}</p>
+                      <p className="text-slate-900">
+                        {equipment.category_label}
+                      </p>
                     </div>
                     <div>
                       <p className="text-slate-500 text-xs">Brand</p>
@@ -455,7 +477,7 @@ export default function VendorEquipmentsPage() {
                     <button
                       onClick={() =>
                         router.push(
-                          `/vendors/${vendorCode}/equipments/${equipment.id}`
+                          `/vendors/${vendorCode}/equipments/${equipment.id}`,
                         )
                       }
                       className="flex-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100"
@@ -465,7 +487,7 @@ export default function VendorEquipmentsPage() {
                     <button
                       onClick={() =>
                         router.push(
-                          `/vendors/${vendorCode}/equipments/${equipment.id}/edit`
+                          `/vendors/${vendorCode}/equipments/${equipment.id}/edit`,
                         )
                       }
                       className="flex-1 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 rounded-md hover:bg-slate-200"

@@ -69,7 +69,7 @@ const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({
 
   const filteredOptions = searchable
     ? options.filter((opt) =>
-        opt.label.toLowerCase().includes(search.toLowerCase())
+        opt.label.toLowerCase().includes(search.toLowerCase()),
       )
     : options;
 
@@ -90,7 +90,9 @@ const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({
           onClick={() => setIsOpen(!isOpen)}
           className="w-full bg-white border border-slate-200 rounded-md px-2.5 py-1.5 text-left text-sm flex items-center justify-between hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
         >
-          <span className={`truncate ${value ? "text-slate-900" : "text-slate-400"}`}>
+          <span
+            className={`truncate ${value ? "text-slate-900" : "text-slate-400"}`}
+          >
             {selectedLabel}
           </span>
           <div className="flex items-center gap-1 ml-1">
@@ -212,7 +214,8 @@ export const VendorDashboard: React.FC = () => {
   const vendorId = user?.entity?.id || "";
 
   // Filter states
-  const [selectedDuration, setSelectedDuration] = useState<string>("last_30_days");
+  const [selectedDuration, setSelectedDuration] =
+    useState<string>("last_30_days");
   const [facilityId, setFacilityId] = useState("");
   const [lotId, setLotId] = useState("");
   const [serviceId, setServiceId] = useState("");
@@ -281,7 +284,11 @@ export const VendorDashboard: React.FC = () => {
   }, [selectedDuration, facilityId, lotId, serviceId]);
 
   // Fetch dashboard data
-  const { data: dashboard, isLoading, error } = useVendorDashboard(vendorId, filters);
+  const {
+    data: dashboard,
+    isLoading,
+    error,
+  } = useVendorDashboard(vendorId, filters);
 
   // Handle lot change - reset service
   const handleLotChange = (value: string) => {
@@ -321,9 +328,21 @@ export const VendorDashboard: React.FC = () => {
       dashboard.equipment.by_status;
     return [
       { name: "Active", value: active, color: EQUIPMENT_STATUS_COLORS.Active },
-      { name: "Maintenance", value: maintenance, color: EQUIPMENT_STATUS_COLORS.Maintenance },
-      { name: "Decommissioned", value: decommissioned, color: EQUIPMENT_STATUS_COLORS.Decommissioned },
-      { name: "Pending", value: pending, color: EQUIPMENT_STATUS_COLORS.Pending },
+      {
+        name: "Maintenance",
+        value: maintenance,
+        color: EQUIPMENT_STATUS_COLORS.Maintenance,
+      },
+      {
+        name: "Decommissioned",
+        value: decommissioned,
+        color: EQUIPMENT_STATUS_COLORS.Decommissioned,
+      },
+      {
+        name: "Pending",
+        value: pending,
+        color: EQUIPMENT_STATUS_COLORS.Pending,
+      },
     ].filter((item) => item.value > 0);
   }, [dashboard]);
 
@@ -333,9 +352,21 @@ export const VendorDashboard: React.FC = () => {
     const { not_started, completed, cancelled } =
       dashboard.bookings.by_service_status;
     return [
-      { name: "Not Started", value: not_started, color: BOOKING_STATUS_COLORS["Not Started"] },
-      { name: "Completed", value: completed, color: BOOKING_STATUS_COLORS.Completed },
-      { name: "Cancelled", value: cancelled, color: BOOKING_STATUS_COLORS.Cancelled },
+      {
+        name: "Not Started",
+        value: not_started,
+        color: BOOKING_STATUS_COLORS["Not Started"],
+      },
+      {
+        name: "Completed",
+        value: completed,
+        color: BOOKING_STATUS_COLORS.Completed,
+      },
+      {
+        name: "Cancelled",
+        value: cancelled,
+        color: BOOKING_STATUS_COLORS.Cancelled,
+      },
     ].filter((item) => item.value > 0);
   }, [dashboard]);
 
@@ -475,7 +506,9 @@ export const VendorDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Revenue Trends */}
         <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">Revenue Trends</h3>
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">
+            Revenue Trends
+          </h3>
           {trendChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={trendChartData}>
@@ -508,7 +541,10 @@ export const VendorDashboard: React.FC = () => {
                       day: "numeric",
                     })
                   }
-                  formatter={(value: number) => [formatCurrency(value), "Vendor Share"]}
+                  formatter={(value: number) => [
+                    formatCurrency(value),
+                    "Vendor Share",
+                  ]}
                   contentStyle={{ fontSize: "12px" }}
                 />
                 <Area
@@ -530,7 +566,9 @@ export const VendorDashboard: React.FC = () => {
 
         {/* Services Performed */}
         <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">Services Performed</h3>
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">
+            Services Performed
+          </h3>
           {trendChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={trendChartData}>
@@ -577,7 +615,9 @@ export const VendorDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Equipment Status Donut */}
         <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">Equipment Status</h3>
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">
+            Equipment Status
+          </h3>
           {equipmentStatusData.length > 0 ? (
             <div className="h-[180px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -596,10 +636,12 @@ export const VendorDashboard: React.FC = () => {
                     ))}
                   </Pie>
                   <Tooltip formatter={(value: number) => [value, "Count"]} />
-                  <Legend 
-                    iconSize={8} 
+                  <Legend
+                    iconSize={8}
                     wrapperStyle={{ fontSize: "11px" }}
-                    formatter={(value) => <span className="text-slate-600">{value}</span>}
+                    formatter={(value) => (
+                      <span className="text-slate-600">{value}</span>
+                    )}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -613,7 +655,9 @@ export const VendorDashboard: React.FC = () => {
 
         {/* Service Status Donut */}
         <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">Service Status</h3>
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">
+            Service Status
+          </h3>
           {bookingStatusData.length > 0 ? (
             <div className="h-[180px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -632,10 +676,12 @@ export const VendorDashboard: React.FC = () => {
                     ))}
                   </Pie>
                   <Tooltip formatter={(value: number) => [value, "Count"]} />
-                  <Legend 
-                    iconSize={8} 
+                  <Legend
+                    iconSize={8}
                     wrapperStyle={{ fontSize: "11px" }}
-                    formatter={(value) => <span className="text-slate-600">{value}</span>}
+                    formatter={(value) => (
+                      <span className="text-slate-600">{value}</span>
+                    )}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -649,7 +695,9 @@ export const VendorDashboard: React.FC = () => {
 
         {/* Payment Type Distribution */}
         <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">Revenue by Payment Type</h3>
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">
+            Revenue by Payment Type
+          </h3>
           {paymentModeData.length > 0 ? (
             <div className="h-[180px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -670,11 +718,15 @@ export const VendorDashboard: React.FC = () => {
                       />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                  <Legend 
-                    iconSize={8} 
+                  <Tooltip
+                    formatter={(value: number) => formatCurrency(value)}
+                  />
+                  <Legend
+                    iconSize={8}
                     wrapperStyle={{ fontSize: "11px" }}
-                    formatter={(value) => <span className="text-slate-600">{value}</span>}
+                    formatter={(value) => (
+                      <span className="text-slate-600">{value}</span>
+                    )}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -691,7 +743,9 @@ export const VendorDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Booking Source */}
         <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">Booking Source</h3>
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">
+            Booking Source
+          </h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-slate-600">Standalone</span>
@@ -768,7 +822,9 @@ export const VendorDashboard: React.FC = () => {
                 >
                   {lot.number}
                 </span>
-                <span className="text-xs text-slate-700 truncate">{lot.name}</span>
+                <span className="text-xs text-slate-700 truncate">
+                  {lot.name}
+                </span>
               </div>
             ))}
             {(!dashboard?.lots?.list || dashboard.lots.list.length === 0) && (
@@ -791,16 +847,22 @@ export const VendorDashboard: React.FC = () => {
                 <span
                   className="w-5 h-5 rounded flex items-center justify-center text-white shrink-0"
                   style={{
-                    backgroundColor: CHART_COLORS[(index + 3) % CHART_COLORS.length],
+                    backgroundColor:
+                      CHART_COLORS[(index + 3) % CHART_COLORS.length],
                   }}
                 >
                   <FaStethoscope className="w-2.5 h-2.5" />
                 </span>
-                <span className="text-xs text-slate-700 truncate">{service.name}</span>
+                <span className="text-xs text-slate-700 truncate">
+                  {service.name}
+                </span>
               </div>
             ))}
-            {(!dashboard?.services?.list || dashboard.services.list.length === 0) && (
-              <p className="text-xs text-slate-400 text-center py-4">No services</p>
+            {(!dashboard?.services?.list ||
+              dashboard.services.list.length === 0) && (
+              <p className="text-xs text-slate-400 text-center py-4">
+                No services
+              </p>
             )}
           </div>
         </div>

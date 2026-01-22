@@ -88,7 +88,7 @@ export default function VendorEquipmentDetailPage() {
         onSuccess: () => {
           router.push(`/vendors/${vendorCode}/equipments`);
         },
-      }
+      },
     );
   };
 
@@ -130,10 +130,12 @@ export default function VendorEquipmentDetailPage() {
           <BackButton onClick={() => router.back()} />
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-slate-900">{equipment.name}</h1>
+              <h1 className="text-xl font-bold text-slate-900">
+                {equipment.name}
+              </h1>
               <span
                 className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(
-                  equipment.status
+                  equipment.status,
                 )}`}
               >
                 {getStatusIcon(equipment.status)}
@@ -145,7 +147,11 @@ export default function VendorEquipmentDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => router.push(`/vendors/${vendorCode}/equipments/${equipmentId}/edit`)}
+            onClick={() =>
+              router.push(
+                `/vendors/${vendorCode}/equipments/${equipmentId}/edit`,
+              )
+            }
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200"
           >
             <FaEdit className="w-3 h-3" />
@@ -245,19 +251,21 @@ export default function VendorEquipmentDetailPage() {
                 Specifications
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {Object.entries(equipment.specifications).map(([key, value]) => (
-                  <div
-                    key={key}
-                    className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
-                  >
-                    <span className="text-sm text-slate-600 capitalize">
-                      {key.replace(/_/g, " ")}
-                    </span>
-                    <span className="text-sm font-medium text-slate-900">
-                      {String(value)}
-                    </span>
-                  </div>
-                ))}
+                {Object.entries(equipment.specifications).map(
+                  ([key, value]) => (
+                    <div
+                      key={key}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                    >
+                      <span className="text-sm text-slate-600 capitalize">
+                        {key.replace(/_/g, " ")}
+                      </span>
+                      <span className="text-sm font-medium text-slate-900">
+                        {String(value)}
+                      </span>
+                    </div>
+                  ),
+                )}
               </div>
             </div>
           )}
@@ -271,8 +279,8 @@ export default function VendorEquipmentDetailPage() {
               Delete Equipment
             </h3>
             <p className="text-slate-600 text-sm mb-4">
-              Are you sure you want to delete &ldquo;{equipment.name}&rdquo;? This action
-              cannot be undone.
+              Are you sure you want to delete &ldquo;{equipment.name}&rdquo;?
+              This action cannot be undone.
             </p>
             <div className="flex gap-3">
               <button

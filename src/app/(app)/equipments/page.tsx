@@ -61,7 +61,7 @@ const getStatusIcon = (status: string) => {
 export default function EquipmentsPage() {
   const router = useRouter();
   const user = useCurrentUser();
-  
+
   // Get vendor ID from the current user's entity
   const vendorId = user?.entity?.id || "";
 
@@ -70,7 +70,9 @@ export default function EquipmentsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
+    null,
+  );
 
   // Fetch equipments
   const {
@@ -87,7 +89,10 @@ export default function EquipmentsPage() {
 
   const deleteEquipmentMutation = useDeleteVendorEquipment();
 
-  const equipments = useMemo(() => equipmentsData?.data || [], [equipmentsData?.data]);
+  const equipments = useMemo(
+    () => equipmentsData?.data || [],
+    [equipmentsData?.data],
+  );
   const pagination = equipmentsData?.pagination;
 
   // Get unique categories for filter
@@ -110,7 +115,7 @@ export default function EquipmentsPage() {
         eq.serial_number?.toLowerCase().includes(s) ||
         eq.brand?.toLowerCase().includes(s) ||
         eq.model?.toLowerCase().includes(s) ||
-        eq.category_label?.toLowerCase().includes(s)
+        eq.category_label?.toLowerCase().includes(s),
     );
   }, [equipments, search]);
 
@@ -122,7 +127,7 @@ export default function EquipmentsPage() {
         onSuccess: () => {
           setShowDeleteConfirm(null);
         },
-      }
+      },
     );
   };
 
@@ -309,7 +314,7 @@ export default function EquipmentsPage() {
                     <Table.Cell>
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadge(
-                          equipment.status
+                          equipment.status,
                         )}`}
                       >
                         {getStatusIcon(equipment.status)}
@@ -386,7 +391,7 @@ export default function EquipmentsPage() {
                   </div>
                   <span
                     className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(
-                      equipment.status
+                      equipment.status,
                     )}`}
                   >
                     {getStatusIcon(equipment.status)}

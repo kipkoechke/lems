@@ -23,7 +23,13 @@ const equipmentSchema = z.object({
   brand: z.string().optional(),
   manufacture_date: z.string().optional(),
   description: z.string().optional(),
-  status: z.enum(["active", "inactive", "maintenance", "decommissioned", "pending_installation"]),
+  status: z.enum([
+    "active",
+    "inactive",
+    "maintenance",
+    "decommissioned",
+    "pending_installation",
+  ]),
 });
 
 type EquipmentFormData = z.infer<typeof equipmentSchema>;
@@ -74,7 +80,9 @@ export default function EditEquipmentPage() {
   const updateEquipmentMutation = useUpdateVendorEquipment();
 
   // Specifications state
-  const [specifications, setSpecifications] = useState<Record<string, string>>({});
+  const [specifications, setSpecifications] = useState<Record<string, string>>(
+    {},
+  );
   const [newSpecKey, setNewSpecKey] = useState("");
   const [newSpecValue, setNewSpecValue] = useState("");
 
@@ -140,14 +148,15 @@ export default function EditEquipmentPage() {
         equipmentId: params.id,
         data: {
           ...data,
-          specifications: Object.keys(specifications).length > 0 ? specifications : undefined,
+          specifications:
+            Object.keys(specifications).length > 0 ? specifications : undefined,
         },
       },
       {
         onSuccess: () => {
           router.push(`/equipments/${params.id}`);
         },
-      }
+      },
     );
   };
 
@@ -200,14 +209,21 @@ export default function EditEquipmentPage() {
               <FaCog className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">Edit Equipment</h1>
-              <p className="text-sm text-slate-500">Update equipment information</p>
+              <h1 className="text-xl font-bold text-slate-900">
+                Edit Equipment
+              </h1>
+              <p className="text-sm text-slate-500">
+                Update equipment information
+              </p>
             </div>
           </div>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg border border-slate-200">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="bg-white rounded-lg border border-slate-200"
+        >
           <div className="p-4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InputField

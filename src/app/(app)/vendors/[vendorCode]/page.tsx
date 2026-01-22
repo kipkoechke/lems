@@ -28,10 +28,7 @@ export default function VendorDetailPage() {
     error: vendorError,
   } = useVendor(vendorCode);
 
-  const {
-    data: contractsData,
-    isLoading: contractsLoading,
-  } = useQuery({
+  const { data: contractsData, isLoading: contractsLoading } = useQuery({
     queryKey: ["contracts", vendorCode],
     queryFn: () => getContracts({ vendor_code: vendorCode }),
     enabled: !!vendorCode,
@@ -208,7 +205,9 @@ export default function VendorDetailPage() {
                 </h2>
               </div>
               <button
-                onClick={() => router.push(`/contracts/new?vendor=${vendorCode}`)}
+                onClick={() =>
+                  router.push(`/contracts/new?vendor=${vendorCode}`)
+                }
                 className="text-xs text-blue-600 hover:text-blue-700 font-medium"
               >
                 + Add Contract
@@ -222,7 +221,9 @@ export default function VendorDetailPage() {
                 </div>
                 <p className="text-sm text-slate-500">No contracts found</p>
                 <button
-                  onClick={() => router.push(`/contracts/new?vendor=${vendorCode}`)}
+                  onClick={() =>
+                    router.push(`/contracts/new?vendor=${vendorCode}`)
+                  }
                   className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
                 >
                   Create first contract
@@ -260,13 +261,14 @@ export default function VendorDetailPage() {
                         </Table.Cell>
                         <Table.Cell>
                           <p className="text-sm text-slate-700">
-                            {formatDate(contract.start_date)} - {formatDate(contract.end_date)}
+                            {formatDate(contract.start_date)} -{" "}
+                            {formatDate(contract.end_date)}
                           </p>
                         </Table.Cell>
                         <Table.Cell>
                           <span
                             className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(
-                              contract.status
+                              contract.status,
                             )}`}
                           >
                             {contract.status.charAt(0).toUpperCase() +
@@ -275,7 +277,9 @@ export default function VendorDetailPage() {
                         </Table.Cell>
                         <Table.Cell align="right">
                           <button
-                            onClick={() => router.push(`/contracts/${contract.id}`)}
+                            onClick={() =>
+                              router.push(`/contracts/${contract.id}`)
+                            }
                             className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                           >
                             View
@@ -288,7 +292,9 @@ export default function VendorDetailPage() {
                 {contracts.length > 5 && (
                   <div className="mt-3 text-center">
                     <button
-                      onClick={() => router.push(`/vendors/${vendorCode}/contracts`)}
+                      onClick={() =>
+                        router.push(`/vendors/${vendorCode}/contracts`)
+                      }
                       className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                     >
                       View all {contracts.length} contracts →
@@ -302,12 +308,8 @@ export default function VendorDetailPage() {
           {/* Timestamps */}
           <div className="px-4 py-3 bg-slate-50 rounded-b-lg">
             <div className="flex flex-wrap gap-4 text-xs text-slate-500">
-              <span>
-                Created: {formatDate(vendor.created_at)}
-              </span>
-              <span>
-                Updated: {formatDate(vendor.updated_at)}
-              </span>
+              <span>Created: {formatDate(vendor.created_at)}</span>
+              <span>Updated: {formatDate(vendor.updated_at)}</span>
             </div>
           </div>
         </div>

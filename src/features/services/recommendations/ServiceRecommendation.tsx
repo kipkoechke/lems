@@ -68,7 +68,7 @@ const ServiceRecommendation: React.FC = () => {
 
   // Booking state - check if booking already exists to preserve UI state
   const [bookingCreated, setBookingCreated] = useState<boolean>(
-    !!workflow.booking
+    !!workflow.booking,
   );
   const booking = useAppSelector((store) => store.workflow.booking);
 
@@ -102,7 +102,9 @@ const ServiceRecommendation: React.FC = () => {
     if (isSelected) {
       // Remove service and its date
       dispatch(
-        setSelectedServices(selectedServiceIds.filter((id) => id !== serviceId))
+        setSelectedServices(
+          selectedServiceIds.filter((id) => id !== serviceId),
+        ),
       );
       dispatch(setServiceDate({ serviceId, date: "" }));
     } else {
@@ -130,7 +132,7 @@ const ServiceRecommendation: React.FC = () => {
       if (selectedContract && selectedContract.services) {
         for (const serviceId of selectedServiceIds) {
           const service = selectedContract.services.find(
-            (s) => s.service_code === serviceId
+            (s) => s.service_code === serviceId,
           );
           if (service && serviceDates[serviceId]) {
             selectedServices.push({
@@ -250,14 +252,14 @@ const ServiceRecommendation: React.FC = () => {
         } else {
           console.error("No expiry time in response:", response);
           toast.error(
-            "Booking created but OTP not sent. Please contact support."
+            "Booking created but OTP not sent. Please contact support.",
           );
         }
       },
       onError: (error: any) => {
         console.error("Booking creation error:", error);
         toast.error(
-          error?.response?.data?.message || "Failed to create booking"
+          error?.response?.data?.message || "Failed to create booking",
         );
       },
     });
@@ -416,8 +418,8 @@ const ServiceRecommendation: React.FC = () => {
                       {isServicesLoading
                         ? "Loading diagnostic services..."
                         : contracts.length === 0
-                        ? "No diagnostic services available"
-                        : "Select a diagnostic service"}
+                          ? "No diagnostic services available"
+                          : "Select a diagnostic service"}
                     </option>
                     {contracts?.map((contract) => (
                       <option key={contract.id} value={contract.id}>
@@ -436,7 +438,7 @@ const ServiceRecommendation: React.FC = () => {
                       </div>
                       <div className="text-xs text-blue-700">
                         {selectedContract.services?.filter(
-                          (s) => s.is_active === "1"
+                          (s) => s.is_active === "1",
                         ).length || 0}{" "}
                         available services
                       </div>
@@ -485,7 +487,7 @@ const ServiceRecommendation: React.FC = () => {
                                 type="checkbox"
                                 id={`service-${service.service_code}`}
                                 checked={selectedServiceIds.includes(
-                                  service.service_code
+                                  service.service_code,
                                 )}
                                 onChange={() =>
                                   handleServiceToggle(service.service_code)
@@ -506,7 +508,7 @@ const ServiceRecommendation: React.FC = () => {
                           </div>
 
                           {selectedServiceIds.includes(
-                            service.service_code
+                            service.service_code,
                           ) && (
                             <div className="mt-2 pt-2 border-t border-green-200">
                               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -518,7 +520,7 @@ const ServiceRecommendation: React.FC = () => {
                                 onChange={(e) =>
                                   handleServiceDateChange(
                                     service.service_code,
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
@@ -543,8 +545,8 @@ const ServiceRecommendation: React.FC = () => {
                           .map(
                             (id) =>
                               availableServices.find(
-                                (s) => s.service_code === id
-                              )?.service_name
+                                (s) => s.service_code === id,
+                              )?.service_name,
                           )
                           .join(", ")}
                       </div>
@@ -585,7 +587,7 @@ const ServiceRecommendation: React.FC = () => {
                         onClick={() => {
                           if (bookingCreated) {
                             toast.error(
-                              "Cannot change override mode after booking is created"
+                              "Cannot change override mode after booking is created",
                             );
                             return;
                           }
@@ -626,8 +628,8 @@ const ServiceRecommendation: React.FC = () => {
                   ? bookingCreated
                     ? "bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 transform hover:scale-105"
                     : isOverrideMode
-                    ? "bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700 transform hover:scale-105"
-                    : "bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-white hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 transform hover:scale-105"
+                      ? "bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700 transform hover:scale-105"
+                      : "bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-white hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 transform hover:scale-105"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >

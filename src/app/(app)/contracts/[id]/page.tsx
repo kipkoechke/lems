@@ -130,7 +130,8 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold text-slate-900">
-                  {contract.contract_number || `Contract #${contract.id.slice(0, 8)}`}
+                  {contract.contract_number ||
+                    `Contract #${contract.id.slice(0, 8)}`}
                 </h1>
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${statusBadge.className}`}
@@ -152,7 +153,9 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
               <MdBusiness className="w-4 h-4" /> Vendor
             </button>
             <button
-              onClick={() => router.push(`/facilities/${contract.facility.code}`)}
+              onClick={() =>
+                router.push(`/facilities/${contract.facility.code}`)
+              }
               className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm"
             >
               <MdLocationOn className="w-4 h-4" /> Facility
@@ -253,7 +256,9 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
           {/* Notes Section */}
           {contract.notes && (
             <div className="p-4 border-b border-slate-100">
-              <h2 className="text-sm font-semibold text-slate-900 mb-2">Notes</h2>
+              <h2 className="text-sm font-semibold text-slate-900 mb-2">
+                Notes
+              </h2>
               <p className="text-sm text-slate-700">{contract.notes}</p>
             </div>
           )}
@@ -298,42 +303,46 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
                     </div>
                     <div className="p-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {lotGroup.services.map((service: ContractServiceItem) => (
-                          <div
-                            key={service.id}
-                            className="flex items-start justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-100"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-900 truncate">
-                                {service.service.name}
-                              </p>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs text-slate-500 font-mono">
-                                  {service.service.code}
-                                </span>
-                                <span className="text-slate-300">•</span>
-                                <span className="text-xs text-slate-600">
-                                  KES {service.service.tariff?.toLocaleString() || 0}
-                                </span>
-                              </div>
-                              {service.equipment && (
-                                <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                                  <MdInventory2 className="w-3 h-3" />
-                                  {service.equipment.name}
-                                </p>
-                              )}
-                            </div>
-                            <span
-                              className={`shrink-0 ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
-                                service.is_active
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : "bg-slate-200 text-slate-600"
-                              }`}
+                        {lotGroup.services.map(
+                          (service: ContractServiceItem) => (
+                            <div
+                              key={service.id}
+                              className="flex items-start justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-100"
                             >
-                              {service.is_active ? "Active" : "Inactive"}
-                            </span>
-                          </div>
-                        ))}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-slate-900 truncate">
+                                  {service.service.name}
+                                </p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-xs text-slate-500 font-mono">
+                                    {service.service.code}
+                                  </span>
+                                  <span className="text-slate-300">•</span>
+                                  <span className="text-xs text-slate-600">
+                                    KES{" "}
+                                    {service.service.tariff?.toLocaleString() ||
+                                      0}
+                                  </span>
+                                </div>
+                                {service.equipment && (
+                                  <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                                    <MdInventory2 className="w-3 h-3" />
+                                    {service.equipment.name}
+                                  </p>
+                                )}
+                              </div>
+                              <span
+                                className={`shrink-0 ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
+                                  service.is_active
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : "bg-slate-200 text-slate-600"
+                                }`}
+                              >
+                                {service.is_active ? "Active" : "Inactive"}
+                              </span>
+                            </div>
+                          ),
+                        )}
                       </div>
                     </div>
                   </div>
@@ -353,9 +362,7 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
           <div className="px-4 py-3 bg-slate-50 rounded-b-lg">
             <div className="flex flex-wrap gap-4 text-xs text-slate-500">
               <span>Created: {formatDate(contract.created_at)}</span>
-              {contract.creator && (
-                <span>By: {contract.creator.name}</span>
-              )}
+              {contract.creator && <span>By: {contract.creator.name}</span>}
               <span>Updated: {formatDate(contract.updated_at)}</span>
             </div>
           </div>

@@ -74,21 +74,21 @@ export const getEquipmentById = async (id: string): Promise<Equipment> => {
 };
 
 export const getEquipmentByService = async (
-  serviceId: string
+  serviceId: string,
 ): Promise<EquipmentWithService[]> => {
   const response = await axios.get(`/service/equipments/${serviceId}`);
   return response.data.data;
 };
 
 export const getEquipmentByCategory = async (
-  id: string
+  id: string,
 ): Promise<Equipment[]> => {
   const response = await axios.get(`/Equipment/category/${id}`);
   return response.data.data;
 };
 
 export const getEquipmentByFacility = async (
-  id: string
+  id: string,
 ): Promise<Equipment[]> => {
   const response = await axios.get(`/Equipment/facility/${id}`);
   return response.data.data;
@@ -96,14 +96,14 @@ export const getEquipmentByFacility = async (
 
 // CRUD aligned with /api/v1/equipments
 export const createEquipment = async (
-  data: EquipmentCreateRequest
+  data: EquipmentCreateRequest,
 ): Promise<Equipment> => {
   const response = await axios.post("/equipments", data);
   return (response.data?.data ?? response.data) as Equipment;
 };
 
 export const updateEquipment = async (
-  data: EquipmentUpdateRequest
+  data: EquipmentUpdateRequest,
 ): Promise<Equipment> => {
   const response = await axios.put(`/equipments/${data.id}`, data);
   return (response.data?.data ?? response.data) as Equipment;
@@ -129,7 +129,12 @@ export interface VendorEquipment {
   manufacture_date: string;
   category: string;
   category_label: string;
-  status: "active" | "inactive" | "maintenance" | "decommissioned" | "pending_installation";
+  status:
+    | "active"
+    | "inactive"
+    | "maintenance"
+    | "decommissioned"
+    | "pending_installation";
   status_label: string;
   description: string;
   specifications: VendorEquipmentSpecifications;
@@ -156,7 +161,12 @@ export interface VendorEquipmentCreateRequest {
   manufacture_date?: string;
   description?: string;
   specifications?: VendorEquipmentSpecifications;
-  status?: "active" | "inactive" | "maintenance" | "decommissioned" | "pending_installation";
+  status?:
+    | "active"
+    | "inactive"
+    | "maintenance"
+    | "decommissioned"
+    | "pending_installation";
 }
 
 export interface VendorEquipmentUpdateRequest extends VendorEquipmentCreateRequest {
@@ -174,25 +184,29 @@ export interface VendorEquipmentsParams {
 // Get vendor equipments with pagination
 export const getVendorEquipments = async (
   vendorId: string,
-  params: VendorEquipmentsParams = {}
+  params: VendorEquipmentsParams = {},
 ): Promise<VendorEquipmentsResponse> => {
-  const response = await axios.get(`/vendors/${vendorId}/equipments`, { params });
+  const response = await axios.get(`/vendors/${vendorId}/equipments`, {
+    params,
+  });
   return response.data;
 };
 
 // Get single vendor equipment
 export const getVendorEquipment = async (
   vendorId: string,
-  equipmentId: string
+  equipmentId: string,
 ): Promise<VendorEquipment> => {
-  const response = await axios.get(`/vendors/${vendorId}/equipments/${equipmentId}`);
+  const response = await axios.get(
+    `/vendors/${vendorId}/equipments/${equipmentId}`,
+  );
   return response.data?.data ?? response.data;
 };
 
 // Create vendor equipment
 export const createVendorEquipment = async (
   vendorId: string,
-  data: VendorEquipmentCreateRequest
+  data: VendorEquipmentCreateRequest,
 ): Promise<VendorEquipment> => {
   const response = await axios.post(`/vendors/${vendorId}/equipments`, data);
   return response.data?.data ?? response.data;
@@ -202,16 +216,19 @@ export const createVendorEquipment = async (
 export const updateVendorEquipment = async (
   vendorId: string,
   equipmentId: string,
-  data: VendorEquipmentCreateRequest
+  data: VendorEquipmentCreateRequest,
 ): Promise<VendorEquipment> => {
-  const response = await axios.patch(`/vendors/${vendorId}/equipments/${equipmentId}`, data);
+  const response = await axios.patch(
+    `/vendors/${vendorId}/equipments/${equipmentId}`,
+    data,
+  );
   return response.data?.data ?? response.data;
 };
 
 // Delete vendor equipment
 export const deleteVendorEquipment = async (
   vendorId: string,
-  equipmentId: string
+  equipmentId: string,
 ): Promise<void> => {
   await axios.delete(`/vendors/${vendorId}/equipments/${equipmentId}`);
 };
