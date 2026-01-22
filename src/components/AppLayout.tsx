@@ -24,8 +24,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     setIsMobileMenuOpen(false);
   };
 
-  // Hide sidebar for f_medical users
-  const showSidebar = user?.role !== "f_medical";
+  // Hide sidebar for f_practitioner users
+  const showSidebar = user?.role !== "f_practitioner";
 
   return (
     <div
@@ -37,7 +37,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         onMenuToggle={toggleMobileMenu}
         isMobileMenuOpen={isMobileMenuOpen}
       />
-      {/* Sidebar - hidden for f_medical users */}
+      {/* Sidebar - hidden for f_practitioner users */}
       {showSidebar && (
         <Sidebar
           isMobileMenuOpen={isMobileMenuOpen}

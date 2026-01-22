@@ -32,7 +32,7 @@ export default function HomePage() {
   }, [currentStep]);
 
   useEffect(() => {
-    if (user && user.role === "f_medical") {
+    if (user && user.role === "f_practitioner") {
       // Clinicians go directly to clinician services page
       router.replace("/clinician");
     } else if (user && user.role === "f_lab") {
@@ -62,8 +62,8 @@ export default function HomePage() {
     return null;
   }
 
-  // If f_medical or f_lab, show loading while redirecting
-  if (user.role === "f_medical" || user.role === "f_lab") {
+  // If f_practitioner or f_lab, show loading while redirecting
+  if (user.role === "f_practitioner" || user.role === "f_lab") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50">
         <div className="text-center">
@@ -102,7 +102,7 @@ export default function HomePage() {
   const handleStepOneComplete = (
     patient: Patient,
     paymentModeId: string,
-    facility: Facility
+    facility: Facility,
   ) => {
     console.log("handleStepOneComplete called with:", {
       patient,
