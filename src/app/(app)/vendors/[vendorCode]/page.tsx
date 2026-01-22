@@ -1,9 +1,20 @@
 "use client";
 
+import React from "react";
 import { useParams, useRouter } from "next/navigation";
+import {
+  MdBusiness,
+  MdCalendarToday,
+  MdHandshake,
+  MdLocationCity,
+  MdCheckCircle,
+} from "react-icons/md";
+import { FaEdit, FaFileContract, FaCog } from "react-icons/fa";
 import { useVendor } from "@/features/vendors/useVendor";
 import { getContracts } from "@/services/apiVendors";
 import { useQuery } from "@tanstack/react-query";
+import BackButton from "@/components/common/BackButton";
+import { Table } from "@/components/Table";
 
 export default function VendorDetailPage() {
   const params = useParams();
@@ -19,7 +30,6 @@ export default function VendorDetailPage() {
   const {
     data: contractsData,
     isLoading: contractsLoading,
-    error: contractsError,
   } = useQuery({
     queryKey: ["contracts", vendorCode],
     queryFn: () => getContracts({ vendor_code: vendorCode }),
@@ -28,343 +38,300 @@ export default function VendorDetailPage() {
 
   const contracts = contractsData?.data || [];
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "active":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "expired":
+        return "bg-red-50 text-red-700 border-red-200";
+      case "pending":
+        return "bg-amber-50 text-amber-700 border-amber-200";
+      default:
+        return "bg-slate-50 text-slate-700 border-slate-200";
+    }
+  };
+
   if (vendorLoading || contractsLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading vendor details...</p>
+      <div className="min-h-screen bg-slate-50 p-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-white rounded-lg border border-slate-200 p-8">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-slate-200 rounded w-1/4"></div>
+              <div className="grid grid-cols-4 gap-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-20 bg-slate-100 rounded-lg"></div>
+                ))}
+              </div>
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-16 bg-slate-100 rounded"></div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (vendorError || contractsError) {
+  // Extract error message from API response or error object
+  const getErrorMessage = (err: unknown): string => {
+    if (err && typeof err === 'object') {
+      const axiosErr = err as { response?: { data?: { message?: string } }; message?: string };
+      if (axiosErr.response?.data?.message) {
+        return axiosErr.response.data.message;
+      }
+      if (axiosErr.message) {
+        return axiosErr.message;
+      }
+    }
+    return "An unexpected error occurred";
+  };
+
+  if (vendorError || !vendor) {
+    const errorMessage = vendorError ? getErrorMessage(vendorError) : "Vendor not found";
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="text-red-500 text-xl mb-2">⚠️</div>
-          <p className="text-red-600">Failed to load vendor details</p>
-          <button
-            onClick={() => router.back()}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Go Back
-          </button>
+      <div className="min-h-screen bg-slate-50 p-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
+            <div className="w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-slate-900 mb-2">Unable to Load Vendor</h2>
+            <p className="text-slate-600 mb-4">{errorMessage}</p>
+            <button
+              onClick={() => router.push("/vendors")}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              Back to Vendors
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!vendor) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="text-yellow-500 text-xl mb-2">🔍</div>
-          <p className="text-gray-600">Vendor not found</p>
-          <button
-            onClick={() => router.back()}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const activeContracts = contracts.filter((c) => c.status === "active").length;
+  const uniqueFacilities = new Set(contracts.map((c) => c.facility.code)).size;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+    <div className="min-h-screen bg-slate-50 p-4">
+      <div className="max-w-5xl mx-auto space-y-4">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <BackButton onClick={() => router.back()} />
             <div>
-              <button
-                onClick={() => router.back()}
-                className="mb-4 flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <svg
-                  className="w-4 h-4 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                Back
-              </button>
-              <h1 className="text-4xl font-bold text-gray-900">
-                {vendor.name}
-              </h1>
-              <p className="text-gray-600 mt-2 text-lg">
-                Vendor Code: {vendor.code}
-              </p>
-            </div>
-            <div className="text-right">
-              <span
-                className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold shadow-sm ${
-                  vendor.is_active === "1"
-                    ? "bg-green-100 text-green-800 border-green-200"
-                    : "bg-red-100 text-red-800 border-red-200"
-                }`}
-              >
-                {vendor.is_active === "1" ? "Active" : "Inactive"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-blue-100 mr-4">
-                <svg
-                  className="w-6 h-6 text-blue-600"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-blue-600">
-                  {contracts.length}
-                </p>
-                <p className="text-sm font-medium text-gray-600">
-                  Total Contracts
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-green-100 mr-4">
-                <svg
-                  className="w-6 h-6 text-green-600"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-green-600">
-                  {contracts.filter((c) => c.status === "active").length}
-                </p>
-                <p className="text-sm font-medium text-gray-600">
-                  Active Contracts
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-orange-500">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-orange-100 mr-4">
-                <svg
-                  className="w-6 h-6 text-orange-600"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-orange-600">
-                  {new Set(contracts.map((c) => c.facility.code)).size}
-                </p>
-                <p className="text-sm font-medium text-gray-600">Facilities</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Vendor Information */}
-        <div className="bg-white rounded-2xl shadow-lg mb-8">
-          <div className="px-8 py-6 border-b border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Vendor Information
-            </h2>
-          </div>
-          <div className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                  Vendor Name
-                </label>
-                <p className="text-lg font-medium text-gray-900">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-slate-900">
                   {vendor.name}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                  Vendor Code
-                </label>
-                <p className="text-lg font-medium text-gray-900 font-mono bg-gray-50 px-3 py-1 rounded-lg inline-block">
-                  {vendor.code}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                  Status
-                </label>
-                <p
-                  className={`text-lg font-semibold ${
-                    vendor.is_active === "1" ? "text-green-600" : "text-red-600"
+                </h1>
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+                    vendor.is_active === "1"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-red-50 text-red-700 border-red-200"
                   }`}
                 >
+                  <MdCheckCircle className="w-3.5 h-3.5" />
                   {vendor.is_active === "1" ? "Active" : "Inactive"}
-                </p>
+                </span>
               </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                  Created Date
-                </label>
-                <p className="text-lg font-medium text-gray-900">
-                  {new Date(vendor.created_at).toLocaleDateString()}
-                </p>
-              </div>
+              <p className="text-sm text-slate-500 font-mono">{vendor.code}</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => router.push(`/vendors/${vendorCode}/equipments`)}
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-medium hover:bg-slate-200 transition-colors flex items-center gap-2 text-sm"
+            >
+              <FaCog className="w-4 h-4" /> Equipment
+            </button>
+            <button
+              onClick={() => router.push(`/vendors/${vendorCode}/edit`)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm"
+            >
+              <FaEdit className="w-4 h-4" /> Edit
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-white rounded-lg border border-slate-200 p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+              <MdBusiness className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500">Vendor Code</p>
+              <p className="text-sm font-medium text-slate-900 font-mono truncate">
+                {vendor.code}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg border border-slate-200 p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+              <MdHandshake className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500">Active Contracts</p>
+              <p className="text-sm font-medium text-slate-900">
+                {activeContracts} of {contracts.length}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg border border-slate-200 p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
+              <MdLocationCity className="w-5 h-5 text-purple-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500">Facilities</p>
+              <p className="text-sm font-medium text-slate-900">
+                {uniqueFacilities}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg border border-slate-200 p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+              <MdCalendarToday className="w-5 h-5 text-amber-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500">Created</p>
+              <p className="text-sm font-medium text-slate-900 truncate">
+                {formatDate(vendor.created_at)}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Contracts */}
-        <div className="bg-white rounded-2xl shadow-lg">
-          <div className="px-8 py-6 border-b border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-900">Contracts</h2>
-          </div>
-          <div className="p-8">
+        {/* Main Content Card */}
+        <div className="bg-white rounded-lg border border-slate-200">
+          {/* Contracts Section */}
+          <div className="p-4 border-b border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <FaFileContract className="w-4 h-4 text-slate-400" />
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Contracts ({contracts.length})
+                </h2>
+              </div>
+              <button
+                onClick={() => router.push(`/contracts/new?vendor=${vendorCode}`)}
+                className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+              >
+                + Add Contract
+              </button>
+            </div>
+
             {contracts.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 text-gray-300">
-                  <svg fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                    <path
-                      fillRule="evenodd"
-                      d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+              <div className="text-center py-8">
+                <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
+                  <FaFileContract className="w-5 h-5 text-slate-400" />
                 </div>
-                <p className="text-gray-600 text-lg">
-                  No contracts found for this vendor
-                </p>
+                <p className="text-sm text-slate-500">No contracts found</p>
+                <button
+                  onClick={() => router.push(`/contracts/new?vendor=${vendorCode}`)}
+                  className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Create first contract
+                </button>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-xl border border-gray-200">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Contract
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Facility
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Period
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {contracts.map((contract) => (
-                      <tr
-                        key={contract.id}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-6 py-4">
+              <div className="overflow-x-auto -mx-4 px-4">
+                <Table>
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.HeaderCell>Contract #</Table.HeaderCell>
+                      <Table.HeaderCell>Facility</Table.HeaderCell>
+                      <Table.HeaderCell>Period</Table.HeaderCell>
+                      <Table.HeaderCell>Status</Table.HeaderCell>
+                      <Table.HeaderCell align="right">Actions</Table.HeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
+                    {contracts.slice(0, 5).map((contract) => (
+                      <Table.Row key={contract.id}>
+                        <Table.Cell>
+                          <span className="font-medium text-slate-900">
+                            {contract.contract_number}
+                          </span>
+                        </Table.Cell>
+                        <Table.Cell>
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">
-                              {contract.contract_number}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900">
+                            <p className="text-sm text-slate-900">
                               {contract.facility.name}
                             </p>
-                            <p className="text-sm text-gray-500 font-mono">
-                              Code: {contract.facility.code}
+                            <p className="text-xs text-slate-500 font-mono">
+                              {contract.facility.code}
                             </p>
                           </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">
-                            <p>
-                              {contract.start_date} - {contract.end_date}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
+                        </Table.Cell>
+                        <Table.Cell>
+                          <p className="text-sm text-slate-700">
+                            {formatDate(contract.start_date)} - {formatDate(contract.end_date)}
+                          </p>
+                        </Table.Cell>
+                        <Table.Cell>
                           <span
-                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                              contract.status === "active"
-                                ? "bg-green-100 text-green-800"
-                                : contract.status === "expired"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                            }`}
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(
+                              contract.status
+                            )}`}
                           >
                             {contract.status.charAt(0).toUpperCase() +
                               contract.status.slice(1)}
                           </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex space-x-3">
-                            <button
-                              onClick={() =>
-                                router.push(`/contracts/${contract.id}`)
-                              }
-                              className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
-                            >
-                              View Contract
-                            </button>
-                            <button
-                              onClick={() =>
-                                router.push(
-                                  `/facilities/${contract.facility.code}`,
-                                )
-                              }
-                              className="text-green-600 hover:text-green-800 text-sm font-medium transition-colors"
-                            >
-                              View Facility
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+                        </Table.Cell>
+                        <Table.Cell align="right">
+                          <button
+                            onClick={() => router.push(`/contracts/${contract.id}`)}
+                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                          >
+                            View
+                          </button>
+                        </Table.Cell>
+                      </Table.Row>
                     ))}
-                  </tbody>
-                </table>
+                  </Table.Body>
+                </Table>
+                {contracts.length > 5 && (
+                  <div className="mt-3 text-center">
+                    <button
+                      onClick={() => router.push(`/vendors/${vendorCode}/contracts`)}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      View all {contracts.length} contracts →
+                    </button>
+                  </div>
+                )}
               </div>
             )}
+          </div>
+
+          {/* Timestamps */}
+          <div className="px-4 py-3 bg-slate-50 rounded-b-lg">
+            <div className="flex flex-wrap gap-4 text-xs text-slate-500">
+              <span>
+                Created: {formatDate(vendor.created_at)}
+              </span>
+              <span>
+                Updated: {formatDate(vendor.updated_at)}
+              </span>
+            </div>
           </div>
         </div>
       </div>

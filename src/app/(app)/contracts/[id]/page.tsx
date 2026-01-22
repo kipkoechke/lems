@@ -9,16 +9,17 @@ import {
 import { useRouter } from "next/navigation";
 import React from "react";
 import {
-  FaArrowLeft,
-  FaBox,
-  FaBuilding,
-  FaCalendarAlt,
-  FaCheck,
-  FaClock,
-  FaMapMarkerAlt,
-  FaStethoscope,
-  FaTimes,
-} from "react-icons/fa";
+  MdBusiness,
+  MdCalendarToday,
+  MdLocationOn,
+  MdCheckCircle,
+  MdCancel,
+  MdAccessTime,
+  MdMedicalServices,
+  MdInventory2,
+} from "react-icons/md";
+import { FaEdit, FaFileContract, FaBox } from "react-icons/fa";
+import BackButton from "@/components/common/BackButton";
 
 interface ContractDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -43,99 +44,98 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
     isLoading: servicesLoading,
   } = useContractServices(contractId);
 
-  // Helper function to format date
   const formatDate = (dateString: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("en-GB", {
       day: "numeric",
+      month: "short",
+      year: "numeric",
     });
   };
 
-  // Helper function to get status badge styles
   const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { bg: string; icon: React.ReactNode }> =
-      {
-        active: {
-          bg: "bg-green-100 text-green-800",
-          icon: <FaCheck className="w-3 h-3" />,
-        },
-        inactive: {
-          bg: "bg-gray-100 text-gray-800",
-          icon: <FaTimes className="w-3 h-3" />,
-        },
-        expired: {
-          bg: "bg-red-100 text-red-800",
-          icon: <FaTimes className="w-3 h-3" />,
-        },
-        pending: {
-          bg: "bg-yellow-100 text-yellow-800",
-          icon: <FaClock className="w-3 h-3" />,
-        },
-      };
-    return statusConfig[status] || statusConfig.inactive;
+    switch (status) {
+      case "active":
+        return {
+          className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+          icon: <MdCheckCircle className="w-3.5 h-3.5" />,
+        };
+      case "expired":
+        return {
+          className: "bg-red-50 text-red-700 border-red-200",
+          icon: <MdCancel className="w-3.5 h-3.5" />,
+        };
+      case "pending":
+        return {
+          className: "bg-amber-50 text-amber-700 border-amber-200",
+          icon: <MdAccessTime className="w-3.5 h-3.5" />,
+        };
+      default:
+        return {
+          className: "bg-slate-50 text-slate-700 border-slate-200",
+          icon: <MdCancel className="w-3.5 h-3.5" />,
+        };
+    }
   };
 
-  if (!contractId) {
+  if (!contractId || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 mt-4">Loading contract details...</p>
+      <div className="min-h-screen bg-slate-50 p-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-white rounded-lg border border-slate-200 p-8">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-slate-200 rounded w-1/4"></div>
+              <div className="grid grid-cols-4 gap-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-20 bg-slate-100 rounded-lg"></div>
+                ))}
+              </div>
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-16 bg-slate-100 rounded"></div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 mt-4">Loading contract details...</p>
-        </div>
-      </div>
-    );
-  }
+  // Extract error message from API response or error object
+  const getErrorMessage = (err: unknown): string => {
+    if (err && typeof err === 'object') {
+      const axiosErr = err as { response?: { data?: { message?: string } }; message?: string };
+      if (axiosErr.response?.data?.message) {
+        return axiosErr.response.data.message;
+      }
+      if (axiosErr.message) {
+        return axiosErr.message;
+      }
+    }
+    return "An unexpected error occurred";
+  };
 
-  if (error) {
+  if (error || !contract) {
+    const errorMessage = error ? getErrorMessage(error) : "Contract not found";
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            Error Loading Contract
-          </h2>
-          <p className="text-gray-600 mb-4">Failed to load contract details</p>
-          <button
-            onClick={() => router.back()}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!contract) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-gray-400 text-6xl mb-4">📄</div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            Contract Not Found
-          </h2>
-          <p className="text-gray-600 mb-4">
-            The requested contract could not be found
-          </p>
-          <button
-            onClick={() => router.back()}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Go Back
-          </button>
+      <div className="min-h-screen bg-slate-50 p-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
+            <div className="w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-slate-900 mb-2">Unable to Load Contract</h2>
+            <p className="text-slate-600 mb-4">{errorMessage}</p>
+            <button
+              onClick={() => router.push("/contracts")}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              Back to Contracts
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -144,296 +144,242 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
   const statusBadge = getStatusBadge(contract.status);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.back()}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                <FaArrowLeft />
-                <span>Back</span>
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Contract Details
+    <div className="min-h-screen bg-slate-50 p-4">
+      <div className="max-w-5xl mx-auto space-y-4">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <BackButton onClick={() => router.back()} />
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-slate-900">
+                  {contract.contract_number || `Contract #${contract.id.slice(0, 8)}`}
                 </h1>
-                <p className="text-gray-600">
-                  {contract.contract_number ||
-                    `Contract #${contract.id.slice(0, 8)}`}
-                </p>
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${statusBadge.className}`}
+                >
+                  {statusBadge.icon}
+                  {contract.status}
+                </span>
               </div>
+              <p className="text-sm text-slate-500">
+                {contract.vendor.name} → {contract.facility.name}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <span
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium capitalize ${statusBadge.bg}`}
-              >
-                {statusBadge.icon}
-                {contract.status}
-              </span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => router.push(`/vendors/${contract.vendor.code}`)}
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-medium hover:bg-slate-200 transition-colors flex items-center gap-2 text-sm"
+            >
+              <MdBusiness className="w-4 h-4" /> Vendor
+            </button>
+            <button
+              onClick={() => router.push(`/facilities/${contract.facility.code}`)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm"
+            >
+              <MdLocationOn className="w-4 h-4" /> Facility
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-white rounded-lg border border-slate-200 p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+              <FaFileContract className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500">Contract #</p>
+              <p className="text-sm font-medium text-slate-900 font-mono truncate">
+                {contract.contract_number || contract.id.slice(0, 8)}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg border border-slate-200 p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+              <MdMedicalServices className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500">Services</p>
+              <p className="text-sm font-medium text-slate-900">
+                {totalServices} in {lotsWithServices.length} lots
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg border border-slate-200 p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
+              <MdCalendarToday className="w-5 h-5 text-purple-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500">Start Date</p>
+              <p className="text-sm font-medium text-slate-900 truncate">
+                {formatDate(contract.start_date)}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg border border-slate-200 p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+              <MdAccessTime className="w-5 h-5 text-amber-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500">End Date</p>
+              <p className="text-sm font-medium text-slate-900 truncate">
+                {formatDate(contract.end_date)}
+              </p>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Contract Information */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Information Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <FaBuilding className="text-blue-600" />
-                Contract Information
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Contract Number
-                  </label>
-                  <p className="text-gray-900 font-mono text-sm bg-gray-50 px-3 py-2 rounded-lg">
-                    {contract.contract_number || contract.id.slice(0, 8)}
-                  </p>
+        {/* Main Content Card */}
+        <div className="bg-white rounded-lg border border-slate-200">
+          {/* Parties Section */}
+          <div className="p-4 border-b border-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900 mb-3">
+              Contract Parties
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                  <MdBusiness className="w-4 h-4 text-blue-600" />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Vendor
-                  </label>
-                  <p className="text-gray-900 font-semibold">
+                <div className="min-w-0">
+                  <p className="text-xs text-slate-500 mb-0.5">Vendor</p>
+                  <p className="text-sm font-medium text-slate-900">
                     {contract.vendor.name}
                   </p>
-                  <p className="text-sm text-gray-600">
-                    Code: {contract.vendor.code}
+                  <p className="text-xs text-slate-500 font-mono">
+                    {contract.vendor.code}
                   </p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Facility
-                  </label>
-                  <p className="text-gray-900 font-semibold flex items-center gap-2">
-                    <FaMapMarkerAlt className="text-gray-400" />
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                  <MdLocationOn className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-slate-500 mb-0.5">Facility</p>
+                  <p className="text-sm font-medium text-slate-900">
                     {contract.facility.name}
                   </p>
-                  <p className="text-sm text-gray-600">
-                    Code: {contract.facility.code}
+                  <p className="text-xs text-slate-500 font-mono">
+                    {contract.facility.code}
                   </p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Contract Period
-                  </label>
-                  <p className="text-gray-900 font-semibold flex items-center gap-2">
-                    <FaCalendarAlt className="text-gray-400" />
-                    {formatDate(contract.start_date)} -{" "}
-                    {formatDate(contract.end_date)}
-                  </p>
-                </div>
-                {contract.notes && (
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Notes
-                    </label>
-                    <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                      {contract.notes}
-                    </p>
-                  </div>
-                )}
               </div>
-            </div>
-
-            {/* Services Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <FaStethoscope className="text-green-600" />
-                Contract Services
-                <span className="text-sm font-normal text-gray-600">
-                  ({totalServices} services)
-                </span>
-              </h2>
-
-              {servicesLoading ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading services...</p>
-                </div>
-              ) : lotsWithServices && lotsWithServices.length > 0 ? (
-                <div className="space-y-6">
-                  {lotsWithServices.map((lotGroup: ContractLotWithServices) => (
-                    <div
-                      key={lotGroup.lot.id}
-                      className="border border-gray-200 rounded-lg overflow-hidden"
-                    >
-                      <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                        <div className="flex items-center gap-2">
-                          <FaBox className="text-blue-600" />
-                          <span className="font-semibold text-gray-900">
-                            LOT {lotGroup.lot.number}
-                          </span>
-                          <span className="text-gray-500">-</span>
-                          <span className="text-gray-700">
-                            {lotGroup.lot.name}
-                          </span>
-                          <span className="ml-auto bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs font-medium">
-                            {lotGroup.services.length} services
-                          </span>
-                        </div>
-                      </div>
-                      <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {lotGroup.services.map(
-                          (service: ContractServiceItem) => (
-                            <div
-                              key={service.id}
-                              className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-100 rounded-lg p-3"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <h3 className="font-semibold text-gray-900 text-sm mb-1">
-                                    {service.service.name}
-                                  </h3>
-                                  <p className="text-xs text-gray-600">
-                                    Code: {service.service.code}
-                                  </p>
-                                  <p className="text-xs text-gray-600">
-                                    Tariff: KES{" "}
-                                    {service.service.tariff?.toLocaleString() ||
-                                      0}
-                                  </p>
-                                  {service.equipment && (
-                                    <p className="text-xs text-gray-500 mt-1">
-                                      Equipment: {service.equipment.name}
-                                    </p>
-                                  )}
-                                </div>
-                                <span
-                                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                    service.is_active
-                                      ? "bg-green-100 text-green-800"
-                                      : "bg-gray-100 text-gray-600"
-                                  }`}
-                                >
-                                  {service.is_active ? "Active" : "Inactive"}
-                                </span>
-                              </div>
-                            </div>
-                          ),
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <FaStethoscope className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No Services Assigned
-                  </h3>
-                  <p className="text-gray-600">
-                    This contract doesn&apos;t have any services assigned yet.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Status Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Contract Status
-              </h3>
+          {/* Notes Section */}
+          {contract.notes && (
+            <div className="p-4 border-b border-slate-100">
+              <h2 className="text-sm font-semibold text-slate-900 mb-2">Notes</h2>
+              <p className="text-sm text-slate-700">{contract.notes}</p>
+            </div>
+          )}
+
+          {/* Services Section */}
+          <div className="p-4 border-b border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <MdMedicalServices className="w-4 h-4 text-slate-400" />
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Services ({totalServices})
+                </h2>
+              </div>
+            </div>
+
+            {servicesLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600 mx-auto mb-2"></div>
+                <p className="text-sm text-slate-500">Loading services...</p>
+              </div>
+            ) : lotsWithServices && lotsWithServices.length > 0 ? (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Status</span>
-                  <span
-                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium capitalize ${statusBadge.bg}`}
+                {lotsWithServices.map((lotGroup: ContractLotWithServices) => (
+                  <div
+                    key={lotGroup.lot.id}
+                    className="border border-slate-200 rounded-lg overflow-hidden"
                   >
-                    {statusBadge.icon}
-                    {contract.status}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Start Date</span>
-                  <span className="font-semibold text-gray-900 text-sm">
-                    {formatDate(contract.start_date)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">End Date</span>
-                  <span className="font-semibold text-gray-900 text-sm">
-                    {formatDate(contract.end_date)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Services Count</span>
-                  <span className="font-semibold text-gray-900">
-                    {totalServices}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Lots</span>
-                  <span className="font-semibold text-gray-900">
-                    {lotsWithServices.length}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Actions
-              </h3>
-              <div className="space-y-3">
-                <button
-                  onClick={() => router.push(`/vendors`)}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <FaBuilding />
-                  View Vendors
-                </button>
-                <button
-                  onClick={() => router.push(`/contracts`)}
-                  className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-                >
-                  <FaStethoscope />
-                  All Contracts
-                </button>
-              </div>
-            </div>
-
-            {/* Contract Timeline */}
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                <FaClock className="text-blue-600" />
-                Contract Timeline
-              </h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Created</span>
-                  <span className="text-gray-900">
-                    {formatDate(contract.created_at)}
-                  </span>
-                </div>
-                {contract.creator && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Created By</span>
-                    <span className="text-gray-900">
-                      {contract.creator.name}
-                    </span>
+                    <div className="bg-slate-50 px-3 py-2 border-b border-slate-200 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FaBox className="w-3.5 h-3.5 text-blue-600" />
+                        <span className="text-sm font-medium text-slate-900">
+                          LOT {lotGroup.lot.number}
+                        </span>
+                        <span className="text-slate-400">•</span>
+                        <span className="text-sm text-slate-600">
+                          {lotGroup.lot.name}
+                        </span>
+                      </div>
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                        {lotGroup.services.length} services
+                      </span>
+                    </div>
+                    <div className="p-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {lotGroup.services.map((service: ContractServiceItem) => (
+                          <div
+                            key={service.id}
+                            className="flex items-start justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-100"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-900 truncate">
+                                {service.service.name}
+                              </p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-xs text-slate-500 font-mono">
+                                  {service.service.code}
+                                </span>
+                                <span className="text-slate-300">•</span>
+                                <span className="text-xs text-slate-600">
+                                  KES {service.service.tariff?.toLocaleString() || 0}
+                                </span>
+                              </div>
+                              {service.equipment && (
+                                <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                                  <MdInventory2 className="w-3 h-3" />
+                                  {service.equipment.name}
+                                </p>
+                              )}
+                            </div>
+                            <span
+                              className={`shrink-0 ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
+                                service.is_active
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "bg-slate-200 text-slate-600"
+                              }`}
+                            >
+                              {service.is_active ? "Active" : "Inactive"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Last Updated</span>
-                  <span className="text-gray-900">
-                    {formatDate(contract.updated_at)}
-                  </span>
-                </div>
+                ))}
               </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
+                  <MdMedicalServices className="w-5 h-5 text-slate-400" />
+                </div>
+                <p className="text-sm text-slate-500">No services assigned</p>
+              </div>
+            )}
+          </div>
+
+          {/* Timestamps */}
+          <div className="px-4 py-3 bg-slate-50 rounded-b-lg">
+            <div className="flex flex-wrap gap-4 text-xs text-slate-500">
+              <span>Created: {formatDate(contract.created_at)}</span>
+              {contract.creator && (
+                <span>By: {contract.creator.name}</span>
+              )}
+              <span>Updated: {formatDate(contract.updated_at)}</span>
             </div>
           </div>
         </div>
