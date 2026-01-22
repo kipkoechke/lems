@@ -8,6 +8,7 @@ import { useState } from "react";
 import { FaFileContract, FaPlus, FaSearch } from "react-icons/fa";
 import { Table } from "@/components/Table";
 import Pagination from "@/components/common/Pagination";
+import { ErrorState } from "@/components/common/ErrorState";
 
 export default function ContractsPage() {
   const router = useRouter();
@@ -67,43 +68,17 @@ export default function ContractsPage() {
     );
   }
 
-  // Extract error message from API response or error object
-  const getErrorMessage = (err: unknown): string => {
-    if (err && typeof err === 'object') {
-      // Axios error with response
-      const axiosErr = err as { response?: { data?: { message?: string } }; message?: string };
-      if (axiosErr.response?.data?.message) {
-        return axiosErr.response.data.message;
-      }
-      if (axiosErr.message) {
-        return axiosErr.message;
-      }
-    }
-    return "An unexpected error occurred";
-  };
-
   if (error) {
-    const errorMessage = getErrorMessage(error);
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
-            <div className="w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <h2 className="text-lg font-semibold text-slate-900 mb-2">Unable to Load Contracts</h2>
-            <p className="text-slate-600 mb-4">{errorMessage}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      </div>
+      <ErrorState
+        title="Unable to Load Contracts"
+        error={error}
+        action={{
+          label: "Try Again",
+          onClick: () => window.location.reload(),
+        }}
+        fullScreen
+      />
     );
   }
 
