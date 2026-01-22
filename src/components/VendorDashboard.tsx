@@ -4,7 +4,6 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   FaCog,
   FaHospital,
-  FaMoneyBillWave,
   FaClipboardList,
   FaBoxes,
   FaStethoscope,
@@ -12,10 +11,6 @@ import {
   FaChartLine,
   FaChevronDown,
   FaSearch,
-  FaWrench,
-  FaCheckCircle,
-  FaTimesCircle,
-  FaClock,
 } from "react-icons/fa";
 import {
   Area,
@@ -25,8 +20,6 @@ import {
   CartesianGrid,
   Cell,
   Legend,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -37,42 +30,7 @@ import {
 import { useCurrentUser } from "@/hooks/useAuth";
 import { useVendorDashboard } from "@/features/vendors/useVendorDashboard";
 import { VendorDashboardFilters } from "@/services/apiVendorDashboard";
-
-// Stat card component
-interface StatCardProps {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color: string;
-  subtext?: string;
-}
-
-const StatCard: React.FC<StatCardProps> = ({
-  title,
-  value,
-  icon,
-  color,
-  subtext,
-}) => (
-  <div
-    className="bg-white rounded-xl shadow-lg p-6 border-l-4"
-    style={{ borderColor: color }}
-  >
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm text-gray-500 font-medium">{title}</p>
-        <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-        {subtext && <p className="text-xs text-gray-400 mt-1">{subtext}</p>}
-      </div>
-      <div
-        className="w-12 h-12 rounded-full flex items-center justify-center"
-        style={{ backgroundColor: `${color}20` }}
-      >
-        <span style={{ color }}>{icon}</span>
-      </div>
-    </div>
-  </div>
-);
+import StatCard from "@/components/common/StatCard";
 
 // Top filter dropdown component
 interface TopFilterDropdownProps {
@@ -123,45 +81,45 @@ const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({
   };
 
   return (
-    <div className="flex flex-col min-w-[140px]">
-      <label className="text-xs font-medium text-gray-500 mb-1">{label}</label>
+    <div className="flex flex-col min-w-[120px]">
+      <label className="text-xs font-medium text-slate-500 mb-1">{label}</label>
       <div ref={ref} className="relative">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-left text-sm flex items-center justify-between hover:border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full bg-white border border-slate-200 rounded-md px-2.5 py-1.5 text-left text-sm flex items-center justify-between hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
         >
-          <span className={value ? "text-gray-900" : "text-gray-400"}>
+          <span className={`truncate ${value ? "text-slate-900" : "text-slate-400"}`}>
             {selectedLabel}
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 ml-1">
             {clearable && value && (
               <span
                 onClick={handleClear}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 ×
               </span>
             )}
             <FaChevronDown
-              className={`text-gray-400 text-xs transition-transform ${
+              className={`text-slate-400 text-xs transition-transform ${
                 isOpen ? "rotate-180" : ""
               }`}
             />
           </div>
         </button>
         {isOpen && (
-          <div className="absolute z-50 mt-1 w-full min-w-[180px] bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+          <div className="absolute z-50 mt-1 w-full min-w-[180px] bg-white border border-slate-200 rounded-md shadow-lg max-h-60 overflow-auto">
             {searchable && (
               <div className="p-2 border-b">
                 <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
                   <input
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search..."
-                    className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -172,7 +130,7 @@ const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({
                   onChange("");
                   setIsOpen(false);
                 }}
-                className="w-full px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-50"
+                className="w-full px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50"
               >
                 {placeholder}
               </button>
@@ -187,7 +145,7 @@ const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({
                   className={`w-full px-3 py-2 text-left text-sm hover:bg-blue-50 ${
                     value === opt.value
                       ? "bg-blue-50 text-blue-700"
-                      : "text-gray-700"
+                      : "text-slate-700"
                   }`}
                 >
                   {opt.label}
@@ -212,6 +170,14 @@ const formatCurrency = (amount: number | string) => {
   }).format(num || 0);
 };
 
+// Format number with K/M suffix
+const formatNumber = (num: number | string) => {
+  const n = typeof num === "string" ? parseFloat(num) : num;
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  return n.toString();
+};
+
 // Colors for charts
 const CHART_COLORS = [
   "#3B82F6",
@@ -223,6 +189,21 @@ const CHART_COLORS = [
   "#06B6D4",
   "#84CC16",
 ];
+
+// Equipment status colors
+const EQUIPMENT_STATUS_COLORS: Record<string, string> = {
+  Active: "#10B981",
+  Maintenance: "#F59E0B",
+  Decommissioned: "#EF4444",
+  Pending: "#6B7280",
+};
+
+// Booking status colors
+const BOOKING_STATUS_COLORS: Record<string, string> = {
+  "Not Started": "#F59E0B",
+  Completed: "#10B981",
+  Cancelled: "#EF4444",
+};
 
 export const VendorDashboard: React.FC = () => {
   const user = useCurrentUser();
@@ -332,28 +313,28 @@ export const VendorDashboard: React.FC = () => {
     ].filter((item) => item.value > 0);
   }, [dashboard]);
 
-  // Equipment status data
+  // Equipment status pie chart data
   const equipmentStatusData = useMemo(() => {
     if (!dashboard?.equipment?.by_status) return [];
     const { active, maintenance, decommissioned, pending } =
       dashboard.equipment.by_status;
     return [
-      { name: "Active", value: active, color: "#10B981" },
-      { name: "Maintenance", value: maintenance, color: "#F59E0B" },
-      { name: "Decommissioned", value: decommissioned, color: "#EF4444" },
-      { name: "Pending", value: pending, color: "#6B7280" },
+      { name: "Active", value: active, color: EQUIPMENT_STATUS_COLORS.Active },
+      { name: "Maintenance", value: maintenance, color: EQUIPMENT_STATUS_COLORS.Maintenance },
+      { name: "Decommissioned", value: decommissioned, color: EQUIPMENT_STATUS_COLORS.Decommissioned },
+      { name: "Pending", value: pending, color: EQUIPMENT_STATUS_COLORS.Pending },
     ].filter((item) => item.value > 0);
   }, [dashboard]);
 
-  // Booking status data
+  // Booking status pie chart data
   const bookingStatusData = useMemo(() => {
     if (!dashboard?.bookings?.by_service_status) return [];
     const { not_started, completed, cancelled } =
       dashboard.bookings.by_service_status;
     return [
-      { name: "Not Started", value: not_started, color: "#F59E0B" },
-      { name: "Completed", value: completed, color: "#10B981" },
-      { name: "Cancelled", value: cancelled, color: "#EF4444" },
+      { name: "Not Started", value: not_started, color: BOOKING_STATUS_COLORS["Not Started"] },
+      { name: "Completed", value: completed, color: BOOKING_STATUS_COLORS.Completed },
+      { name: "Cancelled", value: cancelled, color: BOOKING_STATUS_COLORS.Cancelled },
     ].filter((item) => item.value > 0);
   }, [dashboard]);
 
@@ -361,8 +342,8 @@ export const VendorDashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-3 text-slate-600 text-sm">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -373,18 +354,17 @@ export const VendorDashboard: React.FC = () => {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="text-red-500 text-xl mb-2">⚠️</div>
-          <p className="text-red-600">Failed to load dashboard</p>
+          <p className="text-red-600 text-sm">Failed to load dashboard</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top Filter Bar */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex flex-wrap items-end gap-4">
-          {/* Facility Filter */}
+      <div className="bg-white rounded-lg border border-slate-200 p-3">
+        <div className="flex flex-wrap items-end gap-3">
           <TopFilterDropdown
             label="Facility"
             value={facilityId}
@@ -398,8 +378,6 @@ export const VendorDashboard: React.FC = () => {
             searchable
             placeholder="All Facilities"
           />
-
-          {/* Lot Filter */}
           <TopFilterDropdown
             label="Lot"
             value={lotId}
@@ -413,8 +391,6 @@ export const VendorDashboard: React.FC = () => {
             searchable
             placeholder="All Lots"
           />
-
-          {/* Service Filter */}
           <TopFilterDropdown
             label="Service"
             value={serviceId}
@@ -428,8 +404,6 @@ export const VendorDashboard: React.FC = () => {
             searchable
             placeholder="All Services"
           />
-
-          {/* Period Filter */}
           <TopFilterDropdown
             label="Period"
             value={selectedDuration}
@@ -444,201 +418,63 @@ export const VendorDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            {dashboard?.vendor?.name || "Vendor"} Dashboard
-          </h2>
-          <p className="text-gray-500">
-            {dashboard?.period?.from} to {dashboard?.period?.to}
-          </p>
-        </div>
-        <div className="text-sm text-gray-500">
-          Vendor Code: <span className="font-mono font-medium">{dashboard?.vendor?.code}</span>
-        </div>
-      </div>
-
-      {/* Stats Cards - Row 1 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Cards - Using common StatCard with compact mode */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         <StatCard
           title="Total Equipment"
-          value={dashboard?.equipment?.total || 0}
-          icon={<FaCog className="w-6 h-6" />}
-          color="#3B82F6"
-          subtext={`${dashboard?.equipment?.by_status?.active || 0} active`}
-        />
+          mainValue={dashboard?.equipment?.total || 0}
+          subtitle={`${dashboard?.equipment?.by_status?.active || 0} active`}
+          compact
+        >
+          <FaCog className="w-4 h-4 text-blue-500" />
+        </StatCard>
         <StatCard
-          title="Facilities Served"
-          value={dashboard?.facilities?.count || 0}
-          icon={<FaHospital className="w-6 h-6" />}
-          color="#10B981"
-        />
+          title="Facilities"
+          mainValue={dashboard?.facilities?.count || 0}
+          compact
+        >
+          <FaHospital className="w-4 h-4 text-emerald-500" />
+        </StatCard>
         <StatCard
-          title="Vendor Share"
-          value={formatCurrency(dashboard?.revenue?.vendor_share || "0")}
-          icon={<FaMoneyBillWave className="w-6 h-6" />}
-          color="#F59E0B"
-          subtext="Your revenue"
-        />
+          title="Patients"
+          mainValue={dashboard?.patients?.unique_count || 0}
+          compact
+        >
+          <FaUsers className="w-4 h-4 text-purple-500" />
+        </StatCard>
         <StatCard
-          title="Unique Patients"
-          value={dashboard?.patients?.unique_count || 0}
-          icon={<FaUsers className="w-6 h-6" />}
-          color="#8B5CF6"
-        />
-      </div>
-
-      {/* Stats Cards - Row 2 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          title="Lots"
+          mainValue={dashboard?.lots?.count || 0}
+          subtitle={`${dashboard?.services?.count || 0} services`}
+          compact
+        >
+          <FaBoxes className="w-4 h-4 text-pink-500" />
+        </StatCard>
         <StatCard
-          title="Total Lots"
-          value={dashboard?.lots?.count || 0}
-          icon={<FaBoxes className="w-6 h-6" />}
-          color="#EC4899"
-        />
-        <StatCard
-          title="Total Services"
-          value={dashboard?.services?.count || 0}
-          icon={<FaStethoscope className="w-6 h-6" />}
-          color="#06B6D4"
-        />
-        <StatCard
-          title="Total Bookings"
-          value={dashboard?.bookings?.total_bookings || 0}
-          icon={<FaClipboardList className="w-6 h-6" />}
-          color="#EF4444"
-          subtext={`${dashboard?.bookings?.total_services || 0} services`}
-        />
+          title="Bookings"
+          mainValue={dashboard?.bookings?.total_bookings || 0}
+          subtitle={`${dashboard?.bookings?.total_services || 0} services`}
+          compact
+        >
+          <FaClipboardList className="w-4 h-4 text-cyan-500" />
+        </StatCard>
         <StatCard
           title="Gross Revenue"
-          value={formatCurrency(dashboard?.revenue?.tariff || "0")}
-          icon={<FaChartLine className="w-6 h-6" />}
-          color="#84CC16"
-          subtext="Total billed"
-        />
+          mainValue={formatNumber(dashboard?.revenue?.tariff || 0)}
+          subtitle={`Share: ${formatNumber(dashboard?.revenue?.vendor_share || 0)}`}
+          compact
+        >
+          <FaChartLine className="w-4 h-4 text-amber-500" />
+        </StatCard>
       </div>
 
-      {/* Equipment & Booking Status */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Equipment Status */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Equipment Status
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FaCheckCircle className="text-green-500" />
-                <span className="text-sm text-gray-600">Active</span>
-              </div>
-              <span className="font-semibold">
-                {dashboard?.equipment?.by_status?.active || 0}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FaWrench className="text-yellow-500" />
-                <span className="text-sm text-gray-600">Maintenance</span>
-              </div>
-              <span className="font-semibold">
-                {dashboard?.equipment?.by_status?.maintenance || 0}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FaTimesCircle className="text-red-500" />
-                <span className="text-sm text-gray-600">Decommissioned</span>
-              </div>
-              <span className="font-semibold">
-                {dashboard?.equipment?.by_status?.decommissioned || 0}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FaClock className="text-gray-500" />
-                <span className="text-sm text-gray-600">Pending</span>
-              </div>
-              <span className="font-semibold">
-                {dashboard?.equipment?.by_status?.pending || 0}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Booking Status */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Service Status
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FaClock className="text-yellow-500" />
-                <span className="text-sm text-gray-600">Not Started</span>
-              </div>
-              <span className="font-semibold">
-                {dashboard?.bookings?.by_service_status?.not_started || 0}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FaCheckCircle className="text-green-500" />
-                <span className="text-sm text-gray-600">Completed</span>
-              </div>
-              <span className="font-semibold">
-                {dashboard?.bookings?.by_service_status?.completed || 0}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FaTimesCircle className="text-red-500" />
-                <span className="text-sm text-gray-600">Cancelled</span>
-              </div>
-              <span className="font-semibold">
-                {dashboard?.bookings?.by_service_status?.cancelled || 0}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Booking Source */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Booking Source
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Standalone</span>
-              <span className="font-semibold">
-                {dashboard?.bookings?.by_source?.standalone || 0}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">HMIS</span>
-              <span className="font-semibold">
-                {dashboard?.bookings?.by_source?.hmis || 0}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Provider Portal</span>
-              <span className="font-semibold">
-                {dashboard?.bookings?.by_source?.provider_portal || 0}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Revenue & Services Charts - First after stat cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Revenue Trends */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Revenue Trends
-          </h3>
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">Revenue Trends</h3>
           {trendChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={trendChartData}>
                 <defs>
                   <linearGradient id="colorVendor" x1="0" y1="0" x2="0" y2="1">
@@ -646,10 +482,10 @@ export const VendorDashboard: React.FC = () => {
                     <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                 <XAxis
                   dataKey="date"
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 11, fill: "#64748B" }}
                   tickFormatter={(value) =>
                     new Date(value).toLocaleDateString("en-KE", {
                       month: "short",
@@ -658,21 +494,20 @@ export const VendorDashboard: React.FC = () => {
                   }
                 />
                 <YAxis
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 11, fill: "#64748B" }}
                   tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
                 />
                 <Tooltip
                   labelFormatter={(value) =>
                     new Date(value).toLocaleDateString("en-KE", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
+                      weekday: "short",
+                      month: "short",
                       day: "numeric",
                     })
                   }
                   formatter={(value: number) => [formatCurrency(value), "Vendor Share"]}
+                  contentStyle={{ fontSize: "12px" }}
                 />
-                <Legend />
                 <Area
                   type="monotone"
                   dataKey="vendorShare"
@@ -684,24 +519,22 @@ export const VendorDashboard: React.FC = () => {
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500">
+            <div className="flex items-center justify-center h-[220px] text-slate-400 text-sm">
               No trend data available
             </div>
           )}
         </div>
 
-        {/* Services Count Trend */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Services Performed
-          </h3>
+        {/* Services Performed */}
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">Services Performed</h3>
           {trendChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={220}>
               <BarChart data={trendChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                 <XAxis
                   dataKey="date"
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 11, fill: "#64748B" }}
                   tickFormatter={(value) =>
                     new Date(value).toLocaleDateString("en-KE", {
                       month: "short",
@@ -709,19 +542,18 @@ export const VendorDashboard: React.FC = () => {
                     })
                   }
                 />
-                <YAxis tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 11, fill: "#64748B" }} />
                 <Tooltip
                   labelFormatter={(value) =>
                     new Date(value).toLocaleDateString("en-KE", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
+                      weekday: "short",
+                      month: "short",
                       day: "numeric",
                     })
                   }
                   formatter={(value: number) => [value, "Services"]}
+                  contentStyle={{ fontSize: "12px" }}
                 />
-                <Legend />
                 <Bar
                   dataKey="servicesCount"
                   fill="#3B82F6"
@@ -731,160 +563,241 @@ export const VendorDashboard: React.FC = () => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500">
+            <div className="flex items-center justify-center h-[220px] text-slate-400 text-sm">
               No services data available
             </div>
           )}
         </div>
       </div>
 
-      {/* Payment Mode Distribution & Facilities */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Payment Mode Distribution */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Revenue by Payment Type
-          </h3>
-          {paymentModeData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={paymentModeData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name} (${(percent * 100).toFixed(0)}%)`
-                  }
-                >
-                  {paymentModeData.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={CHART_COLORS[index % CHART_COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+      {/* Status Charts Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Equipment Status Donut */}
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">Equipment Status</h3>
+          {equipmentStatusData.length > 0 ? (
+            <div className="h-[180px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={equipmentStatusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={65}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {equipmentStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => [value, "Count"]} />
+                  <Legend 
+                    iconSize={8} 
+                    wrapperStyle={{ fontSize: "11px" }}
+                    formatter={(value) => <span className="text-slate-600">{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500">
-              No payment data available
+            <div className="flex items-center justify-center h-[180px] text-slate-400 text-sm">
+              No equipment data
             </div>
           )}
         </div>
 
+        {/* Service Status Donut */}
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">Service Status</h3>
+          {bookingStatusData.length > 0 ? (
+            <div className="h-[180px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={bookingStatusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={65}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {bookingStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => [value, "Count"]} />
+                  <Legend 
+                    iconSize={8} 
+                    wrapperStyle={{ fontSize: "11px" }}
+                    formatter={(value) => <span className="text-slate-600">{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-[180px] text-slate-400 text-sm">
+              No service data
+            </div>
+          )}
+        </div>
+
+        {/* Payment Type Distribution */}
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">Revenue by Payment Type</h3>
+          {paymentModeData.length > 0 ? (
+            <div className="h-[180px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={paymentModeData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={65}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {paymentModeData.map((_, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={CHART_COLORS[index % CHART_COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Legend 
+                    iconSize={8} 
+                    wrapperStyle={{ fontSize: "11px" }}
+                    formatter={(value) => <span className="text-slate-600">{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-[180px] text-slate-400 text-sm">
+              No payment data
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Section: Booking Source & Lists */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Booking Source */}
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">Booking Source</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600">Standalone</span>
+              <span className="text-sm font-semibold text-slate-900">
+                {dashboard?.bookings?.by_source?.standalone || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600">HMIS</span>
+              <span className="text-sm font-semibold text-slate-900">
+                {dashboard?.bookings?.by_source?.hmis || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600">Provider Portal</span>
+              <span className="text-sm font-semibold text-slate-900">
+                {dashboard?.bookings?.by_source?.provider_portal || 0}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Facilities List */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">
             Facilities ({dashboard?.facilities?.count || 0})
           </h3>
-          <div className="space-y-3 max-h-[300px] overflow-y-auto">
-            {dashboard?.facilities?.list?.map((facility, index) => (
+          <div className="space-y-2 max-h-[140px] overflow-y-auto">
+            {dashboard?.facilities?.list?.slice(0, 5).map((facility, index) => (
               <div
                 key={facility.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                className="flex items-center gap-2 p-1.5 bg-slate-50 rounded"
               >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                    style={{
-                      backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
-                    }}
-                  >
-                    {index + 1}
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900 text-sm">
-                      {facility.name}
-                    </p>
-                    <p className="text-xs text-gray-500 font-mono">
-                      {facility.fr_code}
-                    </p>
-                  </div>
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
+                  style={{
+                    backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+                  }}
+                >
+                  {index + 1}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-medium text-slate-900 text-xs truncate">
+                    {facility.name}
+                  </p>
                 </div>
               </div>
             ))}
             {(!dashboard?.facilities?.list ||
               dashboard.facilities.list.length === 0) && (
-              <div className="text-center text-gray-500 py-8">
-                No facilities found
+              <div className="text-center text-slate-400 text-xs py-4">
+                No facilities
               </div>
             )}
           </div>
         </div>
-      </div>
 
-      {/* Lots & Services Lists */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Lots List */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">
             Lots ({dashboard?.lots?.count || 0})
           </h3>
-          <div className="space-y-3 max-h-[250px] overflow-y-auto">
-            {dashboard?.lots?.list?.map((lot, index) => (
+          <div className="space-y-2 max-h-[140px] overflow-y-auto">
+            {dashboard?.lots?.list?.slice(0, 5).map((lot, index) => (
               <div
                 key={lot.id}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                className="flex items-center gap-2 p-1.5 bg-slate-50 rounded"
               >
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                <span
+                  className="w-5 h-5 rounded flex items-center justify-center text-white text-[10px] font-bold shrink-0"
                   style={{
                     backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
                   }}
                 >
                   {lot.number}
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900 text-sm">{lot.name}</p>
-                </div>
+                </span>
+                <span className="text-xs text-slate-700 truncate">{lot.name}</span>
               </div>
             ))}
             {(!dashboard?.lots?.list || dashboard.lots.list.length === 0) && (
-              <div className="text-center text-gray-500 py-8">
-                No lots found
-              </div>
+              <p className="text-xs text-slate-400 text-center py-4">No lots</p>
             )}
           </div>
         </div>
 
         {/* Services List */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">
             Services ({dashboard?.services?.count || 0})
           </h3>
-          <div className="space-y-3 max-h-[250px] overflow-y-auto">
-            {dashboard?.services?.list?.map((service, index) => (
+          <div className="space-y-2 max-h-[140px] overflow-y-auto">
+            {dashboard?.services?.list?.slice(0, 5).map((service, index) => (
               <div
                 key={service.id}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                className="flex items-center gap-2 p-1.5 bg-slate-50 rounded"
               >
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                <span
+                  className="w-5 h-5 rounded flex items-center justify-center text-white shrink-0"
                   style={{
-                    backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+                    backgroundColor: CHART_COLORS[(index + 3) % CHART_COLORS.length],
                   }}
                 >
-                  <FaStethoscope className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900 text-sm">
-                    {service.name}
-                  </p>
-                  <p className="text-xs text-gray-500 font-mono">{service.code}</p>
-                </div>
+                  <FaStethoscope className="w-2.5 h-2.5" />
+                </span>
+                <span className="text-xs text-slate-700 truncate">{service.name}</span>
               </div>
             ))}
-            {(!dashboard?.services?.list ||
-              dashboard.services.list.length === 0) && (
-              <div className="text-center text-gray-500 py-8">
-                No services found
-              </div>
+            {(!dashboard?.services?.list || dashboard.services.list.length === 0) && (
+              <p className="text-xs text-slate-400 text-center py-4">No services</p>
             )}
           </div>
         </div>
