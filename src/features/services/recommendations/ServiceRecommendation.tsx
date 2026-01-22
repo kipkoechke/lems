@@ -14,7 +14,7 @@ import {
 import BackButton from "@/components/common/BackButton";
 import { usePatients } from "@/features/patients/usePatients";
 import { useCreateBooking } from "@/features/services/bookings/useCreateBooking";
-import { useServicesByFacilityCode } from "@/features/services/useServicesByFacilityCode";
+import { useServicesByFacilityId } from "@/features/services/useServicesByFacilityCode";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -26,6 +26,7 @@ import {
 } from "react-icons/fa";
 import { FaStethoscope } from "react-icons/fa6";
 import { maskPhoneNumber } from "@/lib/maskUtils";
+import type { FlattenedContractService } from "@/types/contract";
 
 const ServiceRecommendation: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -56,8 +57,8 @@ const ServiceRecommendation: React.FC = () => {
   });
 
   // Get services based on facility ID - now returns FacilityContract[]
-  const { contracts, isServicesLoading } =
-    useServicesByFacilityCode(facilityId);
+  const { contracts, flattenedServices, isServicesLoading } =
+    useServicesByFacilityId(facilityId);
 
   // Initialize contract selection if not set and contracts are available
   useEffect(() => {
@@ -79,9 +80,12 @@ const ServiceRecommendation: React.FC = () => {
   console.log("📋 Contracts array:", contracts);
   console.log("🔍 Selected contract services:", selectedContract?.services);
 
-  // Get available services for the selected contract
-  const availableServices =
-    selectedContract?.services?.filter((s) => s.is_active === "1") || [];
+  // Get available services for the selected contract (flattened)
+  const availableServices: FlattenedContractService[] = selectedContract
+    ? flattenedServices.filter(
+        (s) => s.contract_id === selectedContractId && s.is_active
+      )
+    : [];
 
   console.log("✅ Available services (filtered):", availableServices);
   console.log("📊 Available services count:", availableServices.length);
@@ -129,10 +133,10 @@ const ServiceRecommendation: React.FC = () => {
 
     if (selectedContractId) {
       selectedContract = contracts?.find((c) => c.id === selectedContractId);
-      if (selectedContract && selectedContract.services) {
+      if (selectedContract) {
         for (const serviceId of selectedServiceIds) {
-          const service = selectedContract.services.find(
-            (s) => s.service_code === serviceId,
+          const service = availableServices.find(
+            (s) => s.service_code === serviceId
           );
           if (service && serviceDates[serviceId]) {
             selectedServices.push({
@@ -229,23 +233,28 @@ const ServiceRecommendation: React.FC = () => {
         console.log("Booking creation response:", response);
         toast.success("Booking created successfully!");
 
-        // Store the booking and services separately
-        dispatch(setBooking(response.booking));
-        dispatch(setBookingServices(response.services)); // Store services with vendor/facility shares
+        // Store session_id for OTP verification
+        if (typeof window !== 'undefined' && response.data?.session_id) {
+          sessionStorage.setItem('booking_session_id', response.data.session_id);
+        }
 
-        // New flow: OTP is sent to patient's phone, not returned in response
-        if (response.expires_at) {
-          // Store consent_id and expires_at for OTP validation
-          const bookingWithConsent = {
-            ...response.booking,
-            consent_id: response.consent_id,
-            expires_at: response.expires_at,
-            otp_message: response.otp_message,
-          };
-          dispatch(setBooking(bookingWithConsent));
+        // Store booking info in redux (partial info from initiate response)
+        const bookingInfo = {
+          id: '', // Will be set after OTP verification
+          booking_number: '', // Will be set after OTP verification
+          session_id: response.data?.session_id,
+          patient: response.data?.patient,
+          facility: response.data?.facility,
+          services_count: response.data?.services_count,
+          expires_at: response.data?.expires_at,
+          otp_message: response.message,
+        };
+        dispatch(setBooking(bookingInfo as any));
 
+        // New flow: OTP is sent to patient's phone
+        if (response.data?.expires_at) {
           // Show OTP sent message
-          toast.success(response.otp_message || "OTP sent to patient's phone");
+          toast.success(response.message || "OTP sent to patient's phone");
 
           // Go to consent step for OTP validation
           dispatch(goToNextStep());

@@ -1,13 +1,13 @@
 import { setConsent } from "@/context/workflowSlice";
 import { useAppDispatch } from "@/hooks/hooks";
-import { verifyPatientConsent } from "@/services/apiBooking";
+import { verifyBookingOtp, type VerifyOtpPayload } from "@/services/apiBooking";
 import { useMutation } from "@tanstack/react-query";
 
 export function useOtpValidation() {
   const dispatch = useAppDispatch();
 
   const { mutate: validateOtpMutation, isPending: isValidating } = useMutation({
-    mutationFn: verifyPatientConsent,
+    mutationFn: (data: VerifyOtpPayload) => verifyBookingOtp(data),
     // Remove all global handlers - let the component handle everything
   });
 

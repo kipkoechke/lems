@@ -219,7 +219,9 @@ const ConfirmedBookingsPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getApprovalStatusBadge(booking.approval_status)}
+                      {getApprovalStatusBadge(
+                        booking.approval_status || "pending"
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <button
@@ -253,12 +255,12 @@ const ConfirmedBookingsPage: React.FC = () => {
                                 <div className="flex items-start justify-between">
                                   <div>
                                     <h5 className="text-sm font-medium text-gray-900">
-                                      {service.service?.service?.name ||
+                                      {service.service?.name ||
                                         "Unknown Service"}
                                     </h5>
                                     <p className="text-xs text-gray-500 mt-1">
                                       Code:{" "}
-                                      {service.service?.service?.code || "N/A"}
+                                      {service.service?.code || "N/A"}
                                     </p>
                                   </div>
                                   <span
@@ -283,14 +285,17 @@ const ConfirmedBookingsPage: React.FC = () => {
                                   <div className="flex items-center text-xs text-gray-500">
                                     <Building className="w-3 h-3 mr-1" />
                                     <span>
-                                      {service.service?.contract?.facility
-                                        ?.name || "N/A"}
+                                      {booking.facility?.name || "N/A"}
                                     </span>
                                   </div>
                                   <div className="flex items-center text-xs text-gray-500">
                                     <Calendar className="w-3 h-3 mr-1" />
                                     <span>
-                                      {formatDate(service.booking_date)}
+                                      {formatDate(
+                                        service.scheduled_date ||
+                                          service.booking_date ||
+                                          ""
+                                      )}
                                     </span>
                                   </div>
                                 </div>
@@ -302,7 +307,9 @@ const ConfirmedBookingsPage: React.FC = () => {
                                     </span>
                                     <span className="font-medium text-gray-900">
                                       {formatCurrency(
-                                        service.service?.service?.sha_rate || 0
+                                        service.service?.sha_rate ||
+                                          service.tariff ||
+                                          0
                                       )}
                                     </span>
                                   </div>
@@ -311,7 +318,11 @@ const ConfirmedBookingsPage: React.FC = () => {
                                       Facility Share:
                                     </span>
                                     <span className="font-medium text-gray-900">
-                                      {formatCurrency(service.facility_share)}
+                                      {formatCurrency(
+                                        service.facility_share ||
+                                          service.revenue?.facility_share ||
+                                          0
+                                      )}
                                     </span>
                                   </div>
                                   <div className="flex justify-between text-xs mt-1">
@@ -319,7 +330,11 @@ const ConfirmedBookingsPage: React.FC = () => {
                                       Vendor Share:
                                     </span>
                                     <span className="font-medium text-gray-900">
-                                      {formatCurrency(service.vendor_share)}
+                                      {formatCurrency(
+                                        service.vendor_share ||
+                                          service.revenue?.vendor_share ||
+                                          0
+                                      )}
                                     </span>
                                   </div>
                                 </div>

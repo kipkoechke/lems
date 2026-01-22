@@ -120,24 +120,21 @@ function PatientBookings() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div>
                         <div className="font-medium">
-                          {booking.service?.service?.name || "N/A"}
+                          {booking.services?.[0]?.service?.name || "N/A"}
                         </div>
                         <div className="text-gray-500 text-xs">
-                          {booking.service?.service?.code || "N/A"}
-                        </div>
-                        <div className="text-gray-400 text-xs">
-                          Service ID: {booking.service?.service?.id || "N/A"}
+                          {booking.services?.[0]?.service?.code || "N/A"}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div>
                         <div className="font-medium">
-                          {booking.service?.contract?.facility?.name || "N/A"}
+                          {booking.facility?.name || "N/A"}
                         </div>
                         <div className="text-gray-500 text-xs">
                           Code:{" "}
-                          {booking.service?.contract?.facility?.code || "N/A"}
+                          {booking.facility?.code || "N/A"}
                         </div>
                       </div>
                     </td>
@@ -186,15 +183,15 @@ function PatientBookings() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="font-medium">
                         KES{" "}
-                        {booking.vendor_share
-                          ? parseInt(booking.vendor_share).toLocaleString()
+                        {booking.services?.[0]?.vendor_share
+                          ? parseInt(booking.services[0].vendor_share).toLocaleString()
                           : "0"}
                       </div>
                       <div className="text-xs text-gray-500">
                         SHA Rate:{" "}
-                        {booking.service?.service?.sha_rate
+                        {booking.services?.[0]?.service?.sha_rate
                           ? parseInt(
-                              booking.service.service.sha_rate
+                              booking.services[0].service.sha_rate
                             ).toLocaleString()
                           : "0"}
                       </div>

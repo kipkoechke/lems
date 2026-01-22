@@ -1,4 +1,4 @@
-import { getServiceBookingById } from "@/services/apiBooking";
+import { getBookingById } from "@/services/apiBooking";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 
@@ -11,7 +11,7 @@ export function useBooking() {
     error,
   } = useQuery({
     queryKey: ["booking", bookingId],
-    queryFn: () => getServiceBookingById(bookingId as string),
+    queryFn: () => getBookingById(bookingId as string),
     retry: false,
   });
 

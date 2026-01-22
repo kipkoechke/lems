@@ -1,9 +1,9 @@
 import { completeService } from "@/context/workflowSlice";
 import { useAppDispatch } from "@/hooks/hooks";
 import {
-  ValidateServiceCompletionOtp,
-  ValidateOtpResponse,
-  validateServiceFulfillmentOtp,
+  verifyServiceCompletionOtp,
+  type VerifyServiceCompletionPayload,
+  type VerifyOtpResponse,
 } from "@/services/apiBooking";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -12,35 +12,27 @@ export function useValidateServiceFulfillmentOtp() {
   const dispatch = useAppDispatch();
 
   const { mutate: validateOtpMutation, isPending: isValidating } = useMutation({
-    mutationFn: ({ data }: { data: ValidateServiceCompletionOtp }) =>
-      validateServiceFulfillmentOtp(data),
-    onSuccess: (data: ValidateOtpResponse) => {
+    mutationFn: ({ data }: { data: VerifyServiceCompletionPayload }) =>
+      verifyServiceCompletionOtp(data),
+    onSuccess: (data: VerifyOtpResponse) => {
       console.log("=== SERVICE FULFILLMENT OTP VALIDATION RESPONSE ===");
       console.log("Full response:", data);
-      console.log("Response keys:", Object.keys(data));
-      console.log("Message:", data.message);
-      console.log("Success field (if exists):", (data as any).success);
-      console.log("Status field (if exists):", (data as any).status);
 
-      // Check for various success indicators
+      // Check for success
       const isSuccess =
-        data.message === "Service fulfilled successfully" ||
-        data.message === "Service completed successfully" ||
-        data.message === "OTP verified successfully" ||
         data.message?.toLowerCase().includes("success") ||
-        (data as any).success === true ||
-        (data as any).status === "success";
+        data.message?.toLowerCase().includes("verified") ||
+        data.message?.toLowerCase().includes("completed");
 
       if (isSuccess) {
         toast.success("Service fulfilled successfully!");
         dispatch(completeService(true));
-        // dispatch(goToNextStep());
       } else {
         console.log("Success condition not met. Response:", data);
         toast.error("Service not fulfilled. Please try again.");
       }
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(error.message || "OTP validation failed");
     },
   });

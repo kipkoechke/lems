@@ -97,15 +97,18 @@ export default function ConsentVerificationPage() {
       return;
     }
 
-    if (!bookingInfo?.booking_number) {
+    // Support both new session_id and legacy booking_number
+    const sessionId = bookingInfo?.session_id;
+    const bookingNumber = bookingInfo?.booking_number;
+
+    if (!sessionId && !bookingNumber) {
       toast.error("Booking information missing");
       return;
     }
 
-    const requestPayload = {
-      otp_code: otpCode,
-      booking_number: bookingInfo.booking_number,
-    };
+    const requestPayload = sessionId
+      ? { session_id: sessionId, otp: otpCode }
+      : { session_id: bookingNumber || "", otp: otpCode };
 
     validateOtpMutation(requestPayload, {
       onSuccess: () => {
@@ -134,28 +137,33 @@ export default function ConsentVerificationPage() {
   };
 
   const handleResendOtp = () => {
-    if (!bookingInfo?.booking_number) {
+    // Support both new session_id and legacy booking_number
+    const sessionId = bookingInfo?.session_id;
+    const bookingNumber = bookingInfo?.booking_number;
+
+    if (!sessionId && !bookingNumber) {
       toast.error("Booking information missing");
       return;
     }
 
     resendOtpMutation(
-      { booking_number: bookingInfo.booking_number },
+      { session_id: sessionId || bookingNumber || "" },
       {
         onSuccess: (response) => {
           // Update booking info with new expiry time
           const updatedInfo = {
             ...bookingInfo,
             otp_message:
-              response.otp_message || "OTP has been resent successfully",
-            expires_at: response.expires_at || bookingInfo.expires_at,
+              response.message || "OTP has been resent successfully",
+            expires_at: response.data?.expires_at || bookingInfo.expires_at,
           };
           setBookingInfo(updatedInfo);
           sessionStorage.setItem("pendingBooking", JSON.stringify(updatedInfo));
 
           // Reset countdown
-          if (response.expires_at) {
-            const expiryTime = new Date(response.expires_at).getTime();
+          const expiresAt = response.data?.expires_at;
+          if (expiresAt) {
+            const expiryTime = new Date(expiresAt).getTime();
             const now = Date.now();
             const remaining = Math.max(
               0,

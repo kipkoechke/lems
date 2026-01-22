@@ -1,10 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
-import { requestServiceFulfillmentOtp } from "@/services/apiBooking";
+import {
+  requestServiceCompletionOtp,
+  type ServiceCompletionPayload,
+} from "@/services/apiBooking";
 
 export const useServiceCompletionOtp = () => {
   const mutation = useMutation({
-    mutationFn: (booking_number: string) =>
-      requestServiceFulfillmentOtp(booking_number),
+    mutationFn: (data: ServiceCompletionPayload) =>
+      requestServiceCompletionOtp(data),
   });
 
   return {

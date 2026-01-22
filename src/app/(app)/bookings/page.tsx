@@ -504,8 +504,14 @@ const BookingReport: React.FC = () => {
                               {booking.booking_date
                                 ? formatDate(booking.booking_date)
                                 : booking.services &&
-                                  booking.services.length > 0
-                                ? formatDate(booking.services[0].booking_date)
+                                  booking.services.length > 0 &&
+                                  (booking.services[0].booking_date ||
+                                    booking.services[0].scheduled_date)
+                                ? formatDate(
+                                    booking.services[0].booking_date ||
+                                      booking.services[0].scheduled_date ||
+                                      ""
+                                  )
                                 : formatDate(booking.created_at)}
                             </div>
                           </div>
@@ -521,15 +527,14 @@ const BookingReport: React.FC = () => {
                                   className="border-l-2 border-blue-200 pl-2"
                                 >
                                   <div className="font-medium break-words">
-                                    {service.service?.service?.name || "N/A"}
+                                    {service.service?.name || "N/A"}
                                   </div>
                                   <div className="text-gray-500 break-words">
-                                    {service.service?.service?.code || "N/A"}
+                                    {service.service?.code || "N/A"}
                                   </div>
                                   <div className="text-xs text-gray-400 mt-1 break-words">
                                     <Building className="inline h-3 w-3 mr-1" />
-                                    {service.service?.contract?.facility
-                                      ?.name || "N/A"}
+                                    {booking.facility?.name || "N/A"}
                                   </div>
                                   <div className="text-xs text-blue-600 mt-1">
                                     Status: {service.service_status}
@@ -542,18 +547,14 @@ const BookingReport: React.FC = () => {
                               ))}
                             </div>
                           ) : (
-                            // Fallback to legacy service structure for backward compatibility
+                            // No services available
                             <div>
-                              <div className="font-medium break-words">
-                                {booking.service?.service?.name || "N/A"}
-                              </div>
-                              <div className="text-gray-500 break-words">
-                                {booking.service?.service?.code || "N/A"}
+                              <div className="font-medium break-words text-gray-400">
+                                No services
                               </div>
                               <div className="text-xs text-gray-400 mt-1 break-words">
                                 <Building className="inline h-3 w-3 mr-1" />
-                                {booking.service?.contract?.facility?.name ||
-                                  "N/A"}
+                                {booking.facility?.name || "N/A"}
                               </div>
                             </div>
                           )}
@@ -575,7 +576,8 @@ const BookingReport: React.FC = () => {
                                       </span>
                                       <span className="font-medium">
                                         {formatCurrency(
-                                          service.service?.service?.sha_rate ||
+                                          service.service?.sha_rate ||
+                                            service.tariff ||
                                             "0"
                                         )}
                                       </span>
@@ -638,42 +640,9 @@ const BookingReport: React.FC = () => {
                               )}
                             </div>
                           ) : (
-                            // Fallback to legacy cost structure for backward compatibility
-                            <div className="text-xs text-gray-600 mt-1 space-y-0.5">
-                              <div className="flex justify-between items-center">
-                                <span className="text-blue-600">SHA Rate:</span>
-                                <span className="font-medium">
-                                  {formatCurrency(
-                                    booking.service?.service?.sha_rate ||
-                                      booking.amount ||
-                                      "0"
-                                  )}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-green-600">
-                                  Vendor Share:
-                                </span>
-                                <span className="font-medium">
-                                  {formatCurrency(
-                                    booking.service?.service?.vendor_share ||
-                                      booking.vendor_share ||
-                                      "0"
-                                  )}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-purple-600">
-                                  Facility Share:
-                                </span>
-                                <span className="font-medium">
-                                  {formatCurrency(
-                                    booking.service?.service?.facility_share ||
-                                      booking.facility_share ||
-                                      "0"
-                                  )}
-                                </span>
-                              </div>
+                            // No services available
+                            <div className="text-xs text-gray-400">
+                              No service pricing available
                             </div>
                           )}
                           <div className="text-xs text-gray-500 mt-2">
@@ -758,9 +727,11 @@ const BookingReport: React.FC = () => {
                                 <div className="text-sm space-y-1">
                                   <p>
                                     <span className="text-gray-500">DOB:</span>
-                                    {new Date(
-                                      booking.patient.date_of_birth
-                                    ).toLocaleDateString()}
+                                    {booking.patient.date_of_birth
+                                      ? new Date(
+                                          booking.patient.date_of_birth
+                                        ).toLocaleDateString()
+                                      : "N/A"}
                                   </p>
                                   <p>
                                     <span className="text-gray-500">
@@ -824,8 +795,9 @@ const BookingReport: React.FC = () => {
                                                 return (
                                                   total +
                                                   parseFloat(
-                                                    service.service?.service
-                                                      ?.sha_rate || "0"
+                                                    service.service?.sha_rate ||
+                                                      service.tariff ||
+                                                      "0"
                                                   )
                                                 );
                                               },
@@ -877,46 +849,10 @@ const BookingReport: React.FC = () => {
                                       </div>
                                     </>
                                   ) : (
-                                    // Legacy fallback
-                                    <>
-                                      <div className="flex justify-between">
-                                        <span className="text-blue-600 font-medium">
-                                          SHA Rate:
-                                        </span>
-                                        <span className="font-semibold">
-                                          {formatCurrency(
-                                            booking.service?.service
-                                              ?.sha_rate || "0"
-                                          )}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span className="text-green-600 font-medium">
-                                          Vendor Share:
-                                        </span>
-                                        <span className="font-semibold">
-                                          {formatCurrency(
-                                            booking.service?.service
-                                              ?.vendor_share ||
-                                              booking.vendor_share ||
-                                              "0"
-                                          )}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span className="text-purple-600 font-medium">
-                                          Facility Share:
-                                        </span>
-                                        <span className="font-semibold">
-                                          {formatCurrency(
-                                            booking.service?.service
-                                              ?.facility_share ||
-                                              booking.facility_share ||
-                                              "0"
-                                          )}
-                                        </span>
-                                      </div>
-                                    </>
+                                    // No services available
+                                    <div className="text-gray-400 text-sm">
+                                      No pricing information available
+                                    </div>
                                   )}
                                 </div>
                               </div>
@@ -950,15 +886,13 @@ const BookingReport: React.FC = () => {
                                                 <span className="text-gray-500">
                                                   Name:
                                                 </span>
-                                                {service.service?.service
-                                                  ?.name || "N/A"}
+                                                {service.service?.name || "N/A"}
                                               </p>
                                               <p>
                                                 <span className="text-gray-500">
                                                   Code:
                                                 </span>
-                                                {service.service?.service
-                                                  ?.code || "N/A"}
+                                                {service.service?.code || "N/A"}
                                               </p>
                                               <p>
                                                 <span className="text-gray-500">
@@ -987,22 +921,19 @@ const BookingReport: React.FC = () => {
                                                 <span className="text-gray-500">
                                                   Facility:
                                                 </span>
-                                                {service.service?.contract
-                                                  ?.facility?.name || "N/A"}
+                                                {booking.facility?.name || "N/A"}
                                               </p>
                                               <p>
                                                 <span className="text-gray-500">
                                                   Code:
                                                 </span>
-                                                {service.service?.contract
-                                                  ?.facility?.code || "N/A"}
+                                                {booking.facility?.code || "N/A"}
                                               </p>
                                               <p>
                                                 <span className="text-gray-500">
                                                   Level:
                                                 </span>
-                                                {service.service?.contract
-                                                  ?.facility?.keph_level ||
+                                                {booking.facility?.keph_level ||
                                                   "N/A"}
                                               </p>
                                             </div>
@@ -1018,7 +949,9 @@ const BookingReport: React.FC = () => {
                                                   Scheduled:
                                                 </span>
                                                 {formatDate(
-                                                  service.booking_date
+                                                  service.scheduled_date ||
+                                                    service.booking_date ||
+                                                    ""
                                                 )}
                                               </p>
                                               <p>
@@ -1026,8 +959,9 @@ const BookingReport: React.FC = () => {
                                                   SHA Rate:
                                                 </span>
                                                 {formatCurrency(
-                                                  service.service?.service
-                                                    ?.sha_rate || "0"
+                                                  service.service?.sha_rate ||
+                                                    service.tariff ||
+                                                    "0"
                                                 )}
                                               </p>
                                               <p>

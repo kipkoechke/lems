@@ -28,17 +28,19 @@ export default function ConsentVerification({
   const [consentVerified, setConsentVerified] = useState(false);
 
   const handleValidateOTP = (otp: string) => {
+    // Support both new session_id and legacy booking_number
+    const sessionId = booking.session_id;
     const bookingNumber =
       booking.booking_number || booking.id || booking.number;
 
-    if (!bookingNumber) {
+    if (!sessionId && !bookingNumber) {
       toast.error("Booking ID is missing from booking data.");
       return;
     }
 
     const requestPayload = {
-      otp_code: otp,
-      booking_number: bookingNumber,
+      session_id: sessionId || bookingNumber || "",
+      otp: otp,
     };
 
     validateOtpMutation(requestPayload, {

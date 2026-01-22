@@ -161,31 +161,32 @@ const ApprovedServicesPage: React.FC = () => {
                                 className="border-l-2 border-green-200 pl-2"
                               >
                                 <div className="font-medium break-words">
-                                  {service.service?.service?.name || "N/A"}
+                                  {service.service?.name || "N/A"}
                                 </div>
                                 <div className="text-gray-500 break-words">
-                                  {service.service?.service?.code || "N/A"}
+                                  {service.service?.code || "N/A"}
                                 </div>
                                 <div className="text-xs text-gray-400 mt-1 break-words">
                                   <Building className="inline h-3 w-3 mr-1" />
-                                  {service.service?.contract?.facility?.name ||
-                                    "N/A"}
+                                  {booking.facility?.name || "N/A"}
                                 </div>
                                 <div className="text-xs mt-1">
                                   <span
                                     className={`px-2 py-0.5 rounded-full ${
+                                      service.status === "completed" ||
                                       service.service_status === "completed"
                                         ? "bg-green-100 text-green-800"
                                         : "bg-yellow-100 text-yellow-800"
                                     }`}
                                   >
-                                    {service.service_status === "completed"
+                                    {service.status === "completed" ||
+                                    service.service_status === "completed"
                                       ? "Completed"
                                       : "Pending"}
                                   </span>
                                 </div>
-                                {booking.services.length > 1 &&
-                                  index < booking.services.length - 1 && (
+                                {(booking.services?.length ?? 0) > 1 &&
+                                  index < (booking.services?.length ?? 0) - 1 && (
                                     <div className="border-b border-gray-100 my-1"></div>
                                   )}
                               </div>
@@ -210,7 +211,8 @@ const ApprovedServicesPage: React.FC = () => {
                                     </span>
                                     <span className="font-medium">
                                       {formatCurrency(
-                                        service.service?.service?.sha_rate ||
+                                        service.service?.sha_rate ||
+                                          service.tariff ||
                                           "0"
                                       )}
                                     </span>
@@ -221,7 +223,9 @@ const ApprovedServicesPage: React.FC = () => {
                                     </span>
                                     <span className="font-medium">
                                       {formatCurrency(
-                                        service.vendor_share || "0"
+                                        service.vendor_share ||
+                                          service.revenue?.vendor_share ||
+                                          "0"
                                       )}
                                     </span>
                                   </div>
@@ -231,13 +235,15 @@ const ApprovedServicesPage: React.FC = () => {
                                     </span>
                                     <span className="font-medium">
                                       {formatCurrency(
-                                        service.facility_share || "0"
+                                        service.facility_share ||
+                                          service.revenue?.facility_share ||
+                                          "0"
                                       )}
                                     </span>
                                   </div>
                                 </div>
-                                {booking.services.length > 1 &&
-                                  index < booking.services.length - 1 && (
+                                {(booking.services?.length ?? 0) > 1 &&
+                                  index < (booking.services?.length ?? 0) - 1 && (
                                     <div className="border-b border-gray-100 my-2"></div>
                                   )}
                               </div>
@@ -347,8 +353,9 @@ const ApprovedServicesPage: React.FC = () => {
                                         (total, service) =>
                                           total +
                                           parseFloat(
-                                            service.service?.service
-                                              ?.sha_rate || "0"
+                                            service.service?.sha_rate ||
+                                              service.tariff ||
+                                              "0"
                                           ),
                                         0
                                       ) || 0
@@ -365,7 +372,9 @@ const ApprovedServicesPage: React.FC = () => {
                                         (total, service) =>
                                           total +
                                           parseFloat(
-                                            service.vendor_share || "0"
+                                            service.vendor_share ||
+                                              service.revenue?.vendor_share ||
+                                              "0"
                                           ),
                                         0
                                       ) || 0
@@ -382,7 +391,9 @@ const ApprovedServicesPage: React.FC = () => {
                                         (total, service) =>
                                           total +
                                           parseFloat(
-                                            service.facility_share || "0"
+                                            service.facility_share ||
+                                              service.revenue?.facility_share ||
+                                              "0"
                                           ),
                                         0
                                       ) || 0
@@ -415,12 +426,10 @@ const ApprovedServicesPage: React.FC = () => {
                                         </h5>
                                         <div className="text-sm space-y-1">
                                           <p>
-                                            {service.service?.service?.name ||
-                                              "N/A"}
+                                            {service.service?.name || "N/A"}
                                           </p>
                                           <p className="text-gray-500">
-                                            {service.service?.service?.code ||
-                                              "N/A"}
+                                            {service.service?.code || "N/A"}
                                           </p>
                                         </div>
                                       </div>
@@ -430,7 +439,11 @@ const ApprovedServicesPage: React.FC = () => {
                                         </h5>
                                         <div className="text-sm">
                                           <p>
-                                            {formatDate(service.booking_date)}
+                                            {formatDate(
+                                              service.scheduled_date ||
+                                                service.booking_date ||
+                                                ""
+                                            )}
                                           </p>
                                         </div>
                                       </div>
@@ -440,13 +453,16 @@ const ApprovedServicesPage: React.FC = () => {
                                         </h5>
                                         <span
                                           className={`px-2 py-1 rounded-full text-xs ${
+                                            service.status === "completed" ||
                                             service.service_status ===
-                                            "completed"
+                                              "completed"
                                               ? "bg-green-100 text-green-800"
                                               : "bg-yellow-100 text-yellow-800"
                                           }`}
                                         >
-                                          {service.service_status}
+                                          {service.status ||
+                                            service.service_status ||
+                                            "pending"}
                                         </span>
                                       </div>
                                     </div>

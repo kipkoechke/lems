@@ -1,11 +1,21 @@
 import { goToNextStep, setConsent } from "@/context/workflowSlice";
 import { useAppDispatch } from "@/hooks/hooks";
-import {
-  ValidateOtpResponse,
-  validateOverrideOtp,
-} from "@/services/apiBooking";
+// TODO: Update to use new API endpoint when available
+// import {
+//   ValidateOtpResponse,
+//   validateOverrideOtp,
+// } from "@/services/apiBooking";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+
+// Placeholder types and functions until API endpoints are available
+interface ValidateOtpResponse {
+  message: string;
+}
+
+const validateOverrideOtp = async (_data: unknown): Promise<ValidateOtpResponse> => {
+  throw new Error("Override OTP validation API not yet implemented");
+};
 
 export function useOtpValidationOverride() {
   const dispatch = useAppDispatch();

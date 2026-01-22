@@ -2,11 +2,18 @@
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useCurrentUser, useCurrentFacility } from "@/hooks/useAuth";
-import { useServicesByFacilityCode } from "@/features/services/useServicesByFacilityCode";
+import { useServicesByFacilityId } from "@/features/services/useServicesByFacilityCode";
 import { useState, useMemo } from "react";
 import { FaStethoscope, FaCog } from "react-icons/fa";
 import { SearchField } from "@/components/common/SearchField";
 import Link from "next/link";
+import type { FacilityContract, ContractServiceItem } from "@/types/contract";
+
+// Flattened service type for display
+interface DisplayService extends ContractServiceItem {
+  vendorName: string;
+  facilityName: string;
+}
 
 export default function ServicesPage() {
   const user = useCurrentUser();
@@ -20,33 +27,22 @@ export default function ServicesPage() {
 
   // For facilities, use services by facility ID API
   const {
-    contracts: facilityContracts,
-    isServicesLoading: facilityLoading,
+    contracts,
+    isServicesLoading: isLoading,
     error,
-  } = useServicesByFacilityCode(!isVendor ? entityId : "");
-
-  const isLoading = facilityLoading;
-  const contracts = facilityContracts;
+  } = useServicesByFacilityId(!isVendor ? entityId : "");
 
   // Extract all services from contracts (for facility view)
-  const allServices = useMemo(() => {
+  const allServices = useMemo((): DisplayService[] => {
     if (!contracts) return [];
 
-    return contracts.flatMap((contract: any) => {
-      // For facility contracts, services are in lot.services or contract.services
-      const services = contract.services || contract.lot?.services || [];
-
-      return services.map((service: any) => ({
-        ...service,
-        // Map different field names
-        service_code: service.service_code || service.code,
-        service_name: service.service_name || service.name,
-        vendorName: contract.vendor?.name || contract.vendor_name || "N/A",
-        facilityName:
-          contract.facility?.name || contract.facility_name || "N/A",
-        lotName: contract.lot?.name || contract.lot_name || "N/A",
-      }));
-    });
+    return contracts.flatMap((contract: FacilityContract) =>
+      contract.services.map((svc) => ({
+        ...svc,
+        vendorName: contract.vendor.name,
+        facilityName: contract.facility.name,
+      }))
+    );
   }, [contracts]);
 
   // Filter services based on search
@@ -55,10 +51,10 @@ export default function ServicesPage() {
 
     const lowerSearch = searchTerm.toLowerCase();
     return allServices.filter(
-      (service: any) =>
-        service.service_name?.toLowerCase().includes(lowerSearch) ||
-        service.service_code?.toLowerCase().includes(lowerSearch) ||
-        service.vendorName?.toLowerCase().includes(lowerSearch),
+      (svc) =>
+        svc.service.name.toLowerCase().includes(lowerSearch) ||
+        svc.service.code.toLowerCase().includes(lowerSearch) ||
+        svc.vendorName.toLowerCase().includes(lowerSearch)
     );
   }, [allServices, searchTerm]);
 
@@ -221,39 +217,35 @@ export default function ServicesPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredServices.map((service: any, index: number) => (
+                      {filteredServices.map((svc, index) => (
                         <tr
-                          key={`${service.service_id}-${index}`}
+                          key={`${svc.id}-${index}`}
                           className="hover:bg-gray-50"
                         >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {service.service_code || "N/A"}
+                            {svc.service.code}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {service.service_name || "N/A"}
+                            {svc.service.name}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                            {formatCurrency(service.sha_rate || 0)}
+                            {formatCurrency(svc.service.tariff)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {formatCurrency(service.facility_share || 0)}
+                            -
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {service.lotName}
+                            {svc.lot.name}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                service.is_active === "1" ||
-                                service.is_active === true
+                                svc.is_active
                                   ? "bg-green-100 text-green-800"
                                   : "bg-gray-100 text-gray-800"
                               }`}
                             >
-                              {service.is_active === "1" ||
-                              service.is_active === true
-                                ? "Active"
-                                : "Inactive"}
+                              {svc.is_active ? "Active" : "Inactive"}
                             </span>
                           </td>
                         </tr>

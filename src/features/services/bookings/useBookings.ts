@@ -30,14 +30,16 @@ export function useBookingsWithPagination(filters: BookingFilters = {}) {
     queryFn: () => getBookingsWithPagination(filters),
   });
 
-  // Handle both old and new response formats
-  const bookingsData = data?.bookings?.data || data?.data || [];
-  const paginationData = data?.bookings || data?.pagination;
+  // Handle response format - data.data contains bookings array
+  const bookingsData = data?.data || [];
+  const paginationData = data?.pagination;
+  const summaryData = data?.summary;
 
   return {
     isLoading,
     bookings: bookingsData,
     pagination: paginationData,
+    summary: summaryData,
     error,
     refetchBookings,
   };

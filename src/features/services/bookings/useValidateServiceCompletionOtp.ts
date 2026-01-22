@@ -1,13 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import {
-  validateServiceFulfillmentOtp,
-  ValidateServiceCompletionOtp,
+  verifyServiceCompletionOtp,
+  type VerifyServiceCompletionPayload,
 } from "@/services/apiBooking";
 
 export const useValidateServiceCompletionOtp = () => {
   const mutation = useMutation({
-    mutationFn: (data: ValidateServiceCompletionOtp) =>
-      validateServiceFulfillmentOtp(data),
+    mutationFn: (data: VerifyServiceCompletionPayload) =>
+      verifyServiceCompletionOtp(data),
   });
 
   return {

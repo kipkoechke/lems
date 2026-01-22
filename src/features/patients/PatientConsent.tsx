@@ -35,8 +35,7 @@ const PatientConsent: React.FC = () => {
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
 
   // Check if booking was created with override
-  const isBookingOverridden =
-    booking?.override === "1" || booking?.override === "true";
+  const isBookingOverridden = booking?.override === true;
 
   const handleSendOTP = useCallback(() => {
     console.log("handleSendOTP called", {
@@ -75,23 +74,20 @@ const PatientConsent: React.FC = () => {
       return;
     }
 
-    // Use the booking number for OTP validation
+    // Get session_id from booking or sessionStorage
     const bookingAny = booking as any;
-    const bookingNumber =
-      booking.booking_number ||
-      booking.id ||
-      bookingAny.booking_id ||
-      bookingAny.id ||
-      bookingAny.number;
+    const sessionId = 
+      bookingAny.session_id ||
+      (typeof window !== 'undefined' ? sessionStorage.getItem('booking_session_id') : null);
 
-    if (!bookingNumber) {
-      toast.error("Booking ID is missing from booking data.");
+    if (!sessionId) {
+      toast.error("Session ID is missing. Please restart the booking process.");
       return;
     }
 
     const requestPayload = {
-      otp_code: otp,
-      booking_number: bookingNumber,
+      session_id: sessionId,
+      otp: otp,
     };
     console.log("PatientConsent - Sending validation request:", requestPayload);
 
@@ -211,29 +207,27 @@ const PatientConsent: React.FC = () => {
       return;
     }
 
+    // Get session_id from booking or sessionStorage
     const bookingAny = booking as any;
-    const bookingNumber =
-      booking.booking_number ||
-      booking.id ||
-      bookingAny.booking_id ||
-      bookingAny.id ||
-      bookingAny.number;
+    const sessionId = 
+      bookingAny.session_id ||
+      (typeof window !== 'undefined' ? sessionStorage.getItem('booking_session_id') : null);
 
-    if (!bookingNumber) {
-      toast.error("Booking number is missing");
+    if (!sessionId) {
+      toast.error("Session ID is missing. Please restart the booking process.");
       return;
     }
 
     resendOtpMutation(
-      { booking_number: bookingNumber },
+      { session_id: sessionId },
       {
         onSuccess: (response) => {
           toast.success("OTP has been resent successfully");
 
           // Update expiry time and reset countdown
-          if (response.expires_at) {
-            setExpiresAt(response.expires_at);
-            const expiryTimestamp = new Date(response.expires_at).getTime();
+          if (response.data?.expires_at) {
+            setExpiresAt(response.data.expires_at);
+            const expiryTimestamp = new Date(response.data.expires_at).getTime();
             const now = Date.now();
             const remaining = Math.max(
               0,
@@ -385,10 +379,8 @@ const PatientConsent: React.FC = () => {
                       );
                       return totalVendorShare.toLocaleString();
                     }
-                    // Fallback to legacy vendor_share property
-                    return parseFloat(
-                      booking?.vendor_share || "0"
-                    ).toLocaleString();
+                    // No vendor_share available at booking level
+                    return "0";
                   })()}
                 </p>
                 <p>
@@ -404,10 +396,8 @@ const PatientConsent: React.FC = () => {
                       );
                       return totalFacilityShare.toLocaleString();
                     }
-                    // Fallback to legacy facility_share property
-                    return parseFloat(
-                      booking?.facility_share || "0"
-                    ).toLocaleString();
+                    // No facility_share available at booking level
+                    return "0";
                   })()}
                 </p>
               </>

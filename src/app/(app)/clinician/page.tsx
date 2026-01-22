@@ -5,7 +5,7 @@ import { Patient, IDENTIFICATION_TYPES } from "@/services/apiPatient";
 import { useRegisterPatient } from "@/features/patients/useRegisterPatient";
 import { usePatients } from "@/features/patients/usePatients";
 import { useCurrentFacility } from "@/hooks/useAuth";
-import { useServicesByFacilityCode } from "@/features/services/useServicesByFacilityCode";
+import { useServicesByFacilityId } from "@/features/services/useServicesByFacilityCode";
 import { useCreateBooking } from "@/features/services/bookings/useCreateBooking";
 import {
   FaSearch,
@@ -25,6 +25,7 @@ import Modal from "@/components/common/Modal";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { maskPhoneNumber } from "@/lib/maskUtils";
+import type { FlattenedContractService } from "@/types/contract";
 
 export default function ClinicianServicesPage() {
   const { registerPatients, isRegistering } = useRegisterPatient();
@@ -37,8 +38,8 @@ export default function ClinicianServicesPage() {
   const facilityId = facility?.id || "";
 
   // Fetch contracts based on facility ID
-  const { contracts, isServicesLoading } =
-    useServicesByFacilityCode(facilityId);
+  const { contracts, flattenedServices, isServicesLoading } =
+    useServicesByFacilityId(facilityId);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showFavorites, setShowFavorites] = useState(false);
@@ -179,13 +180,16 @@ export default function ClinicianServicesPage() {
       onSuccess: (response: any) => {
         toast.success("Booking created successfully!");
         // Navigate to consent verification page with booking data
+        // Support both new API (data.session_id) and legacy API (booking.booking_number)
+        const data = response.data || response;
         const bookingInfo = {
-          booking_number: response.booking.booking_number,
-          patient_name: selectedPatient.name,
-          patient_phone: selectedPatient.phone,
-          consent_id: response.consent_id || "",
-          expires_at: response.expires_at || "",
-          otp_message: response.otp_message || "",
+          session_id: data.session_id || "",
+          booking_number: data.booking?.booking_number || response.booking?.booking_number || "",
+          patient_name: data.patient?.name || selectedPatient.name,
+          patient_phone: data.phone || selectedPatient.phone,
+          consent_id: data.consent_id || response.consent_id || "",
+          expires_at: data.expires_at || response.expires_at || "",
+          otp_message: data.otp_message || response.otp_message || response.message || "",
         };
 
         // Store in sessionStorage to pass to next page
@@ -200,14 +204,17 @@ export default function ClinicianServicesPage() {
     });
   };
 
-  // Get selected contract and its services
+  // Get selected contract and its services (flattened for display)
   const selectedContract = contracts?.find((c) => c.id === selectedContractId);
-  const availableServices =
-    selectedContract?.services?.filter((s) => s.is_active === "1") || [];
+  const availableServices: FlattenedContractService[] = selectedContract
+    ? flattenedServices.filter(
+        (s) => s.contract_id === selectedContractId && s.is_active
+      )
+    : [];
 
   // Get selected services with their details
   const selectedServices = availableServices.filter((service) =>
-    selectedServiceIds.includes(service.service_id),
+    selectedServiceIds.includes(service.service_id)
   );
 
   // Calculate total cost from actual service rates
@@ -216,16 +223,9 @@ export default function ClinicianServicesPage() {
     return sum + shaRate;
   }, 0);
 
-  // Calculate facility and vendor shares
-  const facilityShare = selectedServices.reduce((sum, service) => {
-    const facilityShare = parseFloat(service.facility_share || "0");
-    return sum + facilityShare;
-  }, 0);
-
-  const vendorShare = selectedServices.reduce((sum, service) => {
-    const vendorShare = parseFloat(service.vendor_share || "0");
-    return sum + vendorShare;
-  }, 0);
+  // Calculate facility and vendor shares (not in new API, set to 0)
+  const facilityShare = 0;
+  const vendorShare = 0;
 
   const isLoading = isServicesLoading;
 
@@ -277,50 +277,56 @@ export default function ClinicianServicesPage() {
           <div className="flex-1 overflow-y-auto px-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Dynamic Contract Cards */}
-              {contracts?.map((contract) => (
-                <button
-                  key={contract.id}
-                  onClick={() => handleServiceClick(contract.id)}
-                  className={`bg-white rounded-lg p-2 hover:shadow-lg transition-shadow border-2 text-left ${
-                    selectedContractId === contract.id
-                      ? "border-blue-600 shadow-lg"
-                      : "border-gray-200"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg
-                        className="w-6 h-6 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
+              {contracts?.map((contract) => {
+                // Get first lot name from services
+                const lotName =
+                  contract.services[0]?.lot?.name || "Service Category";
+                return (
+                  <button
+                    key={contract.id}
+                    onClick={() => handleServiceClick(contract.id)}
+                    className={`bg-white rounded-lg p-2 hover:shadow-lg transition-shadow border-2 text-left ${
+                      selectedContractId === contract.id
+                        ? "border-blue-600 shadow-lg"
+                        : "border-gray-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg
+                          className="w-6 h-6 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 truncate">
+                          {lotName}
+                        </h3>
+                        <p className="text-xs text-gray-500">
+                          {contract.services_count} services available
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">
-                        {contract.lot_name || "Service Category"}
-                      </h3>
-                      <p className="text-xs text-gray-500">
-                        {contract.services?.length || 0} services available
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Available Services from Selected Contract */}
             {selectedContract && availableServices.length > 0 && (
               <div className="mt-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Available Services in {selectedContract.lot_name}
+                  Available Services in{" "}
+                  {selectedContract.services[0]?.lot?.name || "Selected Category"}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {availableServices.map((service) => (

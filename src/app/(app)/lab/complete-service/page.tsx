@@ -41,8 +41,8 @@ export default function ServiceCompletionPage() {
       setBookingInfo(parsed);
 
       // Auto-request OTP for first service
-      if (parsed.booking_number && parsed.services?.[0]) {
-        handleRequestOtp(parsed.booking_number);
+      if (parsed.id && parsed.services?.[0]?.id) {
+        handleRequestOtp(parsed.id, parsed.services[0].id);
       }
     } catch {
       toast.error("Invalid booking data");
@@ -71,23 +71,27 @@ export default function ServiceCompletionPage() {
   const currentService = bookingInfo?.services?.[currentServiceIndex];
   const totalServices = bookingInfo?.services?.length || 0;
 
-  const handleRequestOtp = (bookingNumber: string) => {
-    requestOtp(bookingNumber, {
+  const handleRequestOtp = (bookingId: string, serviceId?: string) => {
+    const payload = {
+      booking_id: bookingId,
+      service_id: serviceId || currentService?.id || "",
+    };
+    requestOtp(payload, {
       onSuccess: (response: any) => {
         toast.success(
-          response.otp_message || "OTP sent to patient successfully"
+          response.message || "OTP sent to patient successfully"
         );
 
-        if (response.expires_at) {
-          const expiryTime = new Date(response.expires_at).getTime();
+        if (response.data?.expires_at) {
+          const expiryTime = new Date(response.data.expires_at).getTime();
           const now = Date.now();
           const remaining = Math.max(0, Math.floor((expiryTime - now) / 1000));
           setTimeRemaining(remaining);
         }
 
-        // Display OTP code if available (for testing/demo)
-        if (response.otp_code) {
-          console.log("OTP Code:", response.otp_code);
+        // Store session_id for verification
+        if (response.data?.session_id) {
+          sessionStorage.setItem("serviceCompletionSession", response.data.session_id);
         }
       },
       onError: (error: any) => {
@@ -131,15 +135,17 @@ export default function ServiceCompletionPage() {
       return;
     }
 
-    if (!bookingInfo?.booking_number || !currentService) {
+    if (!bookingInfo?.id || !currentService) {
       toast.error("Booking or service information missing");
       return;
     }
 
+    // Get session_id from storage (set during OTP request)
+    const sessionId = sessionStorage.getItem("serviceCompletionSession");
+    
     const requestPayload = {
-      booking_number: bookingInfo.booking_number,
-      service_id: currentService.id,
-      otp_code: otpCode,
+      session_id: sessionId || bookingInfo.id,
+      otp: otpCode,
     };
 
     validateOtp(requestPayload, {
@@ -147,8 +153,9 @@ export default function ServiceCompletionPage() {
         const newCompletedServices = [...completedServices, currentService.id];
         setCompletedServices(newCompletedServices);
 
-        // Clear OTP inputs
+        // Clear OTP inputs and session
         setOtp(["", "", "", "", ""]);
+        sessionStorage.removeItem("serviceCompletionSession");
 
         // Check if all services are completed
         if (newCompletedServices.length === totalServices) {
@@ -315,14 +322,18 @@ export default function ServiceCompletionPage() {
               </h3>
               <div className="text-sm space-y-2">
                 <p className="font-medium text-gray-900">
-                  {currentService.service?.service?.name || "Service"}
+                  {currentService.service?.name || "Service"}
                 </p>
                 <p className="text-gray-600">
-                  Code: {currentService.service?.service?.code || "N/A"}
+                  Code: {currentService.service?.code || "N/A"}
                 </p>
                 <p className="text-gray-600">
                   Scheduled:{" "}
-                  {new Date(currentService.booking_date).toLocaleString()}
+                  {currentService.scheduled_date || currentService.booking_date
+                    ? new Date(
+                        (currentService.scheduled_date || currentService.booking_date)!
+                      ).toLocaleString()
+                    : "N/A"}
                 </p>
               </div>
             </div>
@@ -424,7 +435,7 @@ export default function ServiceCompletionPage() {
                       className="text-sm text-green-800 flex items-center gap-2"
                     >
                       <FaCheckCircle className="w-3 h-3" />
-                      <span>{service.service?.service?.name || "Service"}</span>
+                      <span>{service.service?.name || "Service"}</span>
                     </div>
                   ))}
               </div>

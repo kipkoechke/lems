@@ -292,15 +292,18 @@ export default function LabServicesPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <p className="font-medium text-gray-900 text-sm">
-                          {service.service?.service?.name ||
-                            `Service ${index + 1}`}
+                          {service.service?.name || `Service ${index + 1}`}
                         </p>
                         <p className="text-xs text-gray-600 mt-1">
-                          Code: {service.service?.service?.code || "N/A"}
+                          Code: {service.service?.code || "N/A"}
                         </p>
                         <p className="text-xs text-gray-600">
                           Scheduled:{" "}
-                          {new Date(service.booking_date).toLocaleString()}
+                          {service.scheduled_date || service.booking_date
+                            ? new Date(
+                                (service.scheduled_date || service.booking_date)!
+                              ).toLocaleString()
+                            : "N/A"}
                         </p>
                       </div>
                       <span

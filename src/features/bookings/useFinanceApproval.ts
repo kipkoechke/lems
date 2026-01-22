@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { financeApproval, FinanceApprovalRequest } from "@/services/apiBooking";
+import { financeApproval, FinanceApprovalPayload } from "@/services/apiBooking";
 
 interface FinanceApprovalParams {
   bookingId: string;
-  data: FinanceApprovalRequest;
+  data: FinanceApprovalPayload;
 }
 
 export function useFinanceApproval() {

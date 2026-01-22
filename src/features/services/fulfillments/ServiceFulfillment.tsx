@@ -81,23 +81,25 @@ const ServiceFulfillment: React.FC = () => {
     }
 
     setOtpSent(true);
-    requestFulfillmentOtp(bookingNumber, {
-      onSuccess: (data: { otp_code?: string }) => {
-        console.log("=== OTP REQUEST SUCCESS ===");
-        console.log("Response data:", data);
+    requestFulfillmentOtp(
+      { booking_id: booking?.id || bookingNumber, service_id: currentService.id },
+      {
+        onSuccess: (data) => {
+          console.log("=== OTP REQUEST SUCCESS ===");
+          console.log("Response data:", data);
 
-        if (data?.otp_code) {
-          setGeneratedOtp(data.otp_code);
+          // Store session_id for OTP verification
+          if (typeof window !== 'undefined' && data?.data?.session_id) {
+            sessionStorage.setItem('service_completion_session_id', data.data.session_id);
+          }
+
           toast.success(
-            `Service ${currentServiceIndex + 1}/${totalServices} - OTP: ${
-              data.otp_code
-            }`
+            `Service ${currentServiceIndex + 1}/${totalServices} - OTP sent to patient's phone`
           );
-        }
-        setTimeout(() => {
-          setShowOTP(true);
-        }, 500);
-      },
+          setTimeout(() => {
+            setShowOTP(true);
+          }, 500);
+        },
       onError: (error) => {
         console.error("=== OTP REQUEST ERROR ===");
         console.error("Error:", error);
@@ -135,20 +137,34 @@ const ServiceFulfillment: React.FC = () => {
     const serviceId = currentService.id;
 
     console.log("=== VALIDATING SERVICE FULFILLMENT OTP ===");
-    console.log("Booking number:", bookingNumber);
+    console.log("Booking ID:", booking?.id || bookingNumber);
     console.log("Service ID:", serviceId);
     console.log("OTP code:", otp);
+
+    // Get session_id from sessionStorage
+    const sessionId = typeof window !== 'undefined' 
+      ? sessionStorage.getItem('service_completion_session_id') 
+      : null;
+
+    if (!sessionId) {
+      toast.error("Session expired. Please request a new OTP.");
+      return;
+    }
 
     validateOtpMutation(
       {
         data: {
-          booking_number: bookingNumber,
-          service_id: serviceId,
-          otp_code: otp,
+          session_id: sessionId,
+          otp: otp,
         },
       },
       {
         onSuccess: () => {
+          // Clear session_id after successful verification
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('service_completion_session_id');
+          }
+
           // Mark current service as completed
           const updatedCompletedServices = [...completedServices, serviceId];
           setCompletedServices(updatedCompletedServices);
@@ -481,9 +497,11 @@ const ServiceFulfillment: React.FC = () => {
                           </p>
                           <p className="text-xs text-gray-500">
                             Booking Date:{" "}
-                            {new Date(
-                              service.booking_date
-                            ).toLocaleDateString()}
+                            {service.booking_date || service.scheduled_date
+                              ? new Date(
+                                  (service.booking_date || service.scheduled_date)!
+                                ).toLocaleDateString()
+                              : "N/A"}
                           </p>
                         </div>
                       </div>

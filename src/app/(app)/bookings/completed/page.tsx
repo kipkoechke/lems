@@ -148,10 +148,10 @@ const CompletedServicesPage: React.FC = () => {
                       <div className="flex items-center">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            {booking.patient.name}
+                            {booking.patient?.name || "N/A"}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {maskPhoneNumber(booking.patient.phone)}
+                            {maskPhoneNumber(booking.patient?.phone || "")}
                           </div>
                           <div className="text-xs text-gray-400">
                             Booking: {booking.booking_number}
@@ -169,15 +169,14 @@ const CompletedServicesPage: React.FC = () => {
                                 className="border-l-2 border-green-200 pl-2"
                               >
                                 <div className="font-medium break-words">
-                                  {service.service?.service?.name || "N/A"}
+                                  {service.service?.name || "N/A"}
                                 </div>
                                 <div className="text-gray-500 break-words">
-                                  {service.service?.service?.code || "N/A"}
+                                  {service.service?.code || "N/A"}
                                 </div>
                                 <div className="text-xs text-gray-400 mt-1 break-words">
                                   <Building className="inline h-3 w-3 mr-1" />
-                                  {service.service?.contract?.facility?.name ||
-                                    "N/A"}
+                                  {booking.facility?.name || "N/A"}
                                 </div>
                                 <div className="text-xs mt-1">
                                   <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-800">
@@ -210,7 +209,8 @@ const CompletedServicesPage: React.FC = () => {
                                     </span>
                                     <span className="font-medium">
                                       {formatCurrency(
-                                        service.service?.service?.sha_rate ||
+                                        service.service?.sha_rate ||
+                                          service.tariff ||
                                           "0"
                                       )}
                                     </span>
@@ -255,7 +255,12 @@ const CompletedServicesPage: React.FC = () => {
                         {booking.services && booking.services[0] ? (
                           <div>
                             <div className="font-medium">
-                              {formatDate(booking.services[0].updated_at)}
+                              {formatDate(
+                                booking.services[0].updated_at ||
+                                  booking.services[0].completed_at ||
+                                  booking.updated_at ||
+                                  ""
+                              )}
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
                               {booking.services.length} service
@@ -263,7 +268,7 @@ const CompletedServicesPage: React.FC = () => {
                             </div>
                           </div>
                         ) : (
-                          formatDate(booking.updated_at)
+                          formatDate(booking.updated_at || "")
                         )}
                       </div>
                     </td>
@@ -294,25 +299,27 @@ const CompletedServicesPage: React.FC = () => {
                                   <span className="text-gray-500">
                                     Full Name:{" "}
                                   </span>
-                                  {booking.patient.name}
+                                  {booking.patient?.name || "N/A"}
                                 </p>
                                 <p>
                                   <span className="text-gray-500">DOB: </span>
-                                  {new Date(
-                                    booking.patient.date_of_birth
-                                  ).toLocaleDateString()}
+                                  {booking.patient?.date_of_birth
+                                    ? new Date(
+                                        booking.patient.date_of_birth
+                                      ).toLocaleDateString()
+                                    : "N/A"}
                                 </p>
                                 <p>
                                   <span className="text-gray-500">
                                     SHA Number:{" "}
                                   </span>
-                                  {booking.patient.sha_number || "N/A"}
+                                  {booking.patient?.sha_number || "N/A"}
                                 </p>
                                 <p>
                                   <span className="text-gray-500">
                                     ID Number:{" "}
                                   </span>
-                                  {booking.patient.identification_no || "N/A"}
+                                  {booking.patient?.identification_no || "N/A"}
                                 </p>
                               </div>
                             </div>
@@ -347,7 +354,7 @@ const CompletedServicesPage: React.FC = () => {
                                   <span className="text-gray-500">
                                     Completed:{" "}
                                   </span>
-                                  {formatDate(booking.updated_at)}
+                                  {formatDate(booking.updated_at || "")}
                                 </p>
                               </div>
                             </div>
@@ -368,8 +375,9 @@ const CompletedServicesPage: React.FC = () => {
                                         (total, service) =>
                                           total +
                                           parseFloat(
-                                            service.service?.service
-                                              ?.sha_rate || "0"
+                                            service.service?.sha_rate ||
+                                              service.tariff ||
+                                              "0"
                                           ),
                                         0
                                       ) || 0
@@ -438,17 +446,14 @@ const CompletedServicesPage: React.FC = () => {
                                         </h5>
                                         <div className="text-sm space-y-1">
                                           <p className="font-medium">
-                                            {service.service?.service?.name ||
-                                              "N/A"}
+                                            {service.service?.name || "N/A"}
                                           </p>
                                           <p className="text-gray-500">
-                                            {service.service?.service?.code ||
-                                              "N/A"}
+                                            {service.service?.code || "N/A"}
                                           </p>
                                           <p className="text-xs text-gray-600 mt-2">
                                             <Building className="inline h-3 w-3 mr-1" />
-                                            {service.service?.contract?.facility
-                                              ?.name || "N/A"}
+                                            {booking.facility?.name || "N/A"}
                                           </p>
                                         </div>
                                       </div>
@@ -461,13 +466,21 @@ const CompletedServicesPage: React.FC = () => {
                                             <span className="text-gray-500">
                                               Scheduled:{" "}
                                             </span>
-                                            {formatDate(service.booking_date)}
+                                            {formatDate(
+                                              service.scheduled_date ||
+                                                service.booking_date ||
+                                                ""
+                                            )}
                                           </p>
                                           <p>
                                             <span className="text-gray-500">
                                               Completed:{" "}
                                             </span>
-                                            {formatDate(service.updated_at)}
+                                            {formatDate(
+                                              service.updated_at ||
+                                                service.completed_at ||
+                                                ""
+                                            )}
                                           </p>
                                         </div>
                                       </div>
@@ -481,8 +494,9 @@ const CompletedServicesPage: React.FC = () => {
                                               SHA Rate:{" "}
                                             </span>
                                             {formatCurrency(
-                                              service.service?.service
-                                                ?.sha_rate || "0"
+                                              service.service?.sha_rate ||
+                                                service.tariff ||
+                                                "0"
                                             )}
                                           </p>
                                           <p>

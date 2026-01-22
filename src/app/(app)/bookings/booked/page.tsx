@@ -139,10 +139,10 @@ const BookedServicesPage: React.FC = () => {
                       <div className="flex items-center">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            {booking.patient.name}
+                            {booking.patient?.name || "N/A"}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {maskPhoneNumber(booking.patient.phone)}
+                            {maskPhoneNumber(booking.patient?.phone || "")}
                           </div>
                           <div className="text-xs text-gray-400">
                             {formatDate(booking.created_at)}
@@ -160,18 +160,17 @@ const BookedServicesPage: React.FC = () => {
                                 className="border-l-2 border-blue-200 pl-2"
                               >
                                 <div className="font-medium break-words">
-                                  {service.service?.service?.name || "N/A"}
+                                  {service.service?.name || "N/A"}
                                 </div>
                                 <div className="text-gray-500 break-words">
-                                  {service.service?.service?.code || "N/A"}
+                                  {service.service?.code || "N/A"}
                                 </div>
                                 <div className="text-xs text-gray-400 mt-1 break-words">
                                   <Building className="inline h-3 w-3 mr-1" />
-                                  {service.service?.contract?.facility?.name ||
-                                    "N/A"}
+                                  {booking.facility?.name || "N/A"}
                                 </div>
-                                {booking.services.length > 1 &&
-                                  index < booking.services.length - 1 && (
+                                {(booking.services?.length ?? 0) > 1 &&
+                                  index < (booking.services?.length ?? 0) - 1 && (
                                     <div className="border-b border-gray-100 my-1"></div>
                                   )}
                               </div>
@@ -196,14 +195,15 @@ const BookedServicesPage: React.FC = () => {
                                     </span>
                                     <span className="font-medium">
                                       {formatCurrency(
-                                        service.service?.service?.sha_rate ||
+                                        service.service?.sha_rate ||
+                                          service.tariff ||
                                           "0"
                                       )}
                                     </span>
                                   </div>
                                 </div>
-                                {booking.services.length > 1 &&
-                                  index < booking.services.length - 1 && (
+                                {(booking.services?.length ?? 0) > 1 &&
+                                  index < (booking.services?.length ?? 0) - 1 && (
                                     <div className="border-b border-gray-100 my-2"></div>
                                   )}
                               </div>
@@ -247,15 +247,17 @@ const BookedServicesPage: React.FC = () => {
                               <div className="text-sm space-y-1">
                                 <p>
                                   <span className="text-gray-500">DOB: </span>
-                                  {new Date(
-                                    booking.patient.date_of_birth
-                                  ).toLocaleDateString()}
+                                  {booking.patient?.date_of_birth
+                                    ? new Date(
+                                        booking.patient.date_of_birth
+                                      ).toLocaleDateString()
+                                    : "N/A"}
                                 </p>
                                 <p>
                                   <span className="text-gray-500">
                                     SHA Number:{" "}
                                   </span>
-                                  {booking.patient.sha_number || "N/A"}
+                                  {booking.patient?.sha_number || "N/A"}
                                 </p>
                               </div>
                             </div>
@@ -293,7 +295,8 @@ const BookedServicesPage: React.FC = () => {
                                       (total, service) =>
                                         total +
                                         parseFloat(
-                                          service.service?.service?.sha_rate ||
+                                          service.service?.sha_rate ||
+                                            service.tariff ||
                                             "0"
                                         ),
                                       0
