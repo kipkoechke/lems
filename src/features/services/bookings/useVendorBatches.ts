@@ -21,7 +21,7 @@ export const useVendorBatches = ({ page = 1 }: UseVendorBatchesParams = {}) => {
     pagination: vendorBatchesResponse
       ? {
           currentPage: vendorBatchesResponse.current_page,
-          totalPages: vendorBatchesResponse.last_page,
+          lastPage: vendorBatchesResponse.last_page,
           total: vendorBatchesResponse.total,
           from: vendorBatchesResponse.from,
           to: vendorBatchesResponse.to,

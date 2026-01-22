@@ -1,59 +1,31 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  getVendorDashboardSummary,
+  getVendorDashboard,
   getVendorBookingTrends,
   getVendorRevenueByFacility,
   getVendorRevenueByLot,
   getVendorRevenueByService,
+  VendorDashboardFilters,
   VendorTrendFilters,
 } from "@/services/apiVendorDashboard";
-import { getContracts } from "@/services/apiVendors";
 
-// Hook for vendor dashboard summary
-export const useVendorDashboardSummary = (vendorCode: string) => {
+// NEW: Hook for vendor dashboard using the new /vendors/{id}/dashboard endpoint
+export const useVendorDashboard = (
+  vendorId: string,
+  filters?: VendorDashboardFilters
+) => {
   return useQuery({
-    queryKey: ["vendorDashboardSummary", vendorCode],
-    queryFn: () => getVendorDashboardSummary(vendorCode),
-    enabled: !!vendorCode,
+    queryKey: ["vendorDashboard", vendorId, filters],
+    queryFn: () => getVendorDashboard(vendorId, filters),
+    enabled: !!vendorId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
-// Hook for vendor contracts count (for calculating stats locally)
-export const useVendorStats = (vendorCode: string) => {
-  const contractsQuery = useQuery({
-    queryKey: ["vendorContracts", vendorCode],
-    queryFn: () => getContracts({ vendor_code: vendorCode, per_page: 100 }),
-    enabled: !!vendorCode,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const contracts = contractsQuery.data?.data || [];
-
-  // Calculate stats from contracts
-  const stats = {
-    total_contracts: contracts.length,
-    active_contracts: contracts.filter((c) => c.status === "active").length,
-    total_facilities_served: new Set(contracts.map((c) => c.facility?.code))
-      .size,
-    // Note: lots and services counts removed as they're now separate endpoints
-    total_lots: 0,
-    total_services: 0,
-    total_equipments: 0,
-  };
-
-  return {
-    stats,
-    contracts,
-    isLoading: contractsQuery.isLoading,
-    error: contractsQuery.error,
-  };
-};
-
-// Hook for vendor booking trends with filters
+// Legacy hook for vendor booking trends with filters (kept for backward compatibility)
 export const useVendorBookingTrends = (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>,
+  filters?: Partial<VendorTrendFilters>
 ) => {
   return useQuery({
     queryKey: ["vendorBookingTrends", vendorCode, filters],
@@ -66,7 +38,7 @@ export const useVendorBookingTrends = (
 // Hook for revenue by facility
 export const useVendorRevenueByFacility = (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>,
+  filters?: Partial<VendorTrendFilters>
 ) => {
   return useQuery({
     queryKey: ["vendorRevenueByFacility", vendorCode, filters],
@@ -79,7 +51,7 @@ export const useVendorRevenueByFacility = (
 // Hook for revenue by lot
 export const useVendorRevenueByLot = (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>,
+  filters?: Partial<VendorTrendFilters>
 ) => {
   return useQuery({
     queryKey: ["vendorRevenueByLot", vendorCode, filters],
@@ -92,7 +64,7 @@ export const useVendorRevenueByLot = (
 // Hook for revenue by service
 export const useVendorRevenueByService = (
   vendorCode: string,
-  filters?: Partial<VendorTrendFilters>,
+  filters?: Partial<VendorTrendFilters>
 ) => {
   return useQuery({
     queryKey: ["vendorRevenueByService", vendorCode, filters],

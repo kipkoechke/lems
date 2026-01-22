@@ -36,7 +36,7 @@ export const useSyncedBookings = (options: UseSyncedBookingsOptions = {}) => {
     pagination: data?.results
       ? {
           currentPage: data.results.current_page,
-          totalPages: data.results.last_page,
+          lastPage: data.results.last_page,
           total: data.results.total,
           perPage: data.results.per_page,
           from: data.results.from,

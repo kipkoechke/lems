@@ -8,14 +8,20 @@ import {
   FaClipboardList,
   FaBoxes,
   FaStethoscope,
-  FaFileContract,
+  FaUsers,
   FaChartLine,
   FaChevronDown,
   FaSearch,
+  FaWrench,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaClock,
 } from "react-icons/fa";
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   Cell,
   Legend,
@@ -28,16 +34,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useCurrentFacility } from "@/hooks/useAuth";
-import {
-  useVendorStats,
-  useVendorBookingTrends,
-} from "@/features/vendors/useVendorDashboard";
-import { useCounties, useSubCounties } from "@/features/counties/useCounties";
-import { useLots } from "@/features/lots/useLots";
-import { useLotServices } from "@/features/lots/useLotServices";
-import { useFacilities } from "@/features/facilities/useFacilities";
-import { VendorTrendFilters } from "@/services/apiVendorDashboard";
+import { useCurrentUser } from "@/hooks/useAuth";
+import { useVendorDashboard } from "@/features/vendors/useVendorDashboard";
+import { VendorDashboardFilters } from "@/services/apiVendorDashboard";
 
 // Stat card component
 interface StatCardProps {
@@ -75,7 +74,7 @@ const StatCard: React.FC<StatCardProps> = ({
   </div>
 );
 
-// Top filter dropdown component - matches the reference UI
+// Top filter dropdown component
 interface TopFilterDropdownProps {
   label: string;
   value: string;
@@ -111,7 +110,7 @@ const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({
 
   const filteredOptions = searchable
     ? options.filter((opt) =>
-        opt.label.toLowerCase().includes(search.toLowerCase()),
+        opt.label.toLowerCase().includes(search.toLowerCase())
       )
     : options;
 
@@ -203,13 +202,14 @@ const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({
 };
 
 // Format currency
-const formatCurrency = (amount: number) => {
+const formatCurrency = (amount: number | string) => {
+  const num = typeof amount === "string" ? parseFloat(amount) : amount;
   return new Intl.NumberFormat("en-KE", {
     style: "currency",
     currency: "KES",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(num || 0);
 };
 
 // Colors for charts
@@ -225,20 +225,18 @@ const CHART_COLORS = [
 ];
 
 export const VendorDashboard: React.FC = () => {
-  const facility = useCurrentFacility(); // This contains vendor code for vendors
-  const vendorCode = facility?.code || "";
+  const user = useCurrentUser();
+  // For vendor users, the vendor ID is in the entity field
+  const vendorId = user?.entity?.id || "";
 
-  // Filter states - filters apply automatically when changed
-  const [selectedDuration, setSelectedDuration] = useState<string>("all_time");
-  const [countyCode, setCountyCode] = useState("");
-  const [subCountyCode, setSubCountyCode] = useState("");
-  const [facilityCode, setFacilityCode] = useState("");
-  const [lotNumber, setLotNumber] = useState("");
-  const [serviceCode, setServiceCode] = useState("");
+  // Filter states
+  const [selectedDuration, setSelectedDuration] = useState<string>("last_30_days");
+  const [facilityId, setFacilityId] = useState("");
+  const [lotId, setLotId] = useState("");
+  const [serviceId, setServiceId] = useState("");
 
   // Duration options
   const durationOptions = [
-    { key: "all_time", label: "All Time" },
     { key: "today", label: "Today" },
     { key: "yesterday", label: "Yesterday" },
     { key: "last_7_days", label: "Last 7 Days" },
@@ -275,133 +273,91 @@ export const VendorDashboard: React.FC = () => {
       case "last_year":
         start.setFullYear(start.getFullYear() - 1);
         break;
-      case "all_time":
       default:
-        return { start_date: "", end_date: "" };
+        start.setDate(start.getDate() - 30);
     }
 
     return {
-      start_date: start.toISOString().split("T")[0],
-      end_date: end.toISOString().split("T")[0],
+      from: start.toISOString().split("T")[0],
+      to: end.toISOString().split("T")[0],
     };
   };
 
-  // Computed filters that auto-apply
-  const filters = useMemo(() => {
+  // Computed filters
+  const filters = useMemo<VendorDashboardFilters>(() => {
     const dateRange = getDateRangeFromDuration(selectedDuration);
-    const activeFilters: Partial<VendorTrendFilters> = {};
+    const activeFilters: VendorDashboardFilters = {
+      from: dateRange.from,
+      to: dateRange.to,
+    };
 
-    if (dateRange.start_date) activeFilters.start_date = dateRange.start_date;
-    if (dateRange.end_date) activeFilters.end_date = dateRange.end_date;
-    if (countyCode) activeFilters.county_code = countyCode;
-    if (subCountyCode) activeFilters.sub_county_code = subCountyCode;
-    if (facilityCode) activeFilters.facility_code = facilityCode;
-    if (lotNumber) activeFilters.lot_number = lotNumber;
-    if (serviceCode) activeFilters.service_code = serviceCode;
+    if (facilityId) activeFilters.facility_id = facilityId;
+    if (lotId) activeFilters.lot_id = lotId;
+    if (serviceId) activeFilters.service_id = serviceId;
 
     return activeFilters;
-  }, [
-    selectedDuration,
-    countyCode,
-    subCountyCode,
-    facilityCode,
-    lotNumber,
-    serviceCode,
-  ]);
+  }, [selectedDuration, facilityId, lotId, serviceId]);
 
-  // Data hooks
-  const {
-    stats,
-    contracts,
-    isLoading: statsLoading,
-  } = useVendorStats(vendorCode);
-  const { data: trendsData, isLoading: trendsLoading } = useVendorBookingTrends(
-    vendorCode,
-    filters,
-  );
-
-  // Filter data hooks
-  const { counties } = useCounties();
-  const { subCounties } = useSubCounties(countyCode);
-  const { lots } = useLots();
-  // Find the selected lot by number to get its id for fetching services
-  const selectedLot = lots?.find((l) => l.number === lotNumber);
-  const { services: lotServices } = useLotServices(selectedLot?.id || "");
-  const { facilities } = useFacilities({});
-
-  // Handle county change - reset sub-county
-  const handleCountyChange = (value: string) => {
-    setCountyCode(value);
-    setSubCountyCode("");
-  };
+  // Fetch dashboard data
+  const { data: dashboard, isLoading, error } = useVendorDashboard(vendorId, filters);
 
   // Handle lot change - reset service
   const handleLotChange = (value: string) => {
-    setLotNumber(value);
-    setServiceCode("");
+    setLotId(value);
+    setServiceId("");
   };
 
-  // Compute revenue from trends
-  const revenueStats = useMemo(() => {
-    if (!trendsData?.trends)
-      return { total: 0, vendorShare: 0, facilityShare: 0 };
-
-    return trendsData.trends.reduce(
-      (acc: any, trend: any) => ({
-        total: acc.total + parseFloat(trend.total_amount || "0"),
-        vendorShare:
-          acc.vendorShare + parseFloat(trend.total_vendor_share || "0"),
-        facilityShare:
-          acc.facilityShare + parseFloat(trend.total_facility_share || "0"),
-      }),
-      { total: 0, vendorShare: 0, facilityShare: 0 },
-    );
-  }, [trendsData]);
-
-  // Chart data
+  // Chart data from trendline
   const trendChartData = useMemo(() => {
-    if (!trendsData?.trends) return [];
+    if (!dashboard?.trendline?.data) return [];
+    return dashboard.trendline.data.map((point) => ({
+      date: point.period,
+      total: parseFloat(point.total),
+      vendorShare: parseFloat(point.vendor_share),
+      sha: parseFloat(point.sha),
+      cash: parseFloat(point.cash),
+      otherInsurance: parseFloat(point.other_insurance),
+      servicesCount: point.services_count,
+    }));
+  }, [dashboard]);
 
-    // Group by date
-    const grouped = trendsData.trends.reduce((acc: any, trend: any) => {
-      const date = trend.date;
-      if (!acc[date]) {
-        acc[date] = {
-          date,
-          bookings: 0,
-          revenue: 0,
-          vendorShare: 0,
-        };
-      }
-      acc[date].bookings += parseInt(trend.total || "0");
-      acc[date].revenue += parseFloat(trend.total_amount || "0");
-      acc[date].vendorShare += parseFloat(trend.total_vendor_share || "0");
-      return acc;
-    }, {});
-
-    return Object.values(grouped).sort((a: any, b: any) =>
-      a.date.localeCompare(b.date),
-    );
-  }, [trendsData]);
-
-  // Revenue by payment mode
+  // Payment mode pie chart data
   const paymentModeData = useMemo(() => {
-    if (!trendsData?.trends) return [];
+    if (!dashboard?.revenue?.by_payment_type) return [];
+    const { sha, cash, other_insurance } = dashboard.revenue.by_payment_type;
+    return [
+      { name: "SHA", value: parseFloat(sha) || 0 },
+      { name: "Cash", value: parseFloat(cash) || 0 },
+      { name: "Other Insurance", value: parseFloat(other_insurance) || 0 },
+    ].filter((item) => item.value > 0);
+  }, [dashboard]);
 
-    const grouped = trendsData.trends.reduce((acc: any, trend: any) => {
-      const mode = trend.payment_mode || "Unknown";
-      if (!acc[mode]) {
-        acc[mode] = { name: mode, value: 0, count: 0 };
-      }
-      acc[mode].value += parseFloat(trend.total_vendor_share || "0");
-      acc[mode].count += parseInt(trend.total || "0");
-      return acc;
-    }, {});
+  // Equipment status data
+  const equipmentStatusData = useMemo(() => {
+    if (!dashboard?.equipment?.by_status) return [];
+    const { active, maintenance, decommissioned, pending } =
+      dashboard.equipment.by_status;
+    return [
+      { name: "Active", value: active, color: "#10B981" },
+      { name: "Maintenance", value: maintenance, color: "#F59E0B" },
+      { name: "Decommissioned", value: decommissioned, color: "#EF4444" },
+      { name: "Pending", value: pending, color: "#6B7280" },
+    ].filter((item) => item.value > 0);
+  }, [dashboard]);
 
-    return Object.values(grouped);
-  }, [trendsData]);
+  // Booking status data
+  const bookingStatusData = useMemo(() => {
+    if (!dashboard?.bookings?.by_service_status) return [];
+    const { not_started, completed, cancelled } =
+      dashboard.bookings.by_service_status;
+    return [
+      { name: "Not Started", value: not_started, color: "#F59E0B" },
+      { name: "Completed", value: completed, color: "#10B981" },
+      { name: "Cancelled", value: cancelled, color: "#EF4444" },
+    ].filter((item) => item.value > 0);
+  }, [dashboard]);
 
-  if (statsLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
@@ -412,72 +368,68 @@ export const VendorDashboard: React.FC = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="text-red-500 text-xl mb-2">⚠️</div>
+          <p className="text-red-600">Failed to load dashboard</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Top Filter Bar - Always visible */}
+      {/* Top Filter Bar */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex flex-wrap items-end gap-4">
-          {/* Location Filters */}
-          <TopFilterDropdown
-            label="County"
-            value={countyCode}
-            onChange={handleCountyChange}
-            options={
-              counties?.map((c) => ({ value: c.code, label: c.name })) || []
-            }
-            searchable
-            placeholder="All Counties"
-          />
-          <TopFilterDropdown
-            label="Sub-County"
-            value={subCountyCode}
-            onChange={setSubCountyCode}
-            options={
-              subCounties?.map((sc) => ({
-                value: sc.code,
-                label: sc.name,
-              })) || []
-            }
-            searchable
-            placeholder="All Sub-Counties"
-          />
+          {/* Facility Filter */}
           <TopFilterDropdown
             label="Facility"
-            value={facilityCode}
-            onChange={setFacilityCode}
+            value={facilityId}
+            onChange={setFacilityId}
             options={
-              facilities?.map((f) => ({ value: f.code, label: f.name })) || []
+              dashboard?.facilities?.list?.map((f) => ({
+                value: f.id,
+                label: f.name,
+              })) || []
             }
             searchable
             placeholder="All Facilities"
           />
 
-          {/* Lot & Service Filters */}
+          {/* Lot Filter */}
           <TopFilterDropdown
             label="Lot"
-            value={lotNumber}
+            value={lotId}
             onChange={handleLotChange}
             options={
-              lots?.map((l) => ({
-                value: l.number,
+              dashboard?.lots?.list?.map((l) => ({
+                value: l.id,
                 label: `${l.number} - ${l.name}`,
               })) || []
             }
             searchable
             placeholder="All Lots"
           />
+
+          {/* Service Filter */}
           <TopFilterDropdown
             label="Service"
-            value={serviceCode}
-            onChange={setServiceCode}
+            value={serviceId}
+            onChange={setServiceId}
             options={
-              lotServices?.map((s) => ({ value: s.code, label: s.name })) || []
+              dashboard?.services?.list?.map((s) => ({
+                value: s.id,
+                label: s.name,
+              })) || []
             }
             searchable
             placeholder="All Services"
           />
 
-          {/* Period Filter - rightmost with clear button */}
+          {/* Period Filter */}
           <TopFilterDropdown
             label="Period"
             value={selectedDuration}
@@ -486,166 +438,214 @@ export const VendorDashboard: React.FC = () => {
               value: opt.key,
               label: opt.label,
             }))}
-            placeholder="All Time"
-            clearable
+            placeholder="Last 30 Days"
+            clearable={false}
           />
         </div>
       </div>
 
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Vendor Dashboard</h2>
-        <p className="text-gray-500">Overview of your equipment and services</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {dashboard?.vendor?.name || "Vendor"} Dashboard
+          </h2>
+          <p className="text-gray-500">
+            {dashboard?.period?.from} to {dashboard?.period?.to}
+          </p>
+        </div>
+        <div className="text-sm text-gray-500">
+          Vendor Code: <span className="font-mono font-medium">{dashboard?.vendor?.code}</span>
+        </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Row 1 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Equipment"
-          value={stats.total_equipments}
+          value={dashboard?.equipment?.total || 0}
           icon={<FaCog className="w-6 h-6" />}
           color="#3B82F6"
+          subtext={`${dashboard?.equipment?.by_status?.active || 0} active`}
         />
         <StatCard
           title="Facilities Served"
-          value={stats.total_facilities_served}
+          value={dashboard?.facilities?.count || 0}
           icon={<FaHospital className="w-6 h-6" />}
           color="#10B981"
         />
         <StatCard
-          title="Total Revenue"
-          value={formatCurrency(revenueStats.vendorShare)}
+          title="Vendor Share"
+          value={formatCurrency(dashboard?.revenue?.vendor_share || "0")}
           icon={<FaMoneyBillWave className="w-6 h-6" />}
           color="#F59E0B"
-          subtext="Your share"
+          subtext="Your revenue"
         />
         <StatCard
-          title="Active Contracts"
-          value={stats.active_contracts}
-          icon={<FaFileContract className="w-6 h-6" />}
+          title="Unique Patients"
+          value={dashboard?.patients?.unique_count || 0}
+          icon={<FaUsers className="w-6 h-6" />}
           color="#8B5CF6"
         />
       </div>
 
+      {/* Stats Cards - Row 2 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Lots"
-          value={stats.total_lots}
+          value={dashboard?.lots?.count || 0}
           icon={<FaBoxes className="w-6 h-6" />}
           color="#EC4899"
         />
         <StatCard
           title="Total Services"
-          value={stats.total_services}
+          value={dashboard?.services?.count || 0}
           icon={<FaStethoscope className="w-6 h-6" />}
           color="#06B6D4"
         />
         <StatCard
           title="Total Bookings"
-          value={trendChartData.reduce(
-            (acc: number, d: any) => acc + d.bookings,
-            0,
-          )}
+          value={dashboard?.bookings?.total_bookings || 0}
           icon={<FaClipboardList className="w-6 h-6" />}
           color="#EF4444"
+          subtext={`${dashboard?.bookings?.total_services || 0} services`}
         />
         <StatCard
           title="Gross Revenue"
-          value={formatCurrency(revenueStats.total)}
+          value={formatCurrency(dashboard?.revenue?.tariff || "0")}
           icon={<FaChartLine className="w-6 h-6" />}
           color="#84CC16"
           subtext="Total billed"
         />
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Booking Trends */}
+      {/* Equipment & Booking Status */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Equipment Status */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Equipment Usage Trends
+            Equipment Status
           </h3>
-          {trendsLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FaCheckCircle className="text-green-500" />
+                <span className="text-sm text-gray-600">Active</span>
+              </div>
+              <span className="font-semibold">
+                {dashboard?.equipment?.by_status?.active || 0}
+              </span>
             </div>
-          ) : trendChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={trendChartData}>
-                <defs>
-                  <linearGradient
-                    id="colorBookings"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) =>
-                    new Date(value).toLocaleDateString("en-KE", {
-                      month: "short",
-                      day: "numeric",
-                    })
-                  }
-                />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip
-                  labelFormatter={(value) =>
-                    new Date(value).toLocaleDateString("en-KE", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })
-                  }
-                  formatter={(value: number, name: string) => [
-                    name === "revenue" || name === "vendorShare"
-                      ? formatCurrency(value)
-                      : value,
-                    name === "bookings"
-                      ? "Bookings"
-                      : name === "vendorShare"
-                        ? "Vendor Share"
-                        : "Revenue",
-                  ]}
-                />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="bookings"
-                  stroke="#3B82F6"
-                  fillOpacity={1}
-                  fill="url(#colorBookings)"
-                  name="Bookings"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500">
-              No trend data available
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FaWrench className="text-yellow-500" />
+                <span className="text-sm text-gray-600">Maintenance</span>
+              </div>
+              <span className="font-semibold">
+                {dashboard?.equipment?.by_status?.maintenance || 0}
+              </span>
             </div>
-          )}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FaTimesCircle className="text-red-500" />
+                <span className="text-sm text-gray-600">Decommissioned</span>
+              </div>
+              <span className="font-semibold">
+                {dashboard?.equipment?.by_status?.decommissioned || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FaClock className="text-gray-500" />
+                <span className="text-sm text-gray-600">Pending</span>
+              </div>
+              <span className="font-semibold">
+                {dashboard?.equipment?.by_status?.pending || 0}
+              </span>
+            </div>
+          </div>
         </div>
 
+        {/* Booking Status */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Service Status
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FaClock className="text-yellow-500" />
+                <span className="text-sm text-gray-600">Not Started</span>
+              </div>
+              <span className="font-semibold">
+                {dashboard?.bookings?.by_service_status?.not_started || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FaCheckCircle className="text-green-500" />
+                <span className="text-sm text-gray-600">Completed</span>
+              </div>
+              <span className="font-semibold">
+                {dashboard?.bookings?.by_service_status?.completed || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FaTimesCircle className="text-red-500" />
+                <span className="text-sm text-gray-600">Cancelled</span>
+              </div>
+              <span className="font-semibold">
+                {dashboard?.bookings?.by_service_status?.cancelled || 0}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Booking Source */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Booking Source
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Standalone</span>
+              <span className="font-semibold">
+                {dashboard?.bookings?.by_source?.standalone || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">HMIS</span>
+              <span className="font-semibold">
+                {dashboard?.bookings?.by_source?.hmis || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Provider Portal</span>
+              <span className="font-semibold">
+                {dashboard?.bookings?.by_source?.provider_portal || 0}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue Trends */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Revenue Trends
           </h3>
-          {trendsLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          ) : trendChartData.length > 0 ? (
+          {trendChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={trendChartData}>
+              <AreaChart data={trendChartData}>
+                <defs>
+                  <linearGradient id="colorVendor" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="date"
@@ -670,35 +670,80 @@ export const VendorDashboard: React.FC = () => {
                       day: "numeric",
                     })
                   }
-                  formatter={(value: number) => [
-                    formatCurrency(value),
-                    "Vendor Share",
-                  ]}
+                  formatter={(value: number) => [formatCurrency(value), "Vendor Share"]}
                 />
                 <Legend />
-                <Line
+                <Area
                   type="monotone"
                   dataKey="vendorShare"
                   stroke="#10B981"
-                  strokeWidth={2}
-                  dot={{ fill: "#10B981" }}
+                  fillOpacity={1}
+                  fill="url(#colorVendor)"
                   name="Vendor Share"
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-64 text-gray-500">
-              No revenue data available
+              No trend data available
+            </div>
+          )}
+        </div>
+
+        {/* Services Count Trend */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Services Performed
+          </h3>
+          {trendChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={trendChartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(value) =>
+                    new Date(value).toLocaleDateString("en-KE", {
+                      month: "short",
+                      day: "numeric",
+                    })
+                  }
+                />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip
+                  labelFormatter={(value) =>
+                    new Date(value).toLocaleDateString("en-KE", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  }
+                  formatter={(value: number) => [value, "Services"]}
+                />
+                <Legend />
+                <Bar
+                  dataKey="servicesCount"
+                  fill="#3B82F6"
+                  name="Services"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              No services data available
             </div>
           )}
         </div>
       </div>
 
-      {/* Payment Mode Distribution */}
+      {/* Payment Mode Distribution & Facilities */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Payment Mode Distribution */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Revenue by Payment Mode
+            Revenue by Payment Type
           </h3>
           {paymentModeData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
@@ -728,58 +773,117 @@ export const VendorDashboard: React.FC = () => {
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-64 text-gray-500">
-              No payment mode data available
+              No payment data available
             </div>
           )}
         </div>
 
-        {/* Top Facilities */}
+        {/* Facilities List */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Contracts Overview
+            Facilities ({dashboard?.facilities?.count || 0})
           </h3>
           <div className="space-y-3 max-h-[300px] overflow-y-auto">
-            {contracts.slice(0, 10).map((contract, index) => (
+            {dashboard?.facilities?.list?.map((facility, index) => (
               <div
-                key={contract.id}
+                key={facility.id}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
               >
                 <div className="flex items-center gap-3">
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
                     style={{
-                      backgroundColor:
-                        CHART_COLORS[index % CHART_COLORS.length],
+                      backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
                     }}
                   >
                     {index + 1}
                   </div>
                   <div>
                     <p className="font-medium text-gray-900 text-sm">
-                      {contract.facility?.name || "Unknown Facility"}
+                      {facility.name}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      {contract.contract_number}
+                    <p className="text-xs text-gray-500 font-mono">
+                      {facility.fr_code}
                     </p>
                   </div>
                 </div>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    contract.status === "active"
-                      ? "bg-green-100 text-green-800"
-                      : contract.status === "expired"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {contract.status.charAt(0).toUpperCase() +
-                    contract.status.slice(1)}
-                </span>
               </div>
             ))}
-            {contracts.length === 0 && (
+            {(!dashboard?.facilities?.list ||
+              dashboard.facilities.list.length === 0) && (
               <div className="text-center text-gray-500 py-8">
-                No contracts found
+                No facilities found
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Lots & Services Lists */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Lots List */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Lots ({dashboard?.lots?.count || 0})
+          </h3>
+          <div className="space-y-3 max-h-[250px] overflow-y-auto">
+            {dashboard?.lots?.list?.map((lot, index) => (
+              <div
+                key={lot.id}
+                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+              >
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                  style={{
+                    backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+                  }}
+                >
+                  {lot.number}
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900 text-sm">{lot.name}</p>
+                </div>
+              </div>
+            ))}
+            {(!dashboard?.lots?.list || dashboard.lots.list.length === 0) && (
+              <div className="text-center text-gray-500 py-8">
+                No lots found
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Services List */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Services ({dashboard?.services?.count || 0})
+          </h3>
+          <div className="space-y-3 max-h-[250px] overflow-y-auto">
+            {dashboard?.services?.list?.map((service, index) => (
+              <div
+                key={service.id}
+                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+              >
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                  style={{
+                    backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+                  }}
+                >
+                  <FaStethoscope className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900 text-sm">
+                    {service.name}
+                  </p>
+                  <p className="text-xs text-gray-500 font-mono">{service.code}</p>
+                </div>
+              </div>
+            ))}
+            {(!dashboard?.services?.list ||
+              dashboard.services.list.length === 0) && (
+              <div className="text-center text-gray-500 py-8">
+                No services found
               </div>
             )}
           </div>

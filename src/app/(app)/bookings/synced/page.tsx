@@ -504,11 +504,11 @@ const SyncedBookingsReport: React.FC = () => {
                 </div>
 
                 {/* Vendor Payment Pagination */}
-                {vendorPagination && vendorPagination.totalPages > 1 && (
+                {vendorPagination && vendorPagination.lastPage > 1 && (
                   <div className="mt-6">
                     <Pagination
                       currentPage={vendorPagination.currentPage}
-                      lastPage={vendorPagination.totalPages}
+                      lastPage={vendorPagination.lastPage}
                       total={vendorPagination.total}
                       from={vendorPagination.from}
                       to={vendorPagination.to}
@@ -925,11 +925,11 @@ const SyncedBookingsReport: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
+            {pagination && pagination.lastPage > 1 && (
               <div className="mt-6">
                 <Pagination
                   currentPage={pagination.currentPage}
-                  lastPage={pagination.totalPages}
+                  lastPage={pagination.lastPage}
                   total={pagination.total}
                   from={pagination.from}
                   to={pagination.to}

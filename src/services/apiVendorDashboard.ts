@@ -1,6 +1,153 @@
 import axios from "../lib/axios";
 
-// Vendor Dashboard Summary
+// =============================================
+// NEW Vendor Dashboard API Types (v2)
+// =============================================
+
+export interface VendorInfo {
+  id: string;
+  name: string;
+  code: string;
+}
+
+export interface DashboardPeriod {
+  from: string;
+  to: string;
+}
+
+export interface EquipmentStats {
+  total: number;
+  by_status: {
+    active: number;
+    maintenance: number;
+    decommissioned: number;
+    pending: number;
+  };
+}
+
+export interface BookingStats {
+  total_bookings: number;
+  total_services: number;
+  by_service_status: {
+    not_started: number;
+    completed: number;
+    cancelled: number;
+  };
+  by_source: {
+    standalone: number;
+    hmis: number;
+    provider_portal: number;
+  };
+}
+
+export interface RevenueStats {
+  tariff: string;
+  vendor_share: string;
+  facility_share: string;
+  by_payment_type: {
+    sha: string;
+    cash: string;
+    other_insurance: string;
+  };
+}
+
+export interface PatientStats {
+  unique_count: number;
+}
+
+export interface FacilityItem {
+  id: string;
+  name: string;
+  fr_code: string;
+}
+
+export interface FacilitiesStats {
+  count: number;
+  list: FacilityItem[];
+}
+
+export interface LotItem {
+  id: string;
+  number: string;
+  name: string;
+}
+
+export interface LotsStats {
+  count: number;
+  list: LotItem[];
+}
+
+export interface ServiceItem {
+  id: string;
+  code: string;
+  name: string;
+}
+
+export interface ServicesStats {
+  count: number;
+  list: ServiceItem[];
+}
+
+export interface TrendlineDataPoint {
+  period: string;
+  sha: string;
+  cash: string;
+  other_insurance: string;
+  vendor_share: string;
+  total: string;
+  services_count: number;
+}
+
+export interface TrendlineStats {
+  grouping: string;
+  data: TrendlineDataPoint[];
+}
+
+export interface VendorDashboardResponse {
+  vendor: VendorInfo;
+  period: DashboardPeriod;
+  equipment: EquipmentStats;
+  bookings: BookingStats;
+  revenue: RevenueStats;
+  patients: PatientStats;
+  facilities: FacilitiesStats;
+  lots: LotsStats;
+  services: ServicesStats;
+  trendline: TrendlineStats;
+}
+
+// Filter params for vendor dashboard
+export interface VendorDashboardFilters {
+  from?: string;
+  to?: string;
+  facility_id?: string;
+  lot_id?: string;
+  service_id?: string;
+  grouping?: "day" | "week" | "month";
+}
+
+// Get vendor dashboard data (NEW v2 endpoint)
+export const getVendorDashboard = async (
+  vendorId: string,
+  filters?: VendorDashboardFilters
+): Promise<VendorDashboardResponse> => {
+  const params: Record<string, string> = {};
+
+  if (filters?.from) params.from = filters.from;
+  if (filters?.to) params.to = filters.to;
+  if (filters?.facility_id) params.facility_id = filters.facility_id;
+  if (filters?.lot_id) params.lot_id = filters.lot_id;
+  if (filters?.service_id) params.service_id = filters.service_id;
+  if (filters?.grouping) params.grouping = filters.grouping;
+
+  const response = await axios.get(`/vendors/${vendorId}/dashboard`, { params });
+  return response.data.data;
+};
+
+// =============================================
+// Legacy Types (kept for backward compatibility)
+// =============================================
+
 export interface VendorDashboardSummary {
   total_equipments: number;
   total_facilities_served: number;
@@ -12,7 +159,6 @@ export interface VendorDashboardSummary {
   active_contracts: number;
 }
 
-// Equipment Usage Trend
 export interface EquipmentUsageTrend {
   date: string;
   usage_count: number;
@@ -23,7 +169,6 @@ export interface EquipmentUsageTrend {
   service_name?: string;
 }
 
-// Vendor Trends Response
 export interface VendorTrendsResponse {
   trends: EquipmentUsageTrend[];
   summary: {
@@ -33,7 +178,6 @@ export interface VendorTrendsResponse {
   };
 }
 
-// Filter params for vendor trends
 export interface VendorTrendFilters {
   vendor_code: string;
   start_date?: string;
@@ -47,7 +191,6 @@ export interface VendorTrendFilters {
   period?: "daily" | "weekly" | "monthly";
 }
 
-// Revenue by Facility
 export interface FacilityRevenue {
   facility_code: string;
   facility_name: string;
@@ -56,7 +199,6 @@ export interface FacilityRevenue {
   vendor_share: number;
 }
 
-// Revenue by Lot
 export interface LotRevenue {
   lot_number: string;
   lot_name: string;
@@ -65,7 +207,6 @@ export interface LotRevenue {
   vendor_share: number;
 }
 
-// Revenue by Service
 export interface ServiceRevenue {
   service_code: string;
   service_name: string;
@@ -73,31 +214,6 @@ export interface ServiceRevenue {
   total_bookings: number;
   vendor_share: number;
 }
-
-// Get vendor dashboard summary
-export const getVendorDashboardSummary = async (
-  vendorCode: string
-): Promise<VendorDashboardSummary> => {
-  try {
-    const response = await axios.get(`/vendor/dashboard`, {
-      params: { vendor_code: vendorCode },
-    });
-    return response.data;
-  } catch (error) {
-    // Return mock data for now if API is not ready
-    console.warn("Vendor dashboard API not available, using mock data");
-    return {
-      total_equipments: 0,
-      total_facilities_served: 0,
-      total_revenue: 0,
-      total_bookings: 0,
-      total_lots: 0,
-      total_services: 0,
-      pending_maintenance: 0,
-      active_contracts: 0,
-    };
-  }
-};
 
 // Get equipment usage trends
 export const getVendorEquipmentTrends = async (
