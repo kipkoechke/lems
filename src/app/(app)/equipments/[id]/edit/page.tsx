@@ -1,94 +1,166 @@
 "use client";
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useUpdateEquipment } from "@/features/equipments/useUpdateEquipment";
-import { useEquipments } from "@/features/equipments/useEquipments";
-import { useVendors } from "@/features/vendors/useVendors";
-import { EquipmentUpdateRequest } from "@/services/apiEquipment";
-import { FaCogs, FaChevronDown, FaSearch, FaArrowLeft } from "react-icons/fa";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { FaCog } from "react-icons/fa";
 import BackButton from "@/components/common/BackButton";
+import { InputField } from "@/components/common/InputField";
+import { SelectField } from "@/components/common/SelectField";
+import { useCurrentUser } from "@/hooks/useAuth";
+import {
+  useVendorEquipment,
+  useUpdateVendorEquipment,
+} from "@/features/vendors/useVendorEquipments";
 
-const EditEquipment: React.FC = () => {
+const equipmentSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  category: z.string().min(1, "Category is required"),
+  serial_number: z.string().optional(),
+  model: z.string().optional(),
+  brand: z.string().optional(),
+  manufacture_date: z.string().optional(),
+  description: z.string().optional(),
+  status: z.enum(["active", "inactive", "maintenance", "decommissioned", "pending_installation"]),
+});
+
+type EquipmentFormData = z.infer<typeof equipmentSchema>;
+
+// Equipment categories
+const EQUIPMENT_CATEGORIES = [
+  { value: "ct_scanner_multi_slice", label: "Multi-Slice CT Scanner" },
+  { value: "mri_scanner", label: "MRI Scanner" },
+  { value: "xray_machine", label: "X-Ray Machine" },
+  { value: "ultrasound", label: "Ultrasound" },
+  { value: "mammography", label: "Mammography" },
+  { value: "dental_xray", label: "Dental X-Ray" },
+  { value: "surgical_table", label: "Surgical/OT Table" },
+  { value: "anesthesia_machine", label: "Anesthesia Machine" },
+  { value: "ventilator", label: "Ventilator" },
+  { value: "patient_monitor", label: "Patient Monitor" },
+  { value: "defibrillator", label: "Defibrillator" },
+  { value: "ecg_machine", label: "ECG Machine" },
+  { value: "dialysis_machine", label: "Dialysis Machine" },
+  { value: "centrifuge", label: "Centrifuge" },
+  { value: "autoclave", label: "Autoclave/Sterilizer" },
+  { value: "incubator", label: "Incubator" },
+  { value: "water_treatment", label: "Water Treatment System" },
+  { value: "laboratory_analyzer", label: "Laboratory Analyzer" },
+  { value: "endoscope", label: "Endoscope" },
+  { value: "other", label: "Other" },
+];
+
+const STATUS_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+  { value: "maintenance", label: "Under Maintenance" },
+  { value: "decommissioned", label: "Decommissioned" },
+  { value: "pending_installation", label: "Pending Installation" },
+];
+
+export default function EditEquipmentPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
-  const { updateEquipment, isUpdating } = useUpdateEquipment();
-  const { equipments = [], isLoading } = useEquipments();
-  const { vendors = [], isLoading: vendorsLoading } = useVendors();
+  const user = useCurrentUser();
+  const vendorId = user?.entity?.id || "";
 
-  const equipment = useMemo(
-    () => equipments.find((e) => e.id === params.id),
-    [equipments, params.id]
-  );
+  const {
+    data: equipment,
+    isLoading: equipmentLoading,
+    error: equipmentError,
+  } = useVendorEquipment(vendorId, params.id);
+  const updateEquipmentMutation = useUpdateVendorEquipment();
 
-  const [form, setForm] = useState<EquipmentUpdateRequest>({
-    id: params.id,
-    name: equipment?.name || "",
-    description: equipment?.description || "",
-    serial_number: equipment?.serial_number || "",
-    model: equipment?.model || "",
-    manufacturer: equipment?.manufacturer || "",
-    year: (equipment?.year as any) || "",
-    status: equipment?.status || "available",
-    vendor_id: equipment?.vendor_id || "",
+  // Specifications state
+  const [specifications, setSpecifications] = useState<Record<string, string>>({});
+  const [newSpecKey, setNewSpecKey] = useState("");
+  const [newSpecValue, setNewSpecValue] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<EquipmentFormData>({
+    resolver: zodResolver(equipmentSchema),
   });
 
-  // Searchable vendor dropdown state
-  const [isVendorDropdownOpen, setIsVendorDropdownOpen] = useState(false);
-  const [vendorSearch, setVendorSearch] = useState("");
-  const vendorSearchRef = useRef<HTMLInputElement>(null);
-
-  const filteredVendors = useMemo(() => {
-    const q = vendorSearch.toLowerCase();
-    return vendors
-      ?.filter(
-        (v) =>
-          v.name?.toLowerCase().includes(q) || v.code?.toLowerCase().includes(q)
-      )
-      .slice(0, 50);
-  }, [vendors, vendorSearch]);
-
-  const selectedVendor = useMemo(
-    () => vendors?.find((v) => v.id === form.vendor_id),
-    [vendors, form.vendor_id]
-  );
-
-  // Update form when equipment loads
-  React.useEffect(() => {
+  // Populate form when equipment loads
+  useEffect(() => {
     if (equipment) {
-      setForm({
-        id: params.id,
+      reset({
         name: equipment.name,
-        description: equipment.description || "",
+        category: equipment.category,
         serial_number: equipment.serial_number || "",
         model: equipment.model || "",
-        manufacturer: equipment.manufacturer || "",
-        year: (equipment.year as any) || "",
+        brand: equipment.brand || "",
+        manufacture_date: equipment.manufacture_date
+          ? equipment.manufacture_date.split("T")[0]
+          : "",
+        description: equipment.description || "",
         status: equipment.status,
-        vendor_id: equipment.vendor_id,
       });
+      if (equipment.specifications) {
+        const specObj: Record<string, string> = {};
+        Object.entries(equipment.specifications).forEach(([key, value]) => {
+          specObj[key] = String(value);
+        });
+        setSpecifications(specObj);
+      }
     }
-  }, [equipment, params.id]);
+  }, [equipment, reset]);
 
-  const onSubmit = (ev: React.FormEvent) => {
-    ev.preventDefault();
-    updateEquipment(form, {
-      onSuccess: () => {
-        router.push(`/equipments/${params.id}`);
-      },
+  const addSpecification = () => {
+    if (newSpecKey && newSpecValue) {
+      setSpecifications((prev) => ({
+        ...prev,
+        [newSpecKey]: newSpecValue,
+      }));
+      setNewSpecKey("");
+      setNewSpecValue("");
+    }
+  };
+
+  const removeSpecification = (key: string) => {
+    setSpecifications((prev) => {
+      const newSpecs = { ...prev };
+      delete newSpecs[key];
+      return newSpecs;
     });
   };
 
-  if (isLoading) {
+  const onSubmit = (data: EquipmentFormData) => {
+    if (!vendorId) return;
+
+    updateEquipmentMutation.mutate(
+      {
+        vendorId,
+        equipmentId: params.id,
+        data: {
+          ...data,
+          specifications: Object.keys(specifications).length > 0 ? specifications : undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          router.push(`/equipments/${params.id}`);
+        },
+      }
+    );
+  };
+
+  if (equipmentLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+      <div className="min-h-screen bg-slate-50 p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <div className="animate-pulse space-y-6">
-              <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-              <div className="space-y-4">
+          <div className="bg-white rounded-lg border border-slate-200 p-8">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-slate-200 rounded w-1/4"></div>
+              <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-16 bg-gray-100 rounded"></div>
+                  <div key={i} className="h-16 bg-slate-100 rounded"></div>
                 ))}
               </div>
             </div>
@@ -98,13 +170,19 @@ const EditEquipment: React.FC = () => {
     );
   }
 
-  if (!equipment) {
+  if (equipmentError || !equipment) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+      <div className="min-h-screen bg-slate-50 p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div className="text-red-500 text-xl mb-4">Equipment not found</div>
-            <BackButton onClick={() => router.push("/equipments")} />
+          <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
+            <div className="text-red-500 text-xl mb-2">⚠️</div>
+            <p className="text-slate-600">Equipment not found</p>
+            <button
+              onClick={() => router.push("/equipments")}
+              className="mt-4 text-blue-600 hover:text-blue-700"
+            >
+              Back to Equipment List
+            </button>
           </div>
         </div>
       </div>
@@ -112,240 +190,173 @@ const EditEquipment: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-slate-50 p-4">
+      <div className="max-w-4xl mx-auto space-y-4">
         {/* Header */}
-        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
-            <div className="flex items-center gap-3 md:gap-4">
-              <button
-                onClick={() => router.push(`/equipments/${params.id}`)}
-                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-white/20 hover:bg-white/30 rounded-lg transition-all duration-200"
-              >
-                <FaArrowLeft className="w-4 h-4" />
-                Back
-              </button>
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <FaCogs className="w-5 h-5 md:w-6 md:h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white mb-1">
-                  Edit Equipment
-                </h1>
-                <p className="text-sm md:text-base text-blue-100">
-                  Update equipment information
-                </p>
+        <div className="flex items-center gap-3">
+          <BackButton onClick={() => router.back()} />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <FaCog className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">Edit Equipment</h1>
+              <p className="text-sm text-slate-500">Update equipment information</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg border border-slate-200">
+          <div className="p-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InputField
+                label="Name"
+                type="text"
+                required
+                register={register("name")}
+                error={errors.name?.message}
+                placeholder="Equipment name"
+              />
+
+              <SelectField
+                label="Category"
+                required
+                register={register("category")}
+                error={errors.category?.message}
+                placeholder="Select category"
+                options={EQUIPMENT_CATEGORIES}
+              />
+
+              <InputField
+                label="Serial Number"
+                type="text"
+                register={register("serial_number")}
+                placeholder="Serial number"
+              />
+
+              <InputField
+                label="Model"
+                type="text"
+                register={register("model")}
+                placeholder="Model"
+              />
+
+              <InputField
+                label="Brand"
+                type="text"
+                register={register("brand")}
+                placeholder="Brand/Manufacturer"
+              />
+
+              <InputField
+                label="Manufacture Date"
+                type="date"
+                register={register("manufacture_date")}
+                placeholder=""
+              />
+
+              <SelectField
+                label="Status"
+                required
+                register={register("status")}
+                error={errors.status?.message}
+                placeholder="Select status"
+                options={STATUS_OPTIONS}
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Description
+              </label>
+              <textarea
+                {...register("description")}
+                rows={3}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                placeholder="Equipment description"
+              />
+            </div>
+
+            {/* Specifications */}
+            <div className="border-t border-slate-100 pt-4">
+              <h3 className="text-sm font-semibold text-slate-900 mb-3">
+                Specifications
+              </h3>
+
+              {/* Existing specifications */}
+              {Object.keys(specifications).length > 0 && (
+                <div className="space-y-2 mb-4">
+                  {Object.entries(specifications).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2"
+                    >
+                      <div className="flex gap-2">
+                        <span className="text-sm font-medium text-slate-700 capitalize">
+                          {key.replace(/_/g, " ")}:
+                        </span>
+                        <span className="text-sm text-slate-600">{value}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeSpecification(key)}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add new specification */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Key (e.g., power)"
+                  value={newSpecKey}
+                  onChange={(e) => setNewSpecKey(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="Value (e.g., 220V)"
+                  value={newSpecValue}
+                  onChange={(e) => setNewSpecValue(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={addSpecification}
+                  className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 text-sm font-medium"
+                >
+                  Add
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Form */}
-          <form
-            onSubmit={onSubmit}
-            className="p-4 md:p-8 space-y-4 md:space-y-6"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name *
-                </label>
-                <input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                  required
-                  placeholder="Equipment name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Serial Number
-                </label>
-                <input
-                  value={form.serial_number || ""}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      serial_number: e.target.value || null,
-                    })
-                  }
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                  placeholder="Serial number (optional)"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Model
-                </label>
-                <input
-                  value={form.model ?? ""}
-                  onChange={(e) => setForm({ ...form, model: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                  placeholder="Model"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Manufacturer
-                </label>
-                <input
-                  value={form.manufacturer ?? ""}
-                  onChange={(e) =>
-                    setForm({ ...form, manufacturer: e.target.value })
-                  }
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                  placeholder="Manufacturer"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Year
-                </label>
-                <input
-                  type="number"
-                  value={form.year as any}
-                  onChange={(e) => setForm({ ...form, year: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                  placeholder="Year"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status *
-                </label>
-                <select
-                  value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                  required
-                >
-                  <option value="available">Available</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="unavailable">Unavailable</option>
-                  <option value="retired">Retired</option>
-                </select>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vendor
-                </label>
-                <div className="relative dropdown-container">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsVendorDropdownOpen(!isVendorDropdownOpen);
-                      if (!isVendorDropdownOpen) {
-                        setTimeout(() => vendorSearchRef.current?.focus(), 100);
-                      }
-                    }}
-                    disabled={vendorsLoading}
-                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-left bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed text-sm md:text-base"
-                  >
-                    <span
-                      className={
-                        selectedVendor ? "text-gray-900" : "text-gray-500"
-                      }
-                    >
-                      {vendorsLoading
-                        ? "Loading vendors..."
-                        : selectedVendor
-                        ? `${selectedVendor.name} (${selectedVendor.code})`
-                        : "Select a vendor"}
-                    </span>
-                    <FaChevronDown
-                      className={`text-gray-400 transition-transform ${
-                        isVendorDropdownOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-
-                  {isVendorDropdownOpen && (
-                    <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
-                      <div className="p-3 md:p-4 border-b border-gray-100">
-                        <div className="relative">
-                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                          <input
-                            ref={vendorSearchRef}
-                            type="text"
-                            placeholder="Search vendors..."
-                            value={vendorSearch}
-                            onChange={(e) => setVendorSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 md:py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm md:text-base"
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </div>
-                      </div>
-                      <div className="max-h-60 overflow-y-auto">
-                        {filteredVendors && filteredVendors.length > 0 ? (
-                          filteredVendors.map((v) => (
-                            <div
-                              key={v.id}
-                              className="px-3 md:px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors"
-                              onClick={() => {
-                                setForm({ ...form, vendor_id: v.id });
-                                setIsVendorDropdownOpen(false);
-                                setVendorSearch("");
-                              }}
-                            >
-                              <div className="font-semibold text-gray-900 text-sm md:text-base">
-                                {v.name}
-                              </div>
-                              <div className="text-xs md:text-sm text-gray-500">
-                                Code: {v.code}
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="px-4 py-8 text-center text-gray-500 text-sm md:text-base">
-                            {vendorsLoading
-                              ? "Loading vendors..."
-                              : "No vendors found"}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={form.description ?? ""}
-                  onChange={(e) =>
-                    setForm({ ...form, description: e.target.value })
-                  }
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                  placeholder="Description (optional)"
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-3 pt-4 md:pt-6">
-              <BackButton
-                onClick={() => router.push(`/equipments/${params.id}`)}
-                className="w-full md:flex-1"
-              />
-              <button
-                type="submit"
-                disabled={isUpdating}
-                className="w-full md:flex-1 px-4 py-2 md:py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 text-sm md:text-base"
-              >
-                {isUpdating ? "Updating..." : "Update Equipment"}
-              </button>
-            </div>
-          </form>
-        </div>
+          {/* Form Actions */}
+          <div className="flex justify-end gap-3 p-4 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => router.push(`/equipments/${params.id}`)}
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={updateEquipmentMutation.isPending}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm disabled:opacity-50"
+            >
+              {updateEquipmentMutation.isPending ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
-};
-
-export default EditEquipment;
+}
