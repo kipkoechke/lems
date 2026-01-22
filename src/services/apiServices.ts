@@ -29,13 +29,16 @@ export interface ServiceWithCategory {
 
 interface Equipment {
   id: string;
+  code?: string;
   name: string;
-  serial_number: string;
+  serial_number?: string;
+  category?: string;
   status: string;
 }
 
 interface FacilityContract {
   id: string;
+  contract_number?: string;
   vendor_id?: string;
   vendor_code?: string;
   vendor_name?: string;
@@ -60,7 +63,12 @@ interface FacilityContract {
     number: string;
     name: string;
   };
+  start_date?: string;
+  end_date?: string;
+  status?: string;
+  notes?: string;
   is_active: string;
+  services_count?: number;
   services?: Array<{
     service_id: string;
     service_code: string;
@@ -70,6 +78,9 @@ interface FacilityContract {
     vendor_share?: string;
     facility_share?: string;
     is_capitated?: string;
+    lot_id?: string;
+    lot_number?: string;
+    lot_name?: string;
     equipment?: Equipment | null;
   }>;
 }
@@ -94,54 +105,64 @@ export const getServicesByFacilityId = async (
   const contracts = response.data?.data || [];
   console.log("📋 Contracts received:", contracts.length, contracts);
 
-  // Services are now included in the contract response, no need for separate API calls
+  // Services are now at contract level with nested lot/service objects
+  // New API structure: contract.services[] where each has { id, lot, service, equipment, is_active }
   const normalizedContracts = contracts.map((contract: any) => {
-    // Get services from lot.services (they're now included in the response)
-    // Using exact field names from API: lot.services[]
-    const rawServices = contract.lot?.services || [];
+    const rawServices = contract.services || [];
     console.log(
       "✅ Services found:",
       rawServices.length,
-      "for lot:",
-      contract.lot?.name,
+      "for contract:",
+      contract.contract_number,
     );
 
     // Normalize service structure to match component expectations
-    // API returns: { id, name, code, sha_rate, vendor_share, facility_share, is_capitated, equipment }
-    const normalizedServices = rawServices.map((service: any) => ({
-      service_id: service.id,
-      service_code: service.code,
-      service_name: service.name,
-      is_active: "1", // All services from API are active
-      sha_rate: service.sha_rate,
-      vendor_share: service.vendor_share,
-      facility_share: service.facility_share,
-      is_capitated: service.is_capitated,
-      equipment: service.equipment
+    // New API returns: { id, lot: {id, number, name}, service: {id, code, name, tariff}, equipment: {...}, is_active }
+    const normalizedServices = rawServices.map((svc: any) => ({
+      service_id: svc.service?.id || svc.id,
+      service_code: svc.service?.code,
+      service_name: svc.service?.name,
+      is_active: svc.is_active ? "1" : "0",
+      sha_rate: svc.service?.tariff,
+      vendor_share: svc.vendor_share,
+      facility_share: svc.facility_share,
+      is_capitated: svc.is_capitated,
+      lot_id: svc.lot?.id,
+      lot_number: svc.lot?.number,
+      lot_name: svc.lot?.name,
+      equipment: svc.equipment
         ? {
-            id: service.equipment.id,
-            name: service.equipment.name,
-            serial_number: service.equipment.serial_number,
-            status: service.equipment.status,
+            id: svc.equipment.id,
+            code: svc.equipment.code,
+            name: svc.equipment.name,
+            category: svc.equipment.category,
+            status: svc.equipment.status,
           }
         : null,
     }));
 
     // Normalize contract structure
-    // API structure: { id, vendor: {id, code, name}, facility: {id, code, name}, lot: {id, number, name, services}, is_active, created_at, updated_at }
+    // New API structure: { id, contract_number, vendor, facility, start_date, end_date, status, notes, services_count, services }
     const normalized = {
       id: contract.id,
+      contract_number: contract.contract_number,
       vendor_code: contract.vendor?.code,
       vendor_name: contract.vendor?.name,
       vendor_id: contract.vendor?.id,
       facility_code: contract.facility?.code,
       facility_name: contract.facility?.name,
       facility_id: contract.facility?.id,
-      lot_number: contract.lot?.number,
-      lot_name: contract.lot?.name,
-      lot_id: contract.lot?.id,
-      is_active: contract.is_active,
+      start_date: contract.start_date,
+      end_date: contract.end_date,
+      status: contract.status,
+      notes: contract.notes,
+      is_active: contract.status === "active" ? "1" : "0",
+      services_count: contract.services_count,
       services: normalizedServices,
+      // Also include first lot info for backward compatibility
+      lot_id: rawServices[0]?.lot?.id,
+      lot_number: rawServices[0]?.lot?.number,
+      lot_name: rawServices[0]?.lot?.name,
     } as FacilityContract;
 
     console.log("🎯 Normalized contract:", normalized);
