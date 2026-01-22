@@ -49,6 +49,7 @@ export interface User {
 }
 
 export interface Facility {
+  id: string | null;
   code: string | null;
   name: string | null;
 }
@@ -86,6 +87,7 @@ export const normalizeUser = (apiUser: ApiUser): User => {
 export const extractFacility = (apiUser: ApiUser): Facility => {
   if (apiUser.entity?.type === "facility") {
     return {
+      id: apiUser.entity.id || null,
       code: apiUser.entity.fr_code || apiUser.entity.code || null,
       name: apiUser.entity.name || null,
     };
@@ -93,11 +95,12 @@ export const extractFacility = (apiUser: ApiUser): Facility => {
   // For vendors, return null facility
   if (apiUser.entity?.type === "vendor") {
     return {
+      id: apiUser.entity.id || null,
       code: apiUser.entity.code || null,
       name: apiUser.entity.name || null,
     };
   }
-  return { code: null, name: null };
+  return { id: null, code: null, name: null };
 };
 
 // Login fetcher function for React Query

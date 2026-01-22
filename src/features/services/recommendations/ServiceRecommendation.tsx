@@ -39,7 +39,7 @@ const ServiceRecommendation: React.FC = () => {
   // Use the correct property names based on your workflow slice
   const selectedPaymentModeId =
     workflow.selectedPaymentMode?.paymentModeId || "";
-  const facilityCode = workflow.selectedFacility?.code || "";
+  const facilityId = workflow.selectedFacility?.id || "";
 
   // Get service selection state from Redux
   const selectedContractId = workflow.selectedContractId || "";
@@ -51,13 +51,13 @@ const ServiceRecommendation: React.FC = () => {
     patient: workflow.patient,
     paymentMode: workflow.selectedPaymentMode,
     facility: workflow.selectedFacility,
-    facilityCode,
+    facilityId,
     fullWorkflow: workflow,
   });
 
-  // Get services based on facility code - now returns FacilityContract[]
+  // Get services based on facility ID - now returns FacilityContract[]
   const { contracts, isServicesLoading } =
-    useServicesByFacilityCode(facilityCode);
+    useServicesByFacilityCode(facilityId);
 
   // Initialize contract selection if not set and contracts are available
   useEffect(() => {

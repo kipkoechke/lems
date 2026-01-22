@@ -33,13 +33,12 @@ export default function ClinicianServicesPage() {
   const { createBooking, isCreating } = useCreateBooking();
   const router = useRouter();
 
-  // TODO: Replace with facility?.code once login returns facility code
-  // For now, using demo facility code
-  const facilityCode = facility?.code || "13023";
+  // Get facility ID for fetching contracts
+  const facilityId = facility?.id || "";
 
-  // Fetch contracts based on facility code
+  // Fetch contracts based on facility ID
   const { contracts, isServicesLoading } =
-    useServicesByFacilityCode(facilityCode);
+    useServicesByFacilityCode(facilityId);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showFavorites, setShowFavorites] = useState(false);

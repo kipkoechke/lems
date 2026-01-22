@@ -83,12 +83,12 @@ export const createServiceInfo = async (
   return response.data.data;
 };
 
-// New function to get services by facility code
-export const getServicesByFacilityCode = async (
-  facilityCode: string
+// New function to get services by facility ID
+export const getServicesByFacilityId = async (
+  facilityId: string
 ): Promise<FacilityContract[]> => {
-  console.log("🔍 Fetching contracts for facility:", facilityCode);
-  const response = await axios.get(`contracts?facility_code=${facilityCode}`);
+  console.log("🔍 Fetching contracts for facility:", facilityId);
+  const response = await axios.get(`contracts?facility_id=${facilityId}`);
 
   // Handle response structure: data array is in response.data.data
   const contracts = response.data?.data || [];

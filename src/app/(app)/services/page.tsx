@@ -15,15 +15,15 @@ export default function ServicesPage() {
 
   const isVendor = user?.role === "vendor";
 
-  // Get code from user's entity - for vendors use vendor code, for facilities use facility code
-  const entityCode = facility?.code || "";
+  // Get ID from user's entity - for facilities use facility id
+  const entityId = facility?.id || "";
 
-  // For facilities, use services by facility code API
+  // For facilities, use services by facility ID API
   const {
     contracts: facilityContracts,
     isServicesLoading: facilityLoading,
     error,
-  } = useServicesByFacilityCode(!isVendor ? entityCode : "");
+  } = useServicesByFacilityCode(!isVendor ? entityId : "");
 
   const isLoading = facilityLoading;
   const contracts = facilityContracts;
