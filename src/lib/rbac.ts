@@ -6,7 +6,7 @@ export enum UserRole {
   S_ADMIN = "s_admin", // Super admin
   F_FINANCE = "f_finance", // Facility finance
   F_LAB = "f_lab", // Facility lab
-  F_MEDICAL = "f_medical", // Facility medical (Clinician/Practitioner)
+  F_PRACTITIONER = "f_practitioner", // Facility practitioner (Clinician/Practitioner)
   C_REC = "c_rec", // Claim records
   B_APPROVER = "b_approver", // Batch approver
   VENDOR = "vendor", // Vendor user
@@ -111,8 +111,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_TRENDS,
   ],
 
-  [UserRole.F_MEDICAL]: [
-    // Facility Medical (Clinician/Practitioner) permissions
+  [UserRole.F_PRACTITIONER]: [
+    // Facility Practitioner (Clinician/Practitioner) permissions
     Permission.GET_PATIENT_FROM_REGISTRY,
     Permission.SELECT_SERVICES,
     Permission.PATIENT_BOOKING_CONSENT,
@@ -214,7 +214,7 @@ export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   [UserRole.S_ADMIN]: "Super Admin",
   [UserRole.ADMIN]: "System Admin",
   [UserRole.F_ADMIN]: "Facility Admin",
-  [UserRole.F_MEDICAL]: "Clinician/Practitioner",
+  [UserRole.F_PRACTITIONER]: "Clinician/Practitioner",
   [UserRole.F_FINANCE]: "Facility Finance",
   [UserRole.F_LAB]: "Facility Lab",
   [UserRole.C_REC]: "Claim Records",

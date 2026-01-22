@@ -74,7 +74,7 @@ export const useIsFacilityStaff = (): boolean => {
   const role = useUserRole();
   return [
     UserRole.F_ADMIN,
-    UserRole.F_MEDICAL,
+    UserRole.F_PRACTITIONER,
     UserRole.F_FINANCE,
     UserRole.F_LAB,
   ].includes(role!);
