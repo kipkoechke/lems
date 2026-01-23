@@ -10,7 +10,7 @@ export interface InitiateBookingPayload {
   notes?: string;
   services: {
     contract_service_id: string;
-    practitioner_id?: string;
+    practitioner_id: string;
     scheduled_date: string;
     notes?: string;
   }[];

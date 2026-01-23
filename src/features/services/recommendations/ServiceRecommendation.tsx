@@ -16,6 +16,7 @@ import { usePatients } from "@/features/patients/usePatients";
 import { useCreateBooking } from "@/features/services/bookings/useCreateBooking";
 import { useServicesByFacilityId } from "@/features/services/useServicesByFacilityCode";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
+import { useCurrentUser } from "@/hooks/useAuth";
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import {
@@ -43,6 +44,7 @@ const ServiceRecommendation: React.FC = () => {
   const dispatch = useAppDispatch();
   const { patients } = usePatients();
   const { createBooking, isCreating } = useCreateBooking();
+  const currentUser = useCurrentUser();
 
   // Get patient/payment/facility from redux (set in step 1)
   const workflow = useAppSelector((store) => store.workflow);
@@ -235,6 +237,7 @@ const ServiceRecommendation: React.FC = () => {
       override: isOverrideMode,
       services: services.map((service: any) => ({
         contract_service_id: service.id,
+        practitioner_id: currentUser?.id || "",
         scheduled_date: formatDateForApi(service.booking_date),
       })),
     };

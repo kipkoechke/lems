@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Patient, IDENTIFICATION_TYPES } from "@/services/apiPatient";
 import { useRegisterPatient } from "@/features/patients/useRegisterPatient";
 import { usePatients } from "@/features/patients/usePatients";
-import { useCurrentFacility } from "@/hooks/useAuth";
+import { useCurrentFacility, useCurrentUser } from "@/hooks/useAuth";
 import { useServicesByFacilityId } from "@/features/services/useServicesByFacilityCode";
 import { useCreateBooking } from "@/features/services/bookings/useCreateBooking";
 import {
@@ -22,6 +22,7 @@ import {
 } from "react-icons/fa";
 import toast from "react-hot-toast";
 import Modal from "@/components/common/Modal";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { maskPhoneNumber } from "@/lib/maskUtils";
@@ -31,6 +32,7 @@ export default function ClinicianServicesPage() {
   const { registerPatients, isRegistering } = useRegisterPatient();
   const { patients } = usePatients({});
   const facility = useCurrentFacility();
+  const currentUser = useCurrentUser();
   const { createBooking, isCreating } = useCreateBooking();
   const router = useRouter();
 
@@ -55,12 +57,10 @@ export default function ClinicianServicesPage() {
   const [identificationType, setIdentificationType] = useState<string>(
     IDENTIFICATION_TYPES[0],
   );
-  const [identificationNumber, setIdentificationNumber] = useState(""); // Auto-select first patient if available and none selected
-  useEffect(() => {
-    if (patients && patients.length > 0 && !selectedPatient) {
-      setSelectedPatient(patients[0]);
-    }
-  }, [patients, selectedPatient]);
+  const [identificationNumber, setIdentificationNumber] = useState("");
+
+  // Patient search state for SearchableSelect
+  const [patientSearch, setPatientSearch] = useState("");
 
   // Initialize contract selection when contracts load
   useEffect(() => {
@@ -177,6 +177,7 @@ export default function ClinicianServicesPage() {
 
         return {
           contract_service_id: service.id, // Use the contract service item ID
+          practitioner_id: currentUser?.id || "",
           scheduled_date: formattedDate,
         };
       }),
@@ -445,21 +446,24 @@ export default function ClinicianServicesPage() {
             </div>
 
             {/* Patient Selector */}
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded bg-white text-sm"
+            <SearchableSelect
+              label=""
+              options={
+                patients?.map((p) => ({
+                  value: p.id,
+                  label: p.name,
+                  description: p.phone ? maskPhoneNumber(p.phone) : p.identification_no || undefined,
+                })) || []
+              }
               value={selectedPatient?.id || ""}
-              onChange={(e) => {
-                const patient = patients?.find((p) => p.id === e.target.value);
-                if (patient) setSelectedPatient(patient);
+              onChange={(value) => {
+                const patient = patients?.find((p) => p.id === value);
+                setSelectedPatient(patient || null);
               }}
-            >
-              {!selectedPatient && <option value="">Select a patient</option>}
-              {patients?.map((patient) => (
-                <option key={patient.id} value={patient.id}>
-                  {patient.name}
-                </option>
-              ))}
-            </select>
+              placeholder="Search and select a patient..."
+              searchPlaceholder="Type patient name or ID..."
+              onSearchChange={setPatientSearch}
+            />
           </div>
           {/* Patient Details */}
           <div className="px-4 py-3 border-b border-gray-200 text-sm">
