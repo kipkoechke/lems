@@ -28,6 +28,17 @@ import { FaStethoscope } from "react-icons/fa6";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 import type { FlattenedContractService } from "@/types/contract";
 
+// Helper function to format date for API (YYYY-MM-DD HH:mm)
+const formatDateForApi = (dateString: string): string => {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
+
 const ServiceRecommendation: React.FC = () => {
   const dispatch = useAppDispatch();
   const { patients } = usePatients();
@@ -219,13 +230,12 @@ const ServiceRecommendation: React.FC = () => {
 
     // Format the booking data according to the API requirements
     const bookingData = {
-      facility_id: facilityId, // Add facility ID
+      facility_id: facilityId,
       patient_id: patient.id,
-      payment_mode: selectedPaymentModeId, // Use the payment mode ID directly as string
-      override: isOverrideMode, // Pass override flag based on current mode
+      override: isOverrideMode,
       services: services.map((service: any) => ({
-        contract_service_id: service.id, // Use contract service item ID
-        scheduled_date: new Date(service.booking_date).toISOString(),
+        contract_service_id: service.id,
+        scheduled_date: formatDateForApi(service.booking_date),
       })),
     };
 

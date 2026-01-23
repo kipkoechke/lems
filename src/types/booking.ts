@@ -4,12 +4,14 @@
 // POST /bookings/initiate
 
 export interface InitiateBookingPayload {
+  facility_id: string;
   patient_id: string;
-  payment_mode: string;
   override: boolean;
+  notes?: string;
   services: {
-    service_id: string;
-    booking_date: string;
+    contract_service_id: string;
+    practitioner_id?: string;
+    scheduled_date: string;
     notes?: string;
   }[];
 }

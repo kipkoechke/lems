@@ -159,8 +159,8 @@ export default function ClinicianServicesPage() {
 
     // Create booking payload with per-service dates
     const bookingData = {
+      facility_id: facilityId,
       patient_id: selectedPatient.id,
-      payment_mode: "sha", // You can make this selectable if needed
       override: false,
       services: selectedServices.map((service) => {
         const date = serviceDates[service.service_id];
@@ -169,9 +169,15 @@ export default function ClinicianServicesPage() {
         const bookingDateTime = new Date(date);
         bookingDateTime.setHours(parseInt(hours), parseInt(minutes));
 
+        // Format as "YYYY-MM-DD HH:mm"
+        const year = bookingDateTime.getFullYear();
+        const month = String(bookingDateTime.getMonth() + 1).padStart(2, "0");
+        const day = String(bookingDateTime.getDate()).padStart(2, "0");
+        const formattedDate = `${year}-${month}-${day} ${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
+
         return {
-          service_id: service.service_id,
-          booking_date: bookingDateTime.toISOString(),
+          contract_service_id: service.id, // Use the contract service item ID
+          scheduled_date: formattedDate,
         };
       }),
     };
