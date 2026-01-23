@@ -1,6 +1,8 @@
 // Types for practitioner worklist endpoint
 // GET /practitioner/worklist
 
+import { Pagination } from "./pagination";
+
 export interface WorklistPatient {
   id: string;
   name: string;
@@ -94,14 +96,7 @@ export interface WorklistSummary {
 export interface WorklistResponse {
   data: WorklistBooking[];
   summary: WorklistSummary;
-  pagination: {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    from: number;
-    to: number;
-  };
+  pagination: Pagination;
 }
 
 export interface WorklistParams {
