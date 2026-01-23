@@ -191,12 +191,16 @@ export default function ClinicianServicesPage() {
         const data = response.data || response;
         const bookingInfo = {
           session_id: data.session_id || "",
-          booking_number: data.booking?.booking_number || response.booking?.booking_number || "",
+          booking_number:
+            data.booking?.booking_number ||
+            response.booking?.booking_number ||
+            "",
           patient_name: data.patient?.name || selectedPatient.name,
           patient_phone: data.phone || selectedPatient.phone,
           consent_id: data.consent_id || response.consent_id || "",
           expires_at: data.expires_at || response.expires_at || "",
-          otp_message: data.otp_message || response.otp_message || response.message || "",
+          otp_message:
+            data.otp_message || response.otp_message || response.message || "",
         };
 
         // Store in sessionStorage to pass to next page
@@ -215,13 +219,13 @@ export default function ClinicianServicesPage() {
   const selectedContract = contracts?.find((c) => c.id === selectedContractId);
   const availableServices: FlattenedContractService[] = selectedContract
     ? flattenedServices.filter(
-        (s) => s.contract_id === selectedContractId && s.is_active
+        (s) => s.contract_id === selectedContractId && s.is_active,
       )
     : [];
 
   // Get selected services with their details
   const selectedServices = availableServices.filter((service) =>
-    selectedServiceIds.includes(service.service_id)
+    selectedServiceIds.includes(service.service_id),
   );
 
   // Calculate total cost from actual service rates
@@ -333,7 +337,8 @@ export default function ClinicianServicesPage() {
               <div className="mt-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Available Services in{" "}
-                  {selectedContract.services[0]?.lot?.name || "Selected Category"}
+                  {selectedContract.services[0]?.lot?.name ||
+                    "Selected Category"}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {availableServices.map((service) => (
@@ -436,9 +441,6 @@ export default function ClinicianServicesPage() {
                     <FaUserPlus className="w-4 h-4" />
                   </button>
                 </Modal.Open>
-                <button className="w-8 h-8 bg-orange-500 text-white rounded flex items-center justify-center hover:bg-orange-600">
-                  <FaCamera className="w-4 h-4" />
-                </button>
                 <button className="w-8 h-8 bg-red-500 text-white rounded flex items-center justify-center hover:bg-red-600">
                   <FaTimes className="w-5 h-5" />
                 </button>
@@ -452,7 +454,9 @@ export default function ClinicianServicesPage() {
                 patients?.map((p) => ({
                   value: p.id,
                   label: p.name,
-                  description: p.phone ? maskPhoneNumber(p.phone) : p.identification_no || undefined,
+                  description: p.phone
+                    ? maskPhoneNumber(p.phone)
+                    : p.identification_no || undefined,
                 })) || []
               }
               value={selectedPatient?.id || ""}

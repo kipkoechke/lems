@@ -64,6 +64,12 @@ export interface WorklistCreatedBy {
   name: string;
 }
 
+export interface WorklistFinanceApproval {
+  approved: boolean;
+  approved_at: string | null;
+  approved_by: string | null;
+}
+
 export interface WorklistBooking {
   id: string;
   booking_number: string;
@@ -72,6 +78,7 @@ export interface WorklistBooking {
   patient: WorklistPatient;
   facility: WorklistFacility;
   payment: WorklistPayment;
+  finance_approval?: WorklistFinanceApproval;
   services: WorklistService[];
   services_count: number;
   pending_count: number;
@@ -106,4 +113,5 @@ export interface WorklistParams {
   date_from?: string;
   date_to?: string;
   search?: string;
+  finance_approved?: boolean;
 }

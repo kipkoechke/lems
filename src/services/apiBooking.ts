@@ -36,11 +36,11 @@ export type Bookings = Booking;
 
 // Initiate a booking (sends OTP)
 export const initiateBooking = async (
-  data: InitiateBookingPayload
+  data: InitiateBookingPayload,
 ): Promise<InitiateBookingResponse> => {
   const response = await axios.post<InitiateBookingResponse>(
     "/bookings/initiate",
-    data
+    data,
   );
   return response.data;
 };
@@ -50,29 +50,29 @@ export const createServiceBooking = initiateBooking;
 
 // Verify OTP and create booking
 export const verifyBookingOtp = async (
-  data: VerifyOtpPayload
+  data: VerifyOtpPayload,
 ): Promise<VerifyOtpResponse> => {
   const response = await axios.post<VerifyOtpResponse>(
     "/bookings/verify-otp",
-    data
+    data,
   );
   return response.data;
 };
 
 // Resend OTP
 export const resendBookingOtp = async (
-  data: ResendOtpPayload
+  data: ResendOtpPayload,
 ): Promise<ResendOtpResponse> => {
   const response = await axios.post<ResendOtpResponse>(
     "/bookings/resend-otp",
-    data
+    data,
   );
   return response.data;
 };
 
 // Get bookings list
 export const getBookings = async (
-  filters: BookingFilters = {}
+  filters: BookingFilters = {},
 ): Promise<Booking[]> => {
   const response = await axios.get<BookingsResponse>("/bookings", {
     params: filters,
@@ -82,7 +82,7 @@ export const getBookings = async (
 
 // Get bookings with pagination
 export const getBookingsWithPagination = async (
-  filters: BookingFilters = {}
+  filters: BookingFilters = {},
 ): Promise<BookingsResponse> => {
   const response = await axios.get<BookingsResponse>("/bookings", {
     params: filters,
@@ -114,11 +114,11 @@ export interface ServiceCompletionOtpResponse {
 
 // Request OTP for service completion
 export const requestServiceCompletionOtp = async (
-  data: ServiceCompletionPayload
+  data: ServiceCompletionPayload,
 ): Promise<ServiceCompletionOtpResponse> => {
   const response = await axios.post<ServiceCompletionOtpResponse>(
     "/bookings/service/request-otp",
-    data
+    data,
   );
   return response.data;
 };
@@ -130,20 +130,26 @@ export interface VerifyServiceCompletionPayload {
 
 // Verify OTP for service completion
 export const verifyServiceCompletionOtp = async (
-  data: VerifyServiceCompletionPayload
+  data: VerifyServiceCompletionPayload,
 ): Promise<VerifyOtpResponse> => {
   const response = await axios.post<VerifyOtpResponse>(
     "/bookings/service/verify-otp",
-    data
+    data,
   );
   return response.data;
 };
 
 // ===== Finance Approval =====
 
+export interface ServicePaymentBreakdown {
+  booked_service_id: string;
+  sha: number;
+  cash: number;
+  other_insurance: number;
+}
+
 export interface FinanceApprovalPayload {
-  payment_mode: string;
-  status: "confirmed" | "cancelled";
+  services: ServicePaymentBreakdown[];
 }
 
 export interface FinanceApprovalResponse {
@@ -153,11 +159,104 @@ export interface FinanceApprovalResponse {
 
 export const financeApproval = async (
   bookingId: string,
-  data: FinanceApprovalPayload
+  data: FinanceApprovalPayload,
 ): Promise<FinanceApprovalResponse> => {
   const response = await axios.post<FinanceApprovalResponse>(
-    `/bookings/${bookingId}/finance`,
-    data
+    `/bookings/${bookingId}/approve-finance`,
+    data,
+  );
+  return response.data;
+};
+
+// ===== Service Completion (Equipment User) =====
+
+export interface RequestCompletionResponse {
+  message: string;
+  data: {
+    session_id: string;
+    service_id: string;
+    booking_id: string;
+    expires_at: string;
+    expires_in_minutes: number;
+    phone_masked: string;
+  };
+}
+
+export interface VerifyCompletionOtpPayload {
+  session_id: string;
+  otp: string;
+}
+
+export interface VerifyCompletionOtpResponse {
+  message: string;
+  data: {
+    service: {
+      id: string;
+      lot: {
+        number: string;
+        name: string;
+      };
+      service: {
+        code: string;
+        name: string;
+      };
+      status: string;
+      completed_at: string;
+    };
+    booking_status: string;
+    booking_completed: boolean;
+  };
+}
+
+export interface ResendCompletionOtpPayload {
+  session_id: string;
+}
+
+export interface ResendCompletionOtpResponse {
+  message: string;
+  data: {
+    service_id: string;
+    booking_id: string;
+    expires_at: string;
+    expires_in_minutes: number;
+    email_sent: boolean;
+    sms_sent: boolean;
+  };
+}
+
+// Request completion OTP for a service
+export const requestServiceCompletion = async (
+  bookingId: string,
+  serviceId: string,
+): Promise<RequestCompletionResponse> => {
+  const response = await axios.post<RequestCompletionResponse>(
+    `/bookings/${bookingId}/services/${serviceId}/request-completion`,
+  );
+  return response.data;
+};
+
+// Verify completion OTP
+export const verifyCompletionOtp = async (
+  bookingId: string,
+  serviceId: string,
+  data: VerifyCompletionOtpPayload,
+): Promise<VerifyCompletionOtpResponse> => {
+  const response = await axios.post<VerifyCompletionOtpResponse>(
+    `/bookings/${bookingId}/services/${serviceId}/verify-completion-otp`,
+    data,
+  );
+  return response.data;
+};
+
+// Resend completion OTP
+export const resendCompletionOtp = async (
+  bookingId: string,
+  serviceId: string,
+  data: ResendCompletionOtpPayload,
+): Promise<ResendCompletionOtpResponse> => {
+  const response = await axios.post<ResendCompletionOtpResponse>(
+    `/bookings/${bookingId}/services/${serviceId}/resend-completion-otp`,
+    data,
   );
   return response.data;
 };
@@ -166,14 +265,14 @@ export const financeApproval = async (
 
 export const approveBooking = async (bookingId: string): Promise<Booking> => {
   const response = await axios.post<{ data: Booking }>(
-    `/bookings/${bookingId}/approve`
+    `/bookings/${bookingId}/approve`,
   );
   return response.data.data;
 };
 
 export const rejectBooking = async (bookingId: string): Promise<Booking> => {
   const response = await axios.post<{ data: Booking }>(
-    `/bookings/${bookingId}/reject`
+    `/bookings/${bookingId}/reject`,
   );
   return response.data.data;
 };
