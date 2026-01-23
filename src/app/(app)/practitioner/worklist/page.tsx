@@ -112,7 +112,7 @@ export default function PractitionerWorklistPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <BackButton />
+          <BackButton onClick={() => router.back()} />
           <div>
             <h1 className="text-xl font-bold text-slate-900">My Worklist</h1>
             <p className="text-sm text-slate-500">
@@ -404,7 +404,10 @@ export default function PractitionerWorklistPage() {
         <div className="mt-4">
           <Pagination
             currentPage={pagination.current_page}
-            totalPages={pagination.last_page}
+            lastPage={pagination.last_page}
+            total={pagination.total}
+            from={pagination.from}
+            to={pagination.to}
             onPageChange={setPage}
           />
         </div>
