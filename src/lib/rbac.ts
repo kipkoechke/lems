@@ -5,7 +5,7 @@ export enum UserRole {
   USER = "user", // Regular user
   S_ADMIN = "s_admin", // Super admin
   F_FINANCE = "f_finance", // Facility finance
-  F_LAB = "f_lab", // Facility lab
+  F_EQUIPMENT_USER = "f_equipment_user", // Facility equipment user (Lab)
   F_PRACTITIONER = "f_practitioner", // Facility practitioner (Clinician/Practitioner)
   C_REC = "c_rec", // Claim records
   B_APPROVER = "b_approver", // Batch approver
@@ -46,6 +46,7 @@ export enum Permission {
   VIEW_APPROVED_SERVICES = "view_approved_services",
   VIEW_COMPLETED_SERVICES = "view_completed_services",
   VIEW_CONFIRMED_BOOKINGS = "view_confirmed_bookings",
+  VIEW_WORKLIST = "view_worklist",
 
   // Common permissions
   VIEW_DASHBOARD = "view_dashboard",
@@ -137,8 +138,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_APPROVED_SERVICES,
   ],
 
-  [UserRole.F_LAB]: [
-    // Facility Lab permissions
+  [UserRole.F_EQUIPMENT_USER]: [
+    // Facility equipment user (Lab) permissions
     Permission.SERVICE_COMPLETION,
     Permission.VIEW_PATIENTS,
     Permission.VIEW_EQUIPMENTS,
@@ -216,7 +217,7 @@ export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   [UserRole.F_ADMIN]: "Facility Admin",
   [UserRole.F_PRACTITIONER]: "Clinician/Practitioner",
   [UserRole.F_FINANCE]: "Facility Finance",
-  [UserRole.F_LAB]: "Facility Lab",
+  [UserRole.F_EQUIPMENT_USER]: "Facility Equipment User (Lab)",
   [UserRole.C_REC]: "Claim Records",
   [UserRole.B_APPROVER]: "Batch Approver",
   [UserRole.VENDOR]: "Vendor User",
