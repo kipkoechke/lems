@@ -219,12 +219,13 @@ const ServiceRecommendation: React.FC = () => {
 
     // Format the booking data according to the API requirements
     const bookingData = {
+      facility_id: facilityId, // Add facility ID
       patient_id: patient.id,
       payment_mode: selectedPaymentModeId, // Use the payment mode ID directly as string
       override: isOverrideMode, // Pass override flag based on current mode
       services: services.map((service: any) => ({
-        service_id: service.service_id,
-        booking_date: new Date(service.booking_date).toISOString(),
+        contract_service_id: service.id, // Use contract service item ID
+        scheduled_date: new Date(service.booking_date).toISOString(),
       })),
     };
 
