@@ -97,20 +97,6 @@ export interface EditFacilityForm {
   keph_level: KephLevel | string;
 }
 
-export interface CreateFacilityForm {
-  name: string;
-  code: string;
-  ward_id: string;
-  sub_county_id: string;
-  county_id: string;
-  is_active?: string;
-  regulatory_status: RegulatoryStatus | string;
-  facility_type: FacilityType | string;
-  owner: Owner | string;
-  operation_status: OperationStatus | string;
-  keph_level: KephLevel | string;
-}
-
 // New interface matching the API payload you provided
 export interface CreateFacilityPayload {
   code: string;
@@ -131,19 +117,6 @@ export interface CreateFacilityPayload {
   private_key?: string;
 }
 
-// Utility types
-export type FacilityForm = Omit<
-  Facility,
-  "id" | "created_at" | "updated_at" | "deleted_at"
->;
-
-// Pagination link interface
-export interface PaginationLink {
-  url: string | null;
-  label: string;
-  active: boolean;
-}
-
 // Paginated response interface matching the API structure
 export interface PaginatedFacilityResponse {
   data: Facility[];
@@ -151,19 +124,6 @@ export interface PaginatedFacilityResponse {
   last_page: number;
   per_page: number;
   total: number;
-}
-
-// API Response types
-export interface FacilityResponse {
-  data: Facility[];
-  message?: string;
-  status?: string;
-}
-
-export interface SingleFacilityResponse {
-  data: Facility;
-  message?: string;
-  status?: string;
 }
 
 // Pagination parameters interface
@@ -174,14 +134,14 @@ export interface PaginationParams {
 
 // Search parameters interface
 export interface SearchParams {
-  search?: string; // General search across multiple fields
-  name?: string; // Search by facility name
-  code?: string; // Search by facility code
-  facility_type?: string; // Search by facility type
-  owner?: string; // Search by owner
-  regulatory_status?: string; // Search by regulatory status
-  operation_status?: string; // Search by operation status
-  level?: string; // Search by KEPH level
+  search?: string;
+  name?: string;
+  code?: string;
+  facility_type?: string;
+  owner?: string;
+  regulatory_status?: string;
+  operation_status?: string;
+  level?: string;
 }
 
 // Filter types for API queries
@@ -200,12 +160,10 @@ export interface FacilityFilters {
 
 // Combined filters with pagination and search
 export interface FacilityQueryParams
-  extends FacilityFilters,
-    PaginationParams,
-    SearchParams {}
+  extends FacilityFilters, PaginationParams, SearchParams {}
 
 export const getFacilities = async (
-  params?: FacilityQueryParams
+  params?: FacilityQueryParams,
 ): Promise<Facility[]> => {
   const response = await axios.get("/facilities", { params });
   // If the response has pagination structure, return the data array
@@ -221,7 +179,7 @@ export const getFacilities = async (
 };
 
 export const getFacilitiesPaginated = async (
-  params?: FacilityQueryParams
+  params?: FacilityQueryParams,
 ): Promise<PaginatedFacilityResponse> => {
   let queryParams = { ...params };
 
@@ -242,27 +200,8 @@ export const getFacilitiesPaginated = async (
   return response.data;
 };
 
-export const getFacilityById = async (id: string): Promise<Facility> => {
-  const response = await axios.get(`/facility/${id}`);
-  return response.data.data;
-};
-
-export const getFacilityByCode = async (code: string): Promise<Facility> => {
-  const facilities = await getFacilities({ code });
-  const facility = facilities.find((f: Facility) => f.code === code);
-  if (!facility) {
-    throw new Error(`Facility with code ${code} not found`);
-  }
-  return facility;
-};
-
-export const createFacility = async (data: FacilityForm): Promise<Facility> => {
-  const response = await axios.post("/facilities", data);
-  return response.data.data;
-};
-
 export const createFacilityNew = async (
-  data: CreateFacilityPayload
+  data: CreateFacilityPayload,
 ): Promise<Facility> => {
   const response = await axios.post("/facilities", data);
   return response.data.data;
@@ -270,27 +209,10 @@ export const createFacilityNew = async (
 
 export const updateFacility = async (
   id: string,
-  data: Partial<EditFacilityForm>
+  data: Partial<EditFacilityForm>,
 ): Promise<EditFacilityForm> => {
   const response = await axios.put(`/facilities/${id}`, data);
   return response.data.data;
-};
-
-export const deleteFacility = async (id: string): Promise<void> => {
-  await axios.delete<void>(`/facilities/${id}`);
-};
-
-// Utility functions for building search queries
-export const buildFacilitySearchParams = (
-  searchTerm: string
-): Partial<FacilityQueryParams> => {
-  if (!searchTerm.trim()) {
-    return {};
-  }
-
-  return {
-    search: searchTerm.trim(),
-  };
 };
 
 export const buildAdvancedFacilitySearchParams = (filters: {
@@ -355,7 +277,7 @@ export const buildAdvancedFacilitySearchParams = (filters: {
 
 // Utility functions for URL search parameters
 export const parseSearchParamsFromUrl = (
-  searchParams: URLSearchParams
+  searchParams: URLSearchParams,
 ): Partial<FacilityQueryParams> => {
   const params: Partial<FacilityQueryParams> = {};
 
@@ -426,9 +348,7 @@ export const parseSearchParamsFromUrl = (
   return params;
 };
 
-export const buildUrlSearchParams = (
-  params: Partial<FacilityQueryParams>
-): string => {
+const buildUrlSearchParams = (params: Partial<FacilityQueryParams>): string => {
   const searchParams = new URLSearchParams();
 
   // Add all non-empty parameters to the URL
@@ -445,7 +365,7 @@ export const updateUrlWithSearchParams = (
   router: any,
   basePath: string,
   params: Partial<FacilityQueryParams>,
-  replace: boolean = true
+  replace: boolean = true,
 ) => {
   const queryString = buildUrlSearchParams(params);
   const newUrl = queryString ? `${basePath}?${queryString}` : basePath;

@@ -1,5 +1,7 @@
 "use client";
 
+import BackButton from "@/components/common/BackButton";
+import { ErrorState } from "@/components/common/ErrorState";
 import { useContract } from "@/features/vendors/useContract";
 import { useContractServices } from "@/features/vendors/useContractServices";
 import {
@@ -8,19 +10,17 @@ import {
 } from "@/services/apiVendors";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { FaBox, FaFileContract } from "react-icons/fa";
 import {
+  MdAccessTime,
   MdBusiness,
   MdCalendarToday,
-  MdLocationOn,
-  MdCheckCircle,
   MdCancel,
-  MdAccessTime,
-  MdMedicalServices,
+  MdCheckCircle,
   MdInventory2,
+  MdLocationOn,
+  MdMedicalServices,
 } from "react-icons/md";
-import { FaEdit, FaFileContract, FaBox } from "react-icons/fa";
-import BackButton from "@/components/common/BackButton";
-import { ErrorState } from "@/components/common/ErrorState";
 
 interface ContractDetailsPageProps {
   params: Promise<{ id: string }>;

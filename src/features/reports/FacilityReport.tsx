@@ -13,19 +13,9 @@ const FacilityReport: React.FC = () => {
   const {
     register,
     handleSubmit,
-    reset,
+
     formState: { errors },
   } = useForm<ReportForm>();
-
-  const getChartData = (data: IFacilityReport[]) => {
-    if (!data) return [];
-    return data.flatMap((facility: IFacilityReport) =>
-      (facility.equipments ?? []).map((eq: any) => ({
-        facility_equipment: `${facility.facility} - ${eq.equipment}`,
-        equipment_total_revenue: eq.equipment_total_revenue,
-      }))
-    );
-  };
 
   const onSubmit = (data: ReportForm) => {
     setError(null);
@@ -37,7 +27,7 @@ const FacilityReport: React.FC = () => {
         onSuccess: (result: IFacilityReport[]) => setReportData(result),
         onError: (err: any) =>
           setError(err?.message || "Failed to generate report."),
-      }
+      },
     );
   };
 
@@ -133,7 +123,7 @@ const FacilityReport: React.FC = () => {
                               service: string;
                               revenue?: number;
                             },
-                            serviceIndex: number
+                            serviceIndex: number,
                           ) => {
                             const isFirstRowOfFacility = currentRow === 0;
                             const isFirstRowOfEquipment = serviceIndex === 0;
@@ -191,7 +181,7 @@ const FacilityReport: React.FC = () => {
                                 </td>
                               </tr>
                             );
-                          }
+                          },
                         ) || []
                       );
                     }) || []

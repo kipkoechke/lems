@@ -1,5 +1,3 @@
-// Types matching the API response for /contracts?facility_id={id}
-
 export interface ContractVendor {
   id: string;
   name: string;
@@ -72,31 +70,18 @@ export interface FacilityContractsResponse {
   };
 }
 
-// Query params for fetching contracts
-export interface FacilityContractsParams {
-  facility_id: string;
-  page?: number;
-  per_page?: number;
-  status?: string;
-}
-
 // Helper type for flattened service display (useful for components)
 export interface FlattenedContractService {
-  // From ContractServiceItem
   id: string;
   is_active: boolean;
-  // Flattened from service
   service_id: string;
   service_code: string;
   service_name: string;
   sha_rate: string;
-  // Flattened from lot
   lot_id: string;
   lot_number: string;
   lot_name: string;
-  // Equipment (optional)
   equipment: ContractEquipment | null;
-  // Parent contract info
   contract_id: string;
   vendor_name: string;
   facility_name: string;
@@ -104,7 +89,7 @@ export interface FlattenedContractService {
 
 // Helper function to flatten contract services
 export const flattenContractServices = (
-  contract: FacilityContract
+  contract: FacilityContract,
 ): FlattenedContractService[] => {
   return contract.services.map((svc) => ({
     id: svc.id,

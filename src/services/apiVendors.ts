@@ -26,10 +26,6 @@ export interface VendorEquipment {
   deleted_at: string | null;
 }
 
-export interface VendorWithEquipments {
-  vendor: Vendor;
-}
-
 export interface VendorCreateRequest {
   name: string;
   code: string;
@@ -72,7 +68,7 @@ export interface Contract {
   } | null;
 }
 
-export interface PaginatedContractsResponse {
+interface PaginatedContractsResponse {
   data: Contract[];
   pagination: {
     current_page: number;
@@ -110,35 +106,13 @@ export interface ContractLotWithServices {
   services: ContractServiceItem[];
 }
 
-export interface ContractServicesResponse {
+interface ContractServicesResponse {
   contract: {
     id: string;
     contract_number: string;
   };
   total_services: number;
   data: ContractLotWithServices[];
-}
-
-export interface PaginatedContractsResponseOld {
-  data: {
-    current_page: number;
-    data: Contract[];
-    first_page_url: string;
-    from: number;
-    last_page: number;
-    last_page_url: string;
-    links: Array<{
-      url: string | null;
-      label: string;
-      active: boolean;
-    }>;
-    next_page_url: string | null;
-    path: string;
-    per_page: number;
-    prev_page_url: string | null;
-    to: number;
-    total: number;
-  };
 }
 
 export interface ContractCreateRequest {
@@ -148,16 +122,6 @@ export interface ContractCreateRequest {
   end_date: string;
   status: string;
   notes?: string;
-}
-
-export interface ContractUpdateRequest {
-  contract_id: string;
-  services: ContractServiceUpdate[];
-}
-
-export interface ContractServiceUpdate {
-  code: string;
-  equipment_id?: string;
 }
 
 export interface ContractFilterParams {
@@ -181,15 +145,6 @@ export const getVendor = async (vendorCode: string): Promise<Vendor> => {
     throw new Error(`Vendor with code ${vendorCode} not found`);
   }
   return vendor;
-};
-
-export const getVendorWithEquipments = async (
-  vendorId: string,
-): Promise<VendorWithEquipments> => {
-  const response = await axios.get<VendorWithEquipments>(
-    `/vendors/${vendorId}`,
-  );
-  return response.data;
 };
 
 export const createVendor = async (
@@ -254,12 +209,5 @@ export const createContract = async (
   data: ContractCreateRequest,
 ): Promise<Contract> => {
   const response = await axios.post<Contract>("contracts", data);
-  return response.data;
-};
-
-export const updateContractServices = async (
-  data: ContractUpdateRequest,
-): Promise<Contract> => {
-  const response = await axios.post<Contract>("/upsert/contract", data);
   return response.data;
 };

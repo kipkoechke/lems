@@ -131,16 +131,6 @@ export default function EquipmentsPage() {
     );
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
   if (!vendorId) {
     return (
       <div className="min-h-screen bg-slate-50 p-4">

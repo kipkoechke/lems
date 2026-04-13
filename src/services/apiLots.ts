@@ -34,16 +34,16 @@ export interface PaginationMeta {
   to: number;
 }
 
-export interface LotsResponse {
+interface LotsResponse {
   data: Lot[];
   pagination: PaginationMeta;
 }
 
-export interface LotDetailResponse {
+interface LotDetailResponse {
   data: LotDetail;
 }
 
-export interface LotServicesResponse {
+interface LotServicesResponse {
   data: Service[];
   pagination: PaginationMeta;
 }
@@ -69,7 +69,7 @@ export interface ServiceCreateRequest {
   capitated: boolean;
 }
 
-export interface ServiceCreateResponse {
+interface ServiceCreateResponse {
   message: string;
   service: Service;
 }

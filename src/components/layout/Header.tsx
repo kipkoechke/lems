@@ -1,17 +1,17 @@
 "use client";
 
-import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { HiBars3, HiXMark } from "react-icons/hi2";
-import { FaUser, FaBell } from "react-icons/fa";
-import { MdClose, MdAssignment } from "react-icons/md";
-import {
-  useLogout,
-  useCurrentUser,
-  useCurrentFacility,
-} from "../../hooks/useAuth";
 import { maskPhoneNumber } from "@/lib/maskUtils";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { FaUser } from "react-icons/fa";
+import { HiBars3, HiXMark } from "react-icons/hi2";
+import { MdAssignment, MdClose } from "react-icons/md";
+import {
+  useCurrentFacility,
+  useCurrentUser,
+  useLogout,
+} from "../../hooks/useAuth";
 
 interface HeaderProps {
   onMenuToggle?: () => void;

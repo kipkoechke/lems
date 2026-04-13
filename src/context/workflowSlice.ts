@@ -9,7 +9,7 @@ import { PaymentMode } from "@/services/apiPaymentMode";
 import { ServiceWithCategory } from "@/services/apiServices";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export interface WorkflowState {
+interface WorkflowState {
   currentStep: // | "basicBooking"
   | "registration"
     | "recommendation"
@@ -65,7 +65,7 @@ const initialState: WorkflowState = {
 };
 
 // Update the step order to match our workflow
-export const stepOrder: WorkflowState["currentStep"][] = [
+const stepOrder: WorkflowState["currentStep"][] = [
   // "basicBooking",
   "registration",
   "recommendation",
@@ -82,7 +82,7 @@ export const stepOrder: WorkflowState["currentStep"][] = [
   "validation",
 ];
 
-export const workflowSlice = createSlice({
+const workflowSlice = createSlice({
   name: "workflow",
   initialState,
   reducers: {
@@ -190,23 +190,23 @@ export const workflowSlice = createSlice({
 
 // Export actions and reducer
 export const {
-  setStep,
+  
   setPatient,
-  selectCategory,
+  
   selectService,
-  selectEquipment,
+  
   selectFacility,
   selectPaymentMode,
   setConsent,
-  validateService,
+  
   completeService,
-  setInvoice,
-  setValidationReport,
-  approvePayment,
-  completeDisbursement,
+  
+  
+  
+  
   setBooking,
   setBookingServices,
-  setOtpCode,
+  
   setSelectedContract,
   setSelectedServices,
   setServiceDate,

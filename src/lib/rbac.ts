@@ -73,7 +73,7 @@ export enum Permission {
 }
 
 // Role to permissions mapping
-export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   [UserRole.S_ADMIN]: [
     // Super admin has all permissions
     ...Object.values(Permission),
@@ -211,7 +211,7 @@ export const hasAllPermissions = (
 };
 
 // Role display names
-export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
+const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   [UserRole.S_ADMIN]: "Super Admin",
   [UserRole.ADMIN]: "System Admin",
   [UserRole.F_ADMIN]: "Facility Admin",

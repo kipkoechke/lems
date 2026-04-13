@@ -11,7 +11,7 @@ import { maskPhoneNumber } from "@/lib/maskUtils";
 
 const PatientConsent: React.FC = () => {
   const { patient, selectedService, booking, bookingServices } = useAppSelector(
-    (store) => store.workflow
+    (store) => store.workflow,
   );
 
   console.log("PatientConsent - Workflow state:", {
@@ -32,7 +32,7 @@ const PatientConsent: React.FC = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
-  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [_expiresAt, setExpiresAt] = useState<string | null>(null);
 
   // Check if booking was created with override
   const isBookingOverridden = booking?.override === true;
@@ -76,9 +76,11 @@ const PatientConsent: React.FC = () => {
 
     // Get session_id from booking or sessionStorage
     const bookingAny = booking as any;
-    const sessionId = 
+    const sessionId =
       bookingAny.session_id ||
-      (typeof window !== 'undefined' ? sessionStorage.getItem('booking_session_id') : null);
+      (typeof window !== "undefined"
+        ? sessionStorage.getItem("booking_session_id")
+        : null);
 
     if (!sessionId) {
       toast.error("Session ID is missing. Please restart the booking process.");
@@ -168,7 +170,7 @@ const PatientConsent: React.FC = () => {
         const now = Date.now();
         const remaining = Math.max(
           0,
-          Math.floor((expiryTimestamp - now) / 1000)
+          Math.floor((expiryTimestamp - now) / 1000),
         );
         setTimeRemaining(remaining);
       }
@@ -209,9 +211,11 @@ const PatientConsent: React.FC = () => {
 
     // Get session_id from booking or sessionStorage
     const bookingAny = booking as any;
-    const sessionId = 
+    const sessionId =
       bookingAny.session_id ||
-      (typeof window !== 'undefined' ? sessionStorage.getItem('booking_session_id') : null);
+      (typeof window !== "undefined"
+        ? sessionStorage.getItem("booking_session_id")
+        : null);
 
     if (!sessionId) {
       toast.error("Session ID is missing. Please restart the booking process.");
@@ -227,11 +231,13 @@ const PatientConsent: React.FC = () => {
           // Update expiry time and reset countdown
           if (response.data?.expires_at) {
             setExpiresAt(response.data.expires_at);
-            const expiryTimestamp = new Date(response.data.expires_at).getTime();
+            const expiryTimestamp = new Date(
+              response.data.expires_at,
+            ).getTime();
             const now = Date.now();
             const remaining = Math.max(
               0,
-              Math.floor((expiryTimestamp - now) / 1000)
+              Math.floor((expiryTimestamp - now) / 1000),
             );
             setTimeRemaining(remaining);
           }
@@ -239,7 +245,7 @@ const PatientConsent: React.FC = () => {
         onError: (error: any) => {
           toast.error(error.response?.data?.message || "Failed to resend OTP");
         },
-      }
+      },
     );
   };
 
@@ -375,7 +381,7 @@ const PatientConsent: React.FC = () => {
                       const totalVendorShare = services.reduce(
                         (total, service) =>
                           total + parseFloat(service.vendor_share || "0"),
-                        0
+                        0,
                       );
                       return totalVendorShare.toLocaleString();
                     }
@@ -392,7 +398,7 @@ const PatientConsent: React.FC = () => {
                       const totalFacilityShare = services.reduce(
                         (total, service) =>
                           total + parseFloat(service.facility_share || "0"),
-                        0
+                        0,
                       );
                       return totalFacilityShare.toLocaleString();
                     }
@@ -413,21 +419,21 @@ const PatientConsent: React.FC = () => {
               consentStatus === "pending"
                 ? "pending"
                 : consentStatus === "approved"
-                ? "success"
-                : "error"
+                  ? "success"
+                  : "error"
             }
             message={
               consentStatus === "pending"
                 ? isBookingOverridden
                   ? "Approved via emergency override"
                   : otpSent
-                  ? "Waiting for patient consent verification..."
-                  : "Sending consent verification..."
+                    ? "Waiting for patient consent verification..."
+                    : "Sending consent verification..."
                 : consentStatus === "approved"
-                ? countdown
-                  ? `Patient consent verified successfully! Proceeding to tests in ${countdown} seconds...`
-                  : "Patient consent has been verified successfully"
-                : "Patient consent has been rejected"
+                  ? countdown
+                    ? `Patient consent verified successfully! Proceeding to tests in ${countdown} seconds...`
+                    : "Patient consent has been verified successfully"
+                  : "Patient consent has been rejected"
             }
             details={
               consentStatus === "pending"
@@ -435,10 +441,10 @@ const PatientConsent: React.FC = () => {
                   ? "This booking was processed as an emergency case"
                   : "An OTP has been sent to the patient's phone number for verification"
                 : consentStatus === "approved"
-                ? countdown
-                  ? "You will be automatically redirected to proceed with the tests"
-                  : "The patient has successfully confirmed their consent for this service"
-                : "The booking cannot proceed without patient consent"
+                  ? countdown
+                    ? "You will be automatically redirected to proceed with the tests"
+                    : "The patient has successfully confirmed their consent for this service"
+                  : "The booking cannot proceed without patient consent"
             }
           />
         </div>

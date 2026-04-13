@@ -1,32 +1,31 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Patient, IDENTIFICATION_TYPES } from "@/services/apiPatient";
-import { useRegisterPatient } from "@/features/patients/useRegisterPatient";
-import { usePatients } from "@/features/patients/usePatients";
-import { useCurrentFacility, useCurrentUser } from "@/hooks/useAuth";
-import { useServicesByFacilityId } from "@/features/services/useServicesByFacilityCode";
-import { useCreateBooking } from "@/features/services/bookings/useCreateBooking";
-import {
-  FaSearch,
-  FaMicrophone,
-  FaHeart,
-  FaUser,
-  FaUserPlus,
-  FaCamera,
-  FaShoppingCart,
-  FaCheckCircle,
-  FaTimes,
-  FaCalendar,
-  FaClock,
-} from "react-icons/fa";
-import toast from "react-hot-toast";
 import Modal from "@/components/common/Modal";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { usePatients } from "@/features/patients/usePatients";
+import { useRegisterPatient } from "@/features/patients/useRegisterPatient";
+import { useCreateBooking } from "@/features/services/bookings/useCreateBooking";
+import { useServicesByFacilityId } from "@/features/services/useServicesByFacilityCode";
+import { useCurrentFacility, useCurrentUser } from "@/hooks/useAuth";
+import { maskPhoneNumber } from "@/lib/maskUtils";
+import { IDENTIFICATION_TYPES, Patient } from "@/services/apiPatient";
+import type { FlattenedContractService } from "@/types/contract";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
-import { maskPhoneNumber } from "@/lib/maskUtils";
-import type { FlattenedContractService } from "@/types/contract";
+import toast from "react-hot-toast";
+import {
+  FaCalendar,
+  FaCheckCircle,
+  FaClock,
+  FaHeart,
+  FaMicrophone,
+  FaSearch,
+  FaShoppingCart,
+  FaTimes,
+  FaUser,
+  FaUserPlus,
+} from "react-icons/fa";
 
 export default function ClinicianServicesPage() {
   const { registerPatients, isRegistering } = useRegisterPatient();
@@ -60,7 +59,7 @@ export default function ClinicianServicesPage() {
   const [identificationNumber, setIdentificationNumber] = useState("");
 
   // Patient search state for SearchableSelect
-  const [patientSearch, setPatientSearch] = useState("");
+  const [_patientSearch, setPatientSearch] = useState("");
 
   // Initialize contract selection when contracts load
   useEffect(() => {

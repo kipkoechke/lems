@@ -115,7 +115,7 @@ export interface CreateBatchRequest {
   sync_ids: string[];
 }
 
-export interface CreateBatchResponse {
+interface CreateBatchResponse {
   message: string;
   batch: {
     id: string;
@@ -133,7 +133,7 @@ export const createBatch = async (
   return response.data;
 };
 
-export interface VendorBatch {
+interface VendorBatch {
   id: string;
   batch_no: string;
   vendor_id: string;
@@ -155,7 +155,7 @@ export interface VendorBatch {
   };
 }
 
-export interface VendorBatchesResponse {
+interface VendorBatchesResponse {
   current_page: number;
   data: VendorBatch[];
   first_page_url: string;

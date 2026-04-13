@@ -1,10 +1,9 @@
 import { getServicesByFacilityId } from "@/services/apiServices";
-import { useQuery } from "@tanstack/react-query";
 import type {
   FacilityContract,
   FlattenedContractService,
-  flattenContractServices,
 } from "@/types/contract";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 export const useServicesByFacilityId = (facilityId: string) => {
@@ -50,6 +49,3 @@ export const useServicesByFacilityId = (facilityId: string) => {
     error,
   };
 };
-
-// Backward compatibility alias
-export const useServicesByFacilityCode = useServicesByFacilityId;

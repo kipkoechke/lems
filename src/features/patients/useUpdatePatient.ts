@@ -7,7 +7,7 @@ export const useUpdatePatient = () => {
 
   const mutation = useMutation({
     mutationFn: (data: PatientUpdateRequest) => updatePatient(data),
-    onSuccess: (updatedPatient, variables) => {
+    onSuccess: (_updatedPatient, variables) => {
       toast.success("Patient updated successfully");
       queryClient.invalidateQueries({ queryKey: ["patients"] });
       queryClient.invalidateQueries({ queryKey: ["patient", variables.id] });

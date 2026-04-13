@@ -208,7 +208,7 @@ const BOOKING_STATUS_COLORS: Record<string, string> = {
   Cancelled: "#EF4444",
 };
 
-export const VendorDashboard: React.FC = () => {
+const VendorDashboard: React.FC = () => {
   const user = useCurrentUser();
   // For vendor users, the vendor ID is in the entity field
   const vendorId = user?.entity?.id || "";

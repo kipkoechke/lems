@@ -64,59 +64,10 @@ export const vendorSchema = z.object({
   is_active: z.boolean().optional(),
 });
 
-// Equipment management schemas
-export const equipmentSchema = z.object({
-  name: z.string().min(1, "Equipment name is required"),
-  model: z.string().optional(),
-  serial_number: z.string().optional(),
-  vendor_code: z.string().min(1, "Vendor is required"),
-  manufacturer: z.string().optional(),
-  year: z.string().optional(),
-  purchase_date: z.string().optional(),
-  warranty_expiry: z.string().optional(),
-  status: z.enum(["active", "inactive", "maintenance"]).optional(),
-  description: z.string().optional(),
-});
-
-// Patient management schemas
-export const patientSchema = z.object({
-  first_name: z.string().min(1, "First name is required"),
-  last_name: z.string().min(1, "Last name is required"),
-  email: z
-    .string()
-    .email("Please enter a valid email address")
-    .optional()
-    .or(z.literal("")),
-  phone: z.string().min(1, "Phone number is required"),
-  date_of_birth: z.string().min(1, "Date of birth is required"),
-  gender: z.enum(["male", "female", "other"]),
-  id_number: z.string().optional(),
-  address: z.string().optional(),
-});
-
 // Report schemas
 export const reportFormSchema = z.object({
   start_date: z.string().min(1, "Start date is required"),
   end_date: z.string().min(1, "End date is required"),
-});
-
-// Search and filter schemas
-export const searchSchema = z.object({
-  query: z.string().optional(),
-  status: z.string().optional(),
-  category: z.string().optional(),
-});
-
-// Lot management schemas
-export const lotSchema = z.object({
-  name: z.string().min(1, "Lot name is required"),
-  number: z.string().min(1, "Lot number is required"),
-  vendor_code: z.string().min(1, "Vendor is required"),
-  purchase_date: z.string().optional(),
-  expiry_date: z.string().optional(),
-  quantity: z.number().min(1, "Quantity must be at least 1"),
-  cost: z.number().min(0, "Cost must be positive"),
-  is_active: z.boolean().optional(),
 });
 
 // Simple lot creation schema for new lot form
@@ -141,10 +92,6 @@ export type LoginFormData = z.infer<typeof loginSchema>;
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 export type FacilityFormData = z.infer<typeof facilitySchema>;
 export type VendorFormData = z.infer<typeof vendorSchema>;
-export type EquipmentFormData = z.infer<typeof equipmentSchema>;
-export type PatientFormData = z.infer<typeof patientSchema>;
 export type ReportFormData = z.infer<typeof reportFormSchema>;
-export type SearchFormData = z.infer<typeof searchSchema>;
-export type LotFormData = z.infer<typeof lotSchema>;
 export type LotCreationFormData = z.infer<typeof lotCreationSchema>;
 export type ServiceFormData = z.infer<typeof serviceSchema>;

@@ -3,7 +3,7 @@
 import { Permission } from "@/lib/rbac";
 import { useHasPermission } from "@/hooks/usePermissions";
 
-export interface NavItem {
+interface NavItem {
   label: string;
   href: string;
   permission: Permission;
@@ -12,7 +12,7 @@ export interface NavItem {
 }
 
 // Navigation items based on user roles and permissions
-export const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS: NavItem[] = [
   // Dashboard - available to all authenticated users
   {
     label: "Dashboard",
@@ -141,7 +141,7 @@ export const useAccessibleNavItems = (): NavItem[] => {
 };
 
 // Role-specific quick actions
-export const ROLE_QUICK_ACTIONS = {
+const ROLE_QUICK_ACTIONS = {
   // System Admin actions
   onboard_facility: {
     label: "Onboard Facility",

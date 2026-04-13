@@ -1,5 +1,5 @@
 import Providers from "@/lib/providers";
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 

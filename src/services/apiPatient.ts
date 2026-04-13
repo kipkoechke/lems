@@ -28,7 +28,7 @@ export interface Patient {
   deleted_at: string | null;
 }
 
-export type PatientRegistrationForm = {
+type PatientRegistrationForm = {
   identificationType: string;
   identificationNumber: string;
 };
@@ -43,10 +43,8 @@ export const IDENTIFICATION_TYPES = [
   "Passport",
 ] as const;
 
-export type IdentificationType = (typeof IDENTIFICATION_TYPES)[number];
-
 // County interface
-export interface County {
+interface County {
   id: string;
   name: string;
   code: string;
@@ -57,7 +55,7 @@ export interface County {
 }
 
 // SubCounty interface
-export interface SubCounty {
+interface SubCounty {
   id: string;
   name: string;
   code: string;
@@ -69,7 +67,7 @@ export interface SubCounty {
 }
 
 // Ward interface
-export interface Ward {
+interface Ward {
   id: string;
   code: string;
   name: string;
@@ -81,7 +79,7 @@ export interface Ward {
 }
 
 // Patient creation response interface
-export interface PatientCreateResponse {
+interface PatientCreateResponse {
   message: string;
   patient: Patient & {
     county?: County;
@@ -90,14 +88,6 @@ export interface PatientCreateResponse {
   };
 }
 
-// Pagination link interface
-export interface PaginationLink {
-  url: string | null;
-  label: string;
-  active: boolean;
-}
-
-// API Pagination structure (as returned by the backend)
 export interface ApiPagination {
   total: number;
   per_page: number;
@@ -111,23 +101,6 @@ export interface ApiPagination {
 export interface PaginatedPatientResponse {
   data: Patient[];
   pagination: ApiPagination;
-}
-
-// Legacy Laravel pagination format (for compatibility)
-export interface LegacyPaginatedPatientResponse {
-  current_page: number;
-  data: Patient[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: PaginationLink[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
 }
 
 // Pagination parameters interface
@@ -148,14 +121,14 @@ export interface SearchParams {
 export interface PatientQueryParams extends PaginationParams, SearchParams {}
 
 export const registerPatient = async (
-  data: PatientRegistrationForm
+  data: PatientRegistrationForm,
 ): Promise<Patient> => {
   const response = await axios.post<PatientCreateResponse>("/patients", data);
   return response.data.patient;
 };
 
 export const getRegisteredPatients = async (
-  params?: PatientQueryParams
+  params?: PatientQueryParams,
 ): Promise<Patient[]> => {
   const response = await axios.get("/patients", { params });
   // If the response has pagination structure, return the data array
@@ -171,7 +144,7 @@ export const getRegisteredPatients = async (
 };
 
 export const getRegisteredPatientsPaginated = async (
-  params?: PatientQueryParams
+  params?: PatientQueryParams,
 ): Promise<PaginatedPatientResponse> => {
   const response = await axios.get("/patients", { params });
   return response.data;
@@ -193,12 +166,8 @@ export interface PatientUpdateRequest {
 }
 
 export const updatePatient = async (
-  request: PatientUpdateRequest
+  request: PatientUpdateRequest,
 ): Promise<Patient> => {
   const response = await axios.patch(`/patient/${request.id}`, request.data);
   return response.data.data;
-};
-
-export const deletePatient = async (id: string): Promise<void> => {
-  await axios.delete<void>(`/Patient/${id}`);
 };

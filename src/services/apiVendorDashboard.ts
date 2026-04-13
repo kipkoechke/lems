@@ -4,18 +4,18 @@ import axios from "../lib/axios";
 // NEW Vendor Dashboard API Types (v2)
 // =============================================
 
-export interface VendorInfo {
+interface VendorInfo {
   id: string;
   name: string;
   code: string;
 }
 
-export interface DashboardPeriod {
+interface DashboardPeriod {
   from: string;
   to: string;
 }
 
-export interface EquipmentStats {
+interface EquipmentStats {
   total: number;
   by_status: {
     active: number;
@@ -25,7 +25,7 @@ export interface EquipmentStats {
   };
 }
 
-export interface BookingStats {
+interface BookingStats {
   total_bookings: number;
   total_services: number;
   by_service_status: {
@@ -40,7 +40,7 @@ export interface BookingStats {
   };
 }
 
-export interface RevenueStats {
+interface RevenueStats {
   tariff: string;
   vendor_share: string;
   facility_share: string;
@@ -51,44 +51,44 @@ export interface RevenueStats {
   };
 }
 
-export interface PatientStats {
+interface PatientStats {
   unique_count: number;
 }
 
-export interface FacilityItem {
+interface FacilityItem {
   id: string;
   name: string;
   fr_code: string;
 }
 
-export interface FacilitiesStats {
+interface FacilitiesStats {
   count: number;
   list: FacilityItem[];
 }
 
-export interface LotItem {
+interface LotItem {
   id: string;
   number: string;
   name: string;
 }
 
-export interface LotsStats {
+interface LotsStats {
   count: number;
   list: LotItem[];
 }
 
-export interface ServiceItem {
+interface ServiceItem {
   id: string;
   code: string;
   name: string;
 }
 
-export interface ServicesStats {
+interface ServicesStats {
   count: number;
   list: ServiceItem[];
 }
 
-export interface TrendlineDataPoint {
+interface TrendlineDataPoint {
   period: string;
   sha: string;
   cash: string;
@@ -98,12 +98,12 @@ export interface TrendlineDataPoint {
   services_count: number;
 }
 
-export interface TrendlineStats {
+interface TrendlineStats {
   grouping: string;
   data: TrendlineDataPoint[];
 }
 
-export interface VendorDashboardResponse {
+interface VendorDashboardResponse {
   vendor: VendorInfo;
   period: DashboardPeriod;
   equipment: EquipmentStats;
@@ -146,40 +146,6 @@ export const getVendorDashboard = async (
   return response.data.data;
 };
 
-// =============================================
-// Legacy Types (kept for backward compatibility)
-// =============================================
-
-export interface VendorDashboardSummary {
-  total_equipments: number;
-  total_facilities_served: number;
-  total_revenue: number;
-  total_bookings: number;
-  total_lots: number;
-  total_services: number;
-  pending_maintenance: number;
-  active_contracts: number;
-}
-
-export interface EquipmentUsageTrend {
-  date: string;
-  usage_count: number;
-  revenue: number;
-  equipment_name?: string;
-  facility_name?: string;
-  lot_name?: string;
-  service_name?: string;
-}
-
-export interface VendorTrendsResponse {
-  trends: EquipmentUsageTrend[];
-  summary: {
-    total_usage: number;
-    total_revenue: number;
-    average_daily_usage: number;
-  };
-}
-
 export interface VendorTrendFilters {
   vendor_code: string;
   start_date?: string;
@@ -193,7 +159,7 @@ export interface VendorTrendFilters {
   period?: "daily" | "weekly" | "monthly";
 }
 
-export interface FacilityRevenue {
+interface FacilityRevenue {
   facility_code: string;
   facility_name: string;
   total_revenue: number;
@@ -201,7 +167,7 @@ export interface FacilityRevenue {
   vendor_share: number;
 }
 
-export interface LotRevenue {
+interface LotRevenue {
   lot_number: string;
   lot_name: string;
   total_revenue: number;
@@ -209,7 +175,7 @@ export interface LotRevenue {
   vendor_share: number;
 }
 
-export interface ServiceRevenue {
+interface ServiceRevenue {
   service_code: string;
   service_name: string;
   total_revenue: number;
@@ -217,42 +183,15 @@ export interface ServiceRevenue {
   vendor_share: number;
 }
 
-// Get equipment usage trends
-export const getVendorEquipmentTrends = async (
-  filters: VendorTrendFilters,
-): Promise<VendorTrendsResponse> => {
-  try {
-    const response = await axios.get(`/vendor/equipment-trends`, {
-      params: filters,
-    });
-    return response.data;
-  } catch (error) {
-    console.warn("Vendor trends API not available, using mock data");
-    return {
-      trends: [],
-      summary: {
-        total_usage: 0,
-        total_revenue: 0,
-        average_daily_usage: 0,
-      },
-    };
-  }
-};
-
 // Get revenue by facility
 export const getVendorRevenueByFacility = async (
   vendorCode: string,
   filters?: Partial<VendorTrendFilters>,
 ): Promise<FacilityRevenue[]> => {
-  try {
-    const response = await axios.get(`/vendor/revenue-by-facility`, {
-      params: { vendor_code: vendorCode, ...filters },
-    });
-    return response.data;
-  } catch (error) {
-    console.warn("Vendor revenue by facility API not available");
-    return [];
-  }
+  const response = await axios.get(`/vendor/revenue-by-facility`, {
+    params: { vendor_code: vendorCode, ...filters },
+  });
+  return response.data;
 };
 
 // Get revenue by lot
@@ -260,15 +199,10 @@ export const getVendorRevenueByLot = async (
   vendorCode: string,
   filters?: Partial<VendorTrendFilters>,
 ): Promise<LotRevenue[]> => {
-  try {
-    const response = await axios.get(`/vendor/revenue-by-lot`, {
-      params: { vendor_code: vendorCode, ...filters },
-    });
-    return response.data;
-  } catch (error) {
-    console.warn("Vendor revenue by lot API not available");
-    return [];
-  }
+  const response = await axios.get(`/vendor/revenue-by-lot`, {
+    params: { vendor_code: vendorCode, ...filters },
+  });
+  return response.data;
 };
 
 // Get revenue by service
@@ -276,15 +210,10 @@ export const getVendorRevenueByService = async (
   vendorCode: string,
   filters?: Partial<VendorTrendFilters>,
 ): Promise<ServiceRevenue[]> => {
-  try {
-    const response = await axios.get(`/vendor/revenue-by-service`, {
-      params: { vendor_code: vendorCode, ...filters },
-    });
-    return response.data;
-  } catch (error) {
-    console.warn("Vendor revenue by service API not available");
-    return [];
-  }
+  const response = await axios.get(`/vendor/revenue-by-service`, {
+    params: { vendor_code: vendorCode, ...filters },
+  });
+  return response.data;
 };
 
 // Use existing booking trends API filtered by vendor

@@ -1,25 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { useWorklist } from "@/features/worklist/useWorklist";
-import { useRouter } from "next/navigation";
-import {
-  MdSearch,
-  MdFilterList,
-  MdCalendarToday,
-  MdPerson,
-  MdMedicalServices,
-  MdAccessTime,
-  MdCheckCircle,
-  MdPlayCircle,
-  MdPending,
-  MdCancel,
-} from "react-icons/md";
-import { FaStethoscope, FaHospital } from "react-icons/fa";
 import BackButton from "@/components/common/BackButton";
 import Pagination from "@/components/common/Pagination";
+import { useWorklist } from "@/features/worklist/useWorklist";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 import type { WorklistBooking, WorklistService } from "@/types/worklist";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { FaHospital, FaStethoscope } from "react-icons/fa";
+import {
+  MdCalendarToday,
+  MdCancel,
+  MdCheckCircle,
+  MdFilterList,
+  MdMedicalServices,
+  MdPending,
+  MdPerson,
+  MdPlayCircle,
+  MdSearch,
+} from "react-icons/md";
 
 const statusConfig = {
   not_started: {
@@ -102,9 +101,14 @@ export default function PractitionerWorklistPage() {
     });
   };
 
-  const handleServiceClick = (booking: WorklistBooking, service: WorklistService) => {
+  const handleServiceClick = (
+    booking: WorklistBooking,
+    service: WorklistService,
+  ) => {
     // Navigate to service fulfillment page
-    router.push(`/lab/complete-service?booking_id=${booking.id}&service_id=${service.id}`);
+    router.push(
+      `/lab/complete-service?booking_id=${booking.id}&service_id=${service.id}`,
+    );
   };
 
   return (
@@ -155,7 +159,9 @@ export default function PractitionerWorklistPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xs text-slate-400">Today</p>
-              <p className="text-sm font-medium text-slate-900">{summary.today}</p>
+              <p className="text-sm font-medium text-slate-900">
+                {summary.today}
+              </p>
             </div>
           </div>
 
@@ -248,7 +254,9 @@ export default function PractitionerWorklistPage() {
           {bookings.length === 0 ? (
             <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
               <MdMedicalServices className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500">No bookings found in your worklist</p>
+              <p className="text-slate-500">
+                No bookings found in your worklist
+              </p>
             </div>
           ) : (
             bookings.map((booking) => (
@@ -268,7 +276,8 @@ export default function PractitionerWorklistPage() {
                           {booking.patient.name}
                         </h3>
                         <p className="text-xs text-slate-500">
-                          {booking.booking_number} • {maskPhoneNumber(booking.patient.phone)}
+                          {booking.booking_number} •{" "}
+                          {maskPhoneNumber(booking.patient.phone)}
                         </p>
                       </div>
                     </div>
@@ -276,7 +285,8 @@ export default function PractitionerWorklistPage() {
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${bookingStatusConfig[booking.status]?.color || "bg-slate-50 text-slate-700"}`}
                       >
-                        {bookingStatusConfig[booking.status]?.label || booking.status}
+                        {bookingStatusConfig[booking.status]?.label ||
+                          booking.status}
                       </span>
                     </div>
                   </div>
@@ -298,15 +308,19 @@ export default function PractitionerWorklistPage() {
                       </p>
                     </div>
                     <div>
-                      <span className="text-slate-400 text-xs">Total Tariff</span>
+                      <span className="text-slate-400 text-xs">
+                        Total Tariff
+                      </span>
                       <p className="font-medium text-slate-900">
-                        KES {parseFloat(booking.payment.tariff).toLocaleString()}
+                        KES{" "}
+                        {parseFloat(booking.payment.tariff).toLocaleString()}
                       </p>
                     </div>
                     <div>
                       <span className="text-slate-400 text-xs">Services</span>
                       <p className="font-medium text-slate-900">
-                        {booking.completed_count}/{booking.services_count} completed
+                        {booking.completed_count}/{booking.services_count}{" "}
+                        completed
                       </p>
                     </div>
                   </div>
@@ -334,14 +348,17 @@ export default function PractitionerWorklistPage() {
                                 {service.service.name}
                               </p>
                               <p className="text-xs text-slate-500">
-                                {service.service.code} • LOT {service.lot.number}: {service.lot.name}
+                                {service.service.code} • LOT{" "}
+                                {service.lot.number}: {service.lot.name}
                               </p>
                             </div>
                           </div>
 
                           <div className="flex items-center gap-4">
                             <div className="text-right">
-                              <p className="text-xs text-slate-400">Scheduled</p>
+                              <p className="text-xs text-slate-400">
+                                Scheduled
+                              </p>
                               <p className="text-sm font-medium text-slate-900">
                                 {formatDate(service.scheduled_date)}{" "}
                                 <span className="text-slate-500">
@@ -385,12 +402,8 @@ export default function PractitionerWorklistPage() {
                 {/* Booking Footer */}
                 <div className="px-4 py-2 bg-slate-50 border-t border-slate-200">
                   <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>
-                      Created by: {booking.created_by.name}
-                    </span>
-                    <span>
-                      {formatDate(booking.created_at)}
-                    </span>
+                    <span>Created by: {booking.created_by.name}</span>
+                    <span>{formatDate(booking.created_at)}</span>
                   </div>
                 </div>
               </div>

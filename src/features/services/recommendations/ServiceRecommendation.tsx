@@ -1,23 +1,24 @@
 "use client";
 
+import BackButton from "@/components/common/BackButton";
 import {
   goToNextStep,
   goToPreviousStep,
   selectService,
   setBooking,
-  setBookingServices,
+  setOverrideMode,
   setSelectedContract,
   setSelectedServices,
   setServiceDate,
-  setOverrideMode,
 } from "@/context/workflowSlice";
-import BackButton from "@/components/common/BackButton";
 import { usePatients } from "@/features/patients/usePatients";
 import { useCreateBooking } from "@/features/services/bookings/useCreateBooking";
 import { useServicesByFacilityId } from "@/features/services/useServicesByFacilityCode";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import { useCurrentUser } from "@/hooks/useAuth";
-import React, { useState, useEffect } from "react";
+import { maskPhoneNumber } from "@/lib/maskUtils";
+import type { FlattenedContractService } from "@/types/contract";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import {
   FaArrowRight,
@@ -26,8 +27,6 @@ import {
   FaHospital,
 } from "react-icons/fa";
 import { FaStethoscope } from "react-icons/fa6";
-import { maskPhoneNumber } from "@/lib/maskUtils";
-import type { FlattenedContractService } from "@/types/contract";
 
 // Helper function to format date for API (YYYY-MM-DD HH:mm)
 const formatDateForApi = (dateString: string): string => {
@@ -81,7 +80,7 @@ const ServiceRecommendation: React.FC = () => {
   }, [selectedContractId, contracts, dispatch]);
 
   // Booking state - check if booking already exists to preserve UI state
-  const [bookingCreated, setBookingCreated] = useState<boolean>(
+  const [bookingCreated, _setBookingCreated] = useState<boolean>(
     !!workflow.booking,
   );
   const booking = useAppSelector((store) => store.workflow.booking);
@@ -96,7 +95,7 @@ const ServiceRecommendation: React.FC = () => {
   // Get available services for the selected contract (flattened)
   const availableServices: FlattenedContractService[] = selectedContract
     ? flattenedServices.filter(
-        (s) => s.contract_id === selectedContractId && s.is_active
+        (s) => s.contract_id === selectedContractId && s.is_active,
       )
     : [];
 
@@ -149,7 +148,7 @@ const ServiceRecommendation: React.FC = () => {
       if (selectedContract) {
         for (const serviceId of selectedServiceIds) {
           const service = availableServices.find(
-            (s) => s.service_code === serviceId
+            (s) => s.service_code === serviceId,
           );
           if (service && serviceDates[serviceId]) {
             selectedServices.push({
@@ -248,14 +247,17 @@ const ServiceRecommendation: React.FC = () => {
         toast.success("Booking created successfully!");
 
         // Store session_id for OTP verification
-        if (typeof window !== 'undefined' && response.data?.session_id) {
-          sessionStorage.setItem('booking_session_id', response.data.session_id);
+        if (typeof window !== "undefined" && response.data?.session_id) {
+          sessionStorage.setItem(
+            "booking_session_id",
+            response.data.session_id,
+          );
         }
 
         // Store booking info in redux (partial info from initiate response)
         const bookingInfo = {
-          id: '', // Will be set after OTP verification
-          booking_number: '', // Will be set after OTP verification
+          id: "", // Will be set after OTP verification
+          booking_number: "", // Will be set after OTP verification
           session_id: response.data?.session_id,
           patient: response.data?.patient,
           facility: response.data?.facility,

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { updateFacility, EditFacilityForm } from "@/services/apiFacility";
 
-export interface UpdateFacilityRequest {
+interface UpdateFacilityRequest {
   id: string;
   data: Partial<EditFacilityForm>;
 }

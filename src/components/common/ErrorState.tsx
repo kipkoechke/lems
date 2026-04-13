@@ -23,7 +23,7 @@ interface ErrorStateProps {
 /**
  * Extract error message from various error types (Axios, Error, string, etc.)
  */
-export const getErrorMessage = (err: unknown): string => {
+const getErrorMessage = (err: unknown): string => {
   if (!err) return "An unexpected error occurred";
 
   if (typeof err === "string") return err;
@@ -106,4 +106,4 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   return content;
 };
 
-export default ErrorState;
+

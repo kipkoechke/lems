@@ -1,23 +1,22 @@
 "use client";
-import { useState } from "react";
-import {
-  FaCheck,
-  FaTimes,
-  FaSearch,
-  FaCheckCircle,
-  FaSpinner,
-  FaExclamationTriangle,
-} from "react-icons/fa";
-import toast from "react-hot-toast";
-import { useWorklist } from "@/features/worklist/useWorklist";
-import { useFinanceApproval } from "@/features/bookings/useFinanceApproval";
-import { useEligibilityCheck } from "@/features/patients/useEligibilityCheck";
-import type { WorklistBooking } from "@/types/worklist";
 import { ActionMenu } from "@/components/common/ActionMenu";
-import { SearchField } from "@/components/common/SearchField";
 import Modal from "@/components/common/Modal";
 import Pagination from "@/components/common/Pagination";
+import { SearchField } from "@/components/common/SearchField";
+import { useFinanceApproval } from "@/features/bookings/useFinanceApproval";
+import { useEligibilityCheck } from "@/features/patients/useEligibilityCheck";
+import { useWorklist } from "@/features/worklist/useWorklist";
 import { maskPhoneNumber } from "@/lib/maskUtils";
+import type { WorklistBooking } from "@/types/worklist";
+import { useState } from "react";
+import toast from "react-hot-toast";
+import {
+  FaCheck,
+  FaCheckCircle,
+  FaExclamationTriangle,
+  FaSearch,
+  FaSpinner,
+} from "react-icons/fa";
 
 export default function FinanceApprovalPage() {
   const [page, setPage] = useState(1);
@@ -230,8 +229,13 @@ function BookingActionsCell({ booking }: BookingActionsCellProps) {
     useEligibilityCheck();
 
   const handleFinanceApproval = (
-    services: Array<{ booked_service_id: string; sha: number; cash: number; other_insurance: number }>,
-    onCloseModal?: () => void
+    services: Array<{
+      booked_service_id: string;
+      sha: number;
+      cash: number;
+      other_insurance: number;
+    }>,
+    onCloseModal?: () => void,
   ) => {
     approveFinance(
       {
@@ -248,10 +252,10 @@ function BookingActionsCell({ booking }: BookingActionsCellProps) {
         onError: (error: any) => {
           toast.error(
             error.response?.data?.message ||
-              "Failed to process finance approval"
+              "Failed to process finance approval",
           );
         },
-      }
+      },
     );
   };
 
@@ -435,8 +439,6 @@ function EligibilityCheckModal({
         </div>
       )}
 
-
-
       {/* Action Buttons */}
       <div className="flex gap-3 pt-4">
         <button
@@ -473,7 +475,15 @@ function EligibilityCheckModal({
 // Approval Modal Component with Payment Breakdown
 interface ApprovalModalProps {
   booking: WorklistBooking;
-  onConfirm: (services: Array<{ booked_service_id: string; sha: number; cash: number; other_insurance: number }>, onCloseModal?: () => void) => void;
+  onConfirm: (
+    services: Array<{
+      booked_service_id: string;
+      sha: number;
+      cash: number;
+      other_insurance: number;
+    }>,
+    onCloseModal?: () => void,
+  ) => void;
   isProcessing: boolean;
   onCloseModal?: () => void;
 }
@@ -491,19 +501,19 @@ function ApprovalModal({
       sha: parseFloat(service.tariff),
       cash: 0,
       other_insurance: 0,
-    }))
+    })),
   );
 
   const handlePaymentChange = (
     serviceId: string,
     field: "sha" | "cash" | "other_insurance",
-    value: string
+    value: string,
   ) => {
     const numValue = parseFloat(value) || 0;
     setServicePayments((prev) =>
       prev.map((sp) =>
-        sp.booked_service_id === serviceId ? { ...sp, [field]: numValue } : sp
-      )
+        sp.booked_service_id === serviceId ? { ...sp, [field]: numValue } : sp,
+      ),
     );
   };
 
@@ -531,11 +541,15 @@ function ApprovalModal({
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <span className="text-gray-600">Booking Number:</span>
-            <p className="font-medium text-gray-900">{booking.booking_number}</p>
+            <p className="font-medium text-gray-900">
+              {booking.booking_number}
+            </p>
           </div>
           <div>
             <span className="text-gray-600">Patient:</span>
-            <p className="font-medium text-gray-900">{booking.patient?.name || "N/A"}</p>
+            <p className="font-medium text-gray-900">
+              {booking.patient?.name || "N/A"}
+            </p>
           </div>
           <div>
             <span className="text-gray-600">Phone:</span>
@@ -567,7 +581,9 @@ function ApprovalModal({
             <div
               key={service.id}
               className={`border rounded-lg p-3 ${
-                !isValid ? "border-red-300 bg-red-50" : "border-gray-200 bg-white"
+                !isValid
+                  ? "border-red-300 bg-red-50"
+                  : "border-gray-200 bg-white"
               }`}
             >
               <div className="mb-2">
@@ -588,7 +604,9 @@ function ApprovalModal({
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">SHA</label>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    SHA
+                  </label>
                   <input
                     type="number"
                     step="0.01"
@@ -602,7 +620,9 @@ function ApprovalModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Cash</label>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    Cash
+                  </label>
                   <input
                     type="number"
                     step="0.01"
@@ -616,14 +636,20 @@ function ApprovalModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Other</label>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    Other
+                  </label>
                   <input
                     type="number"
                     step="0.01"
                     min="0"
                     value={payment.other_insurance}
                     onChange={(e) =>
-                      handlePaymentChange(service.id, "other_insurance", e.target.value)
+                      handlePaymentChange(
+                        service.id,
+                        "other_insurance",
+                        e.target.value,
+                      )
                     }
                     disabled={isProcessing}
                     className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"

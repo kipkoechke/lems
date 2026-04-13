@@ -2,7 +2,7 @@ import axios from "../lib/axios";
 import { LoginFormData } from "../lib/validations";
 
 // Role object from API response
-export interface UserRole {
+interface UserRole {
   key: string;
   label: string;
   type: string;
@@ -20,7 +20,7 @@ export interface UserEntity {
 }
 
 // Raw user from API response
-export interface ApiUser {
+interface ApiUser {
   id: string;
   name: string;
   email: string;
@@ -68,7 +68,7 @@ export interface AuthState {
 }
 
 // Helper to normalize API user to app user format
-export const normalizeUser = (apiUser: ApiUser): User => {
+const normalizeUser = (apiUser: ApiUser): User => {
   return {
     id: apiUser.id,
     name: apiUser.name,
@@ -84,7 +84,7 @@ export const normalizeUser = (apiUser: ApiUser): User => {
 };
 
 // Helper to extract facility from API response
-export const extractFacility = (apiUser: ApiUser): Facility => {
+const extractFacility = (apiUser: ApiUser): Facility => {
   if (apiUser.entity?.type === "facility") {
     return {
       id: apiUser.entity.id || null,
@@ -131,9 +131,6 @@ export const loginFetcher = async (
     throw new Error("Network error occurred. Please try again.");
   }
 };
-
-// Legacy function for backward compatibility
-export const loginUser = loginFetcher;
 
 // Auth utility functions
 export const setAuthData = (

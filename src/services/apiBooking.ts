@@ -18,18 +18,10 @@ export type {
   VerifyOtpPayload,
   VerifyOtpResponse,
   ResendOtpPayload,
-  ResendOtpResponse,
   Booking,
-  BookingsResponse,
   BookingFilters,
-  BookingService,
-  BookingPatient,
-  BookingFacility,
-  BookingPayment,
 } from "@/types/booking";
 
-// Legacy type alias for backward compatibility
-export type ServiceBookingForm = InitiateBookingPayload;
 export type Bookings = Booking;
 
 // ===== Booking API Functions =====
@@ -44,9 +36,6 @@ export const initiateBooking = async (
   );
   return response.data;
 };
-
-// Legacy alias
-export const createServiceBooking = initiateBooking;
 
 // Verify OTP and create booking
 export const verifyBookingOtp = async (
@@ -90,12 +79,6 @@ export const getBookingsWithPagination = async (
   return response.data;
 };
 
-// Get single booking by ID
-export const getBookingById = async (bookingId: string): Promise<Booking> => {
-  const response = await axios.get<{ data: Booking }>(`/bookings/${bookingId}`);
-  return response.data.data;
-};
-
 // ===== Service Completion =====
 
 export interface ServiceCompletionPayload {
@@ -103,7 +86,7 @@ export interface ServiceCompletionPayload {
   service_id: string;
 }
 
-export interface ServiceCompletionOtpResponse {
+interface ServiceCompletionOtpResponse {
   message: string;
   data: {
     session_id: string;
@@ -152,7 +135,7 @@ export interface FinanceApprovalPayload {
   services: ServicePaymentBreakdown[];
 }
 
-export interface FinanceApprovalResponse {
+interface FinanceApprovalResponse {
   message: string;
   data: Booking;
 }
@@ -163,99 +146,6 @@ export const financeApproval = async (
 ): Promise<FinanceApprovalResponse> => {
   const response = await axios.post<FinanceApprovalResponse>(
     `/bookings/${bookingId}/approve-finance`,
-    data,
-  );
-  return response.data;
-};
-
-// ===== Service Completion (Equipment User) =====
-
-export interface RequestCompletionResponse {
-  message: string;
-  data: {
-    session_id: string;
-    service_id: string;
-    booking_id: string;
-    expires_at: string;
-    expires_in_minutes: number;
-    phone_masked: string;
-  };
-}
-
-export interface VerifyCompletionOtpPayload {
-  session_id: string;
-  otp: string;
-}
-
-export interface VerifyCompletionOtpResponse {
-  message: string;
-  data: {
-    service: {
-      id: string;
-      lot: {
-        number: string;
-        name: string;
-      };
-      service: {
-        code: string;
-        name: string;
-      };
-      status: string;
-      completed_at: string;
-    };
-    booking_status: string;
-    booking_completed: boolean;
-  };
-}
-
-export interface ResendCompletionOtpPayload {
-  session_id: string;
-}
-
-export interface ResendCompletionOtpResponse {
-  message: string;
-  data: {
-    service_id: string;
-    booking_id: string;
-    expires_at: string;
-    expires_in_minutes: number;
-    email_sent: boolean;
-    sms_sent: boolean;
-  };
-}
-
-// Request completion OTP for a service
-export const requestServiceCompletion = async (
-  bookingId: string,
-  serviceId: string,
-): Promise<RequestCompletionResponse> => {
-  const response = await axios.post<RequestCompletionResponse>(
-    `/bookings/${bookingId}/services/${serviceId}/request-completion`,
-  );
-  return response.data;
-};
-
-// Verify completion OTP
-export const verifyCompletionOtp = async (
-  bookingId: string,
-  serviceId: string,
-  data: VerifyCompletionOtpPayload,
-): Promise<VerifyCompletionOtpResponse> => {
-  const response = await axios.post<VerifyCompletionOtpResponse>(
-    `/bookings/${bookingId}/services/${serviceId}/verify-completion-otp`,
-    data,
-  );
-  return response.data;
-};
-
-// Resend completion OTP
-export const resendCompletionOtp = async (
-  bookingId: string,
-  serviceId: string,
-  data: ResendCompletionOtpPayload,
-): Promise<ResendCompletionOtpResponse> => {
-  const response = await axios.post<ResendCompletionOtpResponse>(
-    `/bookings/${bookingId}/services/${serviceId}/resend-completion-otp`,
     data,
   );
   return response.data;

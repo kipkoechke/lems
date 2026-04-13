@@ -1,21 +1,9 @@
-import axios from "../lib/axios";
-import { ServiceCategory } from "./apiCategory";
 import type {
   FacilityContract,
   FacilityContractsResponse,
 } from "@/types/contract";
-
-export interface ServiceInfo {
-  serviceId: string;
-  serviceName: string;
-  description: string;
-  shaRate: number;
-  vendorShare: number;
-  facilityShare: number;
-  id: string;
-  capitated: number;
-  category: any;
-}
+import axios from "../lib/axios";
+import { ServiceCategory } from "./apiCategory";
 
 export interface ServiceWithCategory {
   serviceId: string;
@@ -31,52 +19,12 @@ export interface ServiceWithCategory {
   category: ServiceCategory;
 }
 
-export type ServiceInfoForm = Omit<ServiceInfo, "serviceId">;
-
-export const createServiceInfo = async (
-  data: ServiceInfoForm
-): Promise<ServiceInfo> => {
-  const response = await axios.post(`/create-service`, data);
-  return response.data.data;
-};
-
 // Get contracts/services by facility ID
 export const getServicesByFacilityId = async (
-  facilityId: string
+  facilityId: string,
 ): Promise<FacilityContract[]> => {
   const response = await axios.get<FacilityContractsResponse>(
-    `contracts?facility_id=${facilityId}`
+    `contracts?facility_id=${facilityId}`,
   );
   return response.data.data;
-};
-
-export const getServiceInfo = async (): Promise<ServiceInfo[]> => {
-  const response = await axios.get(`/lots`);
-  return response.data.lots;
-};
-
-export const getServiceByCategory = async (
-  id: string,
-): Promise<ServiceWithCategory[]> => {
-  const response = await axios.get(`/category/services/${id}`);
-  return response.data.data;
-};
-
-export const getServiceInfoById = async (
-  serviceId: string,
-): Promise<ServiceInfo> => {
-  const response = await axios.get(`/service/${serviceId}`);
-  return response.data.data;
-};
-
-export const updateServiceInfo = async (
-  serviceId: string,
-  data: Partial<ServiceInfo>,
-): Promise<ServiceInfo> => {
-  const response = await axios.patch(`/ServiceInfo/${serviceId}`, data);
-  return response.data.data;
-};
-
-export const deleteServiceInfo = async (serviceId: string): Promise<void> => {
-  await axios.delete<void>(`/ServiceInfo/${serviceId}`);
 };

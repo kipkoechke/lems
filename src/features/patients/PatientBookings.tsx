@@ -1,4 +1,5 @@
 "use client";
+import { maskPhoneNumber } from "@/lib/maskUtils";
 import { useParams, useRouter } from "next/navigation";
 import {
   FaArrowLeft,
@@ -9,7 +10,6 @@ import {
 } from "react-icons/fa";
 import { usePatient } from "./usePatient";
 import { usePatientBookings } from "./usePatientBookings";
-import { maskPhoneNumber } from "@/lib/maskUtils";
 
 // Breadcrumb Component
 function PatientBreadcrumb({ patient }: { patient: any }) {
@@ -39,12 +39,8 @@ function PatientBookings() {
   const router = useRouter();
   const id = params.id as string;
 
-  const { patient, isLoading: patientLoading } = usePatient(id);
-  const { bookings, bookingsLoading, isError } = usePatientBookings(id);
-
-  // Mock data for now
-  //   const bookings = mockBookingData;
-  //   const patient = bookings[0]?.patient; // Get patient data from booking
+  const { patient } = usePatient(id);
+  const { bookings } = usePatientBookings(id);
 
   const handleBackClick = () => {
     router.push("/patients");
@@ -133,8 +129,7 @@ function PatientBookings() {
                           {booking.facility?.name || "N/A"}
                         </div>
                         <div className="text-gray-500 text-xs">
-                          Code:{" "}
-                          {booking.facility?.code || "N/A"}
+                          Code: {booking.facility?.code || "N/A"}
                         </div>
                       </div>
                     </td>
@@ -148,7 +143,7 @@ function PatientBookings() {
                                   year: "numeric",
                                   month: "short",
                                   day: "numeric",
-                                }
+                                },
                               )
                             : "N/A"}
                         </div>
@@ -159,7 +154,7 @@ function PatientBookings() {
                                 {
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                }
+                                },
                               )
                             : "N/A"}
                         </div>
@@ -171,10 +166,10 @@ function PatientBookings() {
                           booking.approval_status === "pending"
                             ? "bg-yellow-100 text-yellow-800"
                             : booking.approval_status === "approved"
-                            ? "bg-green-100 text-green-800"
-                            : booking.approval_status === "rejected"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-800"
+                              ? "bg-green-100 text-green-800"
+                              : booking.approval_status === "rejected"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {booking.approval_status || "pending"}
@@ -184,14 +179,16 @@ function PatientBookings() {
                       <div className="font-medium">
                         KES{" "}
                         {booking.services?.[0]?.vendor_share
-                          ? parseInt(booking.services[0].vendor_share).toLocaleString()
+                          ? parseInt(
+                              booking.services[0].vendor_share,
+                            ).toLocaleString()
                           : "0"}
                       </div>
                       <div className="text-xs text-gray-500">
                         SHA Rate:{" "}
                         {booking.services?.[0]?.service?.sha_rate
                           ? parseInt(
-                              booking.services[0].service.sha_rate
+                              booking.services[0].service.sha_rate,
                             ).toLocaleString()
                           : "0"}
                       </div>
