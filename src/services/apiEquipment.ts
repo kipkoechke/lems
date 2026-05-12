@@ -27,8 +27,35 @@ export interface EquipmentWithService {
 
 // ============ Vendor Equipment Types & API ============
 
+export interface EquipmentCategory {
+  value: string;
+  label: string;
+}
+
+export interface EquipmentStatus {
+  value: string;
+  label: string;
+}
+
 export interface VendorEquipmentSpecifications {
   [key: string]: string | number | undefined;
+}
+
+export interface VendorEquipmentDicom {
+  ae_title: string | null;
+  hl7_host: string | null;
+  hl7_port: number | null;
+  dicom_port: number | null;
+  is_connected: boolean;
+  last_seen_at: string | null;
+}
+
+export interface VendorEquipmentVendorConfig {
+  mwl_server_ip: string;
+  mwl_server_port: number;
+  mwl_server_aet: string;
+  equipment_aet: string;
+  connection_type: string;
 }
 
 export interface VendorEquipment {
@@ -41,6 +68,8 @@ export interface VendorEquipment {
   manufacture_date: string;
   category: string;
   category_label: string;
+  modality: string | null;
+  worklist_category: string | null;
   status:
     | "active"
     | "inactive"
@@ -50,6 +79,8 @@ export interface VendorEquipment {
   status_label: string;
   description: string;
   specifications: VendorEquipmentSpecifications;
+  dicom: VendorEquipmentDicom | null;
+  vendor_config?: VendorEquipmentVendorConfig;
 }
 
 interface VendorEquipmentsResponse {
@@ -79,6 +110,16 @@ export interface VendorEquipmentCreateRequest {
     | "maintenance"
     | "decommissioned"
     | "pending_installation";
+  ae_title?: string;
+  hl7_host?: string;
+  hl7_port?: number;
+  dicom_port?: number;
+}
+
+export interface VendorEquipmentCreateResponse {
+  message: string;
+  equipment: VendorEquipment;
+  orthanc_registered?: boolean;
 }
 
 export interface VendorEquipmentsParams {
@@ -88,6 +129,20 @@ export interface VendorEquipmentsParams {
   category?: string;
   search?: string;
 }
+
+// Get equipment categories
+export const getEquipmentCategories = async (): Promise<
+  EquipmentCategory[]
+> => {
+  const response = await axios.get("/equipments/categories");
+  return response.data;
+};
+
+// Get equipment statuses
+export const getEquipmentStatuses = async (): Promise<EquipmentStatus[]> => {
+  const response = await axios.get("/equipments/statuses");
+  return response.data;
+};
 
 // Get vendor equipments with pagination
 export const getVendorEquipments = async (
@@ -117,7 +172,7 @@ export const createVendorEquipment = async (
   data: VendorEquipmentCreateRequest,
 ): Promise<VendorEquipment> => {
   const response = await axios.post(`/vendors/${vendorId}/equipments`, data);
-  return response.data?.data ?? response.data;
+  return response.data?.equipment ?? response.data?.data ?? response.data;
 };
 
 // Update vendor equipment
@@ -130,7 +185,7 @@ export const updateVendorEquipment = async (
     `/vendors/${vendorId}/equipments/${equipmentId}`,
     data,
   );
-  return response.data?.data ?? response.data;
+  return response.data?.equipment ?? response.data?.data ?? response.data;
 };
 
 // Delete vendor equipment

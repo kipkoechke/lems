@@ -29,38 +29,69 @@ const equipmentSchema = z.object({
     "decommissioned",
     "pending_installation",
   ]),
+  ae_title: z.string().max(16).optional(),
+  hl7_host: z.string().optional(),
+  hl7_port: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(65535)
+    .optional()
+    .or(z.literal("")),
+  dicom_port: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(65535)
+    .optional()
+    .or(z.literal("")),
 });
 
 type EquipmentFormData = z.infer<typeof equipmentSchema>;
 
 // Equipment categories
 const EQUIPMENT_CATEGORIES = [
+  { value: "xray_digital", label: "Digital X-Ray" },
+  { value: "xray_mobile", label: "Mobile X-Ray" },
+  { value: "xray_portable", label: "Portable X-Ray" },
+  { value: "fluoroscopy", label: "Fluoroscopy" },
+  { value: "c_arm", label: "C-Arm" },
+  { value: "ultrasound_general", label: "General Ultrasound" },
+  { value: "ultrasound_3d_4d", label: "3D/4D Ultrasound" },
+  { value: "ultrasound_portable", label: "Portable Ultrasound" },
+  { value: "doppler", label: "Doppler" },
+  { value: "mammography_digital", label: "Digital Mammography" },
+  { value: "mammography_3d", label: "3D Mammography" },
+  { value: "ct_scanner", label: "CT Scanner" },
   { value: "ct_scanner_multi_slice", label: "Multi-Slice CT Scanner" },
   { value: "mri_scanner", label: "MRI Scanner" },
-  { value: "xray_machine", label: "X-Ray Machine" },
-  { value: "ultrasound", label: "Ultrasound" },
-  { value: "mammography", label: "Mammography" },
-  { value: "dental_xray", label: "Dental X-Ray" },
-  { value: "surgical_table", label: "Surgical/OT Table" },
+  { value: "mri_open", label: "Open MRI" },
+  { value: "linear_accelerator", label: "Linear Accelerator" },
+  { value: "brachytherapy", label: "Brachytherapy" },
+  { value: "cobalt_60", label: "Cobalt-60" },
+  { value: "treatment_planning", label: "Treatment Planning" },
+  { value: "simulator", label: "Simulator" },
+  { value: "gamma_camera", label: "Gamma Camera" },
+  { value: "spect", label: "SPECT" },
+  { value: "pet_scanner", label: "PET Scanner" },
+  { value: "pet_ct", label: "PET-CT" },
+  { value: "cyclotron", label: "Cyclotron" },
+  { value: "angiography", label: "Angiography" },
+  { value: "cath_lab", label: "Cath Lab" },
+  { value: "dsa", label: "DSA" },
+  { value: "ecg", label: "ECG" },
+  { value: "echocardiography", label: "Echocardiography" },
+  { value: "holter_monitor", label: "Holter Monitor" },
+  { value: "stress_test", label: "Stress Test" },
+  { value: "pacemaker_programmer", label: "Pacemaker Programmer" },
+  { value: "tmt", label: "TMT" },
   { value: "anesthesia_machine", label: "Anesthesia Machine" },
-  { value: "ventilator", label: "Ventilator" },
-  { value: "patient_monitor", label: "Patient Monitor" },
-  { value: "defibrillator", label: "Defibrillator" },
-  { value: "ecg_machine", label: "ECG Machine" },
-  { value: "dialysis_machine", label: "Dialysis Machine" },
-  { value: "centrifuge", label: "Centrifuge" },
-  { value: "autoclave", label: "Autoclave/Sterilizer" },
-  { value: "incubator", label: "Incubator" },
-  { value: "water_treatment", label: "Water Treatment System" },
-  { value: "laboratory_analyzer", label: "Laboratory Analyzer" },
-  { value: "endoscope", label: "Endoscope" },
-  { value: "other", label: "Other" },
 ];
 
 const STATUS_OPTIONS = [
   { value: "active", label: "Active" },
   { value: "inactive", label: "Inactive" },
-  { value: "maintenance", label: "Under Maintenance" },
+  { value: "maintenance", label: "Maintenance" },
   { value: "decommissioned", label: "Decommissioned" },
   { value: "pending_installation", label: "Pending Installation" },
 ];
@@ -109,6 +140,10 @@ export default function EditVendorEquipmentPage() {
           : "",
         description: equipment.description || "",
         status: equipment.status,
+        ae_title: equipment.dicom?.ae_title || "",
+        hl7_host: equipment.dicom?.hl7_host || "",
+        hl7_port: equipment.dicom?.hl7_port ?? undefined,
+        dicom_port: equipment.dicom?.dicom_port ?? undefined,
       });
 
       if (equipment.specifications) {
@@ -332,6 +367,46 @@ export default function EditVendorEquipmentPage() {
               No specifications added yet.
             </p>
           )}
+        </div>
+
+        {/* DICOM Configuration */}
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <h2 className="text-sm font-semibold text-slate-900 mb-1">
+            DICOM Configuration
+          </h2>
+          <p className="text-xs text-slate-500 mb-4">
+            Optional — required only for imaging equipment that connects via
+            DICOM/MWL.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputField
+              label="AE Title"
+              type="text"
+              register={register("ae_title")}
+              error={errors.ae_title?.message}
+              placeholder="e.g. GEXR001 (max 16 chars)"
+            />
+            <InputField
+              label="Device Host / IP"
+              type="text"
+              register={register("hl7_host")}
+              placeholder="e.g. 192.168.1.50"
+            />
+            <InputField
+              label="HL7 Port"
+              type="number"
+              register={register("hl7_port")}
+              error={errors.hl7_port?.message}
+              placeholder="e.g. 2575"
+            />
+            <InputField
+              label="DICOM Port"
+              type="number"
+              register={register("dicom_port")}
+              error={errors.dicom_port?.message}
+              placeholder="e.g. 11112"
+            />
+          </div>
         </div>
 
         {/* Actions */}

@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
+  getEquipmentCategories,
+  getEquipmentStatuses,
   getVendorEquipments,
   getVendorEquipment,
   createVendorEquipment,
@@ -9,6 +11,24 @@ import {
   VendorEquipmentsParams,
   VendorEquipmentCreateRequest,
 } from "@/services/apiEquipment";
+
+// Equipment categories hook
+export const useEquipmentCategories = () => {
+  return useQuery({
+    queryKey: ["equipmentCategories"],
+    queryFn: getEquipmentCategories,
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
+};
+
+// Equipment statuses hook
+export const useEquipmentStatuses = () => {
+  return useQuery({
+    queryKey: ["equipmentStatuses"],
+    queryFn: getEquipmentStatuses,
+    staleTime: 1000 * 60 * 60,
+  });
+};
 
 // List hook with params
 export const useVendorEquipments = (

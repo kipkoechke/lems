@@ -254,7 +254,7 @@ export default function EquipmentDetailsPage() {
           {/* Specifications Section */}
           {equipment.specifications &&
             Object.keys(equipment.specifications).length > 0 && (
-              <div className="p-4">
+              <div className="p-4 border-b border-slate-100">
                 <h2 className="text-sm font-semibold text-slate-900 mb-3">
                   Specifications
                 </h2>
@@ -277,6 +277,110 @@ export default function EquipmentDetailsPage() {
                 </div>
               </div>
             )}
+
+          {/* DICOM Configuration */}
+          {equipment.dicom && (
+            <div className="p-4 border-b border-slate-100">
+              <h2 className="text-sm font-semibold text-slate-900 mb-3">
+                DICOM Configuration
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-slate-500">AE Title</p>
+                  <p className="text-sm font-mono text-slate-900">
+                    {equipment.dicom.ae_title || "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Device Host / IP</p>
+                  <p className="text-sm font-mono text-slate-900">
+                    {equipment.dicom.hl7_host || "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">HL7 Port</p>
+                  <p className="text-sm font-mono text-slate-900">
+                    {equipment.dicom.hl7_port ?? "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">DICOM Port</p>
+                  <p className="text-sm font-mono text-slate-900">
+                    {equipment.dicom.dicom_port ?? "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Connection Status</p>
+                  <p className="text-sm text-slate-900">
+                    {equipment.dicom.is_connected ? (
+                      <span className="inline-flex items-center gap-1 text-emerald-700">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                        Connected
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-slate-500">
+                        <span className="w-2 h-2 rounded-full bg-slate-300 inline-block"></span>
+                        Not connected
+                      </span>
+                    )}
+                  </p>
+                </div>
+                {equipment.dicom.last_seen_at && (
+                  <div>
+                    <p className="text-xs text-slate-500">Last Seen</p>
+                    <p className="text-sm text-slate-900">
+                      {formatDate(equipment.dicom.last_seen_at)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Vendor Config (MWL Server Details) */}
+          {equipment.vendor_config && (
+            <div className="p-4">
+              <h2 className="text-sm font-semibold text-slate-900 mb-1">
+                MWL Server Configuration
+              </h2>
+              <p className="text-xs text-slate-500 mb-3">
+                Configure your physical device with these details to receive
+                worklists.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 rounded-lg p-3">
+                <div>
+                  <p className="text-xs text-slate-500">MWL Server IP</p>
+                  <p className="text-sm font-mono text-slate-900">
+                    {equipment.vendor_config.mwl_server_ip}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">MWL Server Port</p>
+                  <p className="text-sm font-mono text-slate-900">
+                    {equipment.vendor_config.mwl_server_port}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Server AET</p>
+                  <p className="text-sm font-mono text-slate-900">
+                    {equipment.vendor_config.mwl_server_aet}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Equipment AET</p>
+                  <p className="text-sm font-mono text-slate-900">
+                    {equipment.vendor_config.equipment_aet}
+                  </p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-slate-500">Connection Type</p>
+                  <p className="text-sm text-slate-900">
+                    {equipment.vendor_config.connection_type}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
