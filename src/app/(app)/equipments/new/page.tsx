@@ -146,6 +146,8 @@ export default function NewEquipmentPage() {
         vendorId,
         data: {
           ...data,
+          hl7_port: data.hl7_port || undefined,
+          dicom_port: data.dicom_port || undefined,
           specifications:
             Object.keys(specifications).length > 0 ? specifications : undefined,
         },
