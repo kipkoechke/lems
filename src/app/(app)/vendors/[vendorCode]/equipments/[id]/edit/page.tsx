@@ -10,8 +10,10 @@ import {
   useVendorEquipment,
   useUpdateVendorEquipment,
 } from "@/features/vendors/useVendorEquipments";
+import { useVendors } from "@/features/vendors/useVendors";
 import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import BackButton from "@/components/common/BackButton";
 
 const equipmentSchema = z.object({
@@ -103,11 +105,23 @@ export default function EditVendorEquipmentPage() {
   const equipmentId = params.id as string;
 
   const { vendor, isLoading: vendorLoading } = useVendor(vendorCode);
+  const { vendors, isLoading: vendorsLoading } = useVendors();
+  const [selectedVendorId, setSelectedVendorId] = useState("");
+
+  // Pre-select vendor once it loads from URL
+  useEffect(() => {
+    if (vendor?.id && !selectedVendorId) {
+      setSelectedVendorId(vendor.id);
+    }
+  }, [vendor?.id, selectedVendorId]);
+
+  const vendorOptions = vendors.map((v) => ({ value: v.id, label: v.name }));
+
   const {
     data: equipment,
     isLoading: equipmentLoading,
     error: equipmentError,
-  } = useVendorEquipment(vendor?.id || "", equipmentId);
+  } = useVendorEquipment(selectedVendorId || vendor?.id || "", equipmentId);
   const updateEquipmentMutation = useUpdateVendorEquipment();
 
   // Specifications state
@@ -176,11 +190,12 @@ export default function EditVendorEquipmentPage() {
   };
 
   const onSubmit = (data: EquipmentFormData) => {
-    if (!vendor?.id || !equipmentId) return;
+    const vendorId = selectedVendorId || vendor?.id;
+    if (!vendorId || !equipmentId) return;
 
     updateEquipmentMutation.mutate(
       {
-        vendorId: vendor.id,
+        vendorId,
         equipmentId,
         data: {
           ...data,
@@ -245,6 +260,17 @@ export default function EditVendorEquipmentPage() {
           <h2 className="text-sm font-semibold text-slate-900 mb-4">
             Basic Information
           </h2>
+          <div className="mb-4">
+            <SearchableSelect
+              label="Vendor"
+              required
+              options={vendorOptions}
+              value={selectedVendorId}
+              onChange={setSelectedVendorId}
+              placeholder="Select vendor"
+              isLoading={vendorsLoading}
+            />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
               label="Equipment Name"
