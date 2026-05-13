@@ -36,7 +36,10 @@ services:
       - certbot-conf:/etc/letsencrypt:ro
     depends_on:
       app:
-        condition: service_healthy
+        # service_started (not service_healthy) lets nginx come up immediately.
+        # Nginx has built-in upstream retry — it will serve 502 briefly while
+        # the app warms up, then proxy correctly once app:3000 is ready.
+        condition: service_started
     networks:
       - web
     healthcheck:

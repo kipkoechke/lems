@@ -65,38 +65,77 @@ jobs:
               exit 0
             fi
 
-            # ── Subsequent deploys: pull & restart ────────────────────
+            # ── Subsequent deploys: pull, build & restart ─────────────
             echo "==> Pulling latest code from main..."
             cd "$DEPLOY_PATH"
             git fetch origin main
             git reset --hard origin/main
 
-            echo "==> Building updated Docker image (no cache)..."
+            echo "==> Building updated Docker image..."
             docker compose build --no-cache app
 
             echo "==> Restarting app container..."
-            docker compose up -d --no-deps --remove-orphans app
+            docker compose up -d --remove-orphans
 
-            echo "==> Reloading nginx..."
+            echo "==> Waiting for app to be healthy (up to 2 min)..."
+            ATTEMPTS=0
+            until docker compose ps app | grep -q "healthy" || [ $ATTEMPTS -ge 12 ]; do
+              sleep 10; ATTEMPTS=$((ATTEMPTS + 1))
+              echo "    ... waiting (${ATTEMPTS}/12)"
+            done
+
+            echo "==> Reloading nginx config..."
             docker compose exec -T nginx nginx -s reload || true
 
             echo "==> Pruning unused Docker images..."
             docker image prune -f
 
+            echo "==> Container status:"
+            docker compose ps
+
             echo "==> Deployment complete!"
           REMOTE_SCRIPT
 
-      # ── 5. Health check ──────────────────────────────────
+      # ── 5. Diagnostics ───────────────────────────────────
+      - name: Container & SSL diagnostics
+        if: always()
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT || 22 }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -p "$SERVER_PORT" "$SERVER_USER@$SERVER_HOST" \
+            env DEPLOY_PATH="$DEPLOY_PATH" bash -s << 'DIAG'
+            cd "$DEPLOY_PATH" 2>/dev/null || { echo "DEPLOY_PATH missing"; exit 0; }
+            echo "=== Container status ==="
+            docker compose ps
+            echo ""
+            echo "=== App logs (last 30 lines) ==="
+            docker compose logs --tail=30 app
+            echo ""
+            echo "=== Nginx logs (last 20 lines) ==="
+            docker compose logs --tail=20 nginx
+            echo ""
+            echo "=== SSL cert status ==="
+            docker compose run --rm --no-deps --entrypoint sh certbot \
+              -c "test -f /etc/letsencrypt/live/portal.vems.co.ke/fullchain.pem \
+                  && openssl x509 -noout -dates \
+                     -in /etc/letsencrypt/live/portal.vems.co.ke/fullchain.pem \
+                  || echo 'No real cert yet (still using self-signed)'"
+          DIAG
+
+      # ── 6. Health check ──────────────────────────────────
       - name: Verify site is reachable
         run: |
-          sleep 20
+          sleep 15
           # Check over HTTP (port 80) — avoids SSL cert issues on first deploy
           # when the real Let's Encrypt cert may not be issued yet.
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             --max-time 30 --retry 5 --retry-delay 5 \
             http://portal.vems.co.ke)
           echo "HTTP status: $HTTP_STATUS"
-          # 200 = served directly, 301/302 = redirect to HTTPS (expected), 000 = unreachable
+          # 000 = completely unreachable (server down / port not open)
           if [[ "$HTTP_STATUS" == "000" ]]; then
             echo "::error::Site is unreachable (curl returned 000). Check server logs."
             exit 1

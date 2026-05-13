@@ -169,9 +169,23 @@ start_stack() {
   section "Starting all services"
   cd "$DEPLOY_PATH"
 
+  # Build the app image first (can take several minutes on first run).
+  # Doing this separately avoids health-check timeouts racing against the build.
+  log "Building Next.js Docker image (this may take a few minutes)..."
+  docker compose build --no-cache app
+
+  log "Starting all containers..."
   docker compose up -d --remove-orphans
-  log "All services started. Waiting 20 s for health checks..."
-  sleep 20
+
+  # Wait for the app to pass its health check before declaring success
+  log "Waiting for app to become healthy (up to 3 minutes)..."
+  ATTEMPTS=0
+  until docker compose ps app | grep -q "healthy" || [ $ATTEMPTS -ge 18 ]; do
+    sleep 10
+    ATTEMPTS=$((ATTEMPTS + 1))
+    info "  ... waiting (${ATTEMPTS}/18)"
+  done
+
   docker compose ps
 }
 
