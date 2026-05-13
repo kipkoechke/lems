@@ -33,7 +33,6 @@ export const useLogin = () => {
         token,
         isAuthenticated: true,
       });
-      toast.success("Login successful!");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Login failed. Please try again.");

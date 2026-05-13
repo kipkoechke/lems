@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { InputField } from "../common/InputField";
 import Button from "../common/Button";
 import { loginSchema, LoginFormData } from "../../lib/validations";
@@ -11,6 +11,7 @@ import Link from "next/link";
 
 export const LoginForm = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const redirectUrl = searchParams?.get("redirect") || "/";
   const loginMutation = useLogin();
 
@@ -28,7 +29,7 @@ export const LoginForm = () => {
     loginMutation.mutate(data, {
       onSuccess: () => {
         reset();
-        window.location.href = redirectUrl;
+        router.push(redirectUrl);
       },
     });
   };
@@ -84,14 +85,6 @@ export const LoginForm = () => {
         <div className="p-3 bg-red-50 border border-red-200 rounded-md">
           <p className="text-red-600 text-sm">
             {loginMutation.error?.message || "Login failed. Please try again."}
-          </p>
-        </div>
-      )}
-
-      {loginMutation.isSuccess && (
-        <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-          <p className="text-green-600 text-sm">
-            Login successful! Redirecting...
           </p>
         </div>
       )}
