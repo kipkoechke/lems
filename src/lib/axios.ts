@@ -1,4 +1,5 @@
 import axios from "axios";
+import { clearAuthData } from "@/services/apiAuth";
 
 const instance = axios.create({
   baseURL: "https://api.vems.co.ke/api/v1",
@@ -24,6 +25,9 @@ instance.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401 && typeof window !== "undefined") {
       if (!window.location.pathname.includes("/login")) {
+        // Clear auth cookie + localStorage so middleware doesn't redirect
+        // the user back from /login → / → infinite loop
+        clearAuthData();
         window.location.href = "/login";
       }
     }
