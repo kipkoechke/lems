@@ -29,15 +29,48 @@ docker compose build --no-cache app
 
 # ── Restart app (rolling - no nginx restart needed) ──────
 echo "==> Bringing up updated app container..."
-docker compose up -d --no-deps --remove-orphans app
+docker compose up -d --remove-orphans app
 
-# ── Reload nginx ──────────────────────────────────────────
-echo "==> Reloading Nginx configuration..."
-docker compose exec -T nginx nginx -s reload || true
+# ── Wait for healthy ──────────────────────────────────────
+echo "==> Waiting for app to be healthy (up to 2 min)..."
+ATTEMPTS=0
+until docker compose ps app | grep -q "healthy" || [ $ATTEMPTS -ge 12 ]; do
+  sleep 10; ATTEMPTS=$((ATTEMPTS + 1))
+  echo "    ... waiting (${ATTEMPTS}/12)"
+done
+docker compose ps app
 
-# ── Ensure other services are up ─────────────────────────
-echo "==> Ensuring all services are running..."
-docker compose up -d --remove-orphans
+# ── Update host nginx vhost from repo and reload ──────
+echo "==> Updating nginx vhost config..."
+APP_PORT="${APP_PORT:-3010}"
+DOMAIN="portal.vems.co.ke"
+CERT_PATH="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
+VHOST_SRC="$(pwd)/nginx/host-vhost.conf"
+VHOST_DEST="/etc/nginx/sites-available/$DOMAIN"
+if [ -f "$VHOST_SRC" ] && command -v nginx &>/dev/null; then
+  # Write our vhost (correct syntax, no http2-on directive)
+  sed "s/__APP_PORT__/$APP_PORT/g" "$VHOST_SRC" | sudo tee "$VHOST_DEST" > /dev/null
+  sudo ln -sf "$VHOST_DEST" "/etc/nginx/sites-enabled/$DOMAIN"
+
+  # Remove any portal.vems.co.ke blocks certbot injected into OTHER nginx files.
+  echo "==> Removing stale portal blocks from other nginx configs (if any)..."
+  for conf_file in /etc/nginx/sites-available/*; do
+    [ "$conf_file" = "$VHOST_DEST" ] && continue
+    if grep -ql "server_name.*$DOMAIN" "$conf_file" 2>/dev/null; then
+      sudo python3 "$(pwd)/scripts/fix-nginx-conflict.py" "$conf_file" "$DOMAIN"
+    fi
+  done
+
+  # Only reload if the SSL cert exists — if not, nginx -t would fail on the
+  # HTTPS block. Cert is obtained once by server-setup.sh.
+  if [ -f "$CERT_PATH" ]; then
+    sudo nginx -t && sudo nginx -s reload
+    echo "==> Host nginx reloaded."
+  else
+    echo "==> WARN: SSL cert not found at $CERT_PATH — skipping nginx reload."
+    echo "          Run scripts/server-setup.sh once to obtain the cert."
+  fi
+fi
 
 # ── Prune old images ──────────────────────────────────────
 echo "==> Pruning dangling images..."

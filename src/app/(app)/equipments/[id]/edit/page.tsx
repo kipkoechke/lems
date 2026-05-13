@@ -106,20 +106,25 @@ export default function EditEquipmentPage() {
   const vendorId = user?.entity?.id || "";
 
   const { vendors, isLoading: vendorsLoading } = useVendors();
+
+  // fetchVendorId is locked in once on load — never changes, so switching the
+  // dropdown doesn't trigger a re-fetch or reset the form.
+  const [fetchVendorId, setFetchVendorId] = useState<string>(vendorId);
   const [selectedVendorId, setSelectedVendorId] = useState<string>(vendorId);
 
-  // Keep selectedVendorId in sync when user entity loads
+  // Sync both states only on initial load (when user entity resolves late)
   useEffect(() => {
-    if (vendorId && !selectedVendorId) {
+    if (vendorId && !fetchVendorId) {
+      setFetchVendorId(vendorId);
       setSelectedVendorId(vendorId);
     }
-  }, [vendorId, selectedVendorId]);
+  }, [vendorId, fetchVendorId]);
 
   const {
     data: equipment,
     isLoading: equipmentLoading,
     error: equipmentError,
-  } = useVendorEquipment(selectedVendorId || vendorId, params.id);
+  } = useVendorEquipment(fetchVendorId, params.id);
   const updateEquipmentMutation = useUpdateVendorEquipment();
 
   const vendorOptions = vendors.map((v) => ({ value: v.id, label: v.name }));
@@ -189,11 +194,12 @@ export default function EditEquipmentPage() {
   };
 
   const onSubmit = (data: EquipmentFormData) => {
-    if (!selectedVendorId) return;
+    const effectiveVendorId = selectedVendorId || vendorId;
+    if (!effectiveVendorId) return;
 
     updateEquipmentMutation.mutate(
       {
-        vendorId: selectedVendorId,
+        vendorId: effectiveVendorId,
         equipmentId: params.id,
         data: {
           ...data,
@@ -205,7 +211,7 @@ export default function EditEquipmentPage() {
       },
       {
         onSuccess: () => {
-          router.push(`/equipments/${params.id}`);
+          router.push("/vendors");
         },
       },
     );
@@ -461,7 +467,7 @@ export default function EditEquipmentPage() {
           <div className="flex justify-end gap-3 p-4 border-t border-slate-100">
             <button
               type="button"
-              onClick={() => router.push(`/equipments/${params.id}`)}
+              onClick={() => router.push("/vendors")}
               className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium text-sm"
             >
               Cancel

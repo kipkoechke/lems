@@ -33,6 +33,13 @@ warn()    { echo -e "${YELLOW}   WARN:${NC} $*"; }
 die()     { echo -e "${RED}${BOLD}   ERROR:${NC} $*" >&2; exit 1; }
 section() { echo ""; echo -e "${BOLD}━━━ $* ━━━${NC}"; }
 
+# ── Privilege helper: use sudo when not root ──────────────────────────────────
+SUDO=""
+if [ "$(id -u)" -ne 0 ]; then
+  SUDO="sudo"
+  command -v sudo &>/dev/null || die "Not running as root and 'sudo' not found. Run as root or install sudo."
+fi
+
 # ── Configuration ─────────────────────────────────────────────────────────────
 DOMAIN="portal.vems.co.ke"
 DEPLOY_PATH="${DEPLOY_PATH:-/opt/lems}"
@@ -50,26 +57,25 @@ check_and_install_prereqs() {
   # ── git ──────────────────────────────────────────────
   if ! command -v git &>/dev/null; then
     log "Installing git..."
-    apt-get update -qq && apt-get install -y -qq git
+    $SUDO apt-get update -qq && $SUDO apt-get install -y -qq git
   else
     info "git: $(git --version)"
   fi
 
-  # ── curl (needed for verification step) ─────────────
+  # ── curl ─────────────────────────────────────────────
   if ! command -v curl &>/dev/null; then
     log "Installing curl..."
-    apt-get update -qq && apt-get install -y -qq curl
+    $SUDO apt-get update -qq && $SUDO apt-get install -y -qq curl
   fi
 
   # ── Docker ───────────────────────────────────────────
   if ! command -v docker &>/dev/null; then
     log "Docker not found — installing via get.docker.com..."
-    curl -fsSL https://get.docker.com | sh
-    systemctl enable --now docker
+    curl -fsSL https://get.docker.com | $SUDO sh
+    $SUDO systemctl enable --now docker
     info "Docker installed: $(docker --version)"
-    # Add current (non-root) user to docker group if running via sudo
     if [ -n "${SUDO_USER:-}" ]; then
-      usermod -aG docker "$SUDO_USER"
+      $SUDO usermod -aG docker "$SUDO_USER"
       warn "Added $SUDO_USER to the docker group. A re-login is needed for non-sudo docker use."
     fi
   else
@@ -79,8 +85,8 @@ check_and_install_prereqs() {
   # ── Docker Compose plugin ────────────────────────────
   if ! docker compose version &>/dev/null; then
     log "Docker Compose plugin not found — installing..."
-    apt-get update -qq
-    apt-get install -y -qq docker-compose-plugin
+    $SUDO apt-get update -qq
+    $SUDO apt-get install -y -qq docker-compose-plugin
   else
     info "Docker Compose: $(docker compose version --short)"
   fi
@@ -88,8 +94,8 @@ check_and_install_prereqs() {
   # ── Nginx (host) ─────────────────────────────────────
   if ! command -v nginx &>/dev/null; then
     log "Installing nginx on host..."
-    apt-get update -qq && apt-get install -y -qq nginx
-    systemctl enable nginx
+    $SUDO apt-get update -qq && $SUDO apt-get install -y -qq nginx
+    $SUDO systemctl enable nginx
   else
     info "nginx: $(nginx -v 2>&1)"
   fi
@@ -97,9 +103,20 @@ check_and_install_prereqs() {
   # ── Certbot (host) ───────────────────────────────────
   if ! command -v certbot &>/dev/null; then
     log "Installing certbot on host..."
-    apt-get update -qq && apt-get install -y -qq certbot python3-certbot-nginx
+    $SUDO apt-get update -qq && $SUDO apt-get install -y -qq certbot python3-certbot-nginx
   else
     info "certbot: $(certbot --version 2>&1)"
+  fi
+
+  # ── Sudoers: let deploy user reload nginx without password ───────────────
+  if id deploy &>/dev/null && [ -n "$SUDO" ]; then
+    SUDOERS_FILE="/etc/sudoers.d/deploy-nginx"
+    if [ ! -f "$SUDOERS_FILE" ]; then
+      log "Granting deploy user passwordless sudo for nginx reload..."
+      echo "deploy ALL=(ALL) NOPASSWD: /usr/sbin/nginx, /bin/systemctl reload nginx, /bin/systemctl restart nginx, /usr/bin/certbot" \
+        | $SUDO tee "$SUDOERS_FILE" > /dev/null
+      $SUDO chmod 440 "$SUDOERS_FILE"
+    fi
   fi
 
   log "All prerequisites satisfied."
@@ -185,15 +202,15 @@ setup_nginx_and_ssl() {
 
   # Write the vhost with the correct port substituted
   log "Installing nginx vhost for $DOMAIN (upstream port $APP_PORT)..."
-  sed "s/__APP_PORT__/$APP_PORT/g" "$VHOST_SRC" > "$VHOST_DEST"
-  ln -sf "$VHOST_DEST" "$VHOST_LINK"
+  sed "s/__APP_PORT__/$APP_PORT/g" "$VHOST_SRC" | $SUDO tee "$VHOST_DEST" > /dev/null
+  $SUDO ln -sf "$VHOST_DEST" "$VHOST_LINK"
 
   # If cert doesn't exist yet, use a temporary HTTP-only config so nginx
   # starts cleanly before we have the SSL cert.
   if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
     log "No cert yet — starting nginx with HTTP-only config for ACME challenge..."
     # Comment out the SSL server block temporarily
-    cat > "$VHOST_DEST" <<HTTPONLY
+    $SUDO tee "$VHOST_DEST" > /dev/null <<HTTPONLY
 server {
     listen 80;
     listen [::]:80;
@@ -202,13 +219,13 @@ server {
     location / { return 200 'provisioning...'; add_header Content-Type text/plain; }
 }
 HTTPONLY
-    mkdir -p "$ACME_ROOT"
-    nginx -t && systemctl reload nginx || systemctl start nginx
+    $SUDO mkdir -p "$ACME_ROOT"
+    $SUDO nginx -t && ($SUDO systemctl reload nginx || $SUDO systemctl start nginx)
 
     log "Obtaining Let's Encrypt certificate..."
     STAGING_FLAG=""
     [ "${STAGING:-0}" = "1" ] && STAGING_FLAG="--staging"
-    certbot certonly --webroot -w "$ACME_ROOT" \
+    $SUDO certbot certonly --webroot -w "$ACME_ROOT" \
       $STAGING_FLAG \
       --email "$LETSENCRYPT_EMAIL" \
       --agree-tos --no-eff-email \
@@ -216,18 +233,28 @@ HTTPONLY
       -d "$DOMAIN"
 
     # Now install the real vhost with SSL
-    sed "s/__APP_PORT__/$APP_PORT/g" "$VHOST_SRC" > "$VHOST_DEST"
+    sed "s/__APP_PORT__/$APP_PORT/g" "$VHOST_SRC" | $SUDO tee "$VHOST_DEST" > /dev/null
     log "SSL cert obtained. Reloading nginx with HTTPS config..."
   else
     log "SSL certificate already exists for $DOMAIN."
   fi
 
-  nginx -t && systemctl reload nginx || systemctl start nginx
+  # Remove any blocks for this domain injected by certbot into OTHER config files.
+  log "Removing stale $DOMAIN blocks from other nginx configs (if any)..."
+  for conf_file in /etc/nginx/sites-available/*; do
+    [ "$conf_file" = "$VHOST_DEST" ] && continue
+    if grep -ql "server_name.*$DOMAIN" "$conf_file" 2>/dev/null; then
+      $SUDO python3 "$DEPLOY_PATH/scripts/fix-nginx-conflict.py" "$conf_file" "$DOMAIN"
+    fi
+  done
+
+  $SUDO nginx -t && ($SUDO systemctl reload nginx || $SUDO systemctl start nginx)
   log "Nginx configured and running."
 
   # Set up certbot auto-renewal cron if not already present
-  if ! crontab -l 2>/dev/null | grep -q "certbot renew"; then
-    (crontab -l 2>/dev/null; echo "0 3 * * * certbot renew --quiet && nginx -s reload") | crontab -
+  if ! $SUDO crontab -l 2>/dev/null | grep -q "certbot renew"; then
+    ($SUDO crontab -l 2>/dev/null; echo "0 3 * * * certbot renew --quiet && nginx -s reload") \
+      | $SUDO crontab -
     log "Certbot auto-renewal cron added (runs daily at 03:00)."
   fi
 }
