@@ -1,0 +1,29 @@
+# Dependencies / build artifacts
+node_modules
+.next
+out
+
+# Git
+.git
+.gitignore
+.github
+
+# Dev & editor
+.env*.local
+.vscode
+.idea
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs / misc
+README.md
+*.md
+
+# Docker files themselves
+Dockerfile*
+docker-compose*.yml
+nginx/
+scripts/

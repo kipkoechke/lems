@@ -1,0 +1,81 @@
+name: Deploy to portal.vems.co.ke
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:      # allow manual trigger from GitHub UI
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false  # never cancel an in-flight deploy
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. SSH agent ─────────────────────────────────────
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # ── 3. Add server to known_hosts ─────────────────────
+      - name: Add server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ secrets.SERVER_PORT || 22 }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      # ── 4. Deploy on server ──────────────────────────────
+      - name: Deploy on remote server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT || 22 }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -p "$SERVER_PORT" "$SERVER_USER@$SERVER_HOST" bash -s << 'REMOTE_SCRIPT'
+            set -euo pipefail
+
+            echo "==> Navigating to deploy directory..."
+            cd "$DEPLOY_PATH"
+
+            echo "==> Pulling latest code from main..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "==> Building updated Docker image (no cache)..."
+            docker compose build --no-cache app
+
+            echo "==> Restarting app container with zero downtime..."
+            docker compose up -d --no-deps --remove-orphans app
+
+            echo "==> Reloading nginx..."
+            docker compose exec -T nginx nginx -s reload || true
+
+            echo "==> Pruning unused Docker images..."
+            docker image prune -f
+
+            echo "==> Deployment complete!"
+          REMOTE_SCRIPT
+
+      # ── 5. Health check ──────────────────────────────────
+      - name: Verify site is reachable
+        run: |
+          sleep 15
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 30 --retry 5 --retry-delay 5 \
+            https://portal.vems.co.ke)
+          echo "HTTP status: $HTTP_STATUS"
+          if [[ "$HTTP_STATUS" != "200" && "$HTTP_STATUS" != "301" && "$HTTP_STATUS" != "302" ]]; then
+            echo "::error::Site returned unexpected status $HTTP_STATUS"
+            exit 1
+          fi
+          echo "Site is up and responding correctly."
