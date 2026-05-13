@@ -15,6 +15,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { useCurrentUser } from "@/hooks/useAuth";
+import { useVendors } from "@/features/vendors/useVendors";
 import {
   useVendorEquipments,
   useDeleteVendorEquipment,
@@ -62,8 +63,13 @@ export default function EquipmentsPage() {
   const router = useRouter();
   const user = useCurrentUser();
 
-  // Get vendor ID from the current user's entity
-  const vendorId = user?.entity?.id || "";
+  const isVendorUser = user?.role === "vendor";
+
+  // For vendor users use their entity ID; admins select from dropdown
+  const [selectedVendorId, setSelectedVendorId] = useState("");
+  const vendorId = isVendorUser ? user?.entity?.id || "" : selectedVendorId;
+
+  const { vendors } = useVendors();
 
   // State
   const [page, setPage] = useState(1);
@@ -131,13 +137,37 @@ export default function EquipmentsPage() {
     );
   };
 
-  if (!vendorId) {
+  if (!isVendorUser && !vendorId) {
     return (
       <div className="min-h-screen bg-slate-50 p-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
-            <div className="text-red-500 text-xl mb-2">⚠️</div>
-            <p className="text-slate-600">Vendor information not available</p>
+        <div className="max-w-7xl mx-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <FaCog className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">Equipment</h1>
+              <p className="text-sm text-slate-500">
+                Select a vendor to view equipment
+              </p>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg border border-slate-200 p-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Select Vendor
+            </label>
+            <select
+              value={selectedVendorId}
+              onChange={(e) => setSelectedVendorId(e.target.value)}
+              className="w-full sm:w-80 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            >
+              <option value="">-- Choose a vendor --</option>
+              {vendors?.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -204,6 +234,24 @@ export default function EquipmentsPage() {
         {/* Filters */}
         <div className="bg-white rounded-lg border border-slate-200 p-4">
           <div className="flex flex-col sm:flex-row gap-3">
+            {/* Vendor selector for non-vendor users */}
+            {!isVendorUser && (
+              <select
+                value={selectedVendorId}
+                onChange={(e) => {
+                  setSelectedVendorId(e.target.value);
+                  setPage(1);
+                }}
+                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[180px]"
+              >
+                <option value="">-- Select Vendor --</option>
+                {vendors?.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name}
+                  </option>
+                ))}
+              </select>
+            )}
             {/* Search */}
             <div className="flex-1 relative">
               <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />

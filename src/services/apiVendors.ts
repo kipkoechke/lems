@@ -4,11 +4,25 @@ export interface Vendor {
   id: string;
   name: string;
   code: string;
-  is_active: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
+  email?: string;
+  phone?: string;
+  is_active: boolean | string;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
   equipments?: VendorEquipment[];
+}
+
+interface PaginatedVendorsResponse {
+  data: Vendor[];
+  pagination: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number;
+    to: number;
+  };
 }
 
 export interface VendorEquipment {
@@ -134,13 +148,13 @@ export interface ContractFilterParams {
 
 // Vendor CRUD operations
 export const getVendors = async (): Promise<Vendor[]> => {
-  const response = await axios.get<Vendor[]>("/vendors");
-  return response.data;
+  const response = await axios.get<PaginatedVendorsResponse>("/vendors");
+  return response.data.data;
 };
 
 export const getVendor = async (vendorCode: string): Promise<Vendor> => {
-  const response = await axios.get<Vendor[]>("/vendors");
-  const vendor = response.data.find((v) => v.code === vendorCode);
+  const response = await axios.get<PaginatedVendorsResponse>("/vendors");
+  const vendor = response.data.data.find((v) => v.code === vendorCode);
   if (!vendor) {
     throw new Error(`Vendor with code ${vendorCode} not found`);
   }
