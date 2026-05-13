@@ -247,9 +247,22 @@ export interface BookingsResponse {
 }
 
 export interface BookingFilters {
-  vendor_id?: string;
+  // API-spec params
+  fr_code?: string;
   facility_id?: string;
-  status?: string;
+  patient_id?: string;
+  status?: "pending_otp" | "active" | "completed" | "cancelled" | string;
+  source?: "provider_portal" | "hmis" | "standalone" | string;
+  from?: string; // Y-m-d
+  to?: string; // Y-m-d
+  search?: string;
+  sort_by?: "booking_number" | "status" | "created_at" | string;
+  sort_order?: "asc" | "desc";
+  per_page?: number;
+  page?: number;
+  finance_approved?: boolean;
+  // Legacy / internal params kept for compatibility
+  vendor_id?: string;
   booking_status?: string;
   approval_status?: string;
   service_completion?: string;
@@ -257,8 +270,4 @@ export interface BookingFilters {
   county_id?: string;
   sub_county_id?: string;
   code?: string;
-  start_date?: string;
-  end_date?: string;
-  page?: number;
-  per_page?: number;
 }

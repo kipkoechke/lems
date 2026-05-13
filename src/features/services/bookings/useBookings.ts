@@ -1,5 +1,9 @@
-import { BookingFilters, getBookings } from "@/services/apiBooking";
 import { useQuery } from "@tanstack/react-query";
+import {
+  BookingFilters,
+  getBookings,
+  getBookingsWithPagination,
+} from "@/services/apiBooking";
 
 export function useBookings(filters: BookingFilters = {}) {
   const {
@@ -13,4 +17,11 @@ export function useBookings(filters: BookingFilters = {}) {
   });
 
   return { isLoading, bookings, error, refetchBookings };
+}
+
+export function useBookingsWithPagination(filters: BookingFilters = {}) {
+  return useQuery({
+    queryKey: ["bookings-paginated", filters],
+    queryFn: () => getBookingsWithPagination(filters),
+  });
 }

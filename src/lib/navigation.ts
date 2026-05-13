@@ -13,12 +13,12 @@ interface NavItem {
 
 // Navigation items based on user roles and permissions
 const NAV_ITEMS: NavItem[] = [
-  // Dashboard - available to all authenticated users
+  // Dashboard - first item for all authenticated users
   {
     label: "Dashboard",
-    href: "/",
-    permission: Permission.VIEW_DASHBOARD,
-    description: "Overview and quick actions",
+    href: "/trends",
+    permission: Permission.VIEW_TRENDS,
+    description: "Analytics and trends",
   },
 
   // System Admin specific items
@@ -116,13 +116,6 @@ const NAV_ITEMS: NavItem[] = [
   //   permission: Permission.VIEW_REPORTS,
   //   description: "View system reports",
   // },
-  {
-    label: "Trends",
-    href: "/trends",
-    permission: Permission.VIEW_TRENDS,
-    description: "Analytics and trends",
-  },
-
   // Payments - for Facility Admin and Vendor
   {
     label: "Payments",
