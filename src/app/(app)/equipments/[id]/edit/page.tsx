@@ -9,11 +9,13 @@ import { FaCog } from "react-icons/fa";
 import BackButton from "@/components/common/BackButton";
 import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { useCurrentUser } from "@/hooks/useAuth";
 import {
   useVendorEquipment,
   useUpdateVendorEquipment,
 } from "@/features/vendors/useVendorEquipments";
+import { useVendors } from "@/features/vendors/useVendors";
 
 const equipmentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -103,12 +105,24 @@ export default function EditEquipmentPage() {
   const user = useCurrentUser();
   const vendorId = user?.entity?.id || "";
 
+  const { vendors, isLoading: vendorsLoading } = useVendors();
+  const [selectedVendorId, setSelectedVendorId] = useState<string>(vendorId);
+
+  // Keep selectedVendorId in sync when user entity loads
+  useEffect(() => {
+    if (vendorId && !selectedVendorId) {
+      setSelectedVendorId(vendorId);
+    }
+  }, [vendorId, selectedVendorId]);
+
   const {
     data: equipment,
     isLoading: equipmentLoading,
     error: equipmentError,
-  } = useVendorEquipment(vendorId, params.id);
+  } = useVendorEquipment(selectedVendorId || vendorId, params.id);
   const updateEquipmentMutation = useUpdateVendorEquipment();
+
+  const vendorOptions = vendors.map((v) => ({ value: v.id, label: v.name }));
 
   // Specifications state
   const [specifications, setSpecifications] = useState<Record<string, string>>(
@@ -175,11 +189,11 @@ export default function EditEquipmentPage() {
   };
 
   const onSubmit = (data: EquipmentFormData) => {
-    if (!vendorId) return;
+    if (!selectedVendorId) return;
 
     updateEquipmentMutation.mutate(
       {
-        vendorId,
+        vendorId: selectedVendorId,
         equipmentId: params.id,
         data: {
           ...data,
@@ -262,6 +276,18 @@ export default function EditEquipmentPage() {
           className="bg-white rounded-lg border border-slate-200"
         >
           <div className="p-4 space-y-4">
+            <div className="mb-4">
+              <SearchableSelect
+                label="Vendor"
+                required
+                options={vendorOptions}
+                value={selectedVendorId}
+                onChange={setSelectedVendorId}
+                placeholder="Select vendor"
+                isLoading={vendorsLoading}
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InputField
                 label="Name"

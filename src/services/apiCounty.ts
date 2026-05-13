@@ -21,20 +21,18 @@ export interface Ward {
 }
 
 export const getCounties = async (): Promise<County[]> => {
-  const response = await axios.get("/places");
+  const response = await axios.get("/places/counties");
   return response.data;
 };
 
 export const getSubCounties = async (
   county_code: string,
 ): Promise<SubCounty[]> => {
-  const response = await axios.get(`/places?county_code=${county_code}`);
+  const response = await axios.get(`/places/counties/${county_code}/sub-counties`);
   return response.data;
 };
 
 export const getWards = async (sub_county_code: string): Promise<Ward[]> => {
-  const response = await axios.get(
-    `/places?sub_county_code=${sub_county_code}`,
-  );
+  const response = await axios.get(`/places/sub-counties/${sub_county_code}/wards`);
   return response.data;
 };
