@@ -239,6 +239,15 @@ HTTPONLY
     log "SSL certificate already exists for $DOMAIN."
   fi
 
+  # Remove any blocks for this domain injected by certbot into OTHER config files.
+  log "Removing stale $DOMAIN blocks from other nginx configs (if any)..."
+  for conf_file in /etc/nginx/sites-available/*; do
+    [ "$conf_file" = "$VHOST_DEST" ] && continue
+    if grep -ql "server_name.*$DOMAIN" "$conf_file" 2>/dev/null; then
+      $SUDO python3 "$DEPLOY_PATH/scripts/fix-nginx-conflict.py" "$conf_file" "$DOMAIN"
+    fi
+  done
+
   $SUDO nginx -t && ($SUDO systemctl reload nginx || $SUDO systemctl start nginx)
   log "Nginx configured and running."
 

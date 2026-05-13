@@ -38,8 +38,21 @@ DOMAIN="portal.vems.co.ke"
 VHOST_SRC="$(pwd)/nginx/host-vhost.conf"
 VHOST_DEST="/etc/nginx/sites-available/$DOMAIN"
 if [ -f "$VHOST_SRC" ] && command -v nginx &>/dev/null; then
+  # Write our vhost (correct syntax, no http2-on directive)
   sed "s/__APP_PORT__/$APP_PORT/g" "$VHOST_SRC" | sudo tee "$VHOST_DEST" > /dev/null
   sudo ln -sf "$VHOST_DEST" "/etc/nginx/sites-enabled/$DOMAIN"
+
+  # Remove any portal.vems.co.ke blocks certbot injected into OTHER nginx files.
+  # This prevents "conflicting server name" warnings that cause nginx to ignore
+  # our dedicated vhost and proxy to the wrong backend.
+  echo "==> Removing stale portal blocks from other nginx configs (if any)..."
+  for conf_file in /etc/nginx/sites-available/*; do
+    [ "$conf_file" = "$VHOST_DEST" ] && continue
+    if grep -ql "server_name.*$DOMAIN" "$conf_file" 2>/dev/null; then
+      sudo python3 "$(pwd)/scripts/fix-nginx-conflict.py" "$conf_file" "$DOMAIN"
+    fi
+  done
+
   sudo nginx -t && sudo nginx -s reload
   echo "==> Host nginx reloaded."
 fi
