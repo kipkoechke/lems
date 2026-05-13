@@ -66,7 +66,8 @@ export const getBooking = async (id: string): Promise<Booking> => {
 };
 
 // Get bookings list
-export const getBookings = async (  filters: BookingFilters = {},
+export const getBookings = async (
+  filters: BookingFilters = {},
 ): Promise<Booking[]> => {
   const response = await axios.get<BookingsResponse>("/bookings", {
     params: filters,
