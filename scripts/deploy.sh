@@ -29,15 +29,20 @@ docker compose build --no-cache app
 
 # ── Restart app (rolling - no nginx restart needed) ──────
 echo "==> Bringing up updated app container..."
-docker compose up -d --no-deps --remove-orphans app
+docker compose up -d --remove-orphans app
 
-# ── Reload nginx ──────────────────────────────────────────
-echo "==> Reloading Nginx configuration..."
-docker compose exec -T nginx nginx -s reload || true
-
-# ── Ensure other services are up ─────────────────────────
-echo "==> Ensuring all services are running..."
-docker compose up -d --remove-orphans
+# ── Update host nginx vhost from repo and reload ──────
+echo "==> Updating nginx vhost config..."
+APP_PORT="${APP_PORT:-3010}"
+DOMAIN="portal.vems.co.ke"
+VHOST_SRC="$(pwd)/nginx/host-vhost.conf"
+VHOST_DEST="/etc/nginx/sites-available/$DOMAIN"
+if [ -f "$VHOST_SRC" ] && command -v nginx &>/dev/null; then
+  sed "s/__APP_PORT__/$APP_PORT/g" "$VHOST_SRC" | sudo tee "$VHOST_DEST" > /dev/null
+  sudo ln -sf "$VHOST_DEST" "/etc/nginx/sites-enabled/$DOMAIN"
+  sudo nginx -t && sudo nginx -s reload
+  echo "==> Host nginx reloaded."
+fi
 
 # ── Prune old images ──────────────────────────────────────
 echo "==> Pruning dangling images..."
