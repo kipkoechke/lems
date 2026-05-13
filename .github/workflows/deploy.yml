@@ -41,10 +41,13 @@ jobs:
           SERVER_PORT: ${{ secrets.SERVER_PORT || 22 }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
-          ssh -p "$SERVER_PORT" "$SERVER_USER@$SERVER_HOST" bash -s << 'REMOTE_SCRIPT'
+          # Pass DEPLOY_PATH explicitly via `env` so it is available
+          # on the remote side (single-quoted heredoc is sent verbatim).
+          ssh -p "$SERVER_PORT" "$SERVER_USER@$SERVER_HOST" \
+            "DEPLOY_PATH='$DEPLOY_PATH' bash -s" << 'REMOTE_SCRIPT'
             set -euo pipefail
 
-            echo "==> Navigating to deploy directory..."
+            echo "==> Navigating to $DEPLOY_PATH ..."
             cd "$DEPLOY_PATH"
 
             echo "==> Pulling latest code from main..."
