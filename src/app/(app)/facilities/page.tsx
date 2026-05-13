@@ -338,7 +338,7 @@ function FacilitiesContent() {
                       selectedCounty ? "text-gray-900" : "text-gray-500"
                     }`}
                   >
-                    {counties?.find((c) => c.code === selectedCounty)?.name ||
+                    {counties?.find((c) => c.id === selectedCounty)?.name ||
                       "All Counties"}
                   </span>
                   <FaChevronDown
@@ -382,7 +382,7 @@ function FacilitiesContent() {
                             key={county.id}
                             className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
                             onClick={() => {
-                              handleCountyChange(county.code);
+                              handleCountyChange(county.id);
                               setIsCountyDropdownOpen(false);
                               setCountySearch("");
                             }}
@@ -431,7 +431,7 @@ function FacilitiesContent() {
                   >
                     {!selectedCounty
                       ? "Select county first..."
-                      : subCounties?.find((s) => s.code === selectedSubCounty)
+                      : subCounties?.find((s) => s.id === selectedSubCounty)
                           ?.name || "All Sub Counties"}
                   </span>
                   <FaChevronDown
@@ -475,7 +475,7 @@ function FacilitiesContent() {
                             key={subCounty.id}
                             className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
                             onClick={() => {
-                              handleSubCountyChange(subCounty.code);
+                              handleSubCountyChange(subCounty.id);
                               setIsSubCountyDropdownOpen(false);
                               setSubCountySearch("");
                             }}

@@ -1,25 +1,8 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useCurrentUserWithLoading } from "@/hooks/useAuth";
-import { RoleBasedDashboard } from "@/components/RoleBasedDashboard";
-import UserInfo from "@/components/UserInfo";
-import ProceedToTests from "@/components/ProceedToTests";
-import ServiceInProgress from "@/components/ServiceInProgress";
-import {
-  goToNextStep,
-  selectFacility,
-  selectPaymentMode,
-  setPatient,
-} from "@/context/workflowSlice";
-import PatientConsent from "@/features/patients/PatientConsent";
-import PatientRegistration from "@/features/patients/PatientRegistration";
-import ServiceFulfillment from "@/features/services/fulfillments/ServiceFulfillment";
-import ServiceRecommendation from "@/features/services/recommendations/ServiceRecommendation";
-import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
-import { Facility } from "@/services/apiFacility";
-import { Patient } from "@/services/apiPatient";
+export default function HomePage() {
+  redirect("/trends");
+}
 
 export default function HomePage() {
   const router = useRouter();

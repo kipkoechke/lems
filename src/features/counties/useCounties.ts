@@ -14,29 +14,29 @@ export function useCounties() {
   return { isLoading, counties, error };
 }
 
-export function useSubCounties(county_code: string) {
+export function useSubCounties(county_id: string) {
   const {
     isLoading,
     data: subCounties = [],
     error,
   } = useQuery({
-    queryKey: ["sub-counties", county_code],
-    queryFn: () => getSubCounties(county_code),
-    enabled: !!county_code, // Only fetch if county_code is provided
+    queryKey: ["sub-counties", county_id],
+    queryFn: () => getSubCounties(county_id),
+    enabled: !!county_id, // Only fetch if county_id is provided
   });
 
   return { isLoading, subCounties, error };
 }
 
-export function useWards(sub_county_code: string) {
+export function useWards(sub_county_id: string) {
   const {
     isLoading,
     data: wards = [],
     error,
   } = useQuery({
-    queryKey: ["wards", sub_county_code],
-    queryFn: () => getWards(sub_county_code),
-    enabled: !!sub_county_code, // Only fetch if sub_county_code is provided
+    queryKey: ["wards", sub_county_id],
+    queryFn: () => getWards(sub_county_id),
+    enabled: !!sub_county_id, // Only fetch if sub_county_id is provided
   });
 
   return { isLoading, wards, error };

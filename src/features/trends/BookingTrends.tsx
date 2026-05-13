@@ -477,7 +477,7 @@ const BookingTrends: React.FC = () => {
                           }
                         >
                           {counties?.find(
-                            (c) => c.code === tempFilters.county_code,
+                            (c) => c.id === tempFilters.county_code,
                           )?.name || "All Counties"}
                         </span>
                         <FaChevronDown
@@ -525,7 +525,7 @@ const BookingTrends: React.FC = () => {
                                   onClick={() => {
                                     handleFilterChange(
                                       "county_code",
-                                      county.code,
+                                      county.id,
                                     );
                                     setIsCountyDropdownOpen(false);
                                     setCountySearch("");
@@ -1106,7 +1106,7 @@ const BookingTrends: React.FC = () => {
                                 ? "Select county first"
                                 : subCounties?.find(
                                     (s) =>
-                                      s.code === tempFilters.sub_county_code,
+                                      s.id === tempFilters.sub_county_code,
                                   )?.name || "All Sub Counties"}
                             </span>
                             <FaChevronDown
@@ -1156,7 +1156,7 @@ const BookingTrends: React.FC = () => {
                                         onClick={() => {
                                           handleFilterChange(
                                             "sub_county_code",
-                                            subCounty.code,
+                                            subCounty.id,
                                           );
                                           setIsSubCountyDropdownOpen(false);
                                           setSubCountySearch("");

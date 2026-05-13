@@ -69,7 +69,7 @@ export default function NewFacilityPage() {
         try {
           const county = counties.find((c) => c.id === selectedCounty);
           if (county) {
-            const data = await getSubCounties(county.code);
+            const data = await getSubCounties(county.id);
             setSubCounties(data);
           }
           // Reset dependent fields
@@ -101,7 +101,7 @@ export default function NewFacilityPage() {
             (sc) => sc.id === selectedSubCounty
           );
           if (subCounty) {
-            const data = await getWards(subCounty.code);
+            const data = await getWards(subCounty.id);
             setWards(data);
           }
           // Reset ward field
