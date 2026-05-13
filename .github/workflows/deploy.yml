@@ -40,21 +40,41 @@ jobs:
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_PORT: ${{ secrets.SERVER_PORT || 22 }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          # Build repo URL from built-in GitHub context — no secret needed
+          REPO_URL: https://github.com/${{ github.repository }}.git
+          LETSENCRYPT_EMAIL: ${{ secrets.LETSENCRYPT_EMAIL || 'admin@vems.co.ke' }}
         run: |
-          ssh -p "$SERVER_PORT" "$SERVER_USER@$SERVER_HOST" bash -s << 'REMOTE_SCRIPT'
+          # All variables are expanded by the runner before being sent over SSH.
+          # The remote bash receives them as environment variables.
+          ssh -p "$SERVER_PORT" "$SERVER_USER@$SERVER_HOST" \
+            env DEPLOY_PATH="$DEPLOY_PATH" \
+                REPO_URL="$REPO_URL" \
+                LETSENCRYPT_EMAIL="$LETSENCRYPT_EMAIL" \
+            bash -s << 'REMOTE_SCRIPT'
             set -euo pipefail
 
-            echo "==> Navigating to deploy directory..."
-            cd "$DEPLOY_PATH"
+            # ── First-time bootstrap: clone repo & init SSL ───────────
+            if [ ! -d "$DEPLOY_PATH/.git" ]; then
+              echo "==> First deploy — cloning repository..."
+              mkdir -p "$DEPLOY_PATH"
+              git clone "$REPO_URL" "$DEPLOY_PATH"
+              echo "==> Running full server setup (SSL, Docker, Nginx)..."
+              cd "$DEPLOY_PATH"
+              bash scripts/server-setup.sh
+              echo "==> Initial setup complete!"
+              exit 0
+            fi
 
+            # ── Subsequent deploys: pull & restart ────────────────────
             echo "==> Pulling latest code from main..."
+            cd "$DEPLOY_PATH"
             git fetch origin main
             git reset --hard origin/main
 
             echo "==> Building updated Docker image (no cache)..."
             docker compose build --no-cache app
 
-            echo "==> Restarting app container with zero downtime..."
+            echo "==> Restarting app container..."
             docker compose up -d --no-deps --remove-orphans app
 
             echo "==> Reloading nginx..."
