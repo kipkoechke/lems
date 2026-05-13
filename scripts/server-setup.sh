@@ -18,6 +18,7 @@
 # Environment variables (all optional — script will prompt if missing):
 #   REPO_URL            Git clone URL of this repo
 #   DEPLOY_PATH         Where to deploy on disk  (default: /opt/lems)
+#   APP_PORT            Host port the Next.js container binds to (default: 3010)
 #   LETSENCRYPT_EMAIL   Email for cert expiry notices (default: admin@vems.co.ke)
 #   STAGING             Set to 1 to use LE staging (cert not browser-trusted)
 # =============================================================================
@@ -35,6 +36,7 @@ section() { echo ""; echo -e "${BOLD}━━━ $* ━━━${NC}"; }
 # ── Configuration ─────────────────────────────────────────────────────────────
 DOMAIN="portal.vems.co.ke"
 DEPLOY_PATH="${DEPLOY_PATH:-/opt/lems}"
+APP_PORT="${APP_PORT:-3010}"
 LETSENCRYPT_EMAIL="${LETSENCRYPT_EMAIL:-admin@vems.co.ke}"
 STAGING="${STAGING:-0}"
 REPO_URL="${REPO_URL:-}"
@@ -81,6 +83,23 @@ check_and_install_prereqs() {
     apt-get install -y -qq docker-compose-plugin
   else
     info "Docker Compose: $(docker compose version --short)"
+  fi
+
+  # ── Nginx (host) ─────────────────────────────────────
+  if ! command -v nginx &>/dev/null; then
+    log "Installing nginx on host..."
+    apt-get update -qq && apt-get install -y -qq nginx
+    systemctl enable nginx
+  else
+    info "nginx: $(nginx -v 2>&1)"
+  fi
+
+  # ── Certbot (host) ───────────────────────────────────
+  if ! command -v certbot &>/dev/null; then
+    log "Installing certbot on host..."
+    apt-get update -qq && apt-get install -y -qq certbot python3-certbot-nginx
+  else
+    info "certbot: $(certbot --version 2>&1)"
   fi
 
   log "All prerequisites satisfied."
@@ -153,13 +172,64 @@ EOF
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 4. SSL certificate bootstrap
+# 4. Configure host nginx vhost & obtain SSL cert
 # ─────────────────────────────────────────────────────────────────────────────
-bootstrap_ssl() {
-  section "SSL Certificate (Let's Encrypt)"
+setup_nginx_and_ssl() {
+  section "Nginx vhost & SSL Certificate"
   cd "$DEPLOY_PATH"
-  export LETSENCRYPT_EMAIL STAGING
-  bash scripts/init-letsencrypt.sh
+
+  local VHOST_SRC="$DEPLOY_PATH/nginx/host-vhost.conf"
+  local VHOST_DEST="/etc/nginx/sites-available/$DOMAIN"
+  local VHOST_LINK="/etc/nginx/sites-enabled/$DOMAIN"
+  local ACME_ROOT="/var/www/certbot"
+
+  # Write the vhost with the correct port substituted
+  log "Installing nginx vhost for $DOMAIN (upstream port $APP_PORT)..."
+  sed "s/__APP_PORT__/$APP_PORT/g" "$VHOST_SRC" > "$VHOST_DEST"
+  ln -sf "$VHOST_DEST" "$VHOST_LINK"
+
+  # If cert doesn't exist yet, use a temporary HTTP-only config so nginx
+  # starts cleanly before we have the SSL cert.
+  if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+    log "No cert yet — starting nginx with HTTP-only config for ACME challenge..."
+    # Comment out the SSL server block temporarily
+    cat > "$VHOST_DEST" <<HTTPONLY
+server {
+    listen 80;
+    listen [::]:80;
+    server_name $DOMAIN;
+    location /.well-known/acme-challenge/ { root $ACME_ROOT; }
+    location / { return 200 'provisioning...'; add_header Content-Type text/plain; }
+}
+HTTPONLY
+    mkdir -p "$ACME_ROOT"
+    nginx -t && systemctl reload nginx || systemctl start nginx
+
+    log "Obtaining Let's Encrypt certificate..."
+    STAGING_FLAG=""
+    [ "${STAGING:-0}" = "1" ] && STAGING_FLAG="--staging"
+    certbot certonly --webroot -w "$ACME_ROOT" \
+      $STAGING_FLAG \
+      --email "$LETSENCRYPT_EMAIL" \
+      --agree-tos --no-eff-email \
+      --non-interactive \
+      -d "$DOMAIN"
+
+    # Now install the real vhost with SSL
+    sed "s/__APP_PORT__/$APP_PORT/g" "$VHOST_SRC" > "$VHOST_DEST"
+    log "SSL cert obtained. Reloading nginx with HTTPS config..."
+  else
+    log "SSL certificate already exists for $DOMAIN."
+  fi
+
+  nginx -t && systemctl reload nginx || systemctl start nginx
+  log "Nginx configured and running."
+
+  # Set up certbot auto-renewal cron if not already present
+  if ! crontab -l 2>/dev/null | grep -q "certbot renew"; then
+    (crontab -l 2>/dev/null; echo "0 3 * * * certbot renew --quiet && nginx -s reload") | crontab -
+    log "Certbot auto-renewal cron added (runs daily at 03:00)."
+  fi
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -224,7 +294,7 @@ print_summary() {
   echo -e "    View logs:      docker compose -C $DEPLOY_PATH logs -f"
   echo -e "    Restart app:    docker compose -C $DEPLOY_PATH restart app"
   echo -e "    Manual update:  $DEPLOY_PATH/scripts/deploy.sh"
-  echo -e "    Force SSL renew: docker compose -C $DEPLOY_PATH run --rm certbot renew --force-renewal"
+  echo -e "    Force SSL renew: certbot renew --force-renewal && nginx -s reload"
   echo ""
   echo -e "  ${BOLD}CI/CD:${NC} Every push to ${BOLD}main${NC} deploys automatically via GitHub Actions."
   echo -e "         Required secrets: SSH_PRIVATE_KEY, SERVER_HOST, SERVER_USER, DEPLOY_PATH"
@@ -249,7 +319,7 @@ main() {
   check_and_install_prereqs
   setup_repo
   setup_env
-  bootstrap_ssl
+  setup_nginx_and_ssl
   start_stack
   smoke_test
   print_summary
