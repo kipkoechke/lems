@@ -189,11 +189,12 @@ export default function EditEquipmentPage() {
   };
 
   const onSubmit = (data: EquipmentFormData) => {
-    if (!selectedVendorId) return;
+    const effectiveVendorId = selectedVendorId || vendorId;
+    if (!effectiveVendorId) return;
 
     updateEquipmentMutation.mutate(
       {
-        vendorId: selectedVendorId,
+        vendorId: effectiveVendorId,
         equipmentId: params.id,
         data: {
           ...data,
@@ -205,7 +206,7 @@ export default function EditEquipmentPage() {
       },
       {
         onSuccess: () => {
-          router.push(`/equipments/${params.id}`);
+          router.push("/vendors");
         },
       },
     );
@@ -461,7 +462,7 @@ export default function EditEquipmentPage() {
           <div className="flex justify-end gap-3 p-4 border-t border-slate-100">
             <button
               type="button"
-              onClick={() => router.push(`/equipments/${params.id}`)}
+              onClick={() => router.push("/vendors")}
               className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium text-sm"
             >
               Cancel
