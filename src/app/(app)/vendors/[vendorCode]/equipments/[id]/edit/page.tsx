@@ -117,11 +117,12 @@ export default function EditVendorEquipmentPage() {
 
   const vendorOptions = vendors.map((v) => ({ value: v.id, label: v.name }));
 
+  // Always fetch equipment from the original vendor (URL param) — selectedVendorId is only used on submit
   const {
     data: equipment,
     isLoading: equipmentLoading,
     error: equipmentError,
-  } = useVendorEquipment(selectedVendorId || vendor?.id || "", equipmentId);
+  } = useVendorEquipment(vendor?.id || "", equipmentId);
   const updateEquipmentMutation = useUpdateVendorEquipment();
 
   // Specifications state
@@ -193,6 +194,9 @@ export default function EditVendorEquipmentPage() {
     const vendorId = selectedVendorId || vendor?.id;
     if (!vendorId || !equipmentId) return;
 
+    const targetVendor = vendors.find((v) => v.id === vendorId);
+    const targetVendorCode = targetVendor?.code || vendorCode;
+
     updateEquipmentMutation.mutate(
       {
         vendorId,
@@ -207,7 +211,7 @@ export default function EditVendorEquipmentPage() {
       },
       {
         onSuccess: () => {
-          router.push(`/vendors/${vendorCode}/equipments/${equipmentId}`);
+          router.push(`/vendors/${targetVendorCode}/equipments/${equipmentId}`);
         },
       },
     );
