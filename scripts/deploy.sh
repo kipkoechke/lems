@@ -31,10 +31,20 @@ docker compose build --no-cache app
 echo "==> Bringing up updated app container..."
 docker compose up -d --remove-orphans app
 
+# ── Wait for healthy ──────────────────────────────────────
+echo "==> Waiting for app to be healthy (up to 2 min)..."
+ATTEMPTS=0
+until docker compose ps app | grep -q "healthy" || [ $ATTEMPTS -ge 12 ]; do
+  sleep 10; ATTEMPTS=$((ATTEMPTS + 1))
+  echo "    ... waiting (${ATTEMPTS}/12)"
+done
+docker compose ps app
+
 # ── Update host nginx vhost from repo and reload ──────
 echo "==> Updating nginx vhost config..."
 APP_PORT="${APP_PORT:-3010}"
 DOMAIN="portal.vems.co.ke"
+CERT_PATH="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
 VHOST_SRC="$(pwd)/nginx/host-vhost.conf"
 VHOST_DEST="/etc/nginx/sites-available/$DOMAIN"
 if [ -f "$VHOST_SRC" ] && command -v nginx &>/dev/null; then
@@ -43,8 +53,6 @@ if [ -f "$VHOST_SRC" ] && command -v nginx &>/dev/null; then
   sudo ln -sf "$VHOST_DEST" "/etc/nginx/sites-enabled/$DOMAIN"
 
   # Remove any portal.vems.co.ke blocks certbot injected into OTHER nginx files.
-  # This prevents "conflicting server name" warnings that cause nginx to ignore
-  # our dedicated vhost and proxy to the wrong backend.
   echo "==> Removing stale portal blocks from other nginx configs (if any)..."
   for conf_file in /etc/nginx/sites-available/*; do
     [ "$conf_file" = "$VHOST_DEST" ] && continue
@@ -53,8 +61,15 @@ if [ -f "$VHOST_SRC" ] && command -v nginx &>/dev/null; then
     fi
   done
 
-  sudo nginx -t && sudo nginx -s reload
-  echo "==> Host nginx reloaded."
+  # Only reload if the SSL cert exists — if not, nginx -t would fail on the
+  # HTTPS block. Cert is obtained once by server-setup.sh.
+  if [ -f "$CERT_PATH" ]; then
+    sudo nginx -t && sudo nginx -s reload
+    echo "==> Host nginx reloaded."
+  else
+    echo "==> WARN: SSL cert not found at $CERT_PATH — skipping nginx reload."
+    echo "          Run scripts/server-setup.sh once to obtain the cert."
+  fi
 fi
 
 # ── Prune old images ──────────────────────────────────────

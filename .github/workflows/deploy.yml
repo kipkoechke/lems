@@ -65,35 +65,14 @@ jobs:
               exit 0
             fi
 
-            # ── Subsequent deploys: pull, build & restart ─────────────
+            # ── Subsequent deploys: pull latest then hand off to deploy.sh ──
             echo "==> Pulling latest code from main..."
             cd "$DEPLOY_PATH"
             git fetch origin main
             git reset --hard origin/main
 
-            echo "==> Building updated Docker image..."
-            docker compose build --no-cache app
-
-            echo "==> Restarting app container..."
-            docker compose up -d --remove-orphans
-
-            echo "==> Waiting for app to be healthy (up to 2 min)..."
-            ATTEMPTS=0
-            until docker compose ps app | grep -q "healthy" || [ $ATTEMPTS -ge 12 ]; do
-              sleep 10; ATTEMPTS=$((ATTEMPTS + 1))
-              echo "    ... waiting (${ATTEMPTS}/12)"
-            done
-
-            echo "==> Reloading nginx config..."
-            sudo nginx -t && sudo nginx -s reload || true
-
-            echo "==> Pruning unused Docker images..."
-            docker image prune -f
-
-            echo "==> Container status:"
-            docker compose ps
-
-            echo "==> Deployment complete!"
+            echo "==> Running deploy script..."
+            bash scripts/deploy.sh
           REMOTE_SCRIPT
 
       # ── 5. Diagnostics ───────────────────────────────────
@@ -117,11 +96,17 @@ jobs:
             echo "=== Host nginx status ==="
             systemctl is-active nginx || true
             echo ""
+            echo "=== Nginx sites-enabled ==="
+            ls -la /etc/nginx/sites-enabled/ 2>/dev/null || echo "no sites-enabled dir"
+            echo ""
+            echo "=== Portal vhost (first 20 lines) ==="
+            head -20 /etc/nginx/sites-available/portal.vems.co.ke 2>/dev/null || echo "vhost file not found"
+            echo ""
             echo "=== Nginx error log (last 20 lines) ==="
             tail -20 /var/log/nginx/error.log 2>/dev/null || echo "no error log"
             echo ""
             echo "=== SSL cert status ==="
-            certbot certificates 2>/dev/null | grep -A3 "portal.vems.co.ke" || echo "No cert found"
+            ls -la /etc/letsencrypt/live/portal.vems.co.ke/ 2>/dev/null || echo "No cert directory found"
           DIAG
 
       # ── 6. Health check ──────────────────────────────────
