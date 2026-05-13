@@ -40,7 +40,8 @@ jobs:
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_PORT: ${{ secrets.SERVER_PORT || 22 }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          REPO_URL: ${{ secrets.REPO_URL }}
+          # Build repo URL from built-in GitHub context — no secret needed
+          REPO_URL: https://github.com/${{ github.repository }}.git
           LETSENCRYPT_EMAIL: ${{ secrets.LETSENCRYPT_EMAIL || 'admin@vems.co.ke' }}
         run: |
           # All variables are expanded by the runner before being sent over SSH.
