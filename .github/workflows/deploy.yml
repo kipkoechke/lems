@@ -85,7 +85,7 @@ jobs:
             done
 
             echo "==> Reloading nginx config..."
-            docker compose exec -T nginx nginx -s reload || true
+            nginx -t && nginx -s reload || true
 
             echo "==> Pruning unused Docker images..."
             docker image prune -f
@@ -114,15 +114,14 @@ jobs:
             echo "=== App logs (last 30 lines) ==="
             docker compose logs --tail=30 app
             echo ""
-            echo "=== Nginx logs (last 20 lines) ==="
-            docker compose logs --tail=20 nginx
+            echo "=== Host nginx status ==="
+            systemctl is-active nginx || true
+            echo ""
+            echo "=== Nginx error log (last 20 lines) ==="
+            tail -20 /var/log/nginx/error.log 2>/dev/null || echo "no error log"
             echo ""
             echo "=== SSL cert status ==="
-            docker compose run --rm --no-deps --entrypoint sh certbot \
-              -c "test -f /etc/letsencrypt/live/portal.vems.co.ke/fullchain.pem \
-                  && openssl x509 -noout -dates \
-                     -in /etc/letsencrypt/live/portal.vems.co.ke/fullchain.pem \
-                  || echo 'No real cert yet (still using self-signed)'"
+            certbot certificates 2>/dev/null | grep -A3 "portal.vems.co.ke" || echo "No cert found"
           DIAG
 
       # ── 6. Health check ──────────────────────────────────
