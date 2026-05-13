@@ -36,8 +36,8 @@ fi
 
 # Reload nginx if cert exists
 if [ -f "$CERT_PATH" ]; then
-  nginx -t && nginx -s reload
-  echo "nginx reloaded with portal.vems.co.ke vhost"
+  nginx -t && systemctl restart nginx
+  echo "nginx restarted with portal.vems.co.ke vhost"
 else
   echo "WARN: cert not found at $CERT_PATH — nginx not reloaded"
 fi

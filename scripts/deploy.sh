@@ -108,11 +108,13 @@ SERVICE
   echo "    lems-nginx.service installed and enabled."
 
   # ── 4. Apply config right now ─────────────────────────────────────
+  # Use full restart (not nginx -s reload) so nginx properly reinitialises
+  # SSL SNI state for newly added or changed SSL vhosts.
   if [ -f "$CERT_PATH" ]; then
-    sudo nginx -t && sudo nginx -s reload
-    echo "==> Host nginx reloaded with portal vhost."
+    sudo nginx -t && sudo systemctl restart nginx
+    echo "==> Host nginx restarted with portal vhost."
   else
-    echo "==> WARN: cert not found at $CERT_PATH — skipping nginx reload."
+    echo "==> WARN: cert not found at $CERT_PATH — skipping nginx restart."
   fi
 fi
 
