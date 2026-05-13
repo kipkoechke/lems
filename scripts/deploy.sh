@@ -17,6 +17,24 @@ cd "$DEPLOY_DIR"
 echo "==> [$(date -u '+%Y-%m-%dT%H:%M:%SZ')] Starting deployment..."
 echo "    Deploy path: $DEPLOY_DIR"
 
+# ── Stop any containers binding to ports 80/443 ───────────
+# Containerised nginx from old compose setups auto-restart on reboot
+# and steal ports 80/443 from host nginx. Identify and remove them so
+# host nginx stays in control on every deploy AND after every reboot.
+echo "==> Checking for containers competing on ports 80 / 443..."
+CONFLICT=$(docker ps --format '{{.ID}} {{.Names}} {{.Ports}}' \
+  | grep -E '0\.0\.0\.0:(80|443)->' || true)
+if [ -n "$CONFLICT" ]; then
+  echo "    Found — stopping:"
+  echo "$CONFLICT"
+  echo "$CONFLICT" | awk '{print $1}' | xargs docker stop
+  # Disable auto-restart so they don't come back after reboot
+  echo "$CONFLICT" | awk '{print $1}' | xargs docker update --restart=no || true
+  echo "    Stopped and disabled restart on conflicting containers."
+else
+  echo "    None found."
+fi
+
 # ── Pull latest code ─────────────────────────────────────
 echo "==> Fetching latest code from origin/main..."
 git fetch origin main
@@ -49,7 +67,11 @@ VHOST_SRC="$(pwd)/nginx/host-vhost.conf"
 VHOST_DEST="/etc/nginx/sites-available/$DOMAIN"
 if [ -f "$VHOST_SRC" ] && command -v nginx &>/dev/null; then
   # Write our vhost (correct syntax, no http2-on directive)
+  # Write to BOTH sites-available (with symlink) AND conf.d (auto-loaded,
+  # no symlink needed) so the config survives even if the symlink is lost.
+  CONF_D_DEST="/etc/nginx/conf.d/$DOMAIN.conf"
   sed "s/__APP_PORT__/$APP_PORT/g" "$VHOST_SRC" | sudo tee "$VHOST_DEST" > /dev/null
+  sudo cp "$VHOST_DEST" "$CONF_D_DEST"
   sudo ln -sf "$VHOST_DEST" "/etc/nginx/sites-enabled/$DOMAIN"
 
   # Remove any portal.vems.co.ke blocks certbot injected into OTHER nginx files.
