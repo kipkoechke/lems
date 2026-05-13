@@ -129,6 +129,17 @@ export default function EditEquipmentPage() {
 
   const vendorOptions = vendors.map((v) => ({ value: v.id, label: v.name }));
 
+  // When vendor changes:
+  // - always update selectedVendorId (used at submit time)
+  // - update fetchVendorId only if equipment hasn't loaded yet, so we trigger
+  //   the fetch without resetting the form after equipment is already populated.
+  const handleVendorChange = (newVendorId: string) => {
+    setSelectedVendorId(newVendorId);
+    if (!equipment) {
+      setFetchVendorId(newVendorId);
+    }
+  };
+
   // Specifications state
   const [specifications, setSpecifications] = useState<Record<string, string>>(
     {},
@@ -288,7 +299,7 @@ export default function EditEquipmentPage() {
                 required
                 options={vendorOptions}
                 value={selectedVendorId}
-                onChange={setSelectedVendorId}
+                onChange={handleVendorChange}
                 placeholder="Select vendor"
                 isLoading={vendorsLoading}
               />
