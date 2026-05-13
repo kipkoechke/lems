@@ -31,7 +31,8 @@ const BookedServicesPage: React.FC = () => {
     });
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleString("en-US", {
       year: "numeric",
       month: "short",
@@ -170,7 +171,8 @@ const BookedServicesPage: React.FC = () => {
                                   {booking.facility?.name || "N/A"}
                                 </div>
                                 {(booking.services?.length ?? 0) > 1 &&
-                                  index < (booking.services?.length ?? 0) - 1 && (
+                                  index <
+                                    (booking.services?.length ?? 0) - 1 && (
                                     <div className="border-b border-gray-100 my-1"></div>
                                   )}
                               </div>
@@ -197,13 +199,14 @@ const BookedServicesPage: React.FC = () => {
                                       {formatCurrency(
                                         service.service?.sha_rate ||
                                           service.tariff ||
-                                          "0"
+                                          "0",
                                       )}
                                     </span>
                                   </div>
                                 </div>
                                 {(booking.services?.length ?? 0) > 1 &&
-                                  index < (booking.services?.length ?? 0) - 1 && (
+                                  index <
+                                    (booking.services?.length ?? 0) - 1 && (
                                     <div className="border-b border-gray-100 my-2"></div>
                                   )}
                               </div>
@@ -249,7 +252,7 @@ const BookedServicesPage: React.FC = () => {
                                   <span className="text-gray-500">DOB: </span>
                                   {booking.patient?.date_of_birth
                                     ? new Date(
-                                        booking.patient.date_of_birth
+                                        booking.patient.date_of_birth,
                                       ).toLocaleDateString()
                                     : "N/A"}
                                 </p>
@@ -297,10 +300,10 @@ const BookedServicesPage: React.FC = () => {
                                         parseFloat(
                                           service.service?.sha_rate ||
                                             service.tariff ||
-                                            "0"
+                                            "0",
                                         ),
-                                      0
-                                    ) || 0
+                                      0,
+                                    ) || 0,
                                   )}
                                 </p>
                               </div>

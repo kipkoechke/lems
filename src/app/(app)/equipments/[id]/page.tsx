@@ -71,7 +71,7 @@ export default function EquipmentDetailsPage() {
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined | null) => {
     if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("en-GB", {
       day: "numeric",

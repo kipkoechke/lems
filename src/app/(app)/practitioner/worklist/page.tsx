@@ -79,7 +79,8 @@ export default function PractitionerWorklistPage() {
   const summary = data?.summary;
   const pagination = data?.pagination;
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
       day: "2-digit",

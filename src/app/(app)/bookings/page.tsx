@@ -31,7 +31,7 @@ const BookingReport: React.FC = () => {
   const [approvingIds, setApprovingIds] = useState<Set<string>>(new Set());
   const [rejectingIds, setRejectingIds] = useState<Set<string>>(new Set());
   const [selectedBookings, setSelectedBookings] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   // Removed dropdownOpen state - replaced with ActionMenu
   // Removed location filters from bookings page
@@ -46,7 +46,7 @@ const BookingReport: React.FC = () => {
   // Get pending bookings from filtered bookings for selection
   const pendingBookings = useMemo(() => {
     return filteredBookings.filter(
-      (booking) => booking.approval_status === "pending"
+      (booking) => booking.approval_status === "pending",
     );
   }, [filteredBookings]);
 
@@ -61,7 +61,7 @@ const BookingReport: React.FC = () => {
         acc.all++;
         return acc;
       },
-      { all: 0, pending: 0, approved: 0, rejected: 0 }
+      { all: 0, pending: 0, approved: 0, rejected: 0 },
     );
 
     return counts;
@@ -234,7 +234,8 @@ const BookingReport: React.FC = () => {
     );
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleString("en-US", {
       year: "numeric",
       month: "short",
@@ -356,8 +357,8 @@ const BookingReport: React.FC = () => {
                   {selectedBookings.size === 0
                     ? "Select All"
                     : selectedBookings.size === pendingBookings.length
-                    ? "Deselect All"
-                    : `Select All (${selectedBookings.size} selected)`}
+                      ? "Deselect All"
+                      : `Select All (${selectedBookings.size} selected)`}
                 </button>
                 {selectedBookings.size > 0 && (
                   <span className="text-sm text-gray-500">
@@ -374,14 +375,14 @@ const BookingReport: React.FC = () => {
                     disabled={
                       isApproving ||
                       Array.from(selectedBookings).some((id) =>
-                        approvingIds.has(id)
+                        approvingIds.has(id),
                       )
                     }
                     className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded text-sm inline-flex items-center"
                   >
                     {isApproving ||
                     Array.from(selectedBookings).some((id) =>
-                      approvingIds.has(id)
+                      approvingIds.has(id),
                     ) ? (
                       <>
                         <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
@@ -399,14 +400,14 @@ const BookingReport: React.FC = () => {
                     disabled={
                       isRejecting ||
                       Array.from(selectedBookings).some((id) =>
-                        rejectingIds.has(id)
+                        rejectingIds.has(id),
                       )
                     }
                     className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 py-2 rounded text-sm inline-flex items-center"
                   >
                     {isRejecting ||
                     Array.from(selectedBookings).some((id) =>
-                      approvingIds.has(id)
+                      approvingIds.has(id),
                     ) ? (
                       <>
                         <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
@@ -504,15 +505,15 @@ const BookingReport: React.FC = () => {
                               {booking.booking_date
                                 ? formatDate(booking.booking_date)
                                 : booking.services &&
-                                  booking.services.length > 0 &&
-                                  (booking.services[0].booking_date ||
-                                    booking.services[0].scheduled_date)
-                                ? formatDate(
-                                    booking.services[0].booking_date ||
-                                      booking.services[0].scheduled_date ||
-                                      ""
-                                  )
-                                : formatDate(booking.created_at)}
+                                    booking.services.length > 0 &&
+                                    (booking.services[0].booking_date ||
+                                      booking.services[0].scheduled_date)
+                                  ? formatDate(
+                                      booking.services[0].booking_date ||
+                                        booking.services[0].scheduled_date ||
+                                        "",
+                                    )
+                                  : formatDate(booking.created_at)}
                             </div>
                           </div>
                         </div>
@@ -578,7 +579,7 @@ const BookingReport: React.FC = () => {
                                         {formatCurrency(
                                           service.service?.sha_rate ||
                                             service.tariff ||
-                                            "0"
+                                            "0",
                                         )}
                                       </span>
                                     </div>
@@ -588,7 +589,7 @@ const BookingReport: React.FC = () => {
                                       </span>
                                       <span className="font-medium">
                                         {formatCurrency(
-                                          service.vendor_share || "0"
+                                          service.vendor_share || "0",
                                         )}
                                       </span>
                                     </div>
@@ -598,7 +599,7 @@ const BookingReport: React.FC = () => {
                                       </span>
                                       <span className="font-medium">
                                         {formatCurrency(
-                                          service.facility_share || "0"
+                                          service.facility_share || "0",
                                         )}
                                       </span>
                                     </div>
@@ -620,10 +621,10 @@ const BookingReport: React.FC = () => {
                                         booking.services.reduce(
                                           (total, service) => {
                                             const vendorShare = parseFloat(
-                                              service.vendor_share || "0"
+                                              service.vendor_share || "0",
                                             );
                                             const facilityShare = parseFloat(
-                                              service.facility_share || "0"
+                                              service.facility_share || "0",
                                             );
                                             return (
                                               total +
@@ -631,8 +632,8 @@ const BookingReport: React.FC = () => {
                                               facilityShare
                                             );
                                           },
-                                          0
-                                        )
+                                          0,
+                                        ),
                                       )}
                                     </span>
                                   </div>
@@ -729,7 +730,7 @@ const BookingReport: React.FC = () => {
                                     <span className="text-gray-500">DOB:</span>
                                     {booking.patient.date_of_birth
                                       ? new Date(
-                                          booking.patient.date_of_birth
+                                          booking.patient.date_of_birth,
                                         ).toLocaleDateString()
                                       : "N/A"}
                                   </p>
@@ -797,12 +798,12 @@ const BookingReport: React.FC = () => {
                                                   parseFloat(
                                                     service.service?.sha_rate ||
                                                       service.tariff ||
-                                                      "0"
+                                                      "0",
                                                   )
                                                 );
                                               },
-                                              0
-                                            )
+                                              0,
+                                            ),
                                           )}
                                         </span>
                                       </div>
@@ -817,12 +818,12 @@ const BookingReport: React.FC = () => {
                                                 return (
                                                   total +
                                                   parseFloat(
-                                                    service.vendor_share || "0"
+                                                    service.vendor_share || "0",
                                                   )
                                                 );
                                               },
-                                              0
-                                            )
+                                              0,
+                                            ),
                                           )}
                                         </span>
                                       </div>
@@ -838,12 +839,12 @@ const BookingReport: React.FC = () => {
                                                   total +
                                                   parseFloat(
                                                     service.facility_share ||
-                                                      "0"
+                                                      "0",
                                                   )
                                                 );
                                               },
-                                              0
-                                            )
+                                              0,
+                                            ),
                                           )}
                                         </span>
                                       </div>
@@ -921,13 +922,15 @@ const BookingReport: React.FC = () => {
                                                 <span className="text-gray-500">
                                                   Facility:
                                                 </span>
-                                                {booking.facility?.name || "N/A"}
+                                                {booking.facility?.name ||
+                                                  "N/A"}
                                               </p>
                                               <p>
                                                 <span className="text-gray-500">
                                                   Code:
                                                 </span>
-                                                {booking.facility?.code || "N/A"}
+                                                {booking.facility?.code ||
+                                                  "N/A"}
                                               </p>
                                               <p>
                                                 <span className="text-gray-500">
@@ -951,7 +954,7 @@ const BookingReport: React.FC = () => {
                                                 {formatDate(
                                                   service.scheduled_date ||
                                                     service.booking_date ||
-                                                    ""
+                                                    "",
                                                 )}
                                               </p>
                                               <p>
@@ -961,7 +964,7 @@ const BookingReport: React.FC = () => {
                                                 {formatCurrency(
                                                   service.service?.sha_rate ||
                                                     service.tariff ||
-                                                    "0"
+                                                    "0",
                                                 )}
                                               </p>
                                               <p>
@@ -969,7 +972,7 @@ const BookingReport: React.FC = () => {
                                                   Vendor Share:
                                                 </span>
                                                 {formatCurrency(
-                                                  service.vendor_share || "0"
+                                                  service.vendor_share || "0",
                                                 )}
                                               </p>
                                             </div>

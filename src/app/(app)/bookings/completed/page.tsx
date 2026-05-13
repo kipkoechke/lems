@@ -23,7 +23,7 @@ const CompletedServicesPage: React.FC = () => {
   const completedBookings = useMemo(() => {
     return bookings?.filter((booking: Bookings) => {
       return booking.services?.every(
-        (service) => service.service_status === "completed"
+        (service) => service.service_status === "completed",
       );
     });
   }, [bookings]);
@@ -40,7 +40,8 @@ const CompletedServicesPage: React.FC = () => {
     });
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleString("en-US", {
       year: "numeric",
       month: "short",
@@ -211,7 +212,7 @@ const CompletedServicesPage: React.FC = () => {
                                       {formatCurrency(
                                         service.service?.sha_rate ||
                                           service.tariff ||
-                                          "0"
+                                          "0",
                                       )}
                                     </span>
                                   </div>
@@ -221,7 +222,7 @@ const CompletedServicesPage: React.FC = () => {
                                     </span>
                                     <span className="font-medium">
                                       {formatCurrency(
-                                        service.vendor_share || "0"
+                                        service.vendor_share || "0",
                                       )}
                                     </span>
                                   </div>
@@ -231,7 +232,7 @@ const CompletedServicesPage: React.FC = () => {
                                     </span>
                                     <span className="font-medium">
                                       {formatCurrency(
-                                        service.facility_share || "0"
+                                        service.facility_share || "0",
                                       )}
                                     </span>
                                   </div>
@@ -259,7 +260,7 @@ const CompletedServicesPage: React.FC = () => {
                                 booking.services[0].updated_at ||
                                   booking.services[0].completed_at ||
                                   booking.updated_at ||
-                                  ""
+                                  "",
                               )}
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
@@ -305,7 +306,7 @@ const CompletedServicesPage: React.FC = () => {
                                   <span className="text-gray-500">DOB: </span>
                                   {booking.patient?.date_of_birth
                                     ? new Date(
-                                        booking.patient.date_of_birth
+                                        booking.patient.date_of_birth,
                                       ).toLocaleDateString()
                                     : "N/A"}
                                 </p>
@@ -377,10 +378,10 @@ const CompletedServicesPage: React.FC = () => {
                                           parseFloat(
                                             service.service?.sha_rate ||
                                               service.tariff ||
-                                              "0"
+                                              "0",
                                           ),
-                                        0
-                                      ) || 0
+                                        0,
+                                      ) || 0,
                                     )}
                                   </span>
                                 </div>
@@ -394,10 +395,10 @@ const CompletedServicesPage: React.FC = () => {
                                         (total, service) =>
                                           total +
                                           parseFloat(
-                                            service.vendor_share || "0"
+                                            service.vendor_share || "0",
                                           ),
-                                        0
-                                      ) || 0
+                                        0,
+                                      ) || 0,
                                     )}
                                   </span>
                                 </div>
@@ -411,10 +412,10 @@ const CompletedServicesPage: React.FC = () => {
                                         (total, service) =>
                                           total +
                                           parseFloat(
-                                            service.facility_share || "0"
+                                            service.facility_share || "0",
                                           ),
-                                        0
-                                      ) || 0
+                                        0,
+                                      ) || 0,
                                     )}
                                   </span>
                                 </div>
@@ -469,7 +470,7 @@ const CompletedServicesPage: React.FC = () => {
                                             {formatDate(
                                               service.scheduled_date ||
                                                 service.booking_date ||
-                                                ""
+                                                "",
                                             )}
                                           </p>
                                           <p>
@@ -479,7 +480,7 @@ const CompletedServicesPage: React.FC = () => {
                                             {formatDate(
                                               service.updated_at ||
                                                 service.completed_at ||
-                                                ""
+                                                "",
                                             )}
                                           </p>
                                         </div>
@@ -496,7 +497,7 @@ const CompletedServicesPage: React.FC = () => {
                                             {formatCurrency(
                                               service.service?.sha_rate ||
                                                 service.tariff ||
-                                                "0"
+                                                "0",
                                             )}
                                           </p>
                                           <p>
@@ -504,7 +505,7 @@ const CompletedServicesPage: React.FC = () => {
                                               Vendor:{" "}
                                             </span>
                                             {formatCurrency(
-                                              service.vendor_share || "0"
+                                              service.vendor_share || "0",
                                             )}
                                           </p>
                                           <p>
@@ -512,7 +513,7 @@ const CompletedServicesPage: React.FC = () => {
                                               Facility:{" "}
                                             </span>
                                             {formatCurrency(
-                                              service.facility_share || "0"
+                                              service.facility_share || "0",
                                             )}
                                           </p>
                                         </div>

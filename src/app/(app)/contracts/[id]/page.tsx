@@ -45,7 +45,8 @@ const ContractDetailsPage: React.FC<ContractDetailsPageProps> = ({
     isLoading: servicesLoading,
   } = useContractServices(contractId);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) return "-";
     if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("en-GB", {
       day: "numeric",

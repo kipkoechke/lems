@@ -32,7 +32,8 @@ const ApprovedServicesPage: React.FC = () => {
     });
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleString("en-US", {
       year: "numeric",
       month: "short",
@@ -186,7 +187,8 @@ const ApprovedServicesPage: React.FC = () => {
                                   </span>
                                 </div>
                                 {(booking.services?.length ?? 0) > 1 &&
-                                  index < (booking.services?.length ?? 0) - 1 && (
+                                  index <
+                                    (booking.services?.length ?? 0) - 1 && (
                                     <div className="border-b border-gray-100 my-1"></div>
                                   )}
                               </div>
@@ -213,7 +215,7 @@ const ApprovedServicesPage: React.FC = () => {
                                       {formatCurrency(
                                         service.service?.sha_rate ||
                                           service.tariff ||
-                                          "0"
+                                          "0",
                                       )}
                                     </span>
                                   </div>
@@ -225,7 +227,7 @@ const ApprovedServicesPage: React.FC = () => {
                                       {formatCurrency(
                                         service.vendor_share ||
                                           service.revenue?.vendor_share ||
-                                          "0"
+                                          "0",
                                       )}
                                     </span>
                                   </div>
@@ -237,13 +239,14 @@ const ApprovedServicesPage: React.FC = () => {
                                       {formatCurrency(
                                         service.facility_share ||
                                           service.revenue?.facility_share ||
-                                          "0"
+                                          "0",
                                       )}
                                     </span>
                                   </div>
                                 </div>
                                 {(booking.services?.length ?? 0) > 1 &&
-                                  index < (booking.services?.length ?? 0) - 1 && (
+                                  index <
+                                    (booking.services?.length ?? 0) - 1 && (
                                     <div className="border-b border-gray-100 my-2"></div>
                                   )}
                               </div>
@@ -289,7 +292,7 @@ const ApprovedServicesPage: React.FC = () => {
                                   <span className="text-gray-500">DOB: </span>
                                   {booking.patient?.date_of_birth
                                     ? new Date(
-                                        booking.patient.date_of_birth
+                                        booking.patient.date_of_birth,
                                       ).toLocaleDateString()
                                     : "N/A"}
                                 </p>
@@ -355,10 +358,10 @@ const ApprovedServicesPage: React.FC = () => {
                                           parseFloat(
                                             service.service?.sha_rate ||
                                               service.tariff ||
-                                              "0"
+                                              "0",
                                           ),
-                                        0
-                                      ) || 0
+                                        0,
+                                      ) || 0,
                                     )}
                                   </span>
                                 </div>
@@ -374,10 +377,10 @@ const ApprovedServicesPage: React.FC = () => {
                                           parseFloat(
                                             service.vendor_share ||
                                               service.revenue?.vendor_share ||
-                                              "0"
+                                              "0",
                                           ),
-                                        0
-                                      ) || 0
+                                        0,
+                                      ) || 0,
                                     )}
                                   </span>
                                 </div>
@@ -393,10 +396,10 @@ const ApprovedServicesPage: React.FC = () => {
                                           parseFloat(
                                             service.facility_share ||
                                               service.revenue?.facility_share ||
-                                              "0"
+                                              "0",
                                           ),
-                                        0
-                                      ) || 0
+                                        0,
+                                      ) || 0,
                                     )}
                                   </span>
                                 </div>
@@ -442,7 +445,7 @@ const ApprovedServicesPage: React.FC = () => {
                                             {formatDate(
                                               service.scheduled_date ||
                                                 service.booking_date ||
-                                                ""
+                                                "",
                                             )}
                                           </p>
                                         </div>

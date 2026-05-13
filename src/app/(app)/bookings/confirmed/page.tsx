@@ -37,7 +37,8 @@ const ConfirmedBookingsPage: React.FC = () => {
     });
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleString("en-US", {
       year: "numeric",
       month: "short",
@@ -220,7 +221,7 @@ const ConfirmedBookingsPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getApprovalStatusBadge(
-                        booking.approval_status || "pending"
+                        booking.approval_status || "pending",
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -259,8 +260,7 @@ const ConfirmedBookingsPage: React.FC = () => {
                                         "Unknown Service"}
                                     </h5>
                                     <p className="text-xs text-gray-500 mt-1">
-                                      Code:{" "}
-                                      {service.service?.code || "N/A"}
+                                      Code: {service.service?.code || "N/A"}
                                     </p>
                                   </div>
                                   <span
@@ -294,7 +294,7 @@ const ConfirmedBookingsPage: React.FC = () => {
                                       {formatDate(
                                         service.scheduled_date ||
                                           service.booking_date ||
-                                          ""
+                                          "",
                                       )}
                                     </span>
                                   </div>
@@ -309,7 +309,7 @@ const ConfirmedBookingsPage: React.FC = () => {
                                       {formatCurrency(
                                         service.service?.sha_rate ||
                                           service.tariff ||
-                                          0
+                                          0,
                                       )}
                                     </span>
                                   </div>
@@ -321,7 +321,7 @@ const ConfirmedBookingsPage: React.FC = () => {
                                       {formatCurrency(
                                         service.facility_share ||
                                           service.revenue?.facility_share ||
-                                          0
+                                          0,
                                       )}
                                     </span>
                                   </div>
@@ -333,7 +333,7 @@ const ConfirmedBookingsPage: React.FC = () => {
                                       {formatCurrency(
                                         service.vendor_share ||
                                           service.revenue?.vendor_share ||
-                                          0
+                                          0,
                                       )}
                                     </span>
                                   </div>

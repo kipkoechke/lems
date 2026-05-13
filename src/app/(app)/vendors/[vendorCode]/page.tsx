@@ -36,7 +36,7 @@ export default function VendorDetailPage() {
 
   const contracts = contractsData?.data || [];
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined | null) => {
     if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("en-GB", {
       day: "numeric",
