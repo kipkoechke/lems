@@ -115,6 +115,13 @@ setup_repo() {
     git clone "$REPO_URL" "$DEPLOY_PATH"
     info "At commit: $(git -C "$DEPLOY_PATH" rev-parse --short HEAD)"
   fi
+
+  # Ensure the deploy user owns the entire directory so subsequent
+  # git pulls and docker compose commands work without sudo.
+  if id deploy &>/dev/null; then
+    log "Setting ownership of $DEPLOY_PATH to deploy:deploy ..."
+    chown -R deploy:deploy "$DEPLOY_PATH"
+  fi
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
