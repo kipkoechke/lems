@@ -19,11 +19,11 @@ jobs:
     steps:
       # ── 1. Checkout ──────────────────────────────────────
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       # ── 2. SSH agent ─────────────────────────────────────
       - name: Set up SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@v0.9.1
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
@@ -85,7 +85,7 @@ jobs:
             done
 
             echo "==> Reloading nginx config..."
-            nginx -t && nginx -s reload || true
+            sudo nginx -t && sudo nginx -s reload || true
 
             echo "==> Pruning unused Docker images..."
             docker image prune -f
