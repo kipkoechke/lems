@@ -150,7 +150,7 @@ export default function ServiceCompletionPage() {
 
     validateOtp(requestPayload, {
       onSuccess: () => {
-        const newCompletedServices = [...completedServices, currentService.id];
+        const newCompletedServices = [...completedServices, currentService.id].filter((id): id is string => !!id);
         setCompletedServices(newCompletedServices);
 
         // Clear OTP inputs and session
@@ -428,10 +428,10 @@ export default function ServiceCompletionPage() {
               </h4>
               <div className="space-y-1">
                 {bookingInfo.services
-                  ?.filter((s) => completedServices.includes(s.id))
+                  ?.filter((s) => s.id && completedServices.includes(s.id))
                   .map((service) => (
                     <div
-                      key={service.id}
+                      key={service.id ?? service.service?.name}
                       className="text-sm text-green-800 flex items-center gap-2"
                     >
                       <FaCheckCircle className="w-3 h-3" />

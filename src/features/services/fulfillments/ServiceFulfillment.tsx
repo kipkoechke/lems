@@ -82,7 +82,7 @@ const ServiceFulfillment: React.FC = () => {
 
     setOtpSent(true);
     requestFulfillmentOtp(
-      { booking_id: booking?.id || bookingNumber, service_id: currentService.id },
+      { booking_id: booking?.id || bookingNumber, service_id: currentService.id || "" },
       {
         onSuccess: (data) => {
           console.log("=== OTP REQUEST SUCCESS ===");
@@ -134,7 +134,7 @@ const ServiceFulfillment: React.FC = () => {
       return;
     }
 
-    const serviceId = currentService.id;
+    const serviceId = currentService.id || "";
 
     console.log("=== VALIDATING SERVICE FULFILLMENT OTP ===");
     console.log("Booking ID:", booking?.id || bookingNumber);
@@ -240,7 +240,7 @@ const ServiceFulfillment: React.FC = () => {
     if (currentService) {
       setServicesStatus((prev) => ({
         ...prev,
-        [currentService.id]: "pending",
+        [currentService.id ?? ""]: "pending",
       }));
     }
 
@@ -452,13 +452,13 @@ const ServiceFulfillment: React.FC = () => {
               </h4>
               <div className="space-y-2">
                 {services.map((service, index) => {
-                  const isCompleted = completedServices.includes(service.id);
+                  const isCompleted = completedServices.includes(service.id ?? "");
                   const isCurrent = index === currentServiceIndex;
-                  const isFailed = servicesStatus[service.id] === "failed";
+                  const isFailed = servicesStatus[service.id ?? ""] === "failed";
 
                   return (
                     <div
-                      key={service.id}
+                      key={service.id ?? index}
                       className={`flex items-center justify-between p-3 rounded-lg border ${
                         isCompleted
                           ? "bg-green-50 border-green-200"

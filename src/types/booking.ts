@@ -125,9 +125,23 @@ export interface BookedService {
   notes: string | null;
 }
 
+export interface BookingServiceResult {
+  accession_number?: string | null;
+  modality?: string | null;
+  study_description?: string | null;
+  result_status?: string | null;
+  result_body?: string | null;
+  observations?: string | null;
+  performing_technologist?: string | null;
+  interpreting_physician?: string | null;
+  has_critical_values?: boolean;
+  received_at?: string | null;
+  worklist_status?: string | null;
+}
+
 // Nested structure for services from verify-otp API
 export interface BookingService {
-  id: string;
+  id?: string;
   lot?: BookingServiceLot;
   service?: BookingServiceInfo;
   name?: string;
@@ -151,6 +165,7 @@ export interface BookingService {
   equipment_assigned_at?: string | null;
   started_at: string | null;
   completed_at: string | null;
+  result?: BookingServiceResult | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -168,13 +183,13 @@ export interface Booking {
   payment?: BookingPayment;
   payment_mode?: string;
   booking_date?: string;
-  // Payment fields from list API (flat structure)
-  services_count: number;
-  pending_count: number;
-  completed_count: number;
-  tariff: string;
-  sha: string;
-  cash: string;
+  // Payment fields from list API (flat structure) — not present on detail API
+  services_count?: number;
+  pending_count?: number;
+  completed_count?: number;
+  tariff?: string;
+  sha?: string;
+  cash?: string;
   other_insurance?: string;
   eligibility_verified?: boolean | string | null;
   eligibility_response?: string | null;
@@ -182,8 +197,8 @@ export interface Booking {
   notes?: string | null;
   // Different APIs return different structures
   services: BookingService[];
-  booked_services: BookedService[];
-  created_by: string | null;
+  booked_services?: BookedService[];
+  created_by: string | { id: string; name: string } | null;
   created_at: string;
   updated_at?: string;
 }
