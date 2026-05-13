@@ -30,7 +30,7 @@ import { useValidateServiceFulfillmentOtp } from "./useValidateServiceFulfillmen
 
 const ServiceFulfillment: React.FC = () => {
   const { patient, selectedService, consentObtained } = useAppSelector(
-    (store) => store.workflow
+    (store) => store.workflow,
   );
   const { booking } = useAppSelector((store) => store.workflow);
   const bookingNumber = booking?.booking_number;
@@ -82,31 +82,38 @@ const ServiceFulfillment: React.FC = () => {
 
     setOtpSent(true);
     requestFulfillmentOtp(
-      { booking_id: booking?.id || bookingNumber, service_id: currentService.id || "" },
+      {
+        booking_id: booking?.id || bookingNumber,
+        service_id: currentService.id || "",
+      },
       {
         onSuccess: (data) => {
           console.log("=== OTP REQUEST SUCCESS ===");
           console.log("Response data:", data);
 
           // Store session_id for OTP verification
-          if (typeof window !== 'undefined' && data?.data?.session_id) {
-            sessionStorage.setItem('service_completion_session_id', data.data.session_id);
+          if (typeof window !== "undefined" && data?.data?.session_id) {
+            sessionStorage.setItem(
+              "service_completion_session_id",
+              data.data.session_id,
+            );
           }
 
           toast.success(
-            `Service ${currentServiceIndex + 1}/${totalServices} - OTP sent to patient's phone`
+            `Service ${currentServiceIndex + 1}/${totalServices} - OTP sent to patient's phone`,
           );
           setTimeout(() => {
             setShowOTP(true);
           }, 500);
         },
-      onError: (error) => {
-        console.error("=== OTP REQUEST ERROR ===");
-        console.error("Error:", error);
-        setOtpSent(false);
-        setFulfillmentStatus("failed");
+        onError: (error) => {
+          console.error("=== OTP REQUEST ERROR ===");
+          console.error("Error:", error);
+          setOtpSent(false);
+          setFulfillmentStatus("failed");
+        },
       },
-    });
+    );
   };
 
   useEffect(() => {
@@ -142,9 +149,10 @@ const ServiceFulfillment: React.FC = () => {
     console.log("OTP code:", otp);
 
     // Get session_id from sessionStorage
-    const sessionId = typeof window !== 'undefined' 
-      ? sessionStorage.getItem('service_completion_session_id') 
-      : null;
+    const sessionId =
+      typeof window !== "undefined"
+        ? sessionStorage.getItem("service_completion_session_id")
+        : null;
 
     if (!sessionId) {
       toast.error("Session expired. Please request a new OTP.");
@@ -161,8 +169,8 @@ const ServiceFulfillment: React.FC = () => {
       {
         onSuccess: () => {
           // Clear session_id after successful verification
-          if (typeof window !== 'undefined') {
-            sessionStorage.removeItem('service_completion_session_id');
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("service_completion_session_id");
           }
 
           // Mark current service as completed
@@ -180,7 +188,7 @@ const ServiceFulfillment: React.FC = () => {
             booking?.services?.map((service) =>
               service.id === serviceId
                 ? { ...service, service_status: "completed" as const }
-                : service
+                : service,
             ) || [];
 
           if (booking) {
@@ -204,7 +212,7 @@ const ServiceFulfillment: React.FC = () => {
             toast.success(
               `Service ${
                 currentServiceIndex + 1
-              }/${totalServices} completed! Moving to next service...`
+              }/${totalServices} completed! Moving to next service...`,
             );
 
             // Auto-request OTP for next service after a short delay
@@ -222,7 +230,7 @@ const ServiceFulfillment: React.FC = () => {
           }));
           setFulfillmentStatus("failed");
         },
-      }
+      },
     );
   };
 
@@ -373,8 +381,8 @@ const ServiceFulfillment: React.FC = () => {
                     fulfillmentStatus === "completed"
                       ? "bg-green-500"
                       : fulfillmentStatus === "failed"
-                      ? "bg-red-500"
-                      : "bg-blue-500"
+                        ? "bg-red-500"
+                        : "bg-blue-500"
                   }`}
                 >
                   {fulfillmentStatus === "completed" ? (
@@ -390,8 +398,8 @@ const ServiceFulfillment: React.FC = () => {
                     fulfillmentStatus === "completed"
                       ? "text-green-600"
                       : fulfillmentStatus === "failed"
-                      ? "text-red-600"
-                      : "text-blue-600"
+                        ? "text-red-600"
+                        : "text-blue-600"
                   }`}
                 >
                   Fulfillment
@@ -437,8 +445,8 @@ const ServiceFulfillment: React.FC = () => {
                   {allServicesCompleted
                     ? "All Completed"
                     : fulfillmentStatus === "failed"
-                    ? "Failed"
-                    : "In Progress"}
+                      ? "Failed"
+                      : "In Progress"}
                 </p>
               </div>
             </div>
@@ -452,9 +460,12 @@ const ServiceFulfillment: React.FC = () => {
               </h4>
               <div className="space-y-2">
                 {services.map((service, index) => {
-                  const isCompleted = completedServices.includes(service.id ?? "");
+                  const isCompleted = completedServices.includes(
+                    service.id ?? "",
+                  );
                   const isCurrent = index === currentServiceIndex;
-                  const isFailed = servicesStatus[service.id ?? ""] === "failed";
+                  const isFailed =
+                    servicesStatus[service.id ?? ""] === "failed";
 
                   return (
                     <div
@@ -463,10 +474,10 @@ const ServiceFulfillment: React.FC = () => {
                         isCompleted
                           ? "bg-green-50 border-green-200"
                           : isFailed
-                          ? "bg-red-50 border-red-200"
-                          : isCurrent
-                          ? "bg-blue-50 border-blue-200"
-                          : "bg-gray-50 border-gray-200"
+                            ? "bg-red-50 border-red-200"
+                            : isCurrent
+                              ? "bg-blue-50 border-blue-200"
+                              : "bg-gray-50 border-gray-200"
                       }`}
                     >
                       <div className="flex items-center space-x-3">
@@ -475,10 +486,10 @@ const ServiceFulfillment: React.FC = () => {
                             isCompleted
                               ? "bg-green-500 text-white"
                               : isFailed
-                              ? "bg-red-500 text-white"
-                              : isCurrent
-                              ? "bg-blue-500 text-white"
-                              : "bg-gray-300 text-gray-600"
+                                ? "bg-red-500 text-white"
+                                : isCurrent
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-gray-300 text-gray-600"
                           }`}
                         >
                           {isCompleted ? (
@@ -499,7 +510,8 @@ const ServiceFulfillment: React.FC = () => {
                             Booking Date:{" "}
                             {service.booking_date || service.scheduled_date
                               ? new Date(
-                                  (service.booking_date || service.scheduled_date)!
+                                  (service.booking_date ||
+                                    service.scheduled_date)!,
                                 ).toLocaleDateString()
                               : "N/A"}
                           </p>
@@ -511,19 +523,19 @@ const ServiceFulfillment: React.FC = () => {
                             isCompleted
                               ? "text-green-600"
                               : isFailed
-                              ? "text-red-600"
-                              : isCurrent
-                              ? "text-blue-600"
-                              : "text-gray-500"
+                                ? "text-red-600"
+                                : isCurrent
+                                  ? "text-blue-600"
+                                  : "text-gray-500"
                           }`}
                         >
                           {isCompleted
                             ? "Completed"
                             : isFailed
-                            ? "Failed"
-                            : isCurrent
-                            ? "In Progress"
-                            : "Pending"}
+                              ? "Failed"
+                              : isCurrent
+                                ? "In Progress"
+                                : "Pending"}
                         </p>
                       </div>
                     </div>

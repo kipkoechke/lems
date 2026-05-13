@@ -78,9 +78,7 @@ export default function ServiceCompletionPage() {
     };
     requestOtp(payload, {
       onSuccess: (response: any) => {
-        toast.success(
-          response.message || "OTP sent to patient successfully"
-        );
+        toast.success(response.message || "OTP sent to patient successfully");
 
         if (response.data?.expires_at) {
           const expiryTime = new Date(response.data.expires_at).getTime();
@@ -91,13 +89,16 @@ export default function ServiceCompletionPage() {
 
         // Store session_id for verification
         if (response.data?.session_id) {
-          sessionStorage.setItem("serviceCompletionSession", response.data.session_id);
+          sessionStorage.setItem(
+            "serviceCompletionSession",
+            response.data.session_id,
+          );
         }
       },
       onError: (error: any) => {
         toast.error(
           error.response?.data?.message ||
-            "Failed to send OTP. Please try again."
+            "Failed to send OTP. Please try again.",
         );
       },
     });
@@ -119,7 +120,7 @@ export default function ServiceCompletionPage() {
 
   const handleKeyDown = (
     index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
+    e: React.KeyboardEvent<HTMLInputElement>,
   ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       const prevInput = document.getElementById(`otp-${index - 1}`);
@@ -142,7 +143,7 @@ export default function ServiceCompletionPage() {
 
     // Get session_id from storage (set during OTP request)
     const sessionId = sessionStorage.getItem("serviceCompletionSession");
-    
+
     const requestPayload = {
       session_id: sessionId || bookingInfo.id,
       otp: otpCode,
@@ -150,7 +151,10 @@ export default function ServiceCompletionPage() {
 
     validateOtp(requestPayload, {
       onSuccess: () => {
-        const newCompletedServices = [...completedServices, currentService.id].filter((id): id is string => !!id);
+        const newCompletedServices = [
+          ...completedServices,
+          currentService.id,
+        ].filter((id): id is string => !!id);
         setCompletedServices(newCompletedServices);
 
         // Clear OTP inputs and session
@@ -172,7 +176,7 @@ export default function ServiceCompletionPage() {
           const nextIndex = currentServiceIndex + 1;
           setCurrentServiceIndex(nextIndex);
           toast.success(
-            `Service ${currentServiceIndex + 1}/${totalServices} completed!`
+            `Service ${currentServiceIndex + 1}/${totalServices} completed!`,
           );
 
           // Auto-request OTP for next service
@@ -331,7 +335,8 @@ export default function ServiceCompletionPage() {
                   Scheduled:{" "}
                   {currentService.scheduled_date || currentService.booking_date
                     ? new Date(
-                        (currentService.scheduled_date || currentService.booking_date)!
+                        (currentService.scheduled_date ||
+                          currentService.booking_date)!,
                       ).toLocaleString()
                     : "N/A"}
                 </p>
