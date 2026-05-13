@@ -58,24 +58,23 @@ until docker compose ps app | grep -q "healthy" || [ $ATTEMPTS -ge 12 ]; do
 done
 docker compose ps app
 
-# ── Update host nginx vhost from repo and reload ──────
-echo "==> Updating nginx vhost config..."
+# ── Update host nginx vhost from repo and reload ──────────
+echo "==> Installing nginx vhost and systemd boot service..."
 APP_PORT="${APP_PORT:-3010}"
 DOMAIN="portal.vems.co.ke"
 CERT_PATH="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
 VHOST_SRC="$(pwd)/nginx/host-vhost.conf"
 VHOST_DEST="/etc/nginx/sites-available/$DOMAIN"
+
 if [ -f "$VHOST_SRC" ] && command -v nginx &>/dev/null; then
-  # Write our vhost (correct syntax, no http2-on directive)
-  # Write to BOTH sites-available (with symlink) AND conf.d (auto-loaded,
-  # no symlink needed) so the config survives even if the symlink is lost.
-  CONF_D_DEST="/etc/nginx/conf.d/$DOMAIN.conf"
+  # ── 1. Write the vhost (one place only: sites-available + symlink) ──
+  # Remove the conf.d duplicate if it was created by a previous deploy version
+  sudo rm -f "/etc/nginx/conf.d/$DOMAIN.conf"
   sed "s/__APP_PORT__/$APP_PORT/g" "$VHOST_SRC" | sudo tee "$VHOST_DEST" > /dev/null
-  sudo cp "$VHOST_DEST" "$CONF_D_DEST"
   sudo ln -sf "$VHOST_DEST" "/etc/nginx/sites-enabled/$DOMAIN"
 
-  # Remove any portal.vems.co.ke blocks certbot injected into OTHER nginx files.
-  echo "==> Removing stale portal blocks from other nginx configs (if any)..."
+  # Remove any stale portal blocks certbot injected into OTHER nginx files
+  echo "==> Removing stale portal blocks from other nginx configs..."
   for conf_file in /etc/nginx/sites-available/*; do
     [ "$conf_file" = "$VHOST_DEST" ] && continue
     if grep -ql "server_name.*$DOMAIN" "$conf_file" 2>/dev/null; then
@@ -83,14 +82,37 @@ if [ -f "$VHOST_SRC" ] && command -v nginx &>/dev/null; then
     fi
   done
 
-  # Only reload if the SSL cert exists — if not, nginx -t would fail on the
-  # HTTPS block. Cert is obtained once by server-setup.sh.
+  # ── 2. Install a helper script that re-applies the vhost on boot ───
+  sudo cp "$(pwd)/scripts/lems-nginx.sh" /usr/local/bin/lems-nginx-apply
+  sudo chmod +x /usr/local/bin/lems-nginx-apply
+
+  # ── 3. Install/update systemd service that runs lems-nginx-apply ───
+  # Runs after docker so it fires on every server reboot automatically.
+  sudo tee /etc/systemd/system/lems-nginx.service > /dev/null <<SERVICE
+[Unit]
+Description=Apply LEMS portal.vems.co.ke nginx vhost on boot
+After=network.target nginx.service docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/opt/lems/.env
+Environment=DEPLOY_DIR=/opt/lems
+ExecStart=/usr/local/bin/lems-nginx-apply
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+  sudo systemctl daemon-reload
+  sudo systemctl enable lems-nginx.service
+  echo "    lems-nginx.service installed and enabled."
+
+  # ── 4. Apply config right now ─────────────────────────────────────
   if [ -f "$CERT_PATH" ]; then
     sudo nginx -t && sudo nginx -s reload
-    echo "==> Host nginx reloaded."
+    echo "==> Host nginx reloaded with portal vhost."
   else
-    echo "==> WARN: SSL cert not found at $CERT_PATH — skipping nginx reload."
-    echo "          Run scripts/server-setup.sh once to obtain the cert."
+    echo "==> WARN: cert not found at $CERT_PATH — skipping nginx reload."
   fi
 fi
 
