@@ -173,7 +173,11 @@ function VendorsContent() {
                 </div>
                 <div>
                   <p className="text-3xl font-bold text-green-600">
-                    {filteredVendors.filter((v) => v.is_active === true || v.is_active === "1").length}
+                    {
+                      filteredVendors.filter(
+                        (v) => v.is_active === true || v.is_active === "1",
+                      ).length
+                    }
                   </p>
                   <p className="text-sm font-medium text-gray-600">
                     Active Vendors
@@ -189,7 +193,11 @@ function VendorsContent() {
                 </div>
                 <div>
                   <p className="text-3xl font-bold text-red-600">
-                    {filteredVendors.filter((v) => v.is_active === false || v.is_active === "0").length}
+                    {
+                      filteredVendors.filter(
+                        (v) => v.is_active === false || v.is_active === "0",
+                      ).length
+                    }
                   </p>
                   <p className="text-sm font-medium text-gray-600">
                     Inactive Vendors
@@ -241,8 +249,15 @@ function VendorsContent() {
                             : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {vendor.is_active === true || vendor.is_active === "1" ? <FaCheck /> : <FaTimes />}
-                        {vendor.is_active === true || vendor.is_active === "1" ? "Active" : "Inactive"}
+                        {vendor.is_active === true ||
+                        vendor.is_active === "1" ? (
+                          <FaCheck />
+                        ) : (
+                          <FaTimes />
+                        )}
+                        {vendor.is_active === true || vendor.is_active === "1"
+                          ? "Active"
+                          : "Inactive"}
                       </span>
                     </Table.Cell>
                     <Table.Cell className="text-sm text-gray-600">
@@ -326,8 +341,14 @@ function VendorsContent() {
                           : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {vendor.is_active === true || vendor.is_active === "1" ? <FaCheck /> : <FaTimes />}
-                      {vendor.is_active === true || vendor.is_active === "1" ? "Active" : "Inactive"}
+                      {vendor.is_active === true || vendor.is_active === "1" ? (
+                        <FaCheck />
+                      ) : (
+                        <FaTimes />
+                      )}
+                      {vendor.is_active === true || vendor.is_active === "1"
+                        ? "Active"
+                        : "Inactive"}
                     </span>
                     <ActionMenu menuId={`vendor-mobile-${vendor.id}`}>
                       <ActionMenu.Trigger />

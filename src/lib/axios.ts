@@ -9,9 +9,11 @@ const instance = axios.create({
 
 // Request interceptor to attach bearer token
 instance.interceptors.request.use((config) => {
-  const token = localStorage.getItem("authToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
@@ -20,6 +22,11 @@ instance.interceptors.request.use((config) => {
 instance.interceptors.response.use(
   (res) => res,
   (err) => {
+    if (err.response?.status === 401 && typeof window !== "undefined") {
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/login";
+      }
+    }
     return Promise.reject(err);
   },
 );

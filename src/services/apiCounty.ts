@@ -28,11 +28,15 @@ export const getCounties = async (): Promise<County[]> => {
 export const getSubCounties = async (
   county_code: string,
 ): Promise<SubCounty[]> => {
-  const response = await axios.get(`/places/counties/${county_code}/sub-counties`);
+  const response = await axios.get(
+    `/places/counties/${county_code}/sub-counties`,
+  );
   return response.data;
 };
 
 export const getWards = async (sub_county_code: string): Promise<Ward[]> => {
-  const response = await axios.get(`/places/sub-counties/${sub_county_code}/wards`);
+  const response = await axios.get(
+    `/places/sub-counties/${sub_county_code}/wards`,
+  );
   return response.data;
 };
