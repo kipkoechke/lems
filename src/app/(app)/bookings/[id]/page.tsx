@@ -219,12 +219,6 @@ export default function BookingDetailPage() {
                   SHA: {booking.sha_status}
                 </span>
               )}
-              {booking.claim_id && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-slate-50 text-slate-600 border-slate-200">
-                  <MdVerified className="w-3 h-3" />
-                  Claim: {booking.claim_id.substring(0, 8)}...
-                </span>
-              )}
             </div>
             <p className="text-xs text-slate-500 mt-1">
               Created {formatDate(booking.created_at)} &middot; Source:{" "}
@@ -236,8 +230,8 @@ export default function BookingDetailPage() {
           </div>
         </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        {/* Stats + Payment combined row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
           {[
             {
               icon: <MdMedicalServices className="w-4 h-4 text-blue-600" />,
@@ -258,8 +252,26 @@ export default function BookingDetailPage() {
               value: booking.pending_count ?? pendingCount,
             },
             {
-              icon: <MdAttachMoney className="w-4 h-4 text-green-600" />,
-              bg: "bg-green-50",
+              icon: <MdAttachMoney className="w-4 h-4 text-blue-700" />,
+              bg: "bg-blue-50",
+              label: "SHA",
+              value: formatCurrency(payment?.sha ?? booking.sha),
+            },
+            {
+              icon: <MdAttachMoney className="w-4 h-4 text-emerald-700" />,
+              bg: "bg-emerald-50",
+              label: "Cash",
+              value: formatCurrency(payment?.cash ?? booking.cash),
+            },
+            {
+              icon: <MdAttachMoney className="w-4 h-4 text-purple-700" />,
+              bg: "bg-purple-50",
+              label: "Other Insurance",
+              value: formatCurrency(payment?.other_insurance ?? booking.other_insurance),
+            },
+            {
+              icon: <MdAttachMoney className="w-4 h-4 text-slate-700" />,
+              bg: "bg-slate-100",
               label: "Total Tariff",
               value: formatCurrency(payment?.tariff ?? totalTariff),
             },
@@ -358,48 +370,6 @@ export default function BookingDetailPage() {
                 }
               />
             )}
-          </div>
-        </div>
-
-        {/* Payment Breakdown */}
-        <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <SectionHeader
-            icon={<MdAttachMoney className="w-4 h-4" />}
-            title="Payment Breakdown"
-          />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              {
-                label: "Total Tariff",
-                value: payment?.tariff ?? booking.tariff,
-                color: "text-slate-900",
-              },
-              {
-                label: "SHA",
-                value: payment?.sha ?? booking.sha,
-                color: "text-blue-700",
-              },
-              {
-                label: "Cash",
-                value: payment?.cash ?? booking.cash,
-                color: "text-emerald-700",
-              },
-              {
-                label: "Other Insurance",
-                value: payment?.other_insurance ?? booking.other_insurance,
-                color: "text-purple-700",
-              },
-            ].map(({ label, value, color }) => (
-              <div
-                key={label}
-                className="bg-slate-50 rounded-lg p-3 border border-slate-100"
-              >
-                <p className="text-xs text-slate-400 mb-1">{label}</p>
-                <p className={`text-sm font-semibold ${color}`}>
-                  {formatCurrency(value)}
-                </p>
-              </div>
-            ))}
           </div>
         </div>
 
