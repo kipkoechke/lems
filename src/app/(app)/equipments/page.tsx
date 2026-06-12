@@ -12,11 +12,9 @@ import {
   FaClock,
   FaEye,
   FaEdit,
-  FaTrash,
 } from "react-icons/fa";
 import { useAdminEquipments } from "@/features/vendors/useAdminEquipments";
-import { useDeleteVendorEquipment } from "@/features/vendors/useVendorEquipments";
-import { AdminEquipment } from "@/services/apiEquipment";
+import type { AdminEquipment } from "@/services/apiEquipment";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import Pagination from "@/components/common/Pagination";
@@ -53,7 +51,6 @@ export default function EquipmentsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [modalityFilter, setModalityFilter] = useState("");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
   const { equipments, pagination, availableFilters, isLoading, error, refetch } =
     useAdminEquipments({
@@ -64,21 +61,6 @@ export default function EquipmentsPage() {
       modality: modalityFilter || undefined,
       search: search || undefined,
     });
-
-  const deleteMutation = useDeleteVendorEquipment();
-
-  const handleDelete = (equipment: AdminEquipment) => {
-    if (!equipment.vendor_id) return;
-    deleteMutation.mutate(
-      { vendorId: equipment.vendor_id, equipmentId: equipment.id },
-      {
-        onSuccess: () => {
-          setShowDeleteConfirm(null);
-          refetch();
-        },
-      },
-    );
-  };
 
   if (isLoading) {
     return (
@@ -244,12 +226,6 @@ export default function EquipmentsPage() {
                             onClick={() => router.push(`/equipments/${eq.id}/edit`)}
                           >
                             <FaEdit className="text-amber-500" /> Edit
-                          </ActionMenu.Item>
-                          <ActionMenu.Item
-                            onClick={() => setShowDeleteConfirm(eq.id)}
-                            className="text-red-600 hover:bg-red-50"
-                          >
-                            <FaTrash className="text-red-500" /> Delete
                           </ActionMenu.Item>
                         </ActionMenu.Content>
                       </ActionMenu>
