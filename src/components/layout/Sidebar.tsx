@@ -34,7 +34,7 @@ const getIconForRoute = (href: string) => {
   if (href.startsWith("/finance")) return <HiOutlineDocumentText />;
   if (href.startsWith("/services")) return <HiOutlineWrenchScrewdriver />;
   if (href.startsWith("/reports")) return <HiOutlineDocumentText />;
-  if (href.startsWith("/trends")) return <HiOutlineChartBarSquare />;
+  if (href.startsWith("/dashboard")) return <HiOutlineChartBarSquare />;
   if (href.startsWith("/lab")) return <HiOutlineWrenchScrewdriver />;
   return <HiOutlineUser />;
 };

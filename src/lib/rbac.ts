@@ -81,6 +81,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 
   [UserRole.ADMIN]: [
     // System admin permissions
+    Permission.VIEW_DASHBOARD,
     Permission.ONBOARD_FACILITY,
     Permission.CREATE_FACILITY_USERS,
     Permission.ONBOARD_VENDORS,
@@ -95,7 +96,6 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_LOTS,
     Permission.VIEW_SERVICES,
     Permission.VIEW_EQUIPMENTS,
-    Permission.VIEW_TRENDS,
   ],
 
   [UserRole.F_ADMIN]: [
@@ -109,7 +109,6 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_SERVICES,
     Permission.VIEW_FACILITY_PAYMENTS,
     Permission.VIEW_PAYMENTS,
-    Permission.VIEW_TRENDS,
   ],
 
   [UserRole.F_PRACTITIONER]: [

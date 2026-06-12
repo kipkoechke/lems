@@ -16,9 +16,9 @@ const NAV_ITEMS: NavItem[] = [
   // Dashboard - first item for all authenticated users
   {
     label: "Dashboard",
-    href: "/trends",
-    permission: Permission.VIEW_TRENDS,
-    description: "Analytics and trends",
+    href: "/dashboard",
+    permission: Permission.VIEW_DASHBOARD,
+    description: "System overview and key metrics",
   },
 
   // System Admin specific items
