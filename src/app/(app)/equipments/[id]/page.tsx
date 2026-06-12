@@ -150,6 +150,24 @@ export default function EquipmentDetailsPage() {
                   {getStatusIcon(equipment.status)}
                   {equipment.status_label}
                 </span>
+                {equipment.dicom && (
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+                      equipment.dicom.is_connected
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-slate-50 text-slate-500 border-slate-200"
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        equipment.dicom.is_connected
+                          ? "bg-emerald-500 animate-pulse"
+                          : "bg-slate-300"
+                      }`}
+                    />
+                    {equipment.dicom.is_connected ? "Live" : "Offline"}
+                  </span>
+                )}
               </div>
               <p className="text-sm text-slate-500 font-mono">
                 {equipment.code}
