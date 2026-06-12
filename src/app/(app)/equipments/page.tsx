@@ -49,7 +49,6 @@ export default function EquipmentsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
   const [modalityFilter, setModalityFilter] = useState("");
 
   const { equipments, pagination, availableFilters, isLoading, error, refetch } =
@@ -57,7 +56,6 @@ export default function EquipmentsPage() {
       page,
       per_page: 15,
       status: statusFilter || undefined,
-      category: categoryFilter || undefined,
       modality: modalityFilter || undefined,
       search: search || undefined,
     });
@@ -146,14 +144,14 @@ export default function EquipmentsPage() {
               <option value="pending_installation">Pending Installation</option>
             </select>
             <select
-              value={categoryFilter}
+              value={modalityFilter}
               onChange={(e) => {
-                setCategoryFilter(e.target.value);
+                setModalityFilter(e.target.value);
                 setPage(1);
               }}
               className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[150px] bg-white"
             >
-              <option value="">All Categories</option>
+              <option value="">All Modalities</option>
               {availableFilters?.modalities?.map((m) => (
                 <option key={m.code} value={m.code}>
                   {m.label}
