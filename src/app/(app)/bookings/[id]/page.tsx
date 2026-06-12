@@ -434,9 +434,6 @@ export default function BookingDetailPage() {
   const completedCount = services.filter(
     (s) => s.status === "completed",
   ).length;
-  const pendingCount = services.filter(
-    (s) => s.status === "not_started" || s.status === "in_progress",
-  ).length;
   const totalTariff = services.reduce(
     (sum, s) => sum + Number(s.tariff ?? 0),
     0,
