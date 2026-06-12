@@ -292,6 +292,23 @@ export default function BookingDetailPage() {
               title="Patient"
             />
             <InfoRow label="Full Name" value={booking.patient?.name} />
+            {booking.patient?.date_of_birth && (
+              <InfoRow
+                label="Age"
+                value={`${Math.floor(
+                  (Date.now() - new Date(booking.patient.date_of_birth).getTime()) /
+                    31557600000,
+                )} years`}
+              />
+            )}
+            {booking.patient?.gender && (
+              <InfoRow
+                label="Gender"
+                value={
+                  <span className="capitalize">{booking.patient.gender}</span>
+                }
+              />
+            )}
             {booking.patient?.sha_number && (
               <InfoRow label="SHA Number" value={booking.patient.sha_number} />
             )}
