@@ -499,7 +499,7 @@ export default function BookingDetailPage() {
         </div>
 
         {/* Stats + Payment combined row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
           {[
             {
               icon: <MdMedicalServices className="w-4 h-4 text-blue-600" />,
@@ -508,16 +508,15 @@ export default function BookingDetailPage() {
               value: booking.services_count ?? services.length,
             },
             {
-              icon: <MdCheckCircle className="w-4 h-4 text-emerald-600" />,
-              bg: "bg-emerald-50",
-              label: "Completed",
-              value: booking.completed_count ?? completedCount,
-            },
-            {
-              icon: <MdPending className="w-4 h-4 text-amber-600" />,
-              bg: "bg-amber-50",
-              label: "Pending",
-              value: booking.pending_count ?? pendingCount,
+              icon: (
+                <span className="flex items-center gap-0.5">
+                  <MdCheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  <MdPending className="w-3.5 h-3.5 text-amber-600" />
+                </span>
+              ),
+              bg: "bg-gradient-to-r from-emerald-50 to-amber-50",
+              label: "Comp. / Pending",
+              value: `${booking.completed_count ?? completedCount} / ${booking.pending_count ?? pendingCount}`,
             },
             {
               icon: <MdAttachMoney className="w-4 h-4 text-blue-700" />,
