@@ -120,7 +120,7 @@ export default function PatientEligibilityPage() {
 
   if (isLoadingPatient) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 md:p-6">
+      <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-4xl mx-auto">
           <BackButton onClick={() => router.back()} />
           <div className="flex items-center justify-center py-12">
@@ -136,7 +136,7 @@ export default function PatientEligibilityPage() {
 
   return (
     <PermissionGate permission={Permission.GET_PATIENT_FROM_REGISTRY}>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 md:p-6">
+      <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-4xl mx-auto space-y-4">
           <BackButton onClick={() => router.back()} />
 

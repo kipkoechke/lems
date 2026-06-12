@@ -51,7 +51,7 @@ export default function LotsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 md:p-6">
+      <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
@@ -66,7 +66,7 @@ export default function LotsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 md:p-6">
+      <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
@@ -82,7 +82,7 @@ export default function LotsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 md:p-6">
+    <div className="min-h-screen p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-2 md:mb-3">

@@ -401,7 +401,7 @@ export default function BookingDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen p-4">
         <div className="max-w-5xl mx-auto space-y-4 animate-pulse">
           <div className="h-9 bg-slate-200 rounded w-64" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -449,7 +449,7 @@ export default function BookingDetailPage() {
       : (booking.created_by ?? "-");
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4">
+    <div className="min-h-screen p-4">
       <div className="max-w-5xl mx-auto space-y-4">
         {/* Header */}
         <div className="flex items-start gap-3">

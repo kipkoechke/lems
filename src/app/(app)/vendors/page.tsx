@@ -62,7 +62,7 @@ function VendorsContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
+      <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-6 md:p-8">
             <div className="animate-pulse space-y-6">
@@ -81,7 +81,7 @@ function VendorsContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
+      <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-6 md:p-8 text-center">
             <div className="text-red-500 text-lg md:text-xl mb-4">
@@ -100,7 +100,7 @@ function VendorsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
+    <div className="min-h-screen p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-2 md:mb-3 overflow-hidden">

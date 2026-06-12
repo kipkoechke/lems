@@ -60,7 +60,7 @@ export default function VendorDetailPage() {
 
   if (vendorLoading || contractsLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen p-4">
         <div className="max-w-5xl mx-auto">
           <div className="bg-white rounded-lg border border-slate-200 p-8">
             <div className="animate-pulse space-y-4">
@@ -101,7 +101,7 @@ export default function VendorDetailPage() {
   const uniqueFacilities = new Set(contracts.map((c) => c.facility.code)).size;
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4">
+    <div className="min-h-screen p-4">
       <div className="max-w-5xl mx-auto space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

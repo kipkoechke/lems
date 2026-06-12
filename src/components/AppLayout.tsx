@@ -45,7 +45,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         />
       )}
       <main
-        className={`overflow-auto bg-gray-100 ${
+        className={`overflow-auto ${
           showSidebar ? "md:col-start-2" : ""
         }`}
       >

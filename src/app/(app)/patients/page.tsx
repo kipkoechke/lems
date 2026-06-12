@@ -135,7 +135,7 @@ function Patients() {
   const isSearching = debouncedSearchTerm.length > 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 md:p-6">
+    <div className="min-h-screen p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-4">

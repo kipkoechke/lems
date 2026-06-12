@@ -128,7 +128,7 @@ export default function NewContractPage() {
 
   return (
     <PermissionGate permission={Permission.CREATE_CONTRACTS}>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 md:p-6">
+      <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6">

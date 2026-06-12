@@ -70,7 +70,7 @@ export default function ServicesPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen p-4">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg border border-slate-200 p-8">
             <div className="animate-pulse space-y-4">
@@ -105,7 +105,7 @@ export default function ServicesPage() {
 
   return (
     <PermissionGate permission={Permission.VIEW_SERVICES}>
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen p-4">
         <div className="max-w-7xl mx-auto space-y-4">
           {/* Header */}
           <div className="flex items-center gap-3">

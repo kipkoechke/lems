@@ -94,7 +94,7 @@ export default function EquipmentDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen p-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg border border-slate-200 p-8">
             <div className="animate-pulse space-y-4">
@@ -113,7 +113,7 @@ export default function EquipmentDetailsPage() {
 
   if (error || !equipment) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen p-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
             <div className="text-red-500 text-xl mb-2">⚠️</div>
@@ -131,7 +131,7 @@ export default function EquipmentDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4">
+    <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

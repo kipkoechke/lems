@@ -97,7 +97,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
 
   if (fullScreen) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen p-4">
         <div className="max-w-5xl mx-auto">{content}</div>
       </div>
     );

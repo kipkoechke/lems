@@ -31,7 +31,7 @@ const ServiceInProgress: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen">
       <div className="max-w-4xl mx-auto">
         {/* Main Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

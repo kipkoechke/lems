@@ -230,7 +230,7 @@ export default function EditEquipmentPage() {
 
   if (equipmentLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen p-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg border border-slate-200 p-8">
             <div className="animate-pulse space-y-4">
@@ -249,7 +249,7 @@ export default function EditEquipmentPage() {
 
   if (equipmentError || !equipment) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen p-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
             <div className="text-red-500 text-xl mb-2">⚠️</div>
@@ -267,7 +267,7 @@ export default function EditEquipmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4">
+    <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">

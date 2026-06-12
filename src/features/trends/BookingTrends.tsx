@@ -246,7 +246,7 @@ export default function BookingTrends() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen p-4">
         <div className="max-w-7xl mx-auto space-y-4 animate-pulse">
           <div className="h-9 bg-slate-200 rounded w-48" />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
@@ -272,7 +272,7 @@ export default function BookingTrends() {
 
   if (error || !dashboardData) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen p-4">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
             <div className="text-red-500 text-lg mb-2">
@@ -296,7 +296,7 @@ export default function BookingTrends() {
   const { counts } = dashboardData;
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4">
+    <div className="min-h-screen p-4">
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Header */}
         <div>

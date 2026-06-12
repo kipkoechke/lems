@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         {/* Login Card */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
