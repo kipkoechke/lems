@@ -4,48 +4,44 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:      # allow manual trigger from GitHub UI
+  workflow_dispatch:
 
 concurrency:
   group: production-deploy
-  cancel-in-progress: false  # never cancel an in-flight deploy
+  cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Build & Deploy
+  # ═══════════════════════════════════════════════════════════
+  # Job 1: Build
+  # ═══════════════════════════════════════════════════════════
+  build:
+    name: Build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     steps:
-      # ── 1. Checkout ──────────────────────────────────────
       - name: Checkout code
         uses: actions/checkout@v4.2.2
 
-      # ── 2. SSH agent ─────────────────────────────────────
       - name: Set up SSH agent
         uses: webfactory/ssh-agent@v0.9.1
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # ── 3. Add server to known_hosts ─────────────────────
       - name: Add server to known_hosts
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -p ${{ secrets.SERVER_PORT || 22 }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-      # ── 4. Deploy on server ──────────────────────────────
-      - name: Deploy on remote server
+      - name: Build Docker image on server
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_PORT: ${{ secrets.SERVER_PORT || 22 }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          # Build repo URL from built-in GitHub context — no secret needed
           REPO_URL: https://github.com/${{ github.repository }}.git
           LETSENCRYPT_EMAIL: ${{ secrets.LETSENCRYPT_EMAIL || 'admin@vems.co.ke' }}
         run: |
-          # All variables are expanded by the runner before being sent over SSH.
-          # The remote bash receives them as environment variables.
           ssh -p "$SERVER_PORT" "$SERVER_USER@$SERVER_HOST" \
             env DEPLOY_PATH="$DEPLOY_PATH" \
                 REPO_URL="$REPO_URL" \
@@ -53,7 +49,7 @@ jobs:
             bash -s << 'REMOTE_SCRIPT'
             set -euo pipefail
 
-            # ── First-time bootstrap: clone repo & init SSL ───────────
+            # First-time bootstrap
             if [ ! -d "$DEPLOY_PATH/.git" ]; then
               echo "==> First deploy — cloning repository..."
               mkdir -p "$DEPLOY_PATH"
@@ -65,17 +61,72 @@ jobs:
               exit 0
             fi
 
-            # ── Subsequent deploys: pull latest then hand off to deploy.sh ──
             echo "==> Pulling latest code from main..."
             cd "$DEPLOY_PATH"
             git fetch origin main
             git reset --hard origin/main
+            echo "    At commit: $(git rev-parse --short HEAD)"
 
-            echo "==> Running deploy script..."
-            bash scripts/deploy.sh
+            echo "==> Building Next.js Docker image..."
+            docker compose build --no-cache app
+            echo "==> Build complete!"
           REMOTE_SCRIPT
 
-      # ── 5. Diagnostics ───────────────────────────────────
+  # ═══════════════════════════════════════════════════════════
+  # Job 2: Deploy
+  # ═══════════════════════════════════════════════════════════
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ secrets.SERVER_PORT || 22 }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy container on server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT || 22 }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -p "$SERVER_PORT" "$SERVER_USER@$SERVER_HOST" \
+            env DEPLOY_PATH="$DEPLOY_PATH" bash -s << 'DEPLOY_SCRIPT'
+            set -euo pipefail
+            cd "$DEPLOY_PATH"
+
+            echo "==> [$(date -u '+%Y-%m-%dT%H:%M:%SZ')] Starting deploy..."
+
+            # Stop conflicting containers
+            echo "==> Checking for containers competing on ports 80 / 443..."
+            CONFLICT=$(docker ps --format '{{.ID}} {{.Names}} {{.Ports}}' \
+              | grep -E '0\.0\.0\.0:(80|443)->' || true)
+            if [ -n "$CONFLICT" ]; then
+              echo "    Found — stopping:"
+              echo "$CONFLICT"
+              echo "$CONFLICT" | awk '{print $1}' | xargs docker stop
+              echo "$CONFLICT" | awk '{print $1}' | xargs docker update --restart=no || true
+            else
+              echo "    None found."
+            fi
+
+            echo "==> Bringing up updated app container..."
+            docker compose up -d --remove-orphans app
+            echo "==> Deploy complete!"
+          DEPLOY_SCRIPT
+
       - name: Container & SSL diagnostics
         if: always()
         env:
@@ -109,17 +160,13 @@ jobs:
             ls -la /etc/letsencrypt/live/portal.vems.co.ke/ 2>/dev/null || echo "No cert directory found"
           DIAG
 
-      # ── 6. Health check ──────────────────────────────────
       - name: Verify site is reachable
         run: |
           sleep 15
-          # Check over HTTP (port 80) — avoids SSL cert issues on first deploy
-          # when the real Let's Encrypt cert may not be issued yet.
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             --max-time 30 --retry 5 --retry-delay 5 \
             http://portal.vems.co.ke)
           echo "HTTP status: $HTTP_STATUS"
-          # 000 = completely unreachable (server down / port not open)
           if [[ "$HTTP_STATUS" == "000" ]]; then
             echo "::error::Site is unreachable (curl returned 000). Check server logs."
             exit 1
