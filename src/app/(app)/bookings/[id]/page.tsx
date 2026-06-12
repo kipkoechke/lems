@@ -626,39 +626,6 @@ export default function BookingDetailPage() {
         {services.length > 0 && (
           <ServiceList services={services} />
         )}
-
-        {/* Audit footer */}
-        <div className="bg-white rounded-lg border border-slate-200 px-4 py-3">
-          <div className="flex items-center gap-2 mb-2">
-            <MdInfo className="w-4 h-4 text-slate-400" />
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-              Audit
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-x-8 gap-y-1">
-            <InfoRow label="Created By" value={createdByName} />
-            <InfoRow
-              label="Created At"
-              value={formatDate(booking.created_at)}
-            />
-            {booking.updated_at && (
-              <InfoRow
-                label="Last Updated"
-                value={formatDate(booking.updated_at)}
-              />
-            )}
-            {booking.finance_approved_at && (
-              <InfoRow
-                label="Finance Approved"
-                value={
-                  <span className="text-emerald-600">
-                    {formatDate(booking.finance_approved_at)}
-                  </span>
-                }
-              />
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );
