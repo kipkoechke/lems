@@ -195,6 +195,9 @@ export interface Booking {
   eligibility_response?: string | null;
   finance_approved_at?: string | null;
   notes?: string | null;
+  // SHA claim status
+  sha_status?: "pending" | "submitted" | "approved" | "Payment-completed" | "rejected" | "clinical-review" | null;
+  claim_id?: string | null;
   // Different APIs return different structures
   services: BookingService[];
   booked_services?: BookedService[];

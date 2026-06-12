@@ -94,6 +94,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_CONTRACTS,
     Permission.VIEW_LOTS,
     Permission.VIEW_SERVICES,
+    Permission.VIEW_EQUIPMENTS,
     Permission.VIEW_TRENDS,
   ],
 

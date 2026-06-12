@@ -55,6 +55,19 @@ const RESULT_STATUS_BADGE: Record<string, string> = {
   preliminary: "bg-blue-50 text-blue-700 border-blue-200",
 };
 
+const CLAIM_STATUS_BADGE: Record<string, string> = {
+  pending: "bg-amber-50 text-amber-700 border-amber-200",
+  submitted: "bg-blue-50 text-blue-700 border-blue-200",
+  approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  "Payment-completed": "bg-green-50 text-green-700 border-green-200",
+  rejected: "bg-red-50 text-red-700 border-red-200",
+  "clinical-review": "bg-purple-50 text-purple-700 border-purple-200",
+};
+  pending: "bg-amber-50 text-amber-700 border-amber-200",
+  final: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  preliminary: "bg-blue-50 text-blue-700 border-blue-200",
+};
+
 const formatDate = (
   dateString: string | undefined | null,
   dateOnly = false,
@@ -200,6 +213,22 @@ export default function BookingDetailPage() {
                   Override
                 </span>
               )}
+              {booking.sha_status && (
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
+                    CLAIM_STATUS_BADGE[booking.sha_status] ??
+                    "bg-slate-50 text-slate-700 border-slate-200"
+                  }`}
+                >
+                  SHA: {booking.sha_status}
+                </span>
+              )}
+              {booking.claim_id && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-slate-50 text-slate-600 border-slate-200">
+                  <MdVerified className="w-3 h-3" />
+                  Claim: {booking.claim_id.substring(0, 8)}...
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-500 mt-1">
               Created {formatDate(booking.created_at)} &middot; Source:{" "}
@@ -317,6 +346,31 @@ export default function BookingDetailPage() {
                 )
               }
             />
+            {booking.sha_status && (
+              <InfoRow
+                label="SHA Claim Status"
+                value={
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
+                      CLAIM_STATUS_BADGE[booking.sha_status] ??
+                      "bg-slate-50 text-slate-600 border-slate-200"
+                    }`}
+                  >
+                    {booking.sha_status}
+                  </span>
+                }
+              />
+            )}
+            {booking.claim_id && (
+              <InfoRow
+                label="Claim ID"
+                value={
+                  <span className="font-mono text-xs text-slate-700">
+                    {booking.claim_id}
+                  </span>
+                }
+              />
+            )}
           </div>
         </div>
 
