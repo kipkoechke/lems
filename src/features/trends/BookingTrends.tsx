@@ -546,11 +546,6 @@ export default function BookingTrends() {
                       </td>
                       <td className="py-2.5 px-3 text-slate-700">
                         {activity.patient.name}
-                        {activity.patient.cr_no && (
-                          <span className="text-xs text-slate-400 ml-1">
-                            ({activity.patient.cr_no})
-                          </span>
-                        )}
                       </td>
                       <td className="py-2.5 px-3 text-slate-700">
                         {activity.facility.name}

@@ -292,24 +292,8 @@ export default function BookingDetailPage() {
               title="Patient"
             />
             <InfoRow label="Full Name" value={booking.patient?.name} />
-            <InfoRow
-              label="ID Number"
-              value={booking.patient?.identification_no}
-            />
             {booking.patient?.sha_number && (
               <InfoRow label="SHA Number" value={booking.patient.sha_number} />
-            )}
-            {booking.patient?.phone && (
-              <InfoRow label="Phone" value={booking.patient.phone} />
-            )}
-            {booking.patient?.date_of_birth && (
-              <InfoRow
-                label="Date of Birth"
-                value={formatDate(booking.patient.date_of_birth, true)}
-              />
-            )}
-            {booking.patient?.gender && (
-              <InfoRow label="Gender" value={booking.patient.gender} />
             )}
           </div>
 
@@ -353,16 +337,6 @@ export default function BookingDetailPage() {
                     }`}
                   >
                     {booking.sha_status}
-                  </span>
-                }
-              />
-            )}
-            {booking.claim_id && (
-              <InfoRow
-                label="Claim ID"
-                value={
-                  <span className="font-mono text-xs text-slate-700">
-                    {booking.claim_id}
                   </span>
                 }
               />
