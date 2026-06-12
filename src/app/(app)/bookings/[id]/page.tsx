@@ -562,81 +562,71 @@ export default function BookingDetailPage() {
           ))}
         </div>
 
-        {/* Patient + Facility */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Patient */}
-          <div className="bg-white rounded-lg border border-slate-200 p-4">
-            <SectionHeader
-              icon={<MdPerson className="w-4 h-4" />}
-              title="Patient"
-            />
-            <InfoRow label="Full Name" value={booking.patient?.name} />
-            {booking.patient?.date_of_birth && (
-              <InfoRow
-                label="Age"
-                value={`${Math.floor(
-                  (Date.now() - new Date(booking.patient.date_of_birth).getTime()) /
-                    31557600000,
-                )} years`}
+        {/* Patient & Facility — single card */}
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Patient */}
+            <div>
+              <SectionHeader
+                icon={<MdPerson className="w-4 h-4" />}
+                title="Patient"
               />
-            )}
-            {booking.patient?.gender && (
-              <InfoRow
-                label="Gender"
-                value={
-                  <span className="capitalize">{booking.patient.gender}</span>
-                }
-              />
-            )}
-            {booking.patient?.sha_number && (
-              <InfoRow label="SHA Number" value={booking.patient.sha_number} />
-            )}
-          </div>
+              <InfoRow label="Full Name" value={booking.patient?.name} />
+              {booking.patient?.date_of_birth && (
+                <InfoRow
+                  label="Age"
+                  value={`${Math.floor(
+                    (Date.now() - new Date(booking.patient.date_of_birth).getTime()) /
+                      31557600000,
+                  )} years`}
+                />
+              )}
+              {booking.patient?.gender && (
+                <InfoRow
+                  label="Gender"
+                  value={
+                    <span className="capitalize">{booking.patient.gender}</span>
+                  }
+                />
+              )}
+            </div>
 
-          {/* Facility */}
-          <div className="bg-white rounded-lg border border-slate-200 p-4">
-            <SectionHeader
-              icon={<MdLocalHospital className="w-4 h-4" />}
-              title="Facility"
-            />
-            <InfoRow label="Name" value={booking.facility?.name} />
-            <InfoRow label="FR Code" value={booking.facility?.fr_code} />
-            <InfoRow
-              label="Source"
-              value={
-                <span className="capitalize">
-                  {booking.source?.replace(/_/g, " ")}
-                </span>
-              }
-            />
-            {booking.notes && <InfoRow label="Notes" value={booking.notes} />}
-            <InfoRow
-              label="Finance Approved"
-              value={
-                booking.finance_approved_at ? (
-                  <span className="text-emerald-600">
-                    {formatDate(booking.finance_approved_at)}
-                  </span>
-                ) : (
-                  <span className="text-slate-400 text-xs">Not approved</span>
-                )
-              }
-            />
-            {booking.sha_status && (
+            {/* Facility */}
+            <div>
+              <SectionHeader
+                icon={<MdLocalHospital className="w-4 h-4" />}
+                title="Facility"
+              />
+              <InfoRow label="Name" value={booking.facility?.name} />
               <InfoRow
-                label="SHA Claim Status"
+                label="Finance Approved"
                 value={
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
-                      CLAIM_STATUS_BADGE[booking.sha_status] ??
-                      "bg-slate-50 text-slate-600 border-slate-200"
-                    }`}
-                  >
-                    {booking.sha_status}
-                  </span>
+                  booking.finance_approved_at ? (
+                    <span className="text-emerald-600">
+                      {formatDate(booking.finance_approved_at)}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 text-xs">Not approved</span>
+                  )
                 }
               />
-            )}
+              {booking.sha_status && (
+                <InfoRow
+                  label="SHA Claim Status"
+                  value={
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
+                        CLAIM_STATUS_BADGE[booking.sha_status] ??
+                        "bg-slate-50 text-slate-600 border-slate-200"
+                      }`}
+                    >
+                      {booking.sha_status}
+                    </span>
+                  }
+                />
+              )}
+              {booking.notes && <InfoRow label="Notes" value={booking.notes} />}
+            </div>
           </div>
         </div>
 

@@ -125,23 +125,27 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
         </div>
       </div>
 
-      {/* Center - Facility Name */}
+      {/* Center - Facility Name (hidden for admin users) */}
       <div className="flex-1 max-w-md mx-4">
-        <h1 className="text-base md:text-lg font-semibold text-gray-900 text-center">
-          {facility?.name || "Demo Facility Name"}
-        </h1>
+        {user?.role !== "admin" && user?.role !== "s_admin" && (
+          <h1 className="text-base md:text-lg font-semibold text-gray-900 text-center">
+            {facility?.name || "Demo Facility Name"}
+          </h1>
+        )}
       </div>
 
       {/* Right side - Icons */}
       <div className="flex items-center gap-3">
-        {/* Worklist Icon */}
-        <button
-          onClick={() => router.push("/practitioner/worklist")}
-          className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded relative"
-          title="My Worklist"
-        >
-          <MdAssignment className="w-5 h-5" />
-        </button>
+        {/* Worklist Icon (hidden for admin users) */}
+        {user?.role !== "admin" && user?.role !== "s_admin" && (
+          <button
+            onClick={() => router.push("/practitioner/worklist")}
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded relative"
+            title="My Worklist"
+          >
+            <MdAssignment className="w-5 h-5" />
+          </button>
+        )}
 
         {/* User Menu */}
         <div className="relative" ref={menuRef}>

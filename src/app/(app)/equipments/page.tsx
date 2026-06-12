@@ -14,34 +14,20 @@ import {
   FaEdit,
   FaTrash,
 } from "react-icons/fa";
-import { useCurrentUser } from "@/hooks/useAuth";
-import { useVendors } from "@/features/vendors/useVendors";
-import {
-  useVendorEquipments,
-  useDeleteVendorEquipment,
-} from "@/features/vendors/useVendorEquipments";
-import { VendorEquipment } from "@/services/apiEquipment";
+import { useAdminEquipments } from "@/features/vendors/useAdminEquipments";
+import { useDeleteVendorEquipment } from "@/features/vendors/useVendorEquipments";
+import { AdminEquipment } from "@/services/apiEquipment";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 
-// Status badge colors
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case "active":
-      return "bg-emerald-50 text-emerald-700 border-emerald-200";
-    case "maintenance":
-      return "bg-amber-50 text-amber-700 border-amber-200";
-    case "inactive":
-      return "bg-slate-50 text-slate-700 border-slate-200";
-    case "decommissioned":
-      return "bg-red-50 text-red-700 border-red-200";
-    case "pending_installation":
-      return "bg-blue-50 text-blue-700 border-blue-200";
-    default:
-      return "bg-slate-50 text-slate-700 border-slate-200";
-  }
+const STATUS_BADGE: Record<string, string> = {
+  active: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  maintenance: "bg-amber-50 text-amber-700 border-amber-200",
+  inactive: "bg-slate-50 text-slate-700 border-slate-200",
+  decommissioned: "bg-red-50 text-red-700 border-red-200",
+  pending_installation: "bg-blue-50 text-blue-700 border-blue-200",
 };
 
 const getStatusIcon = (status: string) => {
@@ -61,131 +47,49 @@ const getStatusIcon = (status: string) => {
 
 export default function EquipmentsPage() {
   const router = useRouter();
-  const user = useCurrentUser();
 
-  const isVendorUser = user?.role === "vendor";
-
-  // For vendor users use their entity ID; admins select from dropdown
-  const [selectedVendorId, setSelectedVendorId] = useState("");
-  const vendorId = isVendorUser ? user?.entity?.id || "" : selectedVendorId;
-
-  const { vendors } = useVendors();
-
-  // State
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
-    null,
-  );
+  const [modalityFilter, setModalityFilter] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
-  // Fetch equipments
-  const {
-    data: equipmentsData,
-    isLoading,
-    error,
-  } = useVendorEquipments(vendorId, {
-    page,
-    per_page: 15,
-    status: statusFilter || undefined,
-    category: categoryFilter || undefined,
-    search: search || undefined,
-  });
-
-  const deleteEquipmentMutation = useDeleteVendorEquipment();
-
-  const equipments = useMemo(
-    () => equipmentsData?.data || [],
-    [equipmentsData?.data],
-  );
-  const pagination = equipmentsData?.pagination;
-
-  // Get unique categories for filter
-  const categories = useMemo(() => {
-    const cats = new Set<string>();
-    equipments.forEach((eq) => {
-      if (eq.category_label) cats.add(eq.category_label);
+  const { equipments, pagination, availableFilters, isLoading, error, refetch } =
+    useAdminEquipments({
+      page,
+      per_page: 15,
+      status: statusFilter || undefined,
+      category: categoryFilter || undefined,
+      modality: modalityFilter || undefined,
+      search: search || undefined,
     });
-    return Array.from(cats);
-  }, [equipments]);
 
-  // Filtered equipments (client-side filtering for search)
-  const filteredEquipments = useMemo(() => {
-    if (!search.trim()) return equipments;
-    const s = search.toLowerCase();
-    return equipments.filter(
-      (eq) =>
-        eq.name?.toLowerCase().includes(s) ||
-        eq.code?.toLowerCase().includes(s) ||
-        eq.serial_number?.toLowerCase().includes(s) ||
-        eq.brand?.toLowerCase().includes(s) ||
-        eq.model?.toLowerCase().includes(s) ||
-        eq.category_label?.toLowerCase().includes(s),
-    );
-  }, [equipments, search]);
+  const deleteMutation = useDeleteVendorEquipment();
 
-  const handleDelete = async (equipmentId: string) => {
-    if (!vendorId) return;
-    deleteEquipmentMutation.mutate(
-      { vendorId, equipmentId },
+  const handleDelete = (equipment: AdminEquipment) => {
+    if (!equipment.vendor_id) return;
+    deleteMutation.mutate(
+      { vendorId: equipment.vendor_id, equipmentId: equipment.id },
       {
         onSuccess: () => {
           setShowDeleteConfirm(null);
+          refetch();
         },
       },
     );
   };
 
-  if (!isVendorUser && !vendorId) {
-    return (
-      <div className="min-h-screen p-4">
-        <div className="max-w-7xl mx-auto space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <FaCog className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">Equipment</h1>
-              <p className="text-sm text-slate-500">
-                Select a vendor to view equipment
-              </p>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg border border-slate-200 p-6">
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Select Vendor
-            </label>
-            <select
-              value={selectedVendorId}
-              onChange={(e) => setSelectedVendorId(e.target.value)}
-              className="w-full sm:w-80 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            >
-              <option value="">-- Choose a vendor --</option>
-              {vendors?.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen p-4">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg border border-slate-200 p-8">
-            <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-slate-200 rounded w-1/4"></div>
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-16 bg-slate-100 rounded"></div>
-                ))}
-              </div>
+          <div className="bg-white rounded-lg border border-slate-200 p-8 animate-pulse space-y-4">
+            <div className="h-8 bg-slate-200 rounded w-1/4" />
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-16 bg-slate-100 rounded" />
+              ))}
             </div>
           </div>
         </div>
@@ -198,10 +102,7 @@ export default function EquipmentsPage() {
       <ErrorState
         title="Unable to Load Equipment"
         error={error}
-        action={{
-          label: "Try Again",
-          onClick: () => window.location.reload(),
-        }}
+        action={{ label: "Try Again", onClick: () => refetch() }}
         fullScreen
       />
     );
@@ -234,44 +135,26 @@ export default function EquipmentsPage() {
         {/* Filters */}
         <div className="bg-white rounded-lg border border-slate-200 p-4">
           <div className="flex flex-col sm:flex-row gap-3">
-            {/* Vendor selector for non-vendor users */}
-            {!isVendorUser && (
-              <select
-                value={selectedVendorId}
-                onChange={(e) => {
-                  setSelectedVendorId(e.target.value);
-                  setPage(1);
-                }}
-                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[180px]"
-              >
-                <option value="">-- Select Vendor --</option>
-                {vendors?.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.name}
-                  </option>
-                ))}
-              </select>
-            )}
-            {/* Search */}
             <div className="flex-1 relative">
               <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <input
                 type="text"
                 placeholder="Search by name, code, serial number..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
                 className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
-
-            {/* Status Filter */}
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[140px]"
+              className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[140px] bg-white"
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
@@ -280,29 +163,25 @@ export default function EquipmentsPage() {
               <option value="decommissioned">Decommissioned</option>
               <option value="pending_installation">Pending Installation</option>
             </select>
-
-            {/* Category Filter */}
-            {categories.length > 0 && (
-              <select
-                value={categoryFilter}
-                onChange={(e) => {
-                  setCategoryFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[160px]"
-              >
-                <option value="">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            )}
+            <select
+              value={categoryFilter}
+              onChange={(e) => {
+                setCategoryFilter(e.target.value);
+                setPage(1);
+              }}
+              className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[150px] bg-white"
+            >
+              <option value="">All Categories</option>
+              {availableFilters?.modalities?.map((m) => (
+                <option key={m.code} value={m.code}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Table - Desktop */}
+        {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 hidden md:block overflow-hidden">
           <Table className="w-full">
             <Table.Header>
@@ -310,75 +189,64 @@ export default function EquipmentsPage() {
                 <Table.HeaderCell>Code</Table.HeaderCell>
                 <Table.HeaderCell>Name</Table.HeaderCell>
                 <Table.HeaderCell>Category</Table.HeaderCell>
-                <Table.HeaderCell>Brand / Model</Table.HeaderCell>
+                <Table.HeaderCell>Vendor</Table.HeaderCell>
                 <Table.HeaderCell>Status</Table.HeaderCell>
                 <Table.HeaderCell align="center">Actions</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {filteredEquipments.length === 0 ? (
+              {equipments.length === 0 ? (
                 <Table.Empty colSpan={6}>No equipment found</Table.Empty>
               ) : (
-                filteredEquipments.map((equipment: VendorEquipment) => (
-                  <Table.Row key={equipment.id}>
+                equipments.map((eq: AdminEquipment) => (
+                  <Table.Row key={eq.id}>
                     <Table.Cell>
                       <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
-                        {equipment.code}
+                        {eq.code}
                       </span>
                     </Table.Cell>
                     <Table.Cell>
-                      <div className="font-medium text-slate-900">
-                        {equipment.name}
-                      </div>
-                      {equipment.serial_number && (
+                      <div className="font-medium text-slate-900">{eq.name}</div>
+                      {eq.serial_number && (
                         <div className="text-xs text-slate-500 font-mono">
-                          S/N: {equipment.serial_number}
+                          S/N: {eq.serial_number}
                         </div>
                       )}
                     </Table.Cell>
                     <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {equipment.category_label}
-                      </span>
+                      <span className="text-sm text-slate-700">{eq.category_label}</span>
                     </Table.Cell>
                     <Table.Cell>
-                      <div className="text-sm text-slate-900">
-                        {equipment.brand || "-"}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        {equipment.model || "-"}
-                      </div>
+                      <span className="text-sm text-slate-700">
+                        {eq.vendor?.name || "-"}
+                      </span>
                     </Table.Cell>
                     <Table.Cell>
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadge(
-                          equipment.status,
-                        )}`}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+                          STATUS_BADGE[eq.status] ?? "bg-slate-50 text-slate-700 border-slate-200"
+                        }`}
                       >
-                        {getStatusIcon(equipment.status)}
-                        {equipment.status_label}
+                        {getStatusIcon(eq.status)}
+                        {eq.status_label}
                       </span>
                     </Table.Cell>
                     <Table.Cell align="center">
-                      <ActionMenu menuId={`equipment-${equipment.id}`}>
+                      <ActionMenu menuId={`equipment-${eq.id}`}>
                         <ActionMenu.Trigger />
                         <ActionMenu.Content>
                           <ActionMenu.Item
-                            onClick={() =>
-                              router.push(`/equipments/${equipment.id}`)
-                            }
+                            onClick={() => router.push(`/equipments/${eq.id}`)}
                           >
                             <FaEye className="text-blue-500" /> View
                           </ActionMenu.Item>
                           <ActionMenu.Item
-                            onClick={() =>
-                              router.push(`/equipments/${equipment.id}/edit`)
-                            }
+                            onClick={() => router.push(`/equipments/${eq.id}/edit`)}
                           >
                             <FaEdit className="text-amber-500" /> Edit
                           </ActionMenu.Item>
                           <ActionMenu.Item
-                            onClick={() => setShowDeleteConfirm(equipment.id)}
+                            onClick={() => setShowDeleteConfirm(eq.id)}
                             className="text-red-600 hover:bg-red-50"
                           >
                             <FaTrash className="text-red-500" /> Delete
@@ -391,8 +259,6 @@ export default function EquipmentsPage() {
               )}
             </Table.Body>
           </Table>
-
-          {/* Pagination */}
           {pagination && pagination.last_page > 1 && (
             <Pagination
               currentPage={pagination.current_page}
@@ -407,140 +273,58 @@ export default function EquipmentsPage() {
 
         {/* Mobile Cards */}
         <div className="md:hidden space-y-3">
-          {filteredEquipments.length === 0 ? (
-            <div className="bg-white rounded-lg border border-slate-200 p-8 text-center text-slate-500">
-              No equipment found
-            </div>
-          ) : (
-            filteredEquipments.map((equipment: VendorEquipment) => (
-              <div
-                key={equipment.id}
-                className="bg-white rounded-lg border border-slate-200 p-4"
-                onClick={() => router.push(`/equipments/${equipment.id}`)}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">
-                      {equipment.code}
-                    </span>
-                    <h3 className="font-semibold text-slate-900 mt-2">
-                      {equipment.name}
-                    </h3>
-                  </div>
-                  <span
-                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(
-                      equipment.status,
-                    )}`}
-                  >
-                    {getStatusIcon(equipment.status)}
-                    {equipment.status_label}
+          {equipments.map((eq: AdminEquipment) => (
+            <div
+              key={eq.id}
+              className="bg-white rounded-lg border border-slate-200 p-4"
+              onClick={() => router.push(`/equipments/${eq.id}`)}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">
+                    {eq.code}
                   </span>
+                  <h3 className="font-semibold text-slate-900 mt-2">{eq.name}</h3>
                 </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Category</span>
-                    <span className="text-slate-900">
-                      {equipment.category_label}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Brand</span>
-                    <span className="text-slate-900">
-                      {equipment.brand || "-"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Model</span>
-                    <span className="text-slate-900">
-                      {equipment.model || "-"}
-                    </span>
-                  </div>
-                  {equipment.serial_number && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Serial</span>
-                      <span className="text-slate-900 font-mono text-xs">
-                        {equipment.serial_number}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/equipments/${equipment.id}/edit`);
-                    }}
-                    className="flex-1 py-2 text-sm text-amber-600 bg-amber-50 rounded-lg font-medium hover:bg-amber-100 transition-colors"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDeleteConfirm(equipment.id);
-                    }}
-                    className="flex-1 py-2 text-sm text-red-600 bg-red-50 rounded-lg font-medium hover:bg-red-100 transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
+                    STATUS_BADGE[eq.status] ?? "bg-slate-50 text-slate-700 border-slate-200"
+                  }`}
+                >
+                  {getStatusIcon(eq.status)}
+                  {eq.status_label}
+                </span>
               </div>
-            ))
-          )}
-
-          {/* Mobile Pagination */}
-          {pagination && pagination.last_page > 1 && (
-            <div className="bg-white rounded-lg border border-slate-200">
-              <Pagination
-                currentPage={pagination.current_page}
-                lastPage={pagination.last_page}
-                total={pagination.total}
-                from={pagination.from}
-                to={pagination.to}
-                onPageChange={setPage}
-              />
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Category</span>
+                  <span className="text-slate-900">{eq.category_label}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Vendor</span>
+                  <span className="text-slate-900">{eq.vendor?.name || "-"}</span>
+                </div>
+                {eq.serial_number && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Serial</span>
+                    <span className="text-slate-900 font-mono text-xs">{eq.serial_number}</span>
+                  </div>
+                )}
+              </div>
             </div>
+          ))}
+          {pagination && pagination.last_page > 1 && (
+            <Pagination
+              currentPage={pagination.current_page}
+              lastPage={pagination.last_page}
+              total={pagination.total}
+              from={pagination.from}
+              to={pagination.to}
+              onPageChange={setPage}
+            />
           )}
         </div>
       </div>
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                <FaTrash className="w-6 h-6 text-red-600" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">
-                Delete Equipment
-              </h3>
-              <p className="text-slate-600 mb-6">
-                Are you sure you want to delete this equipment? This action
-                cannot be undone.
-              </p>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowDeleteConfirm(null)}
-                  className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleDelete(showDeleteConfirm)}
-                  disabled={deleteEquipmentMutation.isPending}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 font-medium"
-                >
-                  {deleteEquipmentMutation.isPending ? "Deleting..." : "Delete"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

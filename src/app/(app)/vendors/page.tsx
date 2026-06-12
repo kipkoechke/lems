@@ -64,7 +64,7 @@ function VendorsContent() {
     return (
       <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-6 md:p-8">
+          <div className="bg-white rounded-lg border border-slate-200 p-6 md:p-8">
             <div className="animate-pulse space-y-6">
               <div className="h-8 bg-gray-200 rounded w-1/4"></div>
               <div className="space-y-4">
@@ -83,7 +83,7 @@ function VendorsContent() {
     return (
       <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-6 md:p-8 text-center">
+          <div className="bg-white rounded-lg border border-slate-200 p-6 md:p-8 text-center">
             <div className="text-red-500 text-lg md:text-xl mb-4">
               Error loading vendors
             </div>
@@ -103,18 +103,18 @@ function VendorsContent() {
     <div className="min-h-screen p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-2 md:mb-3 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 md:px-8 py-4 md:py-6">
+        <div className="bg-white rounded-lg border border-slate-200 mb-2 md:mb-3 overflow-hidden">
+          <div className=" px-4 md:px-8 py-4 md:py-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <FaBuilding className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <FaBuilding className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="text-xl md:text-2xl font-bold text-white mb-1">
+                  <h1 className="text-xl font-bold text-slate-900">
                     Vendor Management
                   </h1>
-                  <p className="text-sm md:text-base text-blue-100">
+                  <p className="text-sm text-slate-500">
                     Manage vendors and their contracts
                   </p>
                 </div>
@@ -131,7 +131,7 @@ function VendorsContent() {
           </div>
 
           {/* Filters */}
-          <div className="p-4 md:p-6 bg-gray-50">
+          <div className="p-4">
             <div className="flex flex-col gap-4">
               <div className="flex-1 relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -150,7 +150,7 @@ function VendorsContent() {
         {/* Stats Cards */}
         {filteredVendors && filteredVendors.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500">
+            <div className="bg-white rounded-lg border border-slate-200 p-4">
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-blue-100 mr-4">
                   <FaBuilding className="w-6 h-6 text-blue-600" />
@@ -166,7 +166,7 @@ function VendorsContent() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
+            <div className="bg-white rounded-lg border border-slate-200 p-4">
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-green-100 mr-4">
                   <FaCheck className="w-6 h-6 text-green-600" />
@@ -209,7 +209,7 @@ function VendorsContent() {
         )}
 
         {/* Table - Desktop */}
-        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl hidden md:block">
+        <div className="bg-white rounded-lg border border-slate-200 hidden md:block">
           <Table className="w-full">
             <Table.Header>
               <Table.Row>

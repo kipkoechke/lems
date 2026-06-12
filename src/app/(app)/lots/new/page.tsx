@@ -45,18 +45,18 @@ export default function NewLotPage() {
       <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6">
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
+          <div className="bg-white rounded-lg border border-slate-200 mb-4 md:mb-6">
+            <div className=" px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
               <div className="flex items-center gap-3 md:gap-4">
                 <BackButton onClick={() => router.back()} />
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <FaLayerGroup className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <FaLayerGroup className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="text-xl md:text-2xl font-bold text-white mb-1">
+                  <h1 className="text-xl font-bold text-slate-900">
                     Create New Lot
                   </h1>
-                  <p className="text-sm md:text-base text-indigo-100">
+                  <p className="text-sm text-slate-500">
                     Add a new service lot to the system
                   </p>
                 </div>
@@ -65,7 +65,7 @@ export default function NewLotPage() {
           </div>
 
           {/* Form */}
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+          <div className="bg-white rounded-lg border border-slate-200 p-4 md:p-6">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Lot Information */}
               <div>

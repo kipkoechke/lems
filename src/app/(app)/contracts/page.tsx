@@ -87,15 +87,15 @@ export default function ContractsPage() {
     <div className="min-h-screen p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-2 md:mb-3">
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
+        <div className="bg-white rounded-lg border border-slate-200 mb-2 md:mb-3">
+          <div className=" px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <FaFileContract className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <FaFileContract className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="text-xl md:text-2xl font-bold text-white mb-1">
+                  <h1 className="text-xl font-bold text-slate-900">
                     Contract Management
                   </h1>
                   <p className="text-sm md:text-base text-purple-100">
@@ -116,7 +116,7 @@ export default function ContractsPage() {
           </div>
 
           {/* Search and Filters */}
-          <div className="p-4 md:p-6 bg-gray-50 space-y-4">
+          <div className="p-4 space-y-4">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -134,7 +134,7 @@ export default function ContractsPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+          <div className="bg-white rounded-lg border border-slate-200 p-4 md:p-6">
             <div className="flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-xl flex items-center justify-center">
                 <FaFileContract className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
@@ -149,7 +149,7 @@ export default function ContractsPage() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+          <div className="bg-white rounded-lg border border-slate-200 p-4 md:p-6">
             <div className="flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-xl flex items-center justify-center">
                 <FaFileContract className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
@@ -164,7 +164,7 @@ export default function ContractsPage() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+          <div className="bg-white rounded-lg border border-slate-200 p-4 md:p-6">
             <div className="flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-red-100 rounded-xl flex items-center justify-center">
                 <FaFileContract className="w-5 h-5 md:w-6 md:h-6 text-red-600" />
@@ -182,7 +182,7 @@ export default function ContractsPage() {
         </div>
 
         {/* Table - Desktop */}
-        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl hidden md:block overflow-x-auto">
+        <div className="bg-white rounded-lg border border-slate-200 hidden md:block overflow-x-auto">
           {filteredContracts?.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-gray-500 text-xl mb-4">

@@ -198,7 +198,7 @@ export default function ServicesPage() {
                   setStatus(e.target.value);
                   setPage(1);
                 }}
-                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[140px]"
+                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[140px] bg-white"
               >
                 <option value="">All Statuses</option>
                 <option value="active">Active</option>
@@ -213,7 +213,7 @@ export default function ServicesPage() {
                   setSource(e.target.value);
                   setPage(1);
                 }}
-                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[140px]"
+                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[140px] bg-white"
               >
                 <option value="">All Sources</option>
                 <option value="standalone">Standalone</option>
@@ -228,7 +228,7 @@ export default function ServicesPage() {
                   setFrom(e.target.value);
                   setPage(1);
                 }}
-                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
                 title="From date"
               />
               <input
@@ -238,7 +238,7 @@ export default function ServicesPage() {
                   setTo(e.target.value);
                   setPage(1);
                 }}
-                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
                 title="To date"
               />
             </div>

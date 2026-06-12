@@ -195,3 +195,71 @@ export const deleteVendorEquipment = async (
 ): Promise<void> => {
   await axios.delete(`/vendors/${vendorId}/equipments/${equipmentId}`);
 };
+
+// ============ Admin Equipment Types & API ============
+
+export interface AdminEquipmentVendor {
+  id: string;
+  name: string;
+  code: string;
+}
+
+export interface AdminEquipmentDicom {
+  ae_title: string | null;
+  hl7_host: string | null;
+  dicom_port: number | null;
+  is_connected: boolean;
+}
+
+export interface AdminEquipment {
+  id: string;
+  code: string;
+  name: string;
+  serial_number: string;
+  model: string;
+  brand: string;
+  category: string;
+  category_label: string;
+  modality: string | null;
+  status: string;
+  status_label: string;
+  vendor_id: string;
+  vendor: AdminEquipmentVendor;
+  owner_type: "vendor" | "facility";
+  dicom: AdminEquipmentDicom | null;
+  created_at: string;
+}
+
+export interface AdminEquipmentResponse {
+  data: AdminEquipment[];
+  pagination: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number;
+    to: number;
+  };
+  available_filters?: {
+    modalities: { code: string; label: string }[];
+  };
+}
+
+export interface AdminEquipmentParams {
+  page?: number;
+  per_page?: number;
+  modality?: string;
+  category?: string;
+  status?: string;
+  search?: string;
+  vendor_id?: string;
+  sort_by?: string;
+  sort_order?: string;
+}
+
+export const getAdminEquipments = async (
+  params: AdminEquipmentParams = {},
+): Promise<AdminEquipmentResponse> => {
+  const response = await axios.get("/admin/equipment", { params });
+  return response.data;
+};
