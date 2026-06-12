@@ -22,7 +22,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Legend,
 } from "recharts";
 import { useDashboard } from "./useDashboard";
 import { useRouter } from "next/navigation";
