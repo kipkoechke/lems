@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { FaCog } from "react-icons/fa";
 import BackButton from "@/components/common/BackButton";
 import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
@@ -86,14 +85,6 @@ const EQUIPMENT_CATEGORIES = [
   { value: "anesthesia_machine", label: "Anesthesia Machine" },
 ];
 
-const STATUS_OPTIONS = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-  { value: "maintenance", label: "Maintenance" },
-  { value: "decommissioned", label: "Decommissioned" },
-  { value: "pending_installation", label: "Pending Installation" },
-];
-
 export default function NewEquipmentPage() {
   const router = useRouter();
   const user = useCurrentUser();
@@ -166,16 +157,11 @@ export default function NewEquipmentPage() {
         {/* Header */}
         <div className="flex items-center gap-3">
           <BackButton onClick={() => router.back()} />
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <FaCog className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">
-                Add New Equipment
-              </h1>
-              <p className="text-sm text-slate-500">Register new equipment</p>
-            </div>
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">
+              Add New Equipment
+            </h1>
+            <p className="text-sm text-slate-500">Register new equipment</p>
           </div>
         </div>
 
@@ -230,15 +216,6 @@ export default function NewEquipmentPage() {
                 type="date"
                 register={register("manufacture_date")}
                 placeholder=""
-              />
-
-              <SelectField
-                label="Status"
-                required
-                register={register("status")}
-                error={errors.status?.message}
-                placeholder="Select status"
-                options={STATUS_OPTIONS}
               />
             </div>
 

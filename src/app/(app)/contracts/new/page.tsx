@@ -11,7 +11,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState, useRef, useEffect } from "react";
 import {
-  FaFileContract,
   FaSave,
   FaTimes,
   FaSearch,
@@ -131,22 +130,15 @@ export default function NewContractPage() {
       <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="bg-white rounded-lg border border-slate-200 mb-4 md:mb-6">
-            <div className=" px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
-              <div className="flex items-center gap-3 md:gap-4">
-                <BackButton onClick={() => router.back()} />
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <FaFileContract className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-slate-900">
-                    Create New Contract
-                  </h1>
-                  <p className="text-sm md:text-base text-purple-100">
-                    Add a new vendor facility contract
-                  </p>
-                </div>
-              </div>
+          <div className="flex items-center gap-3 mb-4">
+            <BackButton onClick={() => router.back()} />
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">
+                Create New Contract
+              </h1>
+              <p className="text-sm text-slate-500">
+                Add a new vendor facility contract
+              </p>
             </div>
           </div>
 
@@ -155,10 +147,7 @@ export default function NewContractPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Contract Information */}
               <div>
-                <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 flex items-center gap-3">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <FaFileContract className="w-4 h-4 text-purple-600" />
-                  </div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   Contract Information
                 </h2>
 
@@ -249,26 +238,6 @@ export default function NewContractPage() {
                     {errors.vendor_id && (
                       <p className="mt-1 text-sm text-red-600">
                         {errors.vendor_id.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Status */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Status *
-                    </label>
-                    <select
-                      {...register("status")}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                      <option value="pending">Pending</option>
-                    </select>
-                    {errors.status && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.status.message}
                       </p>
                     )}
                   </div>
@@ -451,11 +420,20 @@ export default function NewContractPage() {
               </div>
 
               {/* Form Actions */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
+              <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => router.push("/contracts")}
+                  className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <FaTimes className="w-4 h-4" />
+                  Cancel
+                </button>
+
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="flex-1 sm:flex-initial bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   {isCreating ? (
                     <>
@@ -468,15 +446,6 @@ export default function NewContractPage() {
                       Create Contract
                     </>
                   )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => router.push("/contracts")}
-                  className="flex-1 sm:flex-initial border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  <FaTimes className="w-4 h-4" />
-                  Cancel
                 </button>
               </div>
             </form>

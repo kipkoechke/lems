@@ -5,7 +5,6 @@ import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { FaCog } from "react-icons/fa";
 import BackButton from "@/components/common/BackButton";
 import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
@@ -272,18 +271,11 @@ export default function EditEquipmentPage() {
         {/* Header */}
         <div className="flex items-center gap-3">
           <BackButton onClick={() => router.back()} />
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <FaCog className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">
-                Edit Equipment
-              </h1>
-              <p className="text-sm text-slate-500">
-                Update equipment information
-              </p>
-            </div>
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Edit Equipment</h1>
+            <p className="text-sm text-slate-500">
+              Update equipment information
+            </p>
           </div>
         </div>
 

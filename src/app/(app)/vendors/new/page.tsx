@@ -19,7 +19,6 @@ function NewVendorContent() {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm<VendorFormData>({
     resolver: zodResolver(vendorSchema),
     defaultValues: {
@@ -31,7 +30,8 @@ function NewVendorContent() {
     createVendor(
       {
         ...data,
-        is_active: data.is_active ? "1" : "0",
+        // New vendors are always created active.
+        is_active: "1",
       },
       {
         onSuccess: () => {
@@ -41,94 +41,55 @@ function NewVendorContent() {
     );
   };
 
-  const isActive = watch("is_active");
-
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
+    <div className="min-h-screen p-3 md:p-6">
+      <div className="mx-auto max-w-4xl">
         {/* Header */}
-        <div className="mb-8">
+        <div className="flex items-center gap-3 mb-4">
           <BackButton onClick={() => router.back()} />
-          <div className="flex items-center gap-4 mt-4">
-            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
-              <FaBuilding className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900">
-                Add New Vendor
-              </h1>
-              <p className="text-gray-600 mt-2">Create a new vendor profile</p>
-            </div>
+          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+            <FaBuilding className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Add New Vendor</h1>
+            <p className="text-sm text-slate-500">Create a new vendor profile</p>
           </div>
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-2xl shadow-lg">
-          <div className="px-8 py-6 border-b border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-900">
+        <div className="bg-white rounded-lg border border-slate-200">
+          <div className="px-4 md:px-6 py-4 border-b border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-900">
               Vendor Information
             </h2>
           </div>
-          <form onSubmit={handleSubmit(onSubmit)} className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Vendor Code */}
-              <div className="space-y-2">
-                <InputField
-                  label="Vendor Code"
-                  type="text"
-                  placeholder="Enter vendor code"
-                  register={register("code")}
-                  error={errors.code?.message}
-                  required
-                  disabled={isCreating}
-                />
-              </div>
-
-              {/* Status */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Status
-                </label>
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    {...register("is_active")}
-                    className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    Active
-                  </span>
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                      isActive
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {isActive ? "Active" : "Inactive"}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500">
-                  Check to make this vendor active
-                </p>
-              </div>
+              <InputField
+                label="Vendor Code"
+                type="text"
+                placeholder="Enter vendor code"
+                register={register("code")}
+                error={errors.code?.message}
+                required
+                disabled={isCreating}
+              />
 
               {/* Vendor Name */}
-              <div className="space-y-2 md:col-span-2">
-                <InputField
-                  label="Vendor Name"
-                  type="text"
-                  placeholder="Enter vendor name"
-                  register={register("name")}
-                  error={errors.name?.message}
-                  required
-                  disabled={isCreating}
-                />
-              </div>
+              <InputField
+                label="Vendor Name"
+                type="text"
+                placeholder="Enter vendor name"
+                register={register("name")}
+                error={errors.name?.message}
+                required
+                disabled={isCreating}
+              />
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-100">
+            <div className="flex justify-end space-x-4 mt-6 pt-6 border-t border-gray-100">
               <button
                 type="button"
                 onClick={() => router.push("/vendors")}

@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { lotCreationSchema, LotCreationFormData } from "@/lib/validations";
 import { InputField } from "@/components/common/InputField";
-import { FaLayerGroup, FaSave, FaTimes } from "react-icons/fa";
+import { FaSave, FaTimes } from "react-icons/fa";
 
 export default function NewLotPage() {
   const router = useRouter();
@@ -45,75 +45,41 @@ export default function NewLotPage() {
       <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="bg-white rounded-lg border border-slate-200 mb-4 md:mb-6">
-            <div className=" px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
-              <div className="flex items-center gap-3 md:gap-4">
-                <BackButton onClick={() => router.back()} />
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <FaLayerGroup className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-slate-900">
-                    Create New Lot
-                  </h1>
-                  <p className="text-sm text-slate-500">
-                    Add a new service lot to the system
-                  </p>
-                </div>
-              </div>
+          <div className="flex items-center gap-3 mb-4">
+            <BackButton onClick={() => router.back()} />
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">
+                Create New Lot
+              </h1>
+              <p className="text-sm text-slate-500">
+                Add a new service lot to the system
+              </p>
             </div>
           </div>
 
           {/* Form */}
           <div className="bg-white rounded-lg border border-slate-200 p-4 md:p-6">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Lot Information */}
-              <div>
-                <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 flex items-center gap-3">
-                  <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                    <FaLayerGroup className="w-4 h-4 text-indigo-600" />
-                  </div>
-                  Lot Information
-                </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <InputField
+                  label="Lot Number"
+                  type="text"
+                  placeholder="Enter lot number (e.g., LOT001)"
+                  register={register("number")}
+                  error={errors.number?.message}
+                  required
+                  disabled={isCreating}
+                />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                  <InputField
-                    label="Lot Number"
-                    type="text"
-                    placeholder="Enter lot number (e.g., LOT001)"
-                    register={register("number")}
-                    error={errors.number?.message}
-                    required
-                    disabled={isCreating}
-                  />
-
-                  <InputField
-                    label="Lot Name"
-                    type="text"
-                    placeholder="Enter lot name"
-                    register={register("name")}
-                    error={errors.name?.message}
-                    required
-                    disabled={isCreating}
-                  />
-
-                  <div className="md:col-span-2">
-                    <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        {...register("is_active")}
-                        className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                      />
-                      <span className="text-sm font-medium text-gray-700">
-                        Active Lot
-                      </span>
-                    </label>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Active lots are available for service assignment and
-                      contract creation
-                    </p>
-                  </div>
-                </div>
+                <InputField
+                  label="Lot Name"
+                  type="text"
+                  placeholder="Enter lot name"
+                  register={register("name")}
+                  error={errors.name?.message}
+                  required
+                  disabled={isCreating}
+                />
               </div>
 
               {/* Form Actions */}

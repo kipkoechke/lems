@@ -112,24 +112,26 @@ function EditLotContent() {
   const isActive = watch("is_active");
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
+    <div className="min-h-screen p-3 md:p-6">
+      <div className="mx-auto max-w-4xl">
         {/* Header */}
-        <div className="mb-8">
+        <div className="flex items-center gap-3 mb-4">
           <BackButton onClick={() => router.back()} />
-          <h1 className="text-4xl font-bold text-gray-900 mt-4">Edit Lot</h1>
-          <p className="text-gray-600 mt-2">Update lot information</p>
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Edit Lot</h1>
+            <p className="text-sm text-slate-500">Update lot information</p>
+          </div>
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-2xl shadow-lg">
-          <div className="px-8 py-6 border-b border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-900">
+        <div className="bg-white rounded-lg border border-slate-200">
+          <div className="px-4 md:px-6 py-4 border-b border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-900">
               Lot Information
             </h2>
           </div>
-          <form onSubmit={handleSubmit(onSubmit)} className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Lot Name */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-700">
