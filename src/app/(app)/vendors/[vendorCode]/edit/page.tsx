@@ -10,7 +10,7 @@ import BackButton from "@/components/common/BackButton";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useState, useEffect } from "react";
-import { FaBuilding, FaSave, FaTimes } from "react-icons/fa";
+import { FaSave, FaTimes } from "react-icons/fa";
 
 const vendorFormSchema = z.object({
   name: z.string().min(1, "Vendor name is required"),
@@ -119,9 +119,6 @@ function EditVendorContent() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <BackButton onClick={() => router.back()} />
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <FaBuilding className="w-5 h-5 text-blue-600" />
-          </div>
           <div>
             <h1 className="text-xl font-bold text-slate-900">Edit Vendor</h1>
             <p className="text-sm text-slate-500">Update vendor information</p>
@@ -130,11 +127,6 @@ function EditVendorContent() {
 
         {/* Form */}
         <div className="bg-white rounded-lg border border-slate-200">
-          <div className="px-4 md:px-6 py-4 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Vendor Information
-            </h2>
-          </div>
           <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Vendor Code */}
@@ -201,9 +193,6 @@ function EditVendorContent() {
                     {isActive ? "Active" : "Inactive"}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500">
-                  Uncheck to deactivate this vendor
-                </p>
               </div>
             </div>
 

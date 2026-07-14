@@ -125,11 +125,6 @@ function EditLotContent() {
 
         {/* Form */}
         <div className="bg-white rounded-lg border border-slate-200">
-          <div className="px-4 md:px-6 py-4 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Lot Information
-            </h2>
-          </div>
           <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Lot Name */}
@@ -198,9 +193,6 @@ function EditLotContent() {
                     {isActive ? "Active" : "Inactive"}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500">
-                  Uncheck to deactivate this lot
-                </p>
               </div>
             </div>
 

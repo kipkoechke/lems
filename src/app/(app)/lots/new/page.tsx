@@ -83,11 +83,20 @@ export default function NewLotPage() {
               </div>
 
               {/* Form Actions */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
+              <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => router.push("/lots")}
+                  className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <FaTimes className="w-4 h-4" />
+                  Cancel
+                </button>
+
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="flex-1 sm:flex-initial bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   {isCreating ? (
                     <>
@@ -100,15 +109,6 @@ export default function NewLotPage() {
                       Create Lot
                     </>
                   )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => router.push("/lots")}
-                  className="flex-1 sm:flex-initial border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  <FaTimes className="w-4 h-4" />
-                  Cancel
                 </button>
               </div>
             </form>

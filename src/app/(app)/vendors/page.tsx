@@ -180,7 +180,7 @@ function VendorsContent() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-slate-200 border-l-4 border-l-red-500 p-3">
+            <div className="bg-white rounded-lg border border-slate-200 p-3">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
                   <FaTimes className="w-4 h-4 text-red-600" />
