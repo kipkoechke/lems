@@ -30,6 +30,7 @@ import {
   FaTimes,
   FaUsers,
   FaChevronDown,
+  FaPlus,
 } from "react-icons/fa";
 
 function EditFacilityForm({
@@ -315,9 +316,63 @@ function FacilitiesContent() {
   return (
     <div className="min-h-screen p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Search and Filters */}
+        {/* Header */}
+        <div className="bg-white rounded-lg border border-slate-200 mb-2 md:mb-3 px-4 md:px-6 py-4">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FaBuilding className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">Facilities</h1>
+                <p className="text-sm text-slate-500">
+                  Manage health facilities
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 max-w-xl w-full mx-auto flex">
+              <div className="relative flex-1">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search facilities..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                  className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+                {searchInput && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <FaTimes />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleSearch}
+                className="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 text-sm font-medium whitespace-nowrap"
+              >
+                Search
+              </button>
+            </div>
+
+            <button
+              onClick={() => router.push("/facilities/new")}
+              className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+            >
+              <FaPlus className="w-3 h-3" /> Add Facility
+            </button>
+          </div>
+        </div>
+
+        {/* Filters */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 mb-4 md:mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* County Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -676,41 +731,6 @@ function FacilitiesContent() {
               </div>
             </div>
 
-            {/* Search Filter */}
-            <div className="lg:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search
-              </label>
-              <div className="relative flex">
-                <div className="relative flex-1">
-                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search facilities..."
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
-                  {searchInput && (
-                    <button
-                      type="button"
-                      onClick={handleClearSearch}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      <FaTimes />
-                    </button>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSearch}
-                  className="px-4 py-2 bg-blue-600 text-white border border-blue-600 rounded-r-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
-                >
-                  Search
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Clear All Filters Button */}
@@ -729,49 +749,39 @@ function FacilitiesContent() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-sm p-2 md:p-6">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <FaBuilding className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="bg-white rounded-lg border border-slate-200 p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
+                <FaBuilding className="w-4 h-4 text-blue-600" />
               </div>
               <div>
-                <div className="text-xl md:text-2xl font-bold text-gray-900">
+                <div className="text-lg font-bold text-gray-900">
                   {totalFacilities}
                 </div>
-                <div className="text-xs md:text-sm text-gray-600">
-                  Total Facilities
-                </div>
+                <div className="text-xs text-gray-600">Total Facilities</div>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-sm p-4 md:p-6">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <FaStethoscope className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
+          <div className="bg-white rounded-lg border border-slate-200 p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
+                <FaStethoscope className="w-4 h-4 text-green-600" />
               </div>
               <div>
-                <div className="text-xl md:text-2xl font-bold text-gray-900">
-                  --
-                </div>
-                <div className="text-xs md:text-sm text-gray-600">
-                  Active Services
-                </div>
+                <div className="text-lg font-bold text-gray-900">--</div>
+                <div className="text-xs text-gray-600">Active Services</div>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-sm p-4 md:p-6">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <FaFileContract className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
+          <div className="bg-white rounded-lg border border-slate-200 p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center shrink-0">
+                <FaFileContract className="w-4 h-4 text-purple-600" />
               </div>
               <div>
-                <div className="text-xl md:text-2xl font-bold text-gray-900">
-                  --
-                </div>
-                <div className="text-xs md:text-sm text-gray-600">
-                  Active Contracts
-                </div>
+                <div className="text-lg font-bold text-gray-900">--</div>
+                <div className="text-xs text-gray-600">Active Contracts</div>
               </div>
             </div>
           </div>

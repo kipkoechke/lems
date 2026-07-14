@@ -17,8 +17,17 @@ import { useAdminEquipments } from "@/features/vendors/useAdminEquipments";
 import type { AdminEquipment } from "@/services/apiEquipment";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
+
+const STATUS_FILTER_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "maintenance", label: "Maintenance" },
+  { value: "inactive", label: "Inactive" },
+  { value: "decommissioned", label: "Decommissioned" },
+  { value: "pending_installation", label: "Pending Installation" },
+];
 
 const STATUS_BADGE: Record<string, string> = {
   active: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -59,6 +68,13 @@ export default function EquipmentsPage() {
       modality: modalityFilter || undefined,
       search: search || undefined,
     });
+
+  const modalityLabel = (code: string | null) => {
+    if (!code) return "-";
+    return (
+      availableFilters?.modalities?.find((m) => m.code === code)?.label || code
+    );
+  };
 
   if (isLoading) {
     return (
@@ -129,50 +145,50 @@ export default function EquipmentsPage() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-              className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[140px] bg-white"
-            >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="maintenance">Maintenance</option>
-              <option value="inactive">Inactive</option>
-              <option value="decommissioned">Decommissioned</option>
-              <option value="pending_installation">Pending Installation</option>
-            </select>
-            <select
-              value={modalityFilter}
-              onChange={(e) => {
-                setModalityFilter(e.target.value);
-                setPage(1);
-              }}
-              className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[150px] bg-white"
-            >
-              <option value="">All Modalities</option>
-              {availableFilters?.modalities?.map((m) => (
-                <option key={m.code} value={m.code}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 hidden md:block overflow-hidden">
+          {/* Filters toolbar */}
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3 p-4 border-b border-slate-100">
+            <div className="w-full sm:w-48">
+              <SearchableSelect
+                label="Status"
+                options={STATUS_FILTER_OPTIONS}
+                value={statusFilter}
+                onChange={(v) => {
+                  setStatusFilter(v);
+                  setPage(1);
+                }}
+                placeholder="All Status"
+                searchPlaceholder="Search status..."
+              />
+            </div>
+            <div className="w-full sm:w-56">
+              <SearchableSelect
+                label="Modality"
+                options={
+                  availableFilters?.modalities?.map((m) => ({
+                    value: m.code,
+                    label: m.label,
+                  })) ?? []
+                }
+                value={modalityFilter}
+                onChange={(v) => {
+                  setModalityFilter(v);
+                  setPage(1);
+                }}
+                placeholder="All Modalities"
+                searchPlaceholder="Search modality..."
+              />
+            </div>
+          </div>
+
           <Table className="w-full">
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>Code</Table.HeaderCell>
                 <Table.HeaderCell>Name</Table.HeaderCell>
                 <Table.HeaderCell>Category</Table.HeaderCell>
+                <Table.HeaderCell>Modality</Table.HeaderCell>
                 <Table.HeaderCell>Vendor</Table.HeaderCell>
                 <Table.HeaderCell>Status</Table.HeaderCell>
                 <Table.HeaderCell align="center">Actions</Table.HeaderCell>
@@ -180,7 +196,7 @@ export default function EquipmentsPage() {
             </Table.Header>
             <Table.Body>
               {equipments.length === 0 ? (
-                <Table.Empty colSpan={6}>No equipment found</Table.Empty>
+                <Table.Empty colSpan={7}>No equipment found</Table.Empty>
               ) : (
                 equipments.map((eq: AdminEquipment) => (
                   <Table.Row key={eq.id}>
@@ -199,6 +215,11 @@ export default function EquipmentsPage() {
                     </Table.Cell>
                     <Table.Cell>
                       <span className="text-sm text-slate-700">{eq.category_label}</span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-sm text-slate-700">
+                        {modalityLabel(eq.modality)}
+                      </span>
                     </Table.Cell>
                     <Table.Cell>
                       <span className="text-sm text-slate-700">

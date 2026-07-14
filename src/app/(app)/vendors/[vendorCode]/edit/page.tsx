@@ -174,15 +174,12 @@ function EditVendorContent() {
                 <label className="block text-sm font-semibold text-gray-700">
                   Status
                 </label>
-                <div className="flex items-center space-x-3">
+                <label className="flex items-center gap-3 cursor-pointer w-fit">
                   <input
                     type="checkbox"
                     {...register("is_active")}
                     className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="text-sm font-medium text-gray-700">
-                    Active
-                  </span>
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                       isActive
@@ -192,7 +189,7 @@ function EditVendorContent() {
                   >
                     {isActive ? "Active" : "Inactive"}
                   </span>
-                </div>
+                </label>
               </div>
             </div>
 
