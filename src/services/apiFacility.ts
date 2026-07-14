@@ -29,9 +29,16 @@ export interface Facility {
   facility_type: string;
   owner: string;
   county: County;
-  // Additional fields that might be in the API but not shown in the sample
+  // Additional fields returned by the facilities detail/list endpoints
+  fr_code?: string;
+  facility_ownership?: string;
+  phone_number?: string;
+  email?: string;
+  sha_contract_status?: string;
+  sub_county?: { id: string; name: string; code: string } | null;
+  ward?: { id: string; name: string; code: string } | null;
   operation_status?: string;
-  is_active?: string;
+  is_active?: string | boolean;
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;

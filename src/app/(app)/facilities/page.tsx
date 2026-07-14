@@ -808,7 +808,7 @@ function FacilitiesContent() {
                 <Table.Header>
                   <Table.Row>
                     <Table.HeaderCell>Facility</Table.HeaderCell>
-                    <Table.HeaderCell>Code</Table.HeaderCell>
+                    <Table.HeaderCell>Location</Table.HeaderCell>
                     <Table.HeaderCell className="whitespace-nowrap">
                       KEPH Level
                     </Table.HeaderCell>
@@ -825,14 +825,22 @@ function FacilitiesContent() {
                         <div className="font-medium text-gray-900">
                           {facility.name}
                         </div>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        <div className="text-xs text-gray-500 font-mono mt-0.5">
                           {facility.code}
-                        </span>
+                        </div>
                       </Table.Cell>
                       <Table.Cell>
-                        <span className="inline-flex items-center px-2.5 py-1.25 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <div className="text-sm text-gray-900">
+                          {facility.county?.name || "-"}
+                        </div>
+                        {facility.sub_county?.name && (
+                          <div className="text-xs text-gray-500">
+                            {facility.sub_county.name}
+                          </div>
+                        )}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           {facility.keph_level}
                         </span>
                       </Table.Cell>
