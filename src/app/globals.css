@@ -20,6 +20,21 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Tailwind v4 resets buttons to cursor: default — restore pointer for
+   interactive controls, while keeping disabled controls non-interactive. */
+button:not(:disabled),
+[role="button"]:not(:disabled),
+label[for],
+summary,
+select:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 /* Mobile-specific optimizations */
 @media (max-width: 768px) {
   .mobile-scroll-container {
