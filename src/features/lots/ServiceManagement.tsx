@@ -197,8 +197,8 @@ const ServiceManagement: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-xl mb-6 p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            <div className="flex items-center gap-4 shrink-0">
               <button
                 onClick={() => router.back()}
                 className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
@@ -206,10 +206,10 @@ const ServiceManagement: React.FC = () => {
                 <FaArrowLeft size={18} />
               </button>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Service Management
                 </h1>
-                <p className="text-gray-600 mt-1">
+                <p className="text-gray-600 mt-1 text-sm">
                   Managing services for lot:{" "}
                   <span className="font-semibold">
                     {lot?.name || "Loading..."}
@@ -217,26 +217,14 @@ const ServiceManagement: React.FC = () => {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => openModal("create")}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
-            >
-              <FaPlus size={16} />
-              Add Service
-            </button>
-          </div>
-        </div>
 
-        {/* Search and Filters */}
-        <div className="bg-white rounded-2xl shadow-xl mb-6 p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <SearchField
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Search services..."
-              className="flex-1"
-            />
-            <div className="flex gap-4">
+            <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 max-w-2xl w-full mx-auto">
+              <SearchField
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="Search services..."
+                className="flex-1"
+              />
               <select
                 value={statusFilter}
                 onChange={(e) =>
@@ -251,6 +239,14 @@ const ServiceManagement: React.FC = () => {
                 <option value="inactive">Inactive</option>
               </select>
             </div>
+
+            <button
+              onClick={() => openModal("create")}
+              className="shrink-0 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 whitespace-nowrap"
+            >
+              <FaPlus size={16} />
+              Add Service
+            </button>
           </div>
         </div>
 

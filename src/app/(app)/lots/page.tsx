@@ -85,90 +85,80 @@ export default function LotsPage() {
     <div className="min-h-screen p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg border border-slate-200 mb-2 md:mb-3">
-          <div className=" px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <FaLayerGroup className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-slate-900">
-                    Lot Management
-                  </h1>
-                  <p className="text-sm text-slate-500">
-                    Manage service lots and categories
-                  </p>
-                </div>
+        <div className="bg-white rounded-lg border border-slate-200 mb-2 md:mb-3 px-4 md:px-6 py-4">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FaLayerGroup className="w-5 h-5 text-blue-600" />
               </div>
-              <PermissionGate permission={Permission.ONBOARD_LOTS}>
-                <button
-                  onClick={() => router.push("/lots/new")}
-                  className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                >
-                  <FaPlus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Add Lot</span>
-                </button>
-              </PermissionGate>
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">
+                  Lot Management
+                </h1>
+                <p className="text-sm text-slate-500">
+                  Manage service lots and categories
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Search and Filters */}
-          <div className="p-4 space-y-4">
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 max-w-xl w-full mx-auto">
               <SearchField
                 value={searchTerm}
                 onChange={setSearchTerm}
                 placeholder="Search lots by name or number..."
               />
             </div>
+
+            <PermissionGate permission={Permission.ONBOARD_LOTS}>
+              <button
+                onClick={() => router.push("/lots/new")}
+                className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                <FaPlus className="w-4 h-4" />
+                <span>Add Lot</span>
+              </button>
+            </PermissionGate>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
-          <div className="bg-white rounded-lg border border-slate-200 p-4 md:p-6">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
-                <FaLayerGroup className="w-5 h-5 md:w-6 md:h-6 text-indigo-600" />
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="bg-white rounded-lg border border-slate-200 p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center shrink-0">
+                <FaLayerGroup className="w-4 h-4 text-indigo-600" />
               </div>
               <div>
-                <div className="text-xl md:text-2xl font-bold text-gray-900">
+                <div className="text-lg font-bold text-gray-900">
                   {pagination?.total || lots?.length || 0}
                 </div>
-                <div className="text-xs md:text-sm text-gray-600">
-                  Total Lots
-                </div>
+                <div className="text-xs text-gray-600">Total Lots</div>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg border border-slate-200 p-4 md:p-6">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <FaLayerGroup className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
+          <div className="bg-white rounded-lg border border-slate-200 p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
+                <FaLayerGroup className="w-4 h-4 text-green-600" />
               </div>
               <div>
-                <div className="text-xl md:text-2xl font-bold text-gray-900">
+                <div className="text-lg font-bold text-gray-900">
                   {lots?.filter((l) => l.is_active).length || 0}
                 </div>
-                <div className="text-xs md:text-sm text-gray-600">
-                  Active Lots
-                </div>
+                <div className="text-xs text-gray-600">Active Lots</div>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg border border-slate-200 p-4 md:p-6">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <FaStethoscope className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
+          <div className="bg-white rounded-lg border border-slate-200 p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
+                <FaStethoscope className="w-4 h-4 text-blue-600" />
               </div>
               <div>
-                <div className="text-xl md:text-2xl font-bold text-gray-900">
+                <div className="text-lg font-bold text-gray-900">
                   {totalServicesCount}
                 </div>
-                <div className="text-xs md:text-sm text-gray-600">
-                  Total Services
-                </div>
+                <div className="text-xs text-gray-600">Total Services</div>
               </div>
             </div>
           </div>

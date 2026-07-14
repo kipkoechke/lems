@@ -92,30 +92,21 @@ export default function EquipmentsPage() {
     <div className="min-h-screen p-4">
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <FaCog className="w-5 h-5 text-blue-600" />
+        <div className="bg-white rounded-lg border border-slate-200 px-4 md:px-6 py-4">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FaCog className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">Equipment</h1>
+                <p className="text-sm text-slate-500">
+                  {pagination?.total || 0} equipment items
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">Equipment</h1>
-              <p className="text-sm text-slate-500">
-                {pagination?.total || 0} equipment items
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => router.push("/equipments/new")}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
-          >
-            <FaPlus className="w-3 h-3" /> Add Equipment
-          </button>
-        </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative">
+            <div className="flex-1 max-w-xl w-full mx-auto relative">
               <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <input
                 type="text"
@@ -128,6 +119,19 @@ export default function EquipmentsPage() {
                 className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
+
+            <button
+              onClick={() => router.push("/equipments/new")}
+              className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+            >
+              <FaPlus className="w-3 h-3" /> Add Equipment
+            </button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <select
               value={statusFilter}
               onChange={(e) => {

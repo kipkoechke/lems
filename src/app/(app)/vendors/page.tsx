@@ -103,103 +103,97 @@ function VendorsContent() {
     <div className="min-h-screen p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg border border-slate-200 mb-2 md:mb-3 overflow-hidden">
-          <div className=" px-4 md:px-8 py-4 md:py-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <FaBuilding className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-slate-900">
-                    Vendor Management
-                  </h1>
-                  <p className="text-sm text-slate-500">
-                    Manage vendors and their contracts
-                  </p>
-                </div>
+        <div className="bg-white rounded-lg border border-slate-200 mb-2 md:mb-3 px-4 md:px-6 py-4">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FaBuilding className="w-5 h-5 text-blue-600" />
               </div>
-              <PermissionGate permission={Permission.ONBOARD_VENDORS}>
-                <button
-                  onClick={() => router.push("/vendors/new")}
-                  className="bg-white/20 hover:bg-white/30 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-sm md:text-base w-full sm:w-auto justify-center"
-                >
-                  <FaPlus /> Add Vendor
-                </button>
-              </PermissionGate>
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">
+                  Vendor Management
+                </h1>
+                <p className="text-sm text-slate-500">
+                  Manage vendors and their contracts
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Filters */}
-          <div className="p-4">
-            <div className="flex flex-col gap-4">
-              <div className="flex-1 relative">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search vendors by name or code..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                />
-              </div>
+            <div className="flex-1 max-w-xl w-full mx-auto relative">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search vendors by name or code..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+              />
             </div>
+
+            <PermissionGate permission={Permission.ONBOARD_VENDORS}>
+              <button
+                onClick={() => router.push("/vendors/new")}
+                className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 whitespace-nowrap justify-center"
+              >
+                <FaPlus /> Add Vendor
+              </button>
+            </PermissionGate>
           </div>
         </div>
 
         {/* Stats Cards */}
         {filteredVendors && filteredVendors.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-lg border border-slate-200 p-4">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-blue-100 mr-4">
-                  <FaBuilding className="w-6 h-6 text-blue-600" />
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="bg-white rounded-lg border border-slate-200 p-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                  <FaBuilding className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-blue-600">
+                  <p className="text-lg font-bold text-blue-600">
                     {filteredVendors.length}
                   </p>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs font-medium text-gray-600">
                     Total Vendors
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-slate-200 p-4">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-green-100 mr-4">
-                  <FaCheck className="w-6 h-6 text-green-600" />
+            <div className="bg-white rounded-lg border border-slate-200 p-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
+                  <FaCheck className="w-4 h-4 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-green-600">
+                  <p className="text-lg font-bold text-green-600">
                     {
                       filteredVendors.filter(
                         (v) => v.is_active === true || v.is_active === "1",
                       ).length
                     }
                   </p>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs font-medium text-gray-600">
                     Active Vendors
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-red-500">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-red-100 mr-4">
-                  <FaTimes className="w-6 h-6 text-red-600" />
+            <div className="bg-white rounded-lg border border-slate-200 border-l-4 border-l-red-500 p-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+                  <FaTimes className="w-4 h-4 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-red-600">
+                  <p className="text-lg font-bold text-red-600">
                     {
                       filteredVendors.filter(
                         (v) => v.is_active === false || v.is_active === "0",
                       ).length
                     }
                   </p>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs font-medium text-gray-600">
                     Inactive Vendors
                   </p>
                 </div>
