@@ -54,6 +54,7 @@ function DonutCard({
   centerLabel,
   centerValue,
   legendItems,
+  emptyMessage = "No data yet",
 }: {
   title: string;
   icon: React.ReactNode;
@@ -62,7 +63,10 @@ function DonutCard({
   centerLabel?: string;
   centerValue?: string | number;
   legendItems?: { label: string; value: string | number; color: string }[];
+  emptyMessage?: string;
 }) {
+  const total = data.reduce((sum, d) => sum + (d.value || 0), 0);
+
   return (
     <div className="bg-white rounded-lg border border-slate-200 p-4">
       <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100">
@@ -71,7 +75,17 @@ function DonutCard({
           {title}
         </p>
       </div>
-      <div className="flex items-center gap-4">
+      {total === 0 ? (
+        <div className="flex flex-col items-center justify-center text-center py-8 h-28">
+          <span className="text-sm font-medium text-slate-500">
+            {emptyMessage}
+          </span>
+          <span className="text-xs text-slate-400 mt-0.5">
+            Data will appear here once available
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-4">
         <div className="relative w-28 h-28 shrink-0">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -136,8 +150,9 @@ function DonutCard({
               </span>
             </div>
           ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
