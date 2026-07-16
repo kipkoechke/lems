@@ -26,14 +26,14 @@ interface ApiUser {
   email: string;
   phone: string;
   role: UserRole;
-  profile: {
+  profile?: {
     salutation: string | null;
     gender: string | null;
     professional_id: string | null;
     registration_id: string | null;
     status: string;
   };
-  entity: UserEntity;
+  entity?: UserEntity;
 }
 
 // Normalized user for app usage
@@ -83,7 +83,10 @@ const normalizeUser = (apiUser: ApiUser): User => {
   };
 };
 
-// Helper to extract facility from API response
+// Helper to extract facility from API response.
+// For vendor users the facility slot doubles as the vendor-identity carrier
+// so that useMyVendor() can resolve the vendor record even when the login
+// payload omits the top-level entity block (newer API versions).
 const extractFacility = (apiUser: ApiUser): Facility => {
   if (apiUser.entity?.type === "facility") {
     return {
@@ -92,12 +95,15 @@ const extractFacility = (apiUser: ApiUser): Facility => {
       name: apiUser.entity.name || null,
     };
   }
-  // For vendors, return null facility
-  if (apiUser.entity?.type === "vendor") {
+  // Vendor: prefer entity; fall back to profile.vendor (newer API shape).
+  if (
+    apiUser.entity?.type === "vendor" ||
+    apiUser.role?.type === "vendor"
+  ) {
     return {
-      id: apiUser.entity.id || null,
-      code: apiUser.entity.code || null,
-      name: apiUser.entity.name || null,
+      id: apiUser.entity?.id || apiUser.profile?.registration_id || null,
+      code: apiUser.entity?.code || null,
+      name: apiUser.entity?.name || null,
     };
   }
   return { id: null, code: null, name: null };
