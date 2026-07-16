@@ -4,13 +4,19 @@ import axios from "../lib/axios";
 // Types
 // ============================================================
 
+export interface DicomServerInfo {
+  version: string;
+  dicom_aet: string;
+  dicom_port: number;
+  server_ip: string;
+  plugins_enabled: boolean;
+  worklist_plugin_loaded: boolean;
+  modalities_count: number;
+}
+
 export interface DicomServerStatus {
   connected: boolean;
-  orthanc_version?: string;
-  ae_title?: string;
-  host?: string;
-  port?: number;
-  registered_modalities?: number;
+  server: DicomServerInfo;
 }
 
 export interface DicomModality {

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useUpdateUser, useUser } from "@/features/users/useUsers";
+import { userDisplayName } from "@/services/apiUsers";
 import BackButton from "@/components/common/BackButton";
 import { InputField } from "@/components/common/InputField";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -38,7 +39,7 @@ function EditUserContent() {
     if (user) {
       reset({
         email: user.email,
-        full_name: user.full_name ?? "",
+        full_name: user.name ?? "",
         password: "",
         is_active: user.is_active,
       });
@@ -99,7 +100,7 @@ function EditUserContent() {
           <div>
             <h1 className="text-xl font-bold text-slate-900">Edit User</h1>
             <p className="text-sm text-slate-500">
-              Update {user.username}&apos;s details
+              Update {userDisplayName(user)}&apos;s details
             </p>
           </div>
         </div>

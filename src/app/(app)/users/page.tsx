@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useDeleteUser, useUsers } from "@/features/users/useUsers";
-import { AdminUser } from "@/services/apiUsers";
+import { userScopeLabel } from "@/services/apiUsers";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import Pagination from "@/components/common/Pagination";
@@ -18,13 +18,6 @@ const ACTIVE_OPTIONS = [
   { value: "true", label: "Active" },
   { value: "false", label: "Inactive" },
 ];
-
-const scopeLabel = (user: AdminUser) => {
-  if (user.is_superuser) return { label: "Super Admin", cls: "bg-purple-50 text-purple-700 border-purple-200" };
-  if (user.is_vendor) return { label: "Vendor", cls: "bg-blue-50 text-blue-700 border-blue-200" };
-  if (user.is_facility) return { label: "Facility", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
-  return { label: "Standard", cls: "bg-slate-50 text-slate-700 border-slate-200" };
-};
 
 function UsersContent() {
   const router = useRouter();
@@ -93,7 +86,7 @@ function UsersContent() {
                   setSearch(v);
                   setPage(1);
                 }}
-                placeholder="Search by username, email or name..."
+                placeholder="Search by name, email or phone..."
               />
             </div>
 
@@ -143,15 +136,15 @@ function UsersContent() {
                 </Table.Empty>
               ) : (
                 users.map((user) => {
-                  const scope = scopeLabel(user);
+                  const scope = userScopeLabel(user);
                   return (
                     <Table.Row key={user.id}>
                       <Table.Cell>
                         <div className="font-medium text-slate-900">
-                          {user.full_name || user.username}
+                          {user.name || user.email}
                         </div>
-                        <div className="text-xs text-slate-500 font-mono">
-                          {user.username}
+                        <div className="text-xs text-slate-500">
+                          {user.role}
                         </div>
                       </Table.Cell>
                       <Table.Cell>
@@ -215,10 +208,10 @@ function UsersContent() {
             </Table.Body>
           </Table>
 
-          {pagination && pagination.last_page > 1 && (
+          {pagination && (pagination.last_page || pagination.total_pages || 1) > 1 && (
             <Pagination
               currentPage={pagination.current_page}
-              lastPage={pagination.last_page}
+              lastPage={pagination.last_page ?? pagination.total_pages ?? 1}
               total={pagination.total}
               from={pagination.from}
               to={pagination.to}

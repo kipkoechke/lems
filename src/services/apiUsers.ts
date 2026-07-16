@@ -4,21 +4,74 @@ import axios from "../lib/axios";
 // Types
 // ============================================================
 
+export interface UserProfileFacility {
+  id: string;
+  name: string;
+}
+
+export interface UserProfileVendor {
+  id: string;
+  name: string;
+}
+
+export interface UserProfile {
+  id: string;
+  salutation?: string | null;
+  gender?: string | null;
+  vendor?: UserProfileVendor | null;
+  facility?: UserProfileFacility | null;
+}
+
 export interface AdminUser {
   id: string;
-  username: string;
+  name?: string;
   email: string;
-  full_name?: string | null;
+  phone?: string;
+  role: string;
+  role_label?: string;
   is_active: boolean;
-  is_superuser: boolean;
-  is_facility: boolean;
-  is_vendor: boolean;
-  facility_id?: string | null;
-  vendor_id?: string | null;
+  profile?: UserProfile;
   permissions?: PermissionRecord[];
   created_at?: string;
   updated_at?: string;
 }
+
+/** Derive a display name, falling back to email when name is absent. */
+export const userDisplayName = (user: AdminUser): string =>
+  user.name || user.email;
+
+/** Map role codes to human-readable labels shown in badges. */
+export const userScopeLabel = (
+  user: AdminUser,
+): { label: string; cls: string } => {
+  switch (user.role) {
+    case "s_admin":
+      return {
+        label: user.role_label || "Super Admin",
+        cls: "bg-purple-50 text-purple-700 border-purple-200",
+      };
+    case "admin":
+      return {
+        label: user.role_label || "Admin",
+        cls: "bg-indigo-50 text-indigo-700 border-indigo-200",
+      };
+    case "f_admin":
+      return {
+        label: user.role_label || "Facility Admin",
+        cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      };
+    case "vendor":
+      return {
+        label: user.role_label || "Vendor",
+        cls: "bg-blue-50 text-blue-700 border-blue-200",
+      };
+    default:
+      return {
+        label: user.role_label || "Standard",
+        cls: "bg-slate-50 text-slate-700 border-slate-200",
+      };
+  }
+};
 
 export interface UserListParams {
   is_active?: boolean;
@@ -34,6 +87,7 @@ export interface UserListResponse {
     last_page: number;
     per_page: number;
     total: number;
+    total_pages?: number;
     from: number;
     to: number;
   };

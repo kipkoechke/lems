@@ -6,6 +6,7 @@ import { Permission } from "@/lib/rbac";
 import { useUser } from "@/features/users/useUsers";
 import { useUserPermissions } from "@/features/users/usePermissionsAdmin";
 import { ErrorState } from "@/components/common/ErrorState";
+import { userDisplayName } from "@/services/apiUsers";
 import { FaArrowLeft, FaEdit, FaKey } from "react-icons/fa";
 
 const formatDate = (value?: string | null) =>
@@ -52,21 +53,13 @@ function UserDetailContent() {
     );
   }
 
-  const scope = user.is_superuser
-    ? "Super Admin"
-    : user.is_vendor
-      ? "Vendor User"
-      : user.is_facility
-        ? "Facility User"
-        : "Standard";
-
   const details = [
-    { label: "Username", value: user.username },
     { label: "Email", value: user.email },
-    { label: "Full Name", value: user.full_name },
-    { label: "Scope", value: scope },
-    { label: "Facility ID", value: user.facility_id },
-    { label: "Vendor ID", value: user.vendor_id },
+    { label: "Phone", value: user.phone },
+    { label: "Full Name", value: user.name },
+    { label: "Role", value: user.role_label || user.role },
+    { label: "Facility", value: user.profile?.facility?.name },
+    { label: "Vendor", value: user.profile?.vendor?.name },
   ];
 
   return (
@@ -82,7 +75,7 @@ function UserDetailContent() {
           </button>
           <div className="min-w-0">
             <h1 className="text-xl md:text-2xl font-bold text-slate-900 truncate">
-              {user.full_name || user.username}
+              {userDisplayName(user)}
             </h1>
             <p className="text-sm text-slate-500 font-mono">{user.email}</p>
           </div>

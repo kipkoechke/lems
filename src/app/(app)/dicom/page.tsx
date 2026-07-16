@@ -124,18 +124,18 @@ function DicomContent() {
               </div>
 
               {[
-                { label: "Version", value: status?.orthanc_version },
-                { label: "AE Title", value: status?.ae_title },
+                { label: "Version", value: status?.server?.version },
+                { label: "AE Title", value: status?.server?.dicom_aet },
                 {
                   label: "Host",
                   value:
-                    status?.host && status?.port
-                      ? `${status.host}:${status.port}`
-                      : status?.host,
+                    status?.server?.server_ip && status?.server?.dicom_port
+                      ? `${status.server.server_ip}:${status.server.dicom_port}`
+                      : status?.server?.server_ip,
                 },
                 {
                   label: "Registered Modalities",
-                  value: status?.registered_modalities?.toString(),
+                  value: status?.server?.modalities_count?.toString(),
                 },
               ].map((item) => (
                 <div key={item.label}>

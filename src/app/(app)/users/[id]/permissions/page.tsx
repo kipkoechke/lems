@@ -12,6 +12,7 @@ import {
   useUserPermissions,
 } from "@/features/users/usePermissionsAdmin";
 import { useCurrentUser } from "@/hooks/useAuth";
+import { userDisplayName } from "@/services/apiUsers";
 import { SearchField } from "@/components/common/SearchField";
 import { ErrorState } from "@/components/common/ErrorState";
 import { FaArrowLeft, FaCheck, FaPlus, FaTimes } from "react-icons/fa";
@@ -107,7 +108,7 @@ function UserPermissionsContent() {
               Permissions
             </h1>
             <p className="text-sm text-slate-500">
-              {user?.full_name || user?.username} · {assigned.length} assigned
+              {user ? userDisplayName(user) : "…"} · {assigned.length} assigned
             </p>
           </div>
           <div className="flex-1 min-w-[200px] max-w-md ml-auto">
