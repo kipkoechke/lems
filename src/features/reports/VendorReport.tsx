@@ -1,6 +1,6 @@
 "use client";
 
-import { IVendorReport } from "@/services/apiReport";
+import { IFacilityReport } from "@/services/apiReport";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,7 @@ import { InputField } from "@/components/common/InputField";
 const VendorReport: React.FC = () => {
   const { isCreatingVendorReport, generateVendorReport } =
     useCreateVendorReport();
-  const [reportData, setReportData] = useState<IVendorReport[] | null>(null);
+  const [reportData, setReportData] = useState<IFacilityReport[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -29,11 +29,11 @@ const VendorReport: React.FC = () => {
 
     generateVendorReport(
       {
-        start_date: new Date(data.start_date),
-        end_date: new Date(data.end_date),
+        start_date: data.start_date,
+        end_date: data.end_date,
       },
       {
-        onSuccess: (result: IVendorReport[]) => setReportData(result),
+        onSuccess: (result) => setReportData(result),
         onError: (err: any) =>
           setError(err?.message || "Failed to generate report."),
       }

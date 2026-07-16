@@ -195,7 +195,7 @@ export default function EditVendorEquipmentPage() {
     if (!vendorId || !equipmentId) return;
 
     const targetVendor = vendors.find((v) => v.id === vendorId);
-    const targetVendorCode = targetVendor?.code || vendorCode;
+    const targetVendorCode = targetVendor?.vendor_alpha_code || vendorCode;
 
     updateEquipmentMutation.mutate(
       {

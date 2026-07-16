@@ -1,8 +1,11 @@
-import { BookingFilters } from "@/services/apiBooking";
-import { BookingTrendsResponse, getBookingTrends } from "@/services/apiTrends";
+import {
+  BookingTrendsResponse,
+  getBookingTrends,
+  TrendFilters,
+} from "@/services/apiTrends";
 import { useQuery } from "@tanstack/react-query";
 
-export const useBookingTrends = (filters: BookingFilters = {}) => {
+export const useBookingTrends = (filters: TrendFilters = {}) => {
   const {
     data: trendsData,
     isLoading,

@@ -1,19 +1,61 @@
 import axios from "../lib/axios";
 
+// ============================================================
+// Shared type aliases
+// ============================================================
+
+export type VendorContactType = "technical" | "support" | "finance" | "general";
+export type VendorLifecycleState = "active" | "disabled" | "retired";
+
+// ============================================================
+// Types
+// ============================================================
+
+export interface VendorContact {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  contact_type: VendorContactType;
+  title?: string;
+  department?: string;
+  is_primary: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface VendorModality {
+  id: string;
+  category?: string;
+  name?: string;
+  code?: string;
+  status?: string;
+  label?: string;
+}
+
 export interface Vendor {
   id: string;
+  vendor_alpha_code: string;
+  dha_vendor_code: string;
+  sha_vendor_code: string;
   name: string;
-  code: string;
-  email?: string;
-  phone?: string;
-  is_active: boolean | string;
+  description?: string | null;
+  address?: string | null;
+  country?: string;
+  email?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  financial_details?: Record<string, unknown> | null;
+  lifecycle_state: VendorLifecycleState;
+  contacts?: VendorContact[];
+  modalities?: VendorModality[];
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
-  equipments?: VendorEquipment[];
 }
 
-interface PaginatedVendorsResponse {
+export interface VendorListResponse {
   data: Vendor[];
   pagination: {
     current_page: number;
@@ -25,33 +67,132 @@ interface PaginatedVendorsResponse {
   };
 }
 
-export interface VendorEquipment {
-  id: string;
-  name: string;
-  description: string | null;
-  serial_number: string | null;
-  model: string | null;
-  manufacturer: string | null;
-  year: string | null;
-  status: string;
-  vendor_id: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
+export interface VendorDetailResponse {
+  data: Vendor;
 }
 
 export interface VendorCreateRequest {
+  vendor_alpha_code: string;
+  dha_vendor_code: string;
+  sha_vendor_code: string;
   name: string;
-  code: string;
-  is_active: string;
+  description?: string;
+  address?: string;
+  country?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  financial_details?: Record<string, unknown>;
+  lifecycle_state?: VendorLifecycleState;
+  modality_ids?: string[];
 }
 
 export interface VendorUpdateRequest {
+  vendor_alpha_code?: string;
+  dha_vendor_code?: string;
+  sha_vendor_code?: string;
+  name?: string;
+  description?: string;
+  address?: string;
+  country?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  financial_details?: Record<string, unknown>;
+  lifecycle_state?: VendorLifecycleState;
+  modality_ids?: string[];
+}
+
+export interface VendorListParams {
+  lifecycle_state?: string;
+  search?: string;
+  page?: number;
+  page_size?: number;
+}
+
+// Contact types
+export interface VendorContactCreateRequest {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  contact_type: VendorContactType;
+  title?: string;
+  department?: string;
+  is_primary?: boolean;
+}
+
+export interface VendorContactUpdateRequest {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  contact_type?: VendorContactType;
+  title?: string;
+  department?: string;
+  is_primary?: boolean;
+}
+
+// Dropdown config types
+export interface DropdownConfig {
   id: string;
+  category: string;
   name: string;
   code: string;
-  is_active: string;
+  status: string;
+  created_at?: string;
+  updated_at?: string;
 }
+
+export interface DropdownConfigCreateRequest {
+  category: string;
+  name: string;
+  code: string;
+  status?: string;
+}
+
+export interface DropdownConfigUpdateRequest {
+  category?: string;
+  name?: string;
+  code?: string;
+  status?: string;
+}
+
+// Modality alias types
+export interface ModalityAlias {
+  id: string;
+  category: string;
+  name: string;
+  code: string;
+  status: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Booking types for vendor
+export interface VendorBooking {
+  id: string;
+  booking_number: string;
+  patient: {
+    id: string;
+    name: string;
+    identification_no?: string;
+  };
+  facility: {
+    id: string;
+    name: string;
+    fr_code: string;
+  };
+  status: string;
+  services_count?: number;
+  total_tariff?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+// ============================================================
+// Contracts Types (kept compatible)
+// ============================================================
 
 export interface Contract {
   id: string;
@@ -94,7 +235,6 @@ interface PaginatedContractsResponse {
   };
 }
 
-// Contract Services Types
 export interface ContractServiceItem {
   id: string;
   service: {
@@ -146,48 +286,220 @@ export interface ContractFilterParams {
   per_page?: number;
 }
 
-// Vendor CRUD operations
-export const getVendors = async (): Promise<Vendor[]> => {
-  const response = await axios.get<PaginatedVendorsResponse>("/vendors");
+// ============================================================
+// Vendor CRUD
+// ============================================================
+
+// GET /vendors — list vendors
+export const getVendors = async (
+  params: VendorListParams = {},
+): Promise<Vendor[]> => {
+  const response = await axios.get<VendorListResponse>("/vendors", { params });
   return response.data.data;
 };
 
-export const getVendor = async (vendorCode: string): Promise<Vendor> => {
-  const response = await axios.get<PaginatedVendorsResponse>("/vendors");
-  const vendor = response.data.data.find((v) => v.code === vendorCode);
-  if (!vendor) {
-    throw new Error(`Vendor with code ${vendorCode} not found`);
-  }
-  return vendor;
-};
-
-// Fetch a single vendor directly by UUID. Vendor users can only read their own
-// record (user.entity.id), so this avoids listing /vendors which they cannot access.
-export const getVendorById = async (vendorId: string): Promise<Vendor> => {
-  const response = await axios.get<{ data: Vendor }>(`/vendors/${vendorId}`);
+// GET /vendors/{id} — get single vendor by ID
+export const getVendor = async (vendorId: string): Promise<Vendor> => {
+  const response = await axios.get<VendorDetailResponse>(
+    `/vendors/${vendorId}`,
+  );
   return response.data.data;
 };
 
+// POST /vendors — create vendor
 export const createVendor = async (
   data: VendorCreateRequest,
 ): Promise<Vendor> => {
-  const response = await axios.post<Vendor>("/vendors", data);
-  return response.data;
+  const response = await axios.post<{ data: Vendor }>("/vendors", data);
+  return response.data.data ?? response.data;
 };
 
-export const updateVendor = async ({
-  id,
-  ...data
-}: VendorUpdateRequest): Promise<Vendor> => {
-  const response = await axios.put<Vendor>(`/vendors/${id}`, data);
-  return response.data;
+// PUT /vendors/{id} — update vendor
+export const updateVendor = async (
+  vendorId: string,
+  data: VendorUpdateRequest,
+): Promise<Vendor> => {
+  const response = await axios.put<{ data: Vendor }>(
+    `/vendors/${vendorId}`,
+    data,
+  );
+  return response.data.data ?? response.data;
 };
 
+// DELETE /vendors/{id} — soft-delete vendor (marks as retired)
 export const deleteVendor = async (id: string): Promise<void> => {
   await axios.delete(`/vendors/${id}`);
 };
 
-// Contract operations
+// ============================================================
+// Vendor Contacts
+// ============================================================
+
+// GET /vendors/{vendorId}/contacts
+export const getVendorContacts = async (
+  vendorId: string,
+): Promise<VendorContact[]> => {
+  const response = await axios.get<{ data: VendorContact[] }>(
+    `/vendors/${vendorId}/contacts`,
+  );
+  return response.data.data ?? response.data;
+};
+
+// POST /vendors/{vendorId}/contacts
+export const createVendorContact = async (
+  vendorId: string,
+  data: VendorContactCreateRequest,
+): Promise<VendorContact> => {
+  const response = await axios.post<{ data: VendorContact }>(
+    `/vendors/${vendorId}/contacts`,
+    data,
+  );
+  return response.data.data ?? response.data;
+};
+
+// PUT /vendors/{vendorId}/contacts/{contactId}
+export const updateVendorContact = async (
+  vendorId: string,
+  contactId: string,
+  data: VendorContactUpdateRequest,
+): Promise<VendorContact> => {
+  const response = await axios.put<{ data: VendorContact }>(
+    `/vendors/${vendorId}/contacts/${contactId}`,
+    data,
+  );
+  return response.data.data ?? response.data;
+};
+
+// DELETE /vendors/{vendorId}/contacts/{contactId}
+export const deleteVendorContact = async (
+  vendorId: string,
+  contactId: string,
+): Promise<void> => {
+  await axios.delete(`/vendors/${vendorId}/contacts/${contactId}`);
+};
+
+// ============================================================
+// Vendor Modalities
+// ============================================================
+
+// GET /vendors/modalities — list modality aliases
+export const getModalities = async (): Promise<ModalityAlias[]> => {
+  const response = await axios.get<{ data: ModalityAlias[] }>(
+    "/vendors/modalities",
+  );
+  return response.data.data ?? response.data;
+};
+
+// POST /vendors/modalities — create modality alias
+export const createModality = async (
+  data: DropdownConfigCreateRequest,
+): Promise<ModalityAlias> => {
+  const response = await axios.post<{ data: ModalityAlias }>(
+    "/vendors/modalities",
+    data,
+  );
+  return response.data.data ?? response.data;
+};
+
+// PUT /vendors/modalities/{id} — update modality alias
+export const updateModality = async (
+  id: string,
+  data: DropdownConfigUpdateRequest,
+): Promise<ModalityAlias> => {
+  const response = await axios.put<{ data: ModalityAlias }>(
+    `/vendors/modalities/${id}`,
+    data,
+  );
+  return response.data.data ?? response.data;
+};
+
+// GET /vendors/{vendorId}/modalities — get vendor modality associations
+export const getVendorModalities = async (
+  vendorId: string,
+): Promise<VendorModality[]> => {
+  const response = await axios.get<{ data: VendorModality[] }>(
+    `/vendors/${vendorId}/modalities`,
+  );
+  return response.data.data ?? response.data;
+};
+
+// POST /vendors/{vendorId}/modalities — add modality associations
+export const addVendorModalities = async (
+  vendorId: string,
+  modalityIds: string[],
+): Promise<void> => {
+  await axios.post(`/vendors/${vendorId}/modalities`, {
+    modality_ids: modalityIds,
+  });
+};
+
+// PUT /vendors/{vendorId}/modalities — replace modality associations
+export const replaceVendorModalities = async (
+  vendorId: string,
+  modalityIds: string[],
+): Promise<void> => {
+  await axios.put(`/vendors/${vendorId}/modalities`, {
+    modality_ids: modalityIds,
+  });
+};
+
+// ============================================================
+// Dropdown Config
+// ============================================================
+
+// GET /vendors/dropdown-config
+export const getDropdownConfig = async (params?: {
+  category?: string;
+  status?: string;
+}): Promise<DropdownConfig[]> => {
+  const response = await axios.get<{ data: DropdownConfig[] }>(
+    "/vendors/dropdown-config",
+    { params },
+  );
+  return response.data.data ?? response.data;
+};
+
+// POST /vendors/dropdown-config
+export const createDropdownConfig = async (
+  data: DropdownConfigCreateRequest,
+): Promise<DropdownConfig> => {
+  const response = await axios.post<{ data: DropdownConfig }>(
+    "/vendors/dropdown-config",
+    data,
+  );
+  return response.data.data ?? response.data;
+};
+
+// PUT /vendors/dropdown-config/{id}
+export const updateDropdownConfig = async (
+  id: string,
+  data: DropdownConfigUpdateRequest,
+): Promise<DropdownConfig> => {
+  const response = await axios.put<{ data: DropdownConfig }>(
+    `/vendors/dropdown-config/${id}`,
+    data,
+  );
+  return response.data.data ?? response.data;
+};
+
+// ============================================================
+// Vendor Bookings
+// ============================================================
+
+// GET /vendors/{vendorId}/bookings
+export const getVendorBookings = async (
+  vendorId: string,
+): Promise<VendorBooking[]> => {
+  const response = await axios.get<{ data: VendorBooking[] }>(
+    `/vendors/${vendorId}/bookings`,
+  );
+  return response.data.data ?? response.data;
+};
+
+// ============================================================
+// Contracts
+// ============================================================
+
 export const getContracts = async (
   params?: ContractFilterParams,
 ): Promise<PaginatedContractsResponse> => {
@@ -205,11 +517,10 @@ export const getContracts = async (
     queryParams.toString() ? `?${queryParams.toString()}` : ""
   }`;
   const response = await axios.get<PaginatedContractsResponse>(url);
-
   return response.data;
 };
 
-// Get a single contract by ID
+// GET /contracts/{id}
 export const getContract = async (contractId: string): Promise<Contract> => {
   const response = await axios.get<{ data: Contract }>(
     `contracts/${contractId}`,
@@ -217,7 +528,7 @@ export const getContract = async (contractId: string): Promise<Contract> => {
   return response.data.data;
 };
 
-// Get contract services grouped by lot
+// GET /contracts/{contractId}/services
 export const getContractServices = async (
   contractId: string,
 ): Promise<ContractServicesResponse> => {
@@ -227,6 +538,7 @@ export const getContractServices = async (
   return response.data;
 };
 
+// POST /contracts
 export const createContract = async (
   data: ContractCreateRequest,
 ): Promise<Contract> => {
