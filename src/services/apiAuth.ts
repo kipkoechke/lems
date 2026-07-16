@@ -33,7 +33,11 @@ interface ApiUser {
     registration_id: string | null;
     status: string;
   };
+  // Legacy: vendor/facility info as a typed entity block (older API versions).
   entity?: UserEntity;
+  // Newer API versions return vendor (and facility) as top-level keys.
+  vendor?: { id: string; code: string; name: string };
+  facility?: { id: string; code?: string; fr_code?: string; name: string };
 }
 
 // Normalized user for app usage
@@ -67,8 +71,31 @@ export interface AuthState {
   isAuthenticated: boolean;
 }
 
-// Helper to normalize API user to app user format
+// Helper to normalise the API user into the flat app User shape.
+// Newer API versions deliver vendor/facility as top-level keys instead of
+// the legacy `entity` envelope — convert them into the entity format so
+// every downstream consumer (useMyVendor, useCurrentFacility, etc.) keeps
+// working without changes.
 const normalizeUser = (apiUser: ApiUser): User => {
+  // Resolve entity: legacy entity block wins; otherwise synthesise from the
+  // vendor/facility keys the current API returns.
+  let entity = apiUser.entity;
+  if (!entity && apiUser.vendor) {
+    entity = {
+      type: "vendor",
+      id: apiUser.vendor.id,
+      code: apiUser.vendor.code,
+      name: apiUser.vendor.name,
+    };
+  } else if (!entity && apiUser.facility) {
+    entity = {
+      type: "facility",
+      id: apiUser.facility.id,
+      code: apiUser.facility.code || apiUser.facility.fr_code,
+      name: apiUser.facility.name,
+    };
+  }
+
   return {
     id: apiUser.id,
     name: apiUser.name,
@@ -79,31 +106,35 @@ const normalizeUser = (apiUser: ApiUser): User => {
       (typeof apiUser.role === "string" ? apiUser.role : "user"),
     roleLabel: apiUser.role?.label,
     roleType: apiUser.role?.type,
-    entity: apiUser.entity,
+    entity,
   };
 };
 
 // Helper to extract facility from API response.
 // For vendor users the facility slot doubles as the vendor-identity carrier
-// so that useMyVendor() can resolve the vendor record even when the login
-// payload omits the top-level entity block (newer API versions).
+// so that useMyVendor() can resolve vendorId via facility.id as a fallback.
 const extractFacility = (apiUser: ApiUser): Facility => {
-  if (apiUser.entity?.type === "facility") {
+  // Facility users: use entity (legacy) or top-level facility key (new API).
+  if (apiUser.entity?.type === "facility" || apiUser.facility) {
+    const src = apiUser.entity?.type === "facility" ? apiUser.entity : null;
+    const f = src || apiUser.facility;
     return {
-      id: apiUser.entity.id || null,
-      code: apiUser.entity.fr_code || apiUser.entity.code || null,
-      name: apiUser.entity.name || null,
+      id: f?.id || null,
+      code: f?.fr_code || f?.code || null,
+      name: f?.name || null,
     };
   }
-  // Vendor: prefer entity; fall back to profile.vendor (newer API shape).
+  // Vendor users: stash vendor id + code so useMyVendor() can find it.
   if (
     apiUser.entity?.type === "vendor" ||
+    apiUser.vendor ||
     apiUser.role?.type === "vendor"
   ) {
+    const v = apiUser.entity?.type === "vendor" ? apiUser.entity : apiUser.vendor;
     return {
-      id: apiUser.entity?.id || apiUser.profile?.registration_id || null,
-      code: apiUser.entity?.code || null,
-      name: apiUser.entity?.name || null,
+      id: v?.id || null,
+      code: v?.code || null,
+      name: v?.name || null,
     };
   }
   return { id: null, code: null, name: null };
