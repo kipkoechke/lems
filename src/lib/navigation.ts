@@ -58,6 +58,36 @@ const NAV_ITEMS: NavItem[] = [
     permission: Permission.VIEW_SERVICES,
     description: "View services offered",
   },
+  {
+    label: "SHA Procedures",
+    href: "/procedures",
+    permission: Permission.ONBOARD_SERVICES,
+    description: "Manage SHA procedures and reimbursements",
+  },
+  {
+    label: "Equipment Status",
+    href: "/equipment-status",
+    permission: Permission.VIEW_EQUIPMENT_STATUS,
+    description: "Equipment status history and uptime",
+  },
+  {
+    label: "Users",
+    href: "/users",
+    permission: Permission.CREATE_FACILITY_USERS,
+    description: "Manage system users",
+  },
+  {
+    label: "Permissions",
+    href: "/admin/permissions",
+    permission: Permission.MANAGE_PERMISSIONS,
+    description: "Manage permission definitions",
+  },
+  {
+    label: "Revenue Distributions",
+    href: "/settings/revenue-distributions",
+    permission: Permission.MANAGE_REVENUE_DISTRIBUTIONS,
+    description: "Vendor / facility revenue share periods",
+  },
 
   // Vendor self-service items — vendor-scoped API surface
   // (/vendors/{vendor}/...). Only the vendor role holds these permissions.

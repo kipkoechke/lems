@@ -1,24 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  getVendorBookings,
-  VendorBookingsParams,
-} from "@/services/apiVendorBookings";
+import { getVendorBookings } from "@/services/apiVendors";
 
-export const useVendorBookings = (
-  vendorId: string,
-  params: VendorBookingsParams = {},
-) => {
+export const useVendorBookings = (vendorId: string) => {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["vendor-bookings", vendorId, params],
-    queryFn: () => getVendorBookings(vendorId, params),
+    queryKey: ["vendor-bookings", vendorId],
+    queryFn: () => getVendorBookings(vendorId),
     enabled: !!vendorId,
   });
 
-  return {
-    bookings: data?.bookings ?? [],
-    pagination: data?.pagination,
-    isLoading,
-    error,
-    refetch,
-  };
+  return { bookings: data ?? [], isLoading, error, refetch };
 };

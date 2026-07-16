@@ -5,9 +5,8 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useMyVendor } from "@/features/vendors/useMyVendor";
 import { useVendorBookings } from "@/features/vendors/useVendorBookings";
-import { VendorBooking } from "@/services/apiVendorBookings";
+import { VendorBooking } from "@/services/apiVendors";
 import { Table } from "@/components/Table";
-import Pagination from "@/components/common/Pagination";
 import { SearchField } from "@/components/common/SearchField";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -41,19 +40,14 @@ const formatDate = (value?: string | null) =>
 
 function VendorBookingsContent() {
   const { vendorId, isLoading: vendorLoading } = useMyVendor();
+  const { bookings, isLoading, error, refetch } = useVendorBookings(vendorId);
 
-  const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
   const [search, setSearch] = useState("");
 
-  const { bookings, pagination, isLoading, error, refetch } = useVendorBookings(
-    vendorId,
-    { page, per_page: 15, status: status || undefined },
-  );
-
-  // Booking number / patient / facility search is applied client-side; the
-  // vendor bookings endpoint only documents status + date filters.
+  // The vendor bookings endpoint returns the full list, so filtering is local.
   const filtered = bookings.filter((b) => {
+    if (status && b.status !== status) return false;
     const term = search.toLowerCase();
     if (!term) return true;
     return (
@@ -102,8 +96,7 @@ function VendorBookingsContent() {
               <div>
                 <h1 className="text-xl font-bold text-slate-900">Bookings</h1>
                 <p className="text-sm text-slate-500">
-                  {pagination?.total ?? bookings.length} bookings on your
-                  equipment
+                  {bookings.length} bookings on your equipment
                 </p>
               </div>
             </div>
@@ -126,10 +119,7 @@ function VendorBookingsContent() {
                 label="Status"
                 options={STATUS_OPTIONS}
                 value={status}
-                onChange={(v) => {
-                  setStatus(v);
-                  setPage(1);
-                }}
+                onChange={setStatus}
                 placeholder="All Status"
                 searchPlaceholder="Search status..."
               />
@@ -140,88 +130,79 @@ function VendorBookingsContent() {
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>Booking #</Table.HeaderCell>
+                <Table.HeaderCell>Patient</Table.HeaderCell>
                 <Table.HeaderCell>Facility</Table.HeaderCell>
                 <Table.HeaderCell>Services</Table.HeaderCell>
-                <Table.HeaderCell>Your Share</Table.HeaderCell>
+                <Table.HeaderCell>Total Tariff</Table.HeaderCell>
                 <Table.HeaderCell>Status</Table.HeaderCell>
                 <Table.HeaderCell>Created</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
               {filtered.length === 0 ? (
-                <Table.Empty colSpan={6}>
+                <Table.Empty colSpan={7}>
                   {search || status
                     ? "No bookings match your criteria"
                     : "No bookings found for your equipment yet"}
                 </Table.Empty>
               ) : (
-                filtered.map((booking: VendorBooking) => {
-                  const vendorShare = (booking.services ?? []).reduce(
-                    (sum, s) => sum + Number(s.revenue?.vendor_share ?? 0),
-                    0,
-                  );
-
-                  return (
-                    <Table.Row key={booking.id}>
-                      <Table.Cell>
-                        <div className="font-mono text-sm text-slate-900">
-                          {booking.booking_number}
+                filtered.map((booking: VendorBooking) => (
+                  <Table.Row key={booking.id}>
+                    <Table.Cell>
+                      <span className="font-mono text-sm text-slate-900">
+                        {booking.booking_number}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="text-sm text-slate-900">
+                        {booking.patient?.name || "-"}
+                      </div>
+                      {booking.patient?.identification_no && (
+                        <div className="text-xs text-slate-500 font-mono">
+                          {booking.patient.identification_no}
                         </div>
-                        {booking.source && (
-                          <div className="text-xs text-slate-500 capitalize">
-                            {booking.source.replace(/_/g, " ")}
-                          </div>
-                        )}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-sm text-slate-700">
-                          {booking.facility?.name || "-"}
-                        </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-sm text-slate-700">
-                          {booking.services?.length ?? 0}
-                        </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-sm font-medium text-slate-900">
-                          {vendorShare > 0
-                            ? formatCurrency(String(vendorShare))
-                            : "-"}
-                        </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${
-                            STATUS_BADGE[booking.status] ??
-                            "bg-slate-50 text-slate-700 border-slate-200"
-                          }`}
-                        >
-                          {booking.status?.replace(/_/g, " ")}
-                        </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-sm text-slate-600">
-                          {formatDate(booking.created_at)}
-                        </span>
-                      </Table.Cell>
-                    </Table.Row>
-                  );
-                })
+                      )}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="text-sm text-slate-900">
+                        {booking.facility?.name || "-"}
+                      </div>
+                      {booking.facility?.fr_code && (
+                        <div className="text-xs text-slate-500 font-mono">
+                          {booking.facility.fr_code}
+                        </div>
+                      )}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-sm text-slate-700">
+                        {booking.services_count ?? "-"}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-sm font-medium text-slate-900">
+                        {formatCurrency(booking.total_tariff)}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${
+                          STATUS_BADGE[booking.status] ??
+                          "bg-slate-50 text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        {booking.status?.replace(/_/g, " ")}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-sm text-slate-600">
+                        {formatDate(booking.created_at)}
+                      </span>
+                    </Table.Cell>
+                  </Table.Row>
+                ))
               )}
             </Table.Body>
           </Table>
-
-          {pagination && pagination.last_page > 1 && (
-            <Pagination
-              currentPage={pagination.current_page}
-              lastPage={pagination.last_page}
-              total={pagination.total}
-              from={pagination.from}
-              to={pagination.to}
-              onPageChange={setPage}
-            />
-          )}
         </div>
       </div>
     </div>
@@ -230,7 +211,7 @@ function VendorBookingsContent() {
 
 export default function VendorBookingsPage() {
   return (
-    <PermissionGate permission={Permission.VIEW_DASHBOARD}>
+    <PermissionGate permission={Permission.VIEW_VENDOR_BOOKINGS}>
       <VendorBookingsContent />
     </PermissionGate>
   );

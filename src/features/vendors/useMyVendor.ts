@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getVendorById } from "@/services/apiVendors";
+import { getVendor } from "@/services/apiVendors";
 import { useCurrentUser } from "@/hooks/useAuth";
 
 /**
@@ -12,7 +12,7 @@ export const useMyVendor = () => {
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["vendor", vendorId],
-    queryFn: () => getVendorById(vendorId),
+    queryFn: () => getVendor(vendorId),
     enabled: !!vendorId,
   });
 

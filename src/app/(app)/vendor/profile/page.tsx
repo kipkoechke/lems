@@ -14,7 +14,16 @@ interface ProfileFormData {
   name: string;
   email?: string;
   phone?: string;
+  website?: string;
+  address?: string;
+  description?: string;
 }
+
+const LIFECYCLE_BADGE: Record<string, string> = {
+  active: "bg-green-100 text-green-800",
+  disabled: "bg-amber-100 text-amber-800",
+  retired: "bg-red-100 text-red-800",
+};
 
 function VendorProfileContent() {
   const { vendor, vendorId, isLoading, error, refetch } = useMyVendor();
@@ -29,6 +38,9 @@ function VendorProfileContent() {
         name: vendor.name,
         email: vendor.email ?? "",
         phone: vendor.phone ?? "",
+        website: vendor.website ?? "",
+        address: vendor.address ?? "",
+        description: vendor.description ?? "",
       });
     }
   }, [vendor, reset]);
@@ -55,7 +67,9 @@ function VendorProfileContent() {
       <ErrorState
         title="Unable to Load Your Vendor Profile"
         error={error}
-        message={!error && !vendor ? "No vendor is linked to your account." : undefined}
+        message={
+          !error && !vendor ? "No vendor is linked to your account." : undefined
+        }
         action={{ label: "Try Again", onClick: () => refetch() }}
         fullScreen
       />
@@ -65,11 +79,15 @@ function VendorProfileContent() {
   const onSubmit = (data: ProfileFormData) => {
     updateVendor(
       {
-        id: vendorId,
-        name: data.name,
-        code: vendor.code,
-        is_active:
-          vendor.is_active === true || vendor.is_active === "1" ? "1" : "0",
+        vendorId,
+        data: {
+          name: data.name,
+          email: data.email || undefined,
+          phone: data.phone || undefined,
+          website: data.website || undefined,
+          address: data.address || undefined,
+          description: data.description || undefined,
+        },
       },
       {
         onSuccess: () => {
@@ -80,13 +98,16 @@ function VendorProfileContent() {
     );
   };
 
-  const isActive = vendor.is_active === true || vendor.is_active === "1";
-
   const details = [
     { label: "Vendor Name", value: vendor.name },
-    { label: "Vendor Code", value: vendor.code },
+    { label: "Vendor Alpha Code", value: vendor.vendor_alpha_code },
+    { label: "DHA Vendor Code", value: vendor.dha_vendor_code },
+    { label: "SHA Vendor Code", value: vendor.sha_vendor_code },
     { label: "Email", value: vendor.email },
     { label: "Phone", value: vendor.phone },
+    { label: "Website", value: vendor.website },
+    { label: "Country", value: vendor.country },
+    { label: "Address", value: vendor.address },
   ];
 
   return (
@@ -98,14 +119,17 @@ function VendorProfileContent() {
             <h1 className="text-xl md:text-2xl font-bold text-slate-900 truncate">
               {vendor.name}
             </h1>
-            <p className="text-sm text-slate-500 font-mono">{vendor.code}</p>
+            <p className="text-sm text-slate-500 font-mono">
+              {vendor.vendor_alpha_code}
+            </p>
           </div>
           <span
-            className={`ml-auto inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-              isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+            className={`ml-auto inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize ${
+              LIFECYCLE_BADGE[vendor.lifecycle_state] ??
+              "bg-slate-100 text-slate-700"
             }`}
           >
-            {isActive ? "Active" : "Inactive"}
+            {vendor.lifecycle_state}
           </span>
           {!isEditing && (
             <button
@@ -144,6 +168,27 @@ function VendorProfileContent() {
                   register={register("phone")}
                   disabled={isUpdating}
                 />
+                <InputField
+                  label="Website"
+                  type="text"
+                  placeholder="Enter website URL"
+                  register={register("website")}
+                  disabled={isUpdating}
+                />
+                <InputField
+                  label="Address"
+                  type="text"
+                  placeholder="Enter address"
+                  register={register("address")}
+                  disabled={isUpdating}
+                />
+                <InputField
+                  label="Description"
+                  type="text"
+                  placeholder="Enter a short description"
+                  register={register("description")}
+                  disabled={isUpdating}
+                />
               </div>
 
               <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-100">
@@ -168,16 +213,24 @@ function VendorProfileContent() {
               </div>
             </form>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4">
-              {details.map((d) => (
-                <div key={d.label}>
-                  <p className="text-xs text-slate-500">{d.label}</p>
-                  <p className="text-sm font-medium text-slate-900">
-                    {d.value || "-"}
-                  </p>
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4">
+                {details.map((d) => (
+                  <div key={d.label}>
+                    <p className="text-xs text-slate-500">{d.label}</p>
+                    <p className="text-sm font-medium text-slate-900 break-words">
+                      {d.value || "-"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {vendor.description && (
+                <div className="mt-5 pt-4 border-t border-slate-100">
+                  <p className="text-xs text-slate-500">Description</p>
+                  <p className="text-sm text-slate-700">{vendor.description}</p>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -187,7 +240,7 @@ function VendorProfileContent() {
 
 export default function VendorProfilePage() {
   return (
-    <PermissionGate permission={Permission.VIEW_DASHBOARD}>
+    <PermissionGate permission={Permission.VIEW_VENDOR_PROFILE}>
       <VendorProfileContent />
     </PermissionGate>
   );

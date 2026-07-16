@@ -5,8 +5,9 @@ import {
   deleteVendorContact,
   getVendorContacts,
   updateVendorContact,
-  VendorContactPayload,
-} from "@/services/apiVendorContacts";
+  VendorContactCreateRequest,
+  VendorContactUpdateRequest,
+} from "@/services/apiVendors";
 
 const contactsKey = (vendorId: string) => ["vendor-contacts", vendorId];
 
@@ -24,7 +25,7 @@ export const useCreateVendorContact = (vendorId: string) => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (data: VendorContactPayload) =>
+    mutationFn: (data: VendorContactCreateRequest) =>
       createVendorContact(vendorId, data),
     onSuccess: () => {
       toast.success("Contact added successfully");
@@ -45,7 +46,7 @@ export const useUpdateVendorContact = (vendorId: string) => {
       data,
     }: {
       contactId: string;
-      data: Partial<VendorContactPayload>;
+      data: VendorContactUpdateRequest;
     }) => updateVendorContact(vendorId, contactId, data),
     onSuccess: () => {
       toast.success("Contact updated successfully");

@@ -77,6 +77,14 @@ export enum Permission {
   // Facility Admin-specific permissions
   REQUEST_MAINTENANCE = "request_maintenance",
   VIEW_FACILITY_PAYMENTS = "view_facility_payments",
+
+  // System-admin-only surfaces. These map to endpoints the API restricts to
+  // the `admin` role (/admin/permissions, /equipment-status/*,
+  // /settings/revenue-distributions), so facility admins must not see them
+  // even though they hold the broader user/equipment permissions.
+  MANAGE_PERMISSIONS = "manage_permissions",
+  VIEW_EQUIPMENT_STATUS = "view_equipment_status",
+  MANAGE_REVENUE_DISTRIBUTIONS = "manage_revenue_distributions",
 }
 
 // Role to permissions mapping
@@ -103,6 +111,9 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_LOTS,
     Permission.VIEW_SERVICES,
     Permission.VIEW_EQUIPMENTS,
+    Permission.MANAGE_PERMISSIONS,
+    Permission.VIEW_EQUIPMENT_STATUS,
+    Permission.MANAGE_REVENUE_DISTRIBUTIONS,
   ],
 
   [UserRole.F_ADMIN]: [
