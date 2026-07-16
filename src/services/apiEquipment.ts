@@ -207,8 +207,10 @@ export interface AdminEquipmentVendor {
 export interface AdminEquipmentDicom {
   ae_title: string | null;
   hl7_host: string | null;
+  hl7_port?: number | null;
   dicom_port: number | null;
   is_connected: boolean;
+  last_seen_at?: string | null;
 }
 
 export interface AdminEquipment {

@@ -10,6 +10,8 @@ export enum UserRole {
   C_REC = "c_rec", // Claim records
   B_APPROVER = "b_approver", // Batch approver
   VENDOR = "vendor", // Vendor user
+  PROVIDER_PORTAL = "provider_portal", // HMIS integration (routes under /provider)
+  PAYER = "payer", // Claim validation (routes under /payer)
 }
 
 // Permission actions enum
@@ -85,6 +87,14 @@ export enum Permission {
   MANAGE_PERMISSIONS = "manage_permissions",
   VIEW_EQUIPMENT_STATUS = "view_equipment_status",
   MANAGE_REVENUE_DISTRIBUTIONS = "manage_revenue_distributions",
+  MANAGE_DICOM = "manage_dicom",
+  VIEW_MEDICAL_REQUESTS = "view_medical_requests",
+  VIEW_SHA_INTERVENTIONS = "view_sha_interventions",
+
+  // Integration-role surfaces. These live under their own API prefixes
+  // (/provider, /payer) and are restricted to the matching system role.
+  VIEW_PROVIDER_BOOKINGS = "view_provider_bookings",
+  VALIDATE_PAYER_SERVICES = "validate_payer_services",
 }
 
 // Role to permissions mapping
@@ -114,6 +124,9 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.MANAGE_PERMISSIONS,
     Permission.VIEW_EQUIPMENT_STATUS,
     Permission.MANAGE_REVENUE_DISTRIBUTIONS,
+    Permission.MANAGE_DICOM,
+    Permission.VIEW_MEDICAL_REQUESTS,
+    Permission.VIEW_SHA_INTERVENTIONS,
   ],
 
   [UserRole.F_ADMIN]: [
@@ -204,6 +217,16 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_PATIENTS,
     Permission.VIEW_BOOKINGS,
   ],
+
+  [UserRole.PROVIDER_PORTAL]: [
+    // HMIS integration account — only the /provider surface.
+    Permission.VIEW_PROVIDER_BOOKINGS,
+  ],
+
+  [UserRole.PAYER]: [
+    // Claim validation account — only the /payer surface.
+    Permission.VALIDATE_PAYER_SERVICES,
+  ],
 };
 
 // Helper functions
@@ -245,6 +268,8 @@ const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   [UserRole.B_APPROVER]: "Batch Approver",
   [UserRole.VENDOR]: "Vendor User",
   [UserRole.USER]: "Regular User",
+  [UserRole.PROVIDER_PORTAL]: "Provider Portal",
+  [UserRole.PAYER]: "Payer",
 };
 
 export const getRoleDisplayName = (role: UserRole): string => {

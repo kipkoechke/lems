@@ -88,6 +88,44 @@ const NAV_ITEMS: NavItem[] = [
     permission: Permission.MANAGE_REVENUE_DISTRIBUTIONS,
     description: "Vendor / facility revenue share periods",
   },
+  {
+    label: "Medical Requests",
+    href: "/requests",
+    permission: Permission.VIEW_MEDICAL_REQUESTS,
+    description: "EMR imaging orders and MWL workflow",
+  },
+  {
+    label: "DICOM",
+    href: "/dicom",
+    permission: Permission.MANAGE_DICOM,
+    description: "Orthanc server and modality registration",
+  },
+  {
+    label: "Ping Requests",
+    href: "/ping-requests",
+    permission: Permission.MANAGE_DICOM,
+    description: "Approve machine ping requests",
+  },
+  {
+    label: "SHA Interventions",
+    href: "/sha/interventions",
+    permission: Permission.VIEW_SHA_INTERVENTIONS,
+    description: "Completed interventions for SHA",
+  },
+
+  // Integration-role items
+  {
+    label: "Provider Bookings",
+    href: "/provider/bookings",
+    permission: Permission.VIEW_PROVIDER_BOOKINGS,
+    description: "Bookings created via the provider portal",
+  },
+  {
+    label: "Payer Validation",
+    href: "/payer/validate",
+    permission: Permission.VALIDATE_PAYER_SERVICES,
+    description: "Validate services for claim processing",
+  },
 
   // Vendor self-service items — vendor-scoped API surface
   // (/vendors/{vendor}/...). Only the vendor role holds these permissions.
