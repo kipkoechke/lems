@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useVendorContracts } from "@/features/vendors/useVendorContracts";
 import { VendorContract } from "@/services/apiVendorContracts";
 import { Table } from "@/components/Table";
+import { ActionMenu } from "@/components/common/ActionMenu";
 import Pagination from "@/components/common/Pagination";
 import { SearchField } from "@/components/common/SearchField";
-import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { ErrorState } from "@/components/common/ErrorState";
-import { FaFileContract } from "react-icons/fa";
+import { FaEye, FaFileContract } from "react-icons/fa";
 
 const STATUS_OPTIONS = [
   { value: "active", label: "Active" },
@@ -36,11 +38,12 @@ const formatDate = (value?: string | null) =>
     : "-";
 
 function VendorContractsContent() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
   const [search, setSearch] = useState("");
 
-  const { contracts, pagination, isLoading, error, refetch } =
+  const { contracts, summary, pagination, isLoading, error, refetch } =
     useVendorContracts({
       page,
       per_page: 15,
@@ -83,6 +86,13 @@ function VendorContractsContent() {
     );
   }
 
+  const stats = [
+    { label: "Total Contracts", value: summary?.total ?? pagination?.total },
+    { label: "Active", value: summary?.active },
+    { label: "Expired", value: summary?.expired },
+    { label: "Facilities", value: summary?.facilities },
+  ].filter((s) => s.value !== undefined);
+
   return (
     <div className="min-h-screen p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -96,7 +106,8 @@ function VendorContractsContent() {
               <div>
                 <h1 className="text-xl font-bold text-slate-900">Contracts</h1>
                 <p className="text-sm text-slate-500">
-                  {pagination?.total ?? contracts.length} contracts
+                  {summary?.total ?? pagination?.total ?? contracts.length}{" "}
+                  contracts
                 </p>
               </div>
             </div>
@@ -111,92 +122,118 @@ function VendorContractsContent() {
           </div>
         </div>
 
+        {/* Stats */}
+        {stats.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+            {stats.map((s) => (
+              <div
+                key={s.label}
+                className="bg-white rounded-lg border border-slate-200 p-3"
+              >
+                <div className="text-lg font-bold text-slate-900">
+                  {s.value}
+                </div>
+                <div className="text-xs text-slate-600">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-3 p-4 border-b border-slate-100">
-            <div className="w-full sm:w-48">
-              <SearchableSelect
-                label="Status"
-                options={STATUS_OPTIONS}
-                value={status}
-                onChange={(v) => {
-                  setStatus(v);
-                  setPage(1);
-                }}
-                placeholder="All Status"
-                searchPlaceholder="Search status..."
-              />
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <Table className="w-full">
-              <Table.Header>
-                <Table.Row>
-                  <Table.HeaderCell>Contract #</Table.HeaderCell>
-                  <Table.HeaderCell>Facility</Table.HeaderCell>
-                  <Table.HeaderCell>Lot</Table.HeaderCell>
-                  <Table.HeaderCell>Period</Table.HeaderCell>
-                  <Table.HeaderCell>Services</Table.HeaderCell>
-                  <Table.HeaderCell>Status</Table.HeaderCell>
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
-                {filtered.length === 0 ? (
-                  <Table.Empty colSpan={6}>
-                    {search || status
-                      ? "No contracts match your criteria"
-                      : "No contracts found for your vendor yet."}
-                  </Table.Empty>
-                ) : (
-                  filtered.map((c) => (
-                    <Table.Row key={c.id}>
-                      <Table.Cell>
-                        <span className="font-mono text-sm text-slate-900">
-                          {c.contract_number || c.id.slice(0, 8)}
-                        </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <div className="text-sm text-slate-900">
-                          {c.facility?.name || "-"}
+          <Table className="w-full">
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell>Contract #</Table.HeaderCell>
+                <Table.HeaderCell>Facility</Table.HeaderCell>
+                <Table.HeaderCell>Lot</Table.HeaderCell>
+                <Table.HeaderCell>Period</Table.HeaderCell>
+                <Table.HeaderCell>Services</Table.HeaderCell>
+                <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Status"
+                    options={STATUS_OPTIONS}
+                    value={status}
+                    onChange={(v) => {
+                      setStatus(v);
+                      setPage(1);
+                    }}
+                    allLabel="All Status"
+                    searchable={false}
+                  />
+                </Table.HeaderCell>
+                <Table.HeaderCell align="center">Actions</Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {filtered.length === 0 ? (
+                <Table.Empty colSpan={7}>
+                  {search || status
+                    ? "No contracts match your criteria"
+                    : "No contracts found for your vendor yet."}
+                </Table.Empty>
+              ) : (
+                filtered.map((c) => (
+                  <Table.Row key={c.id}>
+                    <Table.Cell>
+                      <span className="font-mono text-sm text-slate-900">
+                        {c.contract_number || c.id.slice(0, 8)}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="text-sm text-slate-900">
+                        {c.facility?.name || "-"}
+                      </div>
+                      {(c.facility?.code || c.facility?.fr_code) && (
+                        <div className="text-xs text-slate-500 font-mono">
+                          {c.facility.code ?? c.facility.fr_code}
                         </div>
-                        {(c.facility?.code || c.facility?.fr_code) && (
-                          <div className="text-xs text-slate-500 font-mono">
-                            {c.facility.code ?? c.facility.fr_code}
-                          </div>
-                        )}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-sm text-slate-700">
-                          {c.lot?.name || "-"}
-                        </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-sm text-slate-700">
-                          {formatDate(c.start_date)} – {formatDate(c.end_date)}
-                        </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-sm text-slate-700">
-                          {c.services_count ?? "-"}
-                        </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${
-                            STATUS_BADGE[c.status] ??
-                            "bg-slate-50 text-slate-700 border-slate-200"
-                          }`}
-                        >
-                          {c.status}
-                        </span>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))
-                )}
-              </Table.Body>
-            </Table>
-          </div>
+                      )}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-sm text-slate-700">
+                        {c.lot?.name || "-"}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-sm text-slate-700">
+                        {formatDate(c.start_date)} – {formatDate(c.end_date)}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-sm text-slate-700">
+                        {c.services_count ?? "-"}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${
+                          STATUS_BADGE[c.status] ??
+                          "bg-slate-50 text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        {c.status}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell align="center">
+                      <ActionMenu menuId={`vendor-contract-${c.id}`}>
+                        <ActionMenu.Trigger />
+                        <ActionMenu.Content>
+                          <ActionMenu.Item
+                            onClick={() =>
+                              router.push(`/vendor/contracts/${c.id}`)
+                            }
+                          >
+                            <FaEye className="text-blue-500" /> View Details
+                          </ActionMenu.Item>
+                        </ActionMenu.Content>
+                      </ActionMenu>
+                    </Table.Cell>
+                  </Table.Row>
+                ))
+              )}
+            </Table.Body>
+          </Table>
 
           {pagination && pagination.last_page > 1 && (
             <Pagination

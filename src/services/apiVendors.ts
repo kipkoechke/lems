@@ -329,6 +329,45 @@ export const getVendor = async (vendorId: string): Promise<Vendor> => {
   return response.data.data;
 };
 
+/**
+ * The signed-in vendor's own record.
+ *
+ * Vendor-portal routes live under /vendor/* and infer the vendor from the auth
+ * token, so this works even when the login payload carries no vendor entity —
+ * which is exactly when the id-based lookup below fires no request at all.
+ * `vendorId` is only used for the fallback, for deployments still on the
+ * documented /vendors/{vendor} route.
+ */
+export const getMyVendorProfile = async (
+  vendorId?: string,
+): Promise<Vendor> => {
+  try {
+    const response = await axios.get<VendorDetailResponse>("/vendor/profile");
+    return response.data.data ?? response.data;
+  } catch (error) {
+    const status = (error as { response?: { status?: number } })?.response
+      ?.status;
+    if (status === 404 && vendorId) return getVendor(vendorId);
+    throw error;
+  }
+};
+
+// PUT /vendor/profile — update own vendor record
+export const updateMyVendorProfile = async (
+  data: VendorUpdateRequest,
+  vendorId?: string,
+): Promise<Vendor> => {
+  try {
+    const response = await axios.put<{ data: Vendor }>("/vendor/profile", data);
+    return response.data.data ?? response.data;
+  } catch (error) {
+    const status = (error as { response?: { status?: number } })?.response
+      ?.status;
+    if (status === 404 && vendorId) return updateVendor(vendorId, data);
+    throw error;
+  }
+};
+
 // POST /vendors — create vendor
 export const createVendor = async (
   data: VendorCreateRequest,

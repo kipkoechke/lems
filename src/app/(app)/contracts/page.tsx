@@ -5,14 +5,24 @@ import { useContracts } from "@/features/vendors/useContracts";
 import { Contract } from "@/services/apiVendors";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { FaFileContract, FaPlus, FaSearch } from "react-icons/fa";
+import { FaEye, FaFileContract, FaPlus, FaSearch } from "react-icons/fa";
 import { Table } from "@/components/Table";
+import { ActionMenu } from "@/components/common/ActionMenu";
+import { ColumnFilter } from "@/components/common/ColumnFilter";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
+
+const CONTRACT_STATUS_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+  { value: "expired", label: "Expired" },
+  { value: "pending", label: "Pending" },
+];
 
 export default function ContractsPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
 
   const { contracts, pagination, isLoading, error } = useContracts({
@@ -20,8 +30,10 @@ export default function ContractsPage() {
     per_page: 25,
   });
 
-  // Filter contracts based on search
+  // Filter contracts based on search and status
   const filteredContracts = contracts?.filter((contract: Contract) => {
+    if (statusFilter && contract.status !== statusFilter) return false;
+
     const matchesSearch =
       contract.vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contract.facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -205,20 +217,26 @@ export default function ContractsPage() {
                       End Date
                     </Table.HeaderCell>
                     <Table.HeaderCell className="w-[10%] px-4 py-4">
-                      Status
+                      <ColumnFilter
+                        label="Status"
+                        options={CONTRACT_STATUS_OPTIONS}
+                        value={statusFilter}
+                        onChange={setStatusFilter}
+                        allLabel="All Status"
+                        searchable={false}
+                      />
                     </Table.HeaderCell>
-                    <Table.HeaderCell className="w-[10%] px-4 py-4">
-                      Status
+                    <Table.HeaderCell
+                      className="w-[10%] px-4 py-4"
+                      align="center"
+                    >
+                      Actions
                     </Table.HeaderCell>
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
                   {filteredContracts?.map((contract: Contract) => (
-                    <Table.Row
-                      key={contract.id}
-                      onClick={() => router.push(`/contracts/${contract.id}`)}
-                      className="cursor-pointer hover:bg-gray-50"
-                    >
+                    <Table.Row key={contract.id}>
                       <Table.Cell className="px-6 py-4">
                         <div className="font-mono text-sm text-gray-900">
                           {contract.contract_number || contract.id.slice(0, 8)}
@@ -262,6 +280,20 @@ export default function ContractsPage() {
                         >
                           {contract.status}
                         </span>
+                      </Table.Cell>
+                      <Table.Cell className="px-4 py-4" align="center">
+                        <ActionMenu menuId={`contract-${contract.id}`}>
+                          <ActionMenu.Trigger />
+                          <ActionMenu.Content>
+                            <ActionMenu.Item
+                              onClick={() =>
+                                router.push(`/contracts/${contract.id}`)
+                              }
+                            >
+                              <FaEye className="text-blue-500" /> View Details
+                            </ActionMenu.Item>
+                          </ActionMenu.Content>
+                        </ActionMenu>
                       </Table.Cell>
                     </Table.Row>
                   ))}

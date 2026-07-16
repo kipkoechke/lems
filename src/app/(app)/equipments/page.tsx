@@ -17,7 +17,7 @@ import { useAdminEquipments } from "@/features/vendors/useAdminEquipments";
 import type { AdminEquipment } from "@/services/apiEquipment";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
-import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { ColumnFilter } from "@/components/common/ColumnFilter";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 
@@ -147,50 +147,44 @@ export default function EquipmentsPage() {
 
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 hidden md:block overflow-hidden">
-          {/* Filters toolbar */}
-          <div className="flex flex-col sm:flex-row sm:items-end gap-3 p-4 border-b border-slate-100">
-            <div className="w-full sm:w-48">
-              <SearchableSelect
-                label="Status"
-                options={STATUS_FILTER_OPTIONS}
-                value={statusFilter}
-                onChange={(v) => {
-                  setStatusFilter(v);
-                  setPage(1);
-                }}
-                placeholder="All Status"
-                searchPlaceholder="Search status..."
-              />
-            </div>
-            <div className="w-full sm:w-56">
-              <SearchableSelect
-                label="Modality"
-                options={
-                  availableFilters?.modalities?.map((m) => ({
-                    value: m.code,
-                    label: m.label,
-                  })) ?? []
-                }
-                value={modalityFilter}
-                onChange={(v) => {
-                  setModalityFilter(v);
-                  setPage(1);
-                }}
-                placeholder="All Modalities"
-                searchPlaceholder="Search modality..."
-              />
-            </div>
-          </div>
-
           <Table className="w-full">
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>Code</Table.HeaderCell>
                 <Table.HeaderCell>Name</Table.HeaderCell>
                 <Table.HeaderCell>Category</Table.HeaderCell>
-                <Table.HeaderCell>Modality</Table.HeaderCell>
+                <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Modality"
+                    options={
+                      availableFilters?.modalities?.map((m) => ({
+                        value: m.code,
+                        label: m.label,
+                      })) ?? []
+                    }
+                    value={modalityFilter}
+                    onChange={(v) => {
+                      setModalityFilter(v);
+                      setPage(1);
+                    }}
+                    allLabel="All Modalities"
+                    searchPlaceholder="Search modality..."
+                  />
+                </Table.HeaderCell>
                 <Table.HeaderCell>Vendor</Table.HeaderCell>
-                <Table.HeaderCell>Status</Table.HeaderCell>
+                <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Status"
+                    options={STATUS_FILTER_OPTIONS}
+                    value={statusFilter}
+                    onChange={(v) => {
+                      setStatusFilter(v);
+                      setPage(1);
+                    }}
+                    allLabel="All Status"
+                    searchable={false}
+                  />
+                </Table.HeaderCell>
                 <Table.HeaderCell align="center">Actions</Table.HeaderCell>
               </Table.Row>
             </Table.Header>

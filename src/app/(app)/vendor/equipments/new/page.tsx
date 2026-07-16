@@ -1,16 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useVendor } from "@/features/vendors/useVendor";
+import { PermissionGate } from "@/components/PermissionGate";
+import { Permission } from "@/lib/rbac";
+import { useMyVendor } from "@/features/vendors/useMyVendor";
 import { useCreateVendorEquipment } from "@/features/vendors/useVendorEquipments";
-import {
-  EQUIPMENT_CATEGORIES,
-  EQUIPMENT_STATUS_OPTIONS as STATUS_OPTIONS,
-} from "@/features/vendors/equipmentOptions";
+import { EQUIPMENT_CATEGORIES } from "@/features/vendors/equipmentOptions";
 import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
 import BackButton from "@/components/common/BackButton";
@@ -23,22 +22,9 @@ const equipmentSchema = z.object({
   brand: z.string().optional(),
   manufacture_date: z.string().optional(),
   description: z.string().optional(),
-  status: z.enum([
-    "active",
-    "inactive",
-    "maintenance",
-    "decommissioned",
-    "pending_installation",
-  ]),
   ae_title: z.string().max(16).optional(),
   hl7_host: z.string().optional(),
-  hl7_port: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(65535)
-    .optional()
-    .or(z.literal("")),
+  hl7_port: z.coerce.number().int().min(1).max(65535).optional().or(z.literal("")),
   dicom_port: z.coerce
     .number()
     .int()
@@ -50,15 +36,11 @@ const equipmentSchema = z.object({
 
 type EquipmentFormData = z.infer<typeof equipmentSchema>;
 
-export default function NewVendorEquipmentPage() {
-  const params = useParams();
+function NewMyEquipmentContent() {
   const router = useRouter();
-  const vendorCode = params.vendorCode as string;
-
-  const { vendor, isLoading: vendorLoading } = useVendor(vendorCode);
+  const { vendorId } = useMyVendor();
   const createEquipmentMutation = useCreateVendorEquipment();
 
-  // Specifications state
   const [specifications, setSpecifications] = useState<Record<string, string>>(
     {},
   );
@@ -69,12 +51,7 @@ export default function NewVendorEquipmentPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<EquipmentFormData>({
-    resolver: zodResolver(equipmentSchema),
-    defaultValues: {
-      status: "active",
-    },
-  });
+  } = useForm<EquipmentFormData>({ resolver: zodResolver(equipmentSchema) });
 
   const addSpecification = () => {
     if (newSpecKey.trim() && newSpecValue.trim()) {
@@ -96,74 +73,33 @@ export default function NewVendorEquipmentPage() {
   };
 
   const onSubmit = (data: EquipmentFormData) => {
-    if (!vendor?.id) return;
-
     createEquipmentMutation.mutate(
       {
-        vendorId: vendor.id,
+        vendorId,
         data: {
           ...data,
+          // New equipment is active by definition — sent for the vendor rather
+          // than asked of them.
+          status: "active",
           hl7_port: data.hl7_port || undefined,
           dicom_port: data.dicom_port || undefined,
           specifications:
             Object.keys(specifications).length > 0 ? specifications : undefined,
         },
       },
-      {
-        onSuccess: () => {
-          router.push(`/vendors/${vendorCode}/equipments`);
-        },
-      },
+      { onSuccess: () => router.push("/vendor/equipments") },
     );
   };
 
-  if (vendorLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-slate-600 text-sm">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!vendor) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="text-yellow-500 text-xl mb-2">🔍</div>
-          <p className="text-slate-600">Vendor not found</p>
-          <button
-            onClick={() => router.back()}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="px-4 py-4 space-y-4">
-      {/* Header */}
       <div className="flex items-center gap-3">
-        <BackButton onClick={() => router.back()} />
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">
-            Add New Equipment
-          </h1>
-          <p className="text-sm text-slate-500">{vendor.name}</p>
-        </div>
+        <BackButton onClick={() => router.push("/vendor/equipments")} />
+        <h1 className="text-xl font-bold text-slate-900">Add New Equipment</h1>
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <h2 className="text-sm font-semibold text-slate-900 mb-4">
-            Basic Information
-          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
               label="Equipment Name"
@@ -209,13 +145,6 @@ export default function NewVendorEquipmentPage() {
               register={register("manufacture_date")}
               error={errors.manufacture_date?.message}
             />
-            <SelectField
-              label="Status"
-              register={register("status")}
-              error={errors.status?.message}
-              placeholder="Select Status"
-              options={STATUS_OPTIONS}
-            />
           </div>
           <div className="mt-4">
             <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -235,8 +164,6 @@ export default function NewVendorEquipmentPage() {
           <h2 className="text-sm font-semibold text-slate-900 mb-4">
             Specifications
           </h2>
-
-          {/* Add Specification */}
           <div className="flex gap-2 mb-4">
             <input
               type="text"
@@ -261,7 +188,6 @@ export default function NewVendorEquipmentPage() {
             </button>
           </div>
 
-          {/* Specifications List */}
           {Object.keys(specifications).length > 0 ? (
             <div className="space-y-2">
               {Object.entries(specifications).map(([key, value]) => (
@@ -297,7 +223,7 @@ export default function NewVendorEquipmentPage() {
           </h2>
           <p className="text-xs text-slate-500 mb-4">
             Optional — required only for imaging equipment that connects via
-            DICOM/MWL.
+            DICOM/MWL. You can also set this later from the equipment page.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
@@ -330,11 +256,10 @@ export default function NewVendorEquipmentPage() {
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex gap-3 justify-end">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={() => router.push("/vendor/equipments")}
             className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200"
           >
             Cancel
@@ -351,5 +276,13 @@ export default function NewVendorEquipmentPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function NewMyEquipmentPage() {
+  return (
+    <PermissionGate permission={Permission.VIEW_VENDOR_EQUIPMENTS}>
+      <NewMyEquipmentContent />
+    </PermissionGate>
   );
 }

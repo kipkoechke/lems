@@ -30,7 +30,11 @@ export const useEquipmentStatuses = () => {
   });
 };
 
-// List hook with params
+// List hook with params.
+// The /vendor/equipments route infers the vendor from the auth token, so the id
+// is only a cache key — it must not gate the query, or a session without a
+// vendor entity fires no request at all and the page renders a misleading
+// "no equipment yet" empty state.
 export const useVendorEquipments = (
   vendorId: string,
   params: VendorEquipmentsParams = {},
@@ -38,7 +42,6 @@ export const useVendorEquipments = (
   return useQuery({
     queryKey: ["vendorEquipments", vendorId, params],
     queryFn: () => getVendorEquipments(vendorId, params),
-    enabled: !!vendorId,
   });
 };
 
@@ -47,7 +50,7 @@ export const useVendorEquipment = (vendorId: string, equipmentId: string) => {
   return useQuery({
     queryKey: ["vendorEquipment", vendorId, equipmentId],
     queryFn: () => getVendorEquipment(vendorId, equipmentId),
-    enabled: !!vendorId && !!equipmentId,
+    enabled: !!equipmentId,
   });
 };
 

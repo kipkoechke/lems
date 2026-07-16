@@ -12,7 +12,7 @@ import {
 import { Table } from "@/components/Table";
 import Pagination from "@/components/common/Pagination";
 import { SearchField } from "@/components/common/SearchField";
-import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { ErrorState } from "@/components/common/ErrorState";
 import { FaFileMedical } from "react-icons/fa";
 
@@ -113,22 +113,6 @@ function RequestsContent() {
 
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-3 p-4 border-b border-slate-100">
-            <div className="w-full sm:w-48">
-              <SearchableSelect
-                label="Status"
-                options={REQUEST_STATUS_OPTIONS}
-                value={status}
-                onChange={(v) => {
-                  setStatus(v);
-                  setPage(1);
-                }}
-                placeholder="All Status"
-                searchPlaceholder="Search status..."
-              />
-            </div>
-          </div>
-
           <Table className="w-full">
             <Table.Header>
               <Table.Row>
@@ -136,7 +120,19 @@ function RequestsContent() {
                 <Table.HeaderCell>Patient</Table.HeaderCell>
                 <Table.HeaderCell>Procedures</Table.HeaderCell>
                 <Table.HeaderCell>Facility</Table.HeaderCell>
-                <Table.HeaderCell>Status</Table.HeaderCell>
+                <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Status"
+                    options={REQUEST_STATUS_OPTIONS}
+                    value={status}
+                    onChange={(v) => {
+                      setStatus(v);
+                      setPage(1);
+                    }}
+                    allLabel="All Status"
+                    searchable={false}
+                  />
+                </Table.HeaderCell>
                 <Table.HeaderCell>Created</Table.HeaderCell>
               </Table.Row>
             </Table.Header>

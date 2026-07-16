@@ -1,19 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useVendor } from "@/features/vendors/useVendor";
-import { useCreateVendorEquipment } from "@/features/vendors/useVendorEquipments";
+import { PermissionGate } from "@/components/PermissionGate";
+import { Permission } from "@/lib/rbac";
+import { useMyVendor } from "@/features/vendors/useMyVendor";
+import {
+  useUpdateVendorEquipment,
+  useVendorEquipment,
+} from "@/features/vendors/useVendorEquipments";
 import {
   EQUIPMENT_CATEGORIES,
-  EQUIPMENT_STATUS_OPTIONS as STATUS_OPTIONS,
+  EQUIPMENT_STATUS_OPTIONS,
 } from "@/features/vendors/equipmentOptions";
 import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
 import BackButton from "@/components/common/BackButton";
+import { ErrorState } from "@/components/common/ErrorState";
 
 const equipmentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -30,35 +36,21 @@ const equipmentSchema = z.object({
     "decommissioned",
     "pending_installation",
   ]),
-  ae_title: z.string().max(16).optional(),
-  hl7_host: z.string().optional(),
-  hl7_port: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(65535)
-    .optional()
-    .or(z.literal("")),
-  dicom_port: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(65535)
-    .optional()
-    .or(z.literal("")),
 });
 
 type EquipmentFormData = z.infer<typeof equipmentSchema>;
 
-export default function NewVendorEquipmentPage() {
-  const params = useParams();
+function EditMyEquipmentContent({ equipmentId }: { equipmentId: string }) {
   const router = useRouter();
-  const vendorCode = params.vendorCode as string;
+  const { vendorId } = useMyVendor();
+  const {
+    data: equipment,
+    isLoading,
+    error,
+    refetch,
+  } = useVendorEquipment(vendorId, equipmentId);
+  const updateMutation = useUpdateVendorEquipment();
 
-  const { vendor, isLoading: vendorLoading } = useVendor(vendorCode);
-  const createEquipmentMutation = useCreateVendorEquipment();
-
-  // Specifications state
   const [specifications, setSpecifications] = useState<Record<string, string>>(
     {},
   );
@@ -68,13 +60,33 @@ export default function NewVendorEquipmentPage() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
-  } = useForm<EquipmentFormData>({
-    resolver: zodResolver(equipmentSchema),
-    defaultValues: {
-      status: "active",
-    },
-  });
+  } = useForm<EquipmentFormData>({ resolver: zodResolver(equipmentSchema) });
+
+  useEffect(() => {
+    if (!equipment) return;
+    reset({
+      name: equipment.name ?? "",
+      category: equipment.category ?? "",
+      serial_number: equipment.serial_number ?? "",
+      model: equipment.model ?? "",
+      brand: equipment.brand ?? "",
+      manufacture_date: equipment.manufacture_date ?? "",
+      description: equipment.description ?? "",
+      status: (equipment.status as EquipmentFormData["status"]) ?? "active",
+    });
+    if (equipment.specifications) {
+      setSpecifications(
+        Object.fromEntries(
+          Object.entries(equipment.specifications).map(([k, v]) => [
+            k,
+            String(v),
+          ]),
+        ),
+      );
+    }
+  }, [equipment, reset]);
 
   const addSpecification = () => {
     if (newSpecKey.trim() && newSpecValue.trim()) {
@@ -96,74 +108,63 @@ export default function NewVendorEquipmentPage() {
   };
 
   const onSubmit = (data: EquipmentFormData) => {
-    if (!vendor?.id) return;
-
-    createEquipmentMutation.mutate(
+    updateMutation.mutate(
       {
-        vendorId: vendor.id,
+        vendorId,
+        equipmentId,
         data: {
           ...data,
-          hl7_port: data.hl7_port || undefined,
-          dicom_port: data.dicom_port || undefined,
           specifications:
             Object.keys(specifications).length > 0 ? specifications : undefined,
         },
       },
-      {
-        onSuccess: () => {
-          router.push(`/vendors/${vendorCode}/equipments`);
-        },
-      },
+      { onSuccess: () => router.push(`/vendor/equipments/${equipmentId}`) },
     );
   };
 
-  if (vendorLoading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-slate-600 text-sm">Loading...</p>
+      <div className="px-4 py-4">
+        <div className="bg-white rounded-lg border border-slate-200 p-8 animate-pulse space-y-4">
+          <div className="h-8 bg-slate-200 rounded w-1/3" />
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-5 bg-slate-100 rounded" />
+          ))}
         </div>
       </div>
     );
   }
 
-  if (!vendor) {
+  if (error || !equipment) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="text-yellow-500 text-xl mb-2">🔍</div>
-          <p className="text-slate-600">Vendor not found</p>
-          <button
-            onClick={() => router.back()}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
+      <ErrorState
+        title="Unable to Load Equipment"
+        error={error}
+        message={
+          !error && !equipment ? "This equipment could not be found." : undefined
+        }
+        action={{ label: "Try Again", onClick: () => refetch() }}
+        fullScreen
+      />
     );
   }
 
   return (
     <div className="px-4 py-4 space-y-4">
-      {/* Header */}
       <div className="flex items-center gap-3">
-        <BackButton onClick={() => router.back()} />
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">
-            Add New Equipment
+        <BackButton
+          onClick={() => router.push(`/vendor/equipments/${equipmentId}`)}
+        />
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-slate-900 truncate">
+            Edit Equipment
           </h1>
-          <p className="text-sm text-slate-500">{vendor.name}</p>
+          <p className="text-sm text-slate-500 font-mono">{equipment.code}</p>
         </div>
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <h2 className="text-sm font-semibold text-slate-900 mb-4">
-            Basic Information
-          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
               label="Equipment Name"
@@ -214,7 +215,7 @@ export default function NewVendorEquipmentPage() {
               register={register("status")}
               error={errors.status?.message}
               placeholder="Select Status"
-              options={STATUS_OPTIONS}
+              options={EQUIPMENT_STATUS_OPTIONS}
             />
           </div>
           <div className="mt-4">
@@ -235,8 +236,6 @@ export default function NewVendorEquipmentPage() {
           <h2 className="text-sm font-semibold text-slate-900 mb-4">
             Specifications
           </h2>
-
-          {/* Add Specification */}
           <div className="flex gap-2 mb-4">
             <input
               type="text"
@@ -261,7 +260,6 @@ export default function NewVendorEquipmentPage() {
             </button>
           </div>
 
-          {/* Specifications List */}
           {Object.keys(specifications).length > 0 ? (
             <div className="space-y-2">
               {Object.entries(specifications).map(([key, value]) => (
@@ -290,66 +288,37 @@ export default function NewVendorEquipmentPage() {
           )}
         </div>
 
-        {/* DICOM Configuration */}
-        <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <h2 className="text-sm font-semibold text-slate-900 mb-1">
-            DICOM Configuration
-          </h2>
-          <p className="text-xs text-slate-500 mb-4">
-            Optional — required only for imaging equipment that connects via
-            DICOM/MWL.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
-              label="AE Title"
-              type="text"
-              register={register("ae_title")}
-              error={errors.ae_title?.message}
-              placeholder="e.g. GEXR001 (max 16 chars)"
-            />
-            <InputField
-              label="Device Host / IP"
-              type="text"
-              register={register("hl7_host")}
-              placeholder="e.g. 192.168.1.50"
-            />
-            <InputField
-              label="HL7 Port"
-              type="number"
-              register={register("hl7_port")}
-              error={errors.hl7_port?.message}
-              placeholder="e.g. 2575"
-            />
-            <InputField
-              label="DICOM Port"
-              type="number"
-              register={register("dicom_port")}
-              error={errors.dicom_port?.message}
-              placeholder="e.g. 11112"
-            />
-          </div>
-        </div>
-
-        {/* Actions */}
         <div className="flex gap-3 justify-end">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={() => router.push(`/vendor/equipments/${equipmentId}`)}
             className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200"
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={createEquipmentMutation.isPending}
+            disabled={updateMutation.isPending}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            {createEquipmentMutation.isPending
-              ? "Creating..."
-              : "Create Equipment"}
+            {updateMutation.isPending ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </form>
     </div>
+  );
+}
+
+export default function EditMyEquipmentPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+
+  return (
+    <PermissionGate permission={Permission.VIEW_VENDOR_EQUIPMENTS}>
+      <EditMyEquipmentContent equipmentId={id} />
+    </PermissionGate>
   );
 }

@@ -9,7 +9,7 @@ import {
 } from "@/features/equipmentStatus/useEquipmentStatus";
 import { Table } from "@/components/Table";
 import Pagination from "@/components/common/Pagination";
-import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { ErrorState } from "@/components/common/ErrorState";
 import {
   FaHeartbeat,
@@ -174,19 +174,6 @@ function EquipmentStatusContent() {
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-end gap-3 p-4 border-b border-slate-100">
-            <div className="w-full sm:w-48">
-              <SearchableSelect
-                label="Status"
-                options={STATUS_OPTIONS}
-                value={status}
-                onChange={(v) => {
-                  setStatus(v);
-                  setPage(1);
-                }}
-                placeholder="All Status"
-                searchPlaceholder="Search status..."
-              />
-            </div>
             <div className="w-full sm:w-44">
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 From
@@ -221,7 +208,19 @@ function EquipmentStatusContent() {
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>Equipment</Table.HeaderCell>
-                <Table.HeaderCell>Status</Table.HeaderCell>
+                <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Status"
+                    options={STATUS_OPTIONS}
+                    value={status}
+                    onChange={(v) => {
+                      setStatus(v);
+                      setPage(1);
+                    }}
+                    allLabel="All Status"
+                    searchable={false}
+                  />
+                </Table.HeaderCell>
                 <Table.HeaderCell>Notes</Table.HeaderCell>
                 <Table.HeaderCell>Logged By</Table.HeaderCell>
                 <Table.HeaderCell>When</Table.HeaderCell>

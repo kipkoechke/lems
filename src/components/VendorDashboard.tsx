@@ -209,8 +209,7 @@ const BOOKING_STATUS_COLORS: Record<string, string> = {
 };
 
 const VendorDashboard: React.FC = () => {
-  const { vendorId, missingVendorId, isLoading: vendorLoading } =
-    useMyVendor();
+  const { vendorId, isLoading: vendorLoading } = useMyVendor();
 
   // Filter states
   const [selectedDuration, setSelectedDuration] =
@@ -374,19 +373,11 @@ const VendorDashboard: React.FC = () => {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-3 text-slate-600 text-sm">Loading vendor profile...</p>
+          <p className="mt-3 text-slate-600 text-sm">
+            Loading vendor profile...
+          </p>
         </div>
       </div>
-    );
-  }
-
-  if (missingVendorId) {
-    return (
-      <ErrorState
-        title="Vendor Account Not Linked"
-        message="Your account has no vendor linked to it, so we can't load your dashboard. Sign out and back in, or ask an administrator to link your user to a vendor."
-        fullScreen
-      />
     );
   }
 

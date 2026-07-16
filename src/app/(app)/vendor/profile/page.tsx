@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useMyVendor } from "@/features/vendors/useMyVendor";
-import { useUpdateVendor } from "@/features/vendors/useUpdateVendor";
+import { useUpdateMyVendorProfile } from "@/features/vendors/useUpdateMyVendorProfile";
 import { isVendorActive, vendorCode, vendorStatusLabel } from "@/services/apiVendors";
 import { InputField } from "@/components/common/InputField";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -27,9 +27,8 @@ const LIFECYCLE_BADGE: Record<string, string> = {
 };
 
 function VendorProfileContent() {
-  const { vendor, vendorId, missingVendorId, isLoading, error, refetch } =
-    useMyVendor();
-  const { updateVendor, isUpdating } = useUpdateVendor();
+  const { vendor, vendorId, isLoading, error, refetch } = useMyVendor();
+  const { updateProfile, isUpdating } = useUpdateMyVendorProfile(vendorId);
   const [isEditing, setIsEditing] = useState(false);
 
   const { register, handleSubmit, reset } = useForm<ProfileFormData>();
@@ -64,16 +63,6 @@ function VendorProfileContent() {
     );
   }
 
-  if (missingVendorId) {
-    return (
-      <ErrorState
-        title="Vendor Account Not Linked"
-        message="Your account has no vendor linked to it. Sign out and back in, or ask an administrator to link your user to a vendor."
-        fullScreen
-      />
-    );
-  }
-
   if (error || !vendor) {
     return (
       <ErrorState
@@ -89,17 +78,14 @@ function VendorProfileContent() {
   }
 
   const onSubmit = (data: ProfileFormData) => {
-    updateVendor(
+    updateProfile(
       {
-        vendorId,
-        data: {
-          name: data.name,
-          email: data.email || undefined,
-          phone: data.phone || undefined,
-          website: data.website || undefined,
-          address: data.address || undefined,
-          description: data.description || undefined,
-        },
+        name: data.name,
+        email: data.email || undefined,
+        phone: data.phone || undefined,
+        website: data.website || undefined,
+        address: data.address || undefined,
+        description: data.description || undefined,
       },
       {
         onSuccess: () => {

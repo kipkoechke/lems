@@ -10,7 +10,7 @@ import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import Pagination from "@/components/common/Pagination";
 import { SearchField } from "@/components/common/SearchField";
-import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { ErrorState } from "@/components/common/ErrorState";
 import { FaEdit, FaEye, FaPlus, FaTrash, FaUsers, FaKey } from "react-icons/fa";
 
@@ -101,29 +101,25 @@ function UsersContent() {
 
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-3 p-4 border-b border-slate-100">
-            <div className="w-full sm:w-48">
-              <SearchableSelect
-                label="Status"
-                options={ACTIVE_OPTIONS}
-                value={activeFilter}
-                onChange={(v) => {
-                  setActiveFilter(v);
-                  setPage(1);
-                }}
-                placeholder="All Status"
-                searchPlaceholder="Search status..."
-              />
-            </div>
-          </div>
-
           <Table className="w-full">
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>User</Table.HeaderCell>
                 <Table.HeaderCell>Email</Table.HeaderCell>
                 <Table.HeaderCell>Scope</Table.HeaderCell>
-                <Table.HeaderCell>Status</Table.HeaderCell>
+                <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Status"
+                    options={ACTIVE_OPTIONS}
+                    value={activeFilter}
+                    onChange={(v) => {
+                      setActiveFilter(v);
+                      setPage(1);
+                    }}
+                    allLabel="All Status"
+                    searchable={false}
+                  />
+                </Table.HeaderCell>
                 <Table.HeaderCell align="center">Actions</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
@@ -208,16 +204,17 @@ function UsersContent() {
             </Table.Body>
           </Table>
 
-          {pagination && (pagination.last_page || pagination.total_pages || 1) > 1 && (
-            <Pagination
-              currentPage={pagination.current_page}
-              lastPage={pagination.last_page ?? pagination.total_pages ?? 1}
-              total={pagination.total}
-              from={pagination.from}
-              to={pagination.to}
-              onPageChange={setPage}
-            />
-          )}
+          {pagination &&
+            (pagination.last_page || pagination.total_pages || 1) > 1 && (
+              <Pagination
+                currentPage={pagination.current_page}
+                lastPage={pagination.last_page ?? pagination.total_pages ?? 1}
+                total={pagination.total}
+                from={pagination.from}
+                to={pagination.to}
+                onPageChange={setPage}
+              />
+            )}
         </div>
       </div>
 

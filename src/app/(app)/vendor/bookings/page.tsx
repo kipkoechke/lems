@@ -8,7 +8,7 @@ import { useVendorBookings } from "@/features/vendors/useVendorBookings";
 import { VendorBooking } from "@/services/apiVendors";
 import { Table } from "@/components/Table";
 import { SearchField } from "@/components/common/SearchField";
-import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { ErrorState } from "@/components/common/ErrorState";
 import { FaCalendarCheck } from "react-icons/fa";
 
@@ -39,7 +39,7 @@ const formatDate = (value?: string | null) =>
     : "-";
 
 function VendorBookingsContent() {
-  const { vendorId, missingVendorId, isLoading: vendorLoading } = useMyVendor();
+  const { vendorId, isLoading: vendorLoading } = useMyVendor();
   const { bookings, isLoading, error, refetch } = useVendorBookings(vendorId);
 
   const [status, setStatus] = useState("");
@@ -69,16 +69,6 @@ function VendorBookingsContent() {
           </div>
         </div>
       </div>
-    );
-  }
-
-  if (missingVendorId) {
-    return (
-      <ErrorState
-        title="Vendor Account Not Linked"
-        message="Your account has no vendor linked to it, so we can't load your bookings. Sign out and back in, or ask an administrator to link your user to a vendor."
-        fullScreen
-      />
     );
   }
 
@@ -123,19 +113,6 @@ function VendorBookingsContent() {
 
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-3 p-4 border-b border-slate-100">
-            <div className="w-full sm:w-48">
-              <SearchableSelect
-                label="Status"
-                options={STATUS_OPTIONS}
-                value={status}
-                onChange={setStatus}
-                placeholder="All Status"
-                searchPlaceholder="Search status..."
-              />
-            </div>
-          </div>
-
           <Table className="w-full">
             <Table.Header>
               <Table.Row>
@@ -144,7 +121,16 @@ function VendorBookingsContent() {
                 <Table.HeaderCell>Facility</Table.HeaderCell>
                 <Table.HeaderCell>Services</Table.HeaderCell>
                 <Table.HeaderCell>Total Tariff</Table.HeaderCell>
-                <Table.HeaderCell>Status</Table.HeaderCell>
+                <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Status"
+                    options={STATUS_OPTIONS}
+                    value={status}
+                    onChange={setStatus}
+                    allLabel="All Status"
+                    searchable={false}
+                  />
+                </Table.HeaderCell>
                 <Table.HeaderCell>Created</Table.HeaderCell>
               </Table.Row>
             </Table.Header>

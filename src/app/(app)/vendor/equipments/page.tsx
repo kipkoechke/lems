@@ -10,7 +10,7 @@ import type { VendorEquipment } from "@/services/apiEquipment";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { SearchField } from "@/components/common/SearchField";
-import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { ErrorState } from "@/components/common/ErrorState";
 import {
   FaCog,
@@ -56,15 +56,11 @@ const getStatusIcon = (status: string) => {
 
 function VendorEquipmentsContent() {
   const router = useRouter();
-  const {
-    vendor,
-    vendorId,
-    missingVendorId,
-    isLoading: vendorLoading,
-  } = useMyVendor();
+  const { vendor, vendorId, isLoading: vendorLoading } = useMyVendor();
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [modality, setModality] = useState("");
 
   const {
     data,
@@ -75,7 +71,16 @@ function VendorEquipmentsContent() {
 
   const equipments: VendorEquipment[] = data?.data ?? [];
 
+  // The vendor equipment endpoint has no modality filter param, so the options
+  // come from what this vendor actually owns and filtering happens client-side.
+  const modalityOptions = Array.from(
+    new Set(equipments.map((eq) => eq.modality).filter(Boolean) as string[]),
+  )
+    .sort()
+    .map((m) => ({ value: m, label: m }));
+
   const filtered = equipments.filter((eq) => {
+    if (modality && eq.modality !== modality) return false;
     const term = search.toLowerCase();
     if (!term) return true;
     return (
@@ -97,16 +102,6 @@ function VendorEquipmentsContent() {
           </div>
         </div>
       </div>
-    );
-  }
-
-  if (missingVendorId) {
-    return (
-      <ErrorState
-        title="Vendor Account Not Linked"
-        message="Your account has no vendor linked to it, so we can't load your equipment. Sign out and back in, or ask an administrator to link your user to a vendor."
-        fullScreen
-      />
     );
   }
 
@@ -162,34 +157,39 @@ function VendorEquipmentsContent() {
 
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-3 p-4 border-b border-slate-100">
-            <div className="w-full sm:w-48">
-              <SearchableSelect
-                label="Status"
-                options={STATUS_OPTIONS}
-                value={status}
-                onChange={setStatus}
-                placeholder="All Status"
-                searchPlaceholder="Search status..."
-              />
-            </div>
-          </div>
-
           <Table className="w-full">
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>Code</Table.HeaderCell>
                 <Table.HeaderCell>Name</Table.HeaderCell>
                 <Table.HeaderCell>Category</Table.HeaderCell>
-                <Table.HeaderCell>Modality</Table.HeaderCell>
-                <Table.HeaderCell>Status</Table.HeaderCell>
+                <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Modality"
+                    options={modalityOptions}
+                    value={modality}
+                    onChange={setModality}
+                    allLabel="All Modalities"
+                    searchPlaceholder="Search modality..."
+                  />
+                </Table.HeaderCell>
+                <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Status"
+                    options={STATUS_OPTIONS}
+                    value={status}
+                    onChange={setStatus}
+                    allLabel="All Status"
+                    searchable={false}
+                  />
+                </Table.HeaderCell>
                 <Table.HeaderCell align="center">Actions</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
               {filtered.length === 0 ? (
                 <Table.Empty colSpan={6}>
-                  {search || status
+                  {search || status || modality
                     ? "No equipment matches your criteria"
                     : "No equipment yet. Add your first item to get started."}
                 </Table.Empty>
