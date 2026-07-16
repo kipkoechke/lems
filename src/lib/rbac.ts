@@ -66,6 +66,13 @@ export enum Permission {
   VIEW_MAINTENANCE_HISTORY = "view_maintenance_history",
   VIEW_VENDOR_REVENUE = "view_vendor_revenue",
   VIEW_VENDOR_PAYMENTS = "view_vendor_payments",
+  // Vendor self-service — these map to the vendor-scoped API surface
+  // (/vendors/{vendor}/...) and must never be granted to admin roles, whose
+  // equivalents live under the admin endpoints.
+  VIEW_VENDOR_PROFILE = "view_vendor_profile",
+  VIEW_VENDOR_CONTACTS = "view_vendor_contacts",
+  VIEW_VENDOR_BOOKINGS = "view_vendor_bookings",
+  VIEW_VENDOR_EQUIPMENTS = "view_vendor_equipments",
 
   // Facility Admin-specific permissions
   REQUEST_MAINTENANCE = "request_maintenance",
@@ -163,13 +170,19 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ],
 
   [UserRole.VENDOR]: [
-    // Vendor permissions
+    // Vendor permissions — scoped to the vendor's own profile, equipment,
+    // contacts and bookings. Vendors have no API access to facilities,
+    // the vendor directory, contracts, lots or services (see API reference
+    // "Vendor User" role), so those must not appear in their navigation.
     Permission.VIEW_DASHBOARD,
-    Permission.VIEW_EQUIPMENTS,
+    // NOTE: deliberately NOT VIEW_EQUIPMENTS — the /equipments page reads
+    // /admin/equipment, which vendors cannot call. They get the vendor-scoped
+    // equipment page instead.
+    Permission.VIEW_VENDOR_EQUIPMENTS,
+    Permission.VIEW_VENDOR_BOOKINGS,
+    Permission.VIEW_VENDOR_CONTACTS,
+    Permission.VIEW_VENDOR_PROFILE,
     Permission.VIEW_MAINTENANCE_HISTORY,
-    Permission.VIEW_CONTRACTS,
-    Permission.VIEW_LOTS,
-    Permission.VIEW_SERVICES,
     Permission.VIEW_VENDOR_REVENUE,
     Permission.VIEW_VENDOR_PAYMENTS,
     Permission.VIEW_PAYMENTS,

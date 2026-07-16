@@ -59,6 +59,33 @@ const NAV_ITEMS: NavItem[] = [
     description: "View services offered",
   },
 
+  // Vendor self-service items — vendor-scoped API surface
+  // (/vendors/{vendor}/...). Only the vendor role holds these permissions.
+  {
+    label: "My Equipment",
+    href: "/vendor/equipments",
+    permission: Permission.VIEW_VENDOR_EQUIPMENTS,
+    description: "Manage your equipment",
+  },
+  {
+    label: "Bookings",
+    href: "/vendor/bookings",
+    permission: Permission.VIEW_VENDOR_BOOKINGS,
+    description: "Bookings on your equipment",
+  },
+  {
+    label: "Contacts",
+    href: "/vendor/contacts",
+    permission: Permission.VIEW_VENDOR_CONTACTS,
+    description: "Manage your vendor contacts",
+  },
+  {
+    label: "My Profile",
+    href: "/vendor/profile",
+    permission: Permission.VIEW_VENDOR_PROFILE,
+    description: "View and update your vendor profile",
+  },
+
   // Patient workflow items (Medical and Finance staff)
   {
     label: "Patients",

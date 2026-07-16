@@ -161,6 +161,13 @@ export const getVendor = async (vendorCode: string): Promise<Vendor> => {
   return vendor;
 };
 
+// Fetch a single vendor directly by UUID. Vendor users can only read their own
+// record (user.entity.id), so this avoids listing /vendors which they cannot access.
+export const getVendorById = async (vendorId: string): Promise<Vendor> => {
+  const response = await axios.get<{ data: Vendor }>(`/vendors/${vendorId}`);
+  return response.data.data;
+};
+
 export const createVendor = async (
   data: VendorCreateRequest,
 ): Promise<Vendor> => {
@@ -168,10 +175,11 @@ export const createVendor = async (
   return response.data;
 };
 
-export const updateVendor = async (
-  data: VendorUpdateRequest,
-): Promise<Vendor> => {
-  const response = await axios.post<Vendor>("/vendors", data);
+export const updateVendor = async ({
+  id,
+  ...data
+}: VendorUpdateRequest): Promise<Vendor> => {
+  const response = await axios.put<Vendor>(`/vendors/${id}`, data);
   return response.data;
 };
 
