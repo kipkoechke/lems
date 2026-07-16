@@ -168,11 +168,11 @@ function VendorContractDetailContent({ contractId }: { contractId: string }) {
                   <Table.Row key={s.id}>
                     <Table.Cell>
                       <div className="font-medium text-slate-900">
-                        {s.service?.name || "-"}
+                        {s.name || "-"}
                       </div>
-                      {s.service?.code && (
+                      {s.code && (
                         <div className="text-xs text-slate-500 font-mono">
-                          {s.service.code}
+                          {s.code}
                         </div>
                       )}
                     </Table.Cell>
@@ -188,7 +188,7 @@ function VendorContractDetailContent({ contractId }: { contractId: string }) {
                     </Table.Cell>
                     <Table.Cell>
                       <span className="text-sm text-slate-700">
-                        {formatTariff(s.service?.tariff)}
+                        {formatTariff(s.tariff)}
                       </span>
                     </Table.Cell>
                     <Table.Cell>

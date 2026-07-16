@@ -193,8 +193,32 @@ export const deleteVendorEquipment = async (
 
 // ============ Vendor Equipment DICOM (vendor portal) ============
 
+export interface ConfigurationGuideField {
+  label: string;
+  value: string | number;
+}
+
+export interface ConfigurationGuideStep {
+  step: number;
+  label: string;
+  field?: string;
+  value?: string;
+  note?: string;
+  section?: string;
+  fields?: ConfigurationGuideField[];
+}
+
+export interface ConfigurationGuide {
+  title: string;
+  steps: ConfigurationGuideStep[];
+}
+
 export interface VendorEquipmentDicomStatus {
+  id?: string;
+  name?: string;
+  code?: string;
   ae_title: string | null;
+  host?: string | null;
   ip?: string | null;
   hl7_host?: string | null;
   port?: number | null;
@@ -202,10 +226,13 @@ export interface VendorEquipmentDicomStatus {
   hl7_port?: number | null;
   is_connected: boolean;
   last_seen_at?: string | null;
+  connected_at?: string | null;
+  registered_in_orthanc?: boolean;
   orthanc_registered?: boolean;
   registered?: boolean;
   mwl_server?: VendorEquipmentVendorConfig | null;
   vendor_config?: VendorEquipmentVendorConfig | null;
+  configuration_guide?: ConfigurationGuide | null;
 }
 
 export interface VendorDicomConfigureRequest {

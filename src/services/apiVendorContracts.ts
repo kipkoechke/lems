@@ -118,16 +118,18 @@ export const getVendorContracts = async (
 
 export interface VendorContractServiceItem {
   id: string;
-  service?: {
-    id?: string;
-    code?: string;
+  code?: string;
+  name?: string;
+  tariff?: number | string;
+  lot?: {
+    number?: string;
     name?: string;
-    tariff?: number | string;
   } | null;
   equipment?: {
     id?: string;
     code?: string;
     name?: string;
+    status?: string;
   } | null;
   is_active?: boolean;
 }
