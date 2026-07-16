@@ -509,12 +509,12 @@ export const updateDropdownConfig = async (
 // Vendor Bookings
 // ============================================================
 
-// GET /vendors/{vendorId}/bookings
+// GET /vendor/bookings — vendor inferred from auth token
 export const getVendorBookings = async (
-  vendorId: string,
+  _vendorId: string,
 ): Promise<VendorBooking[]> => {
   const response = await axios.get<{ data: VendorBooking[] }>(
-    `/vendors/${vendorId}/bookings`,
+    `/vendor/bookings`,
   );
   return response.data.data ?? response.data;
 };

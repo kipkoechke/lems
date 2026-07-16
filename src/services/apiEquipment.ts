@@ -144,56 +144,56 @@ export const getEquipmentStatuses = async (): Promise<EquipmentStatus[]> => {
   return response.data;
 };
 
-// Get vendor equipments with pagination
+// GET /vendor/equipments — vendor inferred from auth token
 export const getVendorEquipments = async (
-  vendorId: string,
+  _vendorId: string,
   params: VendorEquipmentsParams = {},
 ): Promise<VendorEquipmentsResponse> => {
-  const response = await axios.get(`/vendors/${vendorId}/equipments`, {
+  const response = await axios.get(`/vendor/equipments`, {
     params,
   });
   return response.data;
 };
 
-// Get single vendor equipment
+// GET /vendor/equipments/{id} — vendor inferred from auth token
 export const getVendorEquipment = async (
-  vendorId: string,
+  _vendorId: string,
   equipmentId: string,
 ): Promise<VendorEquipment> => {
   const response = await axios.get(
-    `/vendors/${vendorId}/equipments/${equipmentId}`,
+    `/vendor/equipments/${equipmentId}`,
   );
   return response.data?.data ?? response.data;
 };
 
-// Create vendor equipment
+// POST /vendor/equipments — vendor inferred from auth token
 export const createVendorEquipment = async (
-  vendorId: string,
+  _vendorId: string,
   data: VendorEquipmentCreateRequest,
 ): Promise<VendorEquipment> => {
-  const response = await axios.post(`/vendors/${vendorId}/equipments`, data);
+  const response = await axios.post(`/vendor/equipments`, data);
   return response.data?.equipment ?? response.data?.data ?? response.data;
 };
 
-// Update vendor equipment
+// PATCH /vendor/equipments/{id} — vendor inferred from auth token
 export const updateVendorEquipment = async (
-  vendorId: string,
+  _vendorId: string,
   equipmentId: string,
   data: VendorEquipmentCreateRequest,
 ): Promise<VendorEquipment> => {
   const response = await axios.patch(
-    `/vendors/${vendorId}/equipments/${equipmentId}`,
+    `/vendor/equipments/${equipmentId}`,
     data,
   );
   return response.data?.equipment ?? response.data?.data ?? response.data;
 };
 
-// Delete vendor equipment
+// DELETE /vendor/equipments/{id} — vendor inferred from auth token
 export const deleteVendorEquipment = async (
-  vendorId: string,
+  _vendorId: string,
   equipmentId: string,
 ): Promise<void> => {
-  await axios.delete(`/vendors/${vendorId}/equipments/${equipmentId}`);
+  await axios.delete(`/vendor/equipments/${equipmentId}`);
 };
 
 // ============ Admin Equipment Types & API ============
@@ -615,47 +615,47 @@ export interface DicomEquipmentStatus {
   last_seen_at?: string;
 }
 
-// POST /dicom/equipment/{id}/configure
+// POST /vendor/equipments/{id}/configure
 export const configureDicomEquipment = async (
   equipmentId: string,
   data: DicomConfigureRequest,
 ): Promise<DicomConfigureResponse> => {
   const response = await axios.post(
-    `/dicom/equipment/${equipmentId}/configure`,
+    `/vendor/equipments/${equipmentId}/configure`,
     data,
   );
   return response.data;
 };
 
-// POST /dicom/equipment/{id}/test
+// POST /vendor/equipments/{id}/test-connection
 export const testDicomConnection = async (
   equipmentId: string,
 ): Promise<{ message: string }> => {
-  const response = await axios.post(`/dicom/equipment/${equipmentId}/test`);
+  const response = await axios.post(`/vendor/equipments/${equipmentId}/test-connection`);
   return response.data;
 };
 
-// POST /dicom/equipment/{id}/register
+// POST /vendor/equipments/{id}/register
 export const registerDicomModality = async (
   equipmentId: string,
 ): Promise<{ message: string }> => {
   const response = await axios.post(
-    `/dicom/equipment/${equipmentId}/register`,
+    `/vendor/equipments/${equipmentId}/register`,
   );
   return response.data;
 };
 
-// DELETE /dicom/equipment/{id}/register
+// DELETE /vendor/equipments/{id}/register
 export const unregisterDicomModality = async (
   equipmentId: string,
 ): Promise<void> => {
-  await axios.delete(`/dicom/equipment/${equipmentId}/register`);
+  await axios.delete(`/vendor/equipments/${equipmentId}/register`);
 };
 
-// GET /dicom/equipment/{id}/status
+// GET /vendor/equipments/{id}/dicom-status
 export const getDicomEquipmentStatus = async (
   equipmentId: string,
 ): Promise<DicomEquipmentStatus> => {
-  const response = await axios.get(`/dicom/equipment/${equipmentId}/status`);
+  const response = await axios.get(`/vendor/equipments/${equipmentId}/dicom-status`);
   return response.data;
 };

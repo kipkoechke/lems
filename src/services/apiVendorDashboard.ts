@@ -126,9 +126,9 @@ export interface VendorDashboardFilters {
   grouping?: "day" | "week" | "month";
 }
 
-// GET /vendors/{vendorId}/dashboard
+// GET /vendor/dashboard — vendor inferred from auth token
 export const getVendorDashboard = async (
-  vendorId: string,
+  _vendorId: string,
   filters?: VendorDashboardFilters,
 ): Promise<VendorDashboardResponse> => {
   const params: Record<string, string> = {};
@@ -140,7 +140,7 @@ export const getVendorDashboard = async (
   if (filters?.service_id) params.service_id = filters.service_id;
   if (filters?.grouping) params.grouping = filters.grouping;
 
-  const response = await axios.get(`/vendors/${vendorId}/dashboard`, {
+  const response = await axios.get(`/vendor/dashboard`, {
     params,
   });
   return response.data.data ?? response.data;
