@@ -6,6 +6,11 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useVendors } from "@/features/vendors/useVendors";
 import { useDeleteVendor } from "@/features/vendors/useDeleteVendor";
+import {
+  isVendorActive,
+  vendorCode,
+  vendorStatusLabel,
+} from "@/services/apiVendors";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { Table } from "@/components/Table";
 import {
@@ -33,11 +38,11 @@ function VendorsContent() {
 
   // Filter vendors based on search
   const filteredVendors = vendors?.filter((vendor) => {
-    const matchesSearch =
-      vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vendor.vendor_alpha_code.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return matchesSearch;
+    const term = searchTerm.toLowerCase();
+    return (
+      vendor.name.toLowerCase().includes(term) ||
+      vendorCode(vendor).toLowerCase().includes(term)
+    );
   });
 
   const handleDelete = (vendorId: string) => {
@@ -167,11 +172,7 @@ function VendorsContent() {
                 </div>
                 <div>
                   <p className="text-lg font-bold text-green-600">
-                    {
-                      filteredVendors.filter(
-                        (v) => v.lifecycle_state === "active",
-                      ).length
-                    }
+                    {filteredVendors.filter(isVendorActive).length}
                   </p>
                   <p className="text-xs font-medium text-gray-600">
                     Active Vendors
@@ -187,11 +188,7 @@ function VendorsContent() {
                 </div>
                 <div>
                   <p className="text-lg font-bold text-red-600">
-                    {
-                      filteredVendors.filter(
-                        (v) => v.lifecycle_state !== "active",
-                      ).length
-                    }
+                    {filteredVendors.filter((v) => !isVendorActive(v)).length}
                   </p>
                   <p className="text-xs font-medium text-gray-600">
                     Inactive Vendors
@@ -227,7 +224,7 @@ function VendorsContent() {
                   <Table.Row key={vendor.id}>
                     <Table.Cell>
                       <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                        {vendor.vendor_alpha_code}
+                        {vendorCode(vendor)}
                       </span>
                     </Table.Cell>
                     <Table.Cell>
@@ -237,22 +234,14 @@ function VendorsContent() {
                     </Table.Cell>
                     <Table.Cell>
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                          vendor.lifecycle_state === "active"
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium capitalize ${
+                          isVendorActive(vendor)
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {vendor.lifecycle_state === "active" ? (
-                          <FaCheck />
-                        ) : (
-                          <FaTimes />
-                        )}
-                        {vendor.lifecycle_state === "active"
-                          ? "Active"
-                          : vendor.lifecycle_state === "disabled"
-                            ? "Disabled"
-                            : "Retired"}
+                        {isVendorActive(vendor) ? <FaCheck /> : <FaTimes />}
+                        {vendorStatusLabel(vendor)}
                       </span>
                     </Table.Cell>
                     <Table.Cell className="text-sm text-gray-600">

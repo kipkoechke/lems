@@ -6,6 +6,7 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useMyVendor } from "@/features/vendors/useMyVendor";
 import { useUpdateVendor } from "@/features/vendors/useUpdateVendor";
+import { isVendorActive, vendorCode, vendorStatusLabel } from "@/services/apiVendors";
 import { InputField } from "@/components/common/InputField";
 import { ErrorState } from "@/components/common/ErrorState";
 import { FaSave, FaTimes } from "react-icons/fa";
@@ -26,7 +27,8 @@ const LIFECYCLE_BADGE: Record<string, string> = {
 };
 
 function VendorProfileContent() {
-  const { vendor, vendorId, isLoading, error, refetch } = useMyVendor();
+  const { vendor, vendorId, missingVendorId, isLoading, error, refetch } =
+    useMyVendor();
   const { updateVendor, isUpdating } = useUpdateVendor();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -59,6 +61,16 @@ function VendorProfileContent() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (missingVendorId) {
+    return (
+      <ErrorState
+        title="Vendor Account Not Linked"
+        message="Your account has no vendor linked to it. Sign out and back in, or ask an administrator to link your user to a vendor."
+        fullScreen
+      />
     );
   }
 
@@ -100,7 +112,7 @@ function VendorProfileContent() {
 
   const details = [
     { label: "Vendor Name", value: vendor.name },
-    { label: "Vendor Alpha Code", value: vendor.vendor_alpha_code },
+    { label: "Vendor Code", value: vendorCode(vendor) },
     { label: "DHA Vendor Code", value: vendor.dha_vendor_code },
     { label: "SHA Vendor Code", value: vendor.sha_vendor_code },
     { label: "Email", value: vendor.email },
@@ -120,16 +132,18 @@ function VendorProfileContent() {
               {vendor.name}
             </h1>
             <p className="text-sm text-slate-500 font-mono">
-              {vendor.vendor_alpha_code}
+              {vendorCode(vendor)}
             </p>
           </div>
           <span
             className={`ml-auto inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-              LIFECYCLE_BADGE[vendor.lifecycle_state] ??
-              "bg-slate-100 text-slate-700"
+              LIFECYCLE_BADGE[vendorStatusLabel(vendor)] ??
+              (isVendorActive(vendor)
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800")
             }`}
           >
-            {vendor.lifecycle_state}
+            {vendorStatusLabel(vendor)}
           </span>
           {!isEditing && (
             <button

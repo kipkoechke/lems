@@ -1,25 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  getShaInterventions,
-  ShaInterventionParams,
-} from "@/services/apiSha";
+import { getShaInterventions } from "@/services/apiSha";
 
-export const useShaInterventions = (params: ShaInterventionParams = {}) => {
-  // Every filter is optional, but an unfiltered call can be very broad — only
-  // fetch once the operator has supplied at least one identifier.
-  const hasFilter = Object.values(params).some((v) => !!v);
-
+export const useShaInterventions = () => {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["sha-interventions", params],
-    queryFn: () => getShaInterventions(params),
-    enabled: hasFilter,
+    queryKey: ["sha-interventions"],
+    queryFn: getShaInterventions,
   });
 
-  return {
-    interventions: data ?? [],
-    hasFilter,
-    isLoading,
-    error,
-    refetch,
-  };
+  return { lots: data ?? [], isLoading, error, refetch };
 };

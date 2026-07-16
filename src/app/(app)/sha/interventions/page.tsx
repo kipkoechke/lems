@@ -1,228 +1,198 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useMemo, useState } from "react";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useShaInterventions } from "@/features/sha/useSha";
-import { ShaInterventionParams } from "@/services/apiSha";
 import { Table } from "@/components/Table";
-import { InputField } from "@/components/common/InputField";
+import { SearchField } from "@/components/common/SearchField";
 import { ErrorState } from "@/components/common/ErrorState";
-import { FaShieldAlt, FaSearch } from "react-icons/fa";
+import { FaShieldAlt, FaLayerGroup, FaStethoscope } from "react-icons/fa";
 
-const formatDateTime = (value?: string | null) =>
-  value
-    ? new Date(value).toLocaleString("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "-";
+const formatAmount = (value?: number | string | null) =>
+  value === null || value === undefined || value === ""
+    ? "-"
+    : Number(value).toLocaleString();
 
 function ShaInterventionsContent() {
-  const [filters, setFilters] = useState<ShaInterventionParams>({});
-  const { interventions, hasFilter, isLoading, error, refetch } =
-    useShaInterventions(filters);
+  const { lots, isLoading, error, refetch } = useShaInterventions();
+  const [search, setSearch] = useState("");
 
-  const { register, handleSubmit, reset } = useForm<ShaInterventionParams>();
+  // Filter services within each lot, dropping lots left with no matches.
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return lots;
 
-  const onSearch = (data: ShaInterventionParams) => {
-    // Strip blanks so we don't send empty query params.
-    const cleaned = Object.fromEntries(
-      Object.entries(data).filter(([, v]) => !!v),
-    ) as ShaInterventionParams;
-    setFilters(cleaned);
-  };
+    return lots
+      .map((group) => ({
+        ...group,
+        services: group.services.filter(
+          (s) =>
+            s.name?.toLowerCase().includes(term) ||
+            s.code?.toLowerCase().includes(term),
+        ),
+      }))
+      .filter(
+        (group) =>
+          group.services.length > 0 ||
+          group.lot.name?.toLowerCase().includes(term) ||
+          group.lot.number?.toLowerCase().includes(term),
+      );
+  }, [lots, search]);
 
-  const onReset = () => {
-    reset({
-      patient_id: "",
-      id_number: "",
-      emr_request_id: "",
-      facility_id: "",
-      internal_request_id: "",
-    });
-    setFilters({});
-  };
+  const totalServices = lots.reduce((sum, g) => sum + g.services.length, 0);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-3 md:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white rounded-lg border border-slate-200 p-8 animate-pulse space-y-4">
+            <div className="h-8 bg-slate-200 rounded w-1/4" />
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-14 bg-slate-100 rounded" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Unable to Load Interventions"
+        error={error}
+        action={{ label: "Try Again", onClick: () => refetch() }}
+        fullScreen
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen p-3 md:p-6">
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Header */}
         <div className="bg-white rounded-lg border border-slate-200 px-4 md:px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-              <FaShieldAlt className="w-4 h-4 text-emerald-600" />
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <FaShieldAlt className="w-4 h-4 text-emerald-600" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">
+                  SHA Interventions
+                </h1>
+                <p className="text-sm text-slate-500">
+                  {totalServices} active services across {lots.length} lots
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">
-                SHA Interventions
-              </h1>
-              <p className="text-sm text-slate-500">
-                Completed interventions with equipment and result details
-              </p>
+
+            <div className="flex-1 max-w-xl w-full mx-auto">
+              <SearchField
+                value={search}
+                onChange={setSearch}
+                placeholder="Search interventions by name, code or lot..."
+              />
             </div>
           </div>
         </div>
 
-        {/* Lookup */}
-        <div className="bg-white rounded-lg border border-slate-200 p-4 md:p-6">
-          <form onSubmit={handleSubmit(onSearch)}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <InputField
-                label="Patient ID"
-                type="text"
-                placeholder="Patient identifier"
-                register={register("patient_id")}
-              />
-              <InputField
-                label="ID Number"
-                type="text"
-                placeholder="National ID / MRN"
-                register={register("id_number")}
-              />
-              <InputField
-                label="EMR Request ID"
-                type="text"
-                placeholder="EMR request identifier"
-                register={register("emr_request_id")}
-              />
-              <InputField
-                label="Facility ID"
-                type="text"
-                placeholder="Facility identifier"
-                register={register("facility_id")}
-              />
-              <InputField
-                label="Internal Request ID"
-                type="text"
-                placeholder="Middleware request ID"
-                register={register("internal_request_id")}
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={onReset}
-                className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-2 rounded-lg font-medium transition-colors"
-              >
-                Reset
-              </button>
-              <button
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-              >
-                <FaSearch className="w-3.5 h-3.5" /> Search
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* Results */}
-        {error ? (
-          <ErrorState
-            title="Unable to Load Interventions"
-            error={error}
-            action={{ label: "Try Again", onClick: () => refetch() }}
-          />
-        ) : !hasFilter ? (
+        {/* Lots */}
+        {filtered.length === 0 ? (
           <div className="bg-white rounded-lg border border-slate-200 p-12 text-center">
             <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
-              <FaSearch className="w-5 h-5 text-slate-400" />
+              <FaStethoscope className="w-5 h-5 text-slate-400" />
             </div>
             <p className="text-sm font-medium text-slate-600">
-              Enter at least one identifier to search
+              {search
+                ? "No interventions match your search"
+                : "No active interventions available."}
             </p>
-            <p className="text-xs text-slate-400 mt-1">
-              Interventions are looked up by patient, request, or facility.
-            </p>
-          </div>
-        ) : isLoading ? (
-          <div className="bg-white rounded-lg border border-slate-200 p-8 animate-pulse space-y-3">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-14 bg-slate-100 rounded" />
-            ))}
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table className="w-full">
-                <Table.Header>
-                  <Table.Row>
-                    <Table.HeaderCell>Request</Table.HeaderCell>
-                    <Table.HeaderCell>Patient</Table.HeaderCell>
-                    <Table.HeaderCell>Procedure</Table.HeaderCell>
-                    <Table.HeaderCell>Equipment</Table.HeaderCell>
-                    <Table.HeaderCell>Facility</Table.HeaderCell>
-                    <Table.HeaderCell>Performed</Table.HeaderCell>
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {interventions.length === 0 ? (
-                    <Table.Empty colSpan={6}>
-                      No interventions found for those identifiers.
-                    </Table.Empty>
-                  ) : (
-                    interventions.map((item, i) => (
-                      <Table.Row key={item.internal_request_id ?? item.id ?? i}>
-                        <Table.Cell>
-                          <div className="font-mono text-sm text-slate-900">
-                            {item.emr_request_id || item.request_id || "-"}
-                          </div>
-                          {item.internal_request_id && (
-                            <div className="text-xs text-slate-500 font-mono truncate max-w-[180px]">
-                              {item.internal_request_id}
-                            </div>
-                          )}
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="text-sm text-slate-900">
-                            {item.patient_name || item.patient_id || "-"}
-                          </div>
-                          {item.id_number && (
-                            <div className="text-xs text-slate-500 font-mono">
-                              {item.id_number}
-                            </div>
-                          )}
-                        </Table.Cell>
-                        <Table.Cell>
-                          <span className="text-sm text-slate-700 font-mono">
-                            {item.procedure_code || item.procedure || "-"}
-                          </span>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="text-sm text-slate-700">
-                            {item.equipment?.name || "-"}
-                          </div>
-                          {item.equipment?.dicom_aet && (
-                            <div className="text-xs text-slate-500 font-mono">
-                              AET {item.equipment.dicom_aet}
-                            </div>
-                          )}
-                        </Table.Cell>
-                        <Table.Cell>
-                          <span className="text-sm text-slate-700">
-                            {item.facility_name || item.facility_id || "-"}
-                          </span>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <span className="text-sm text-slate-600">
-                            {formatDateTime(
-                              item.performed_at || item.completed_at,
-                            )}
-                          </span>
-                        </Table.Cell>
-                      </Table.Row>
-                    ))
+          filtered.map((group) => (
+            <div
+              key={group.lot.id ?? group.lot.number ?? group.lot.name}
+              className="bg-white rounded-lg border border-slate-200 overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50">
+                <div className="flex items-center gap-2">
+                  <FaLayerGroup className="w-3.5 h-3.5 text-blue-600" />
+                  {group.lot.number && (
+                    <span className="text-sm font-medium text-slate-900">
+                      LOT {group.lot.number}
+                    </span>
                   )}
-                </Table.Body>
-              </Table>
+                  {group.lot.number && group.lot.name && (
+                    <span className="text-slate-400">•</span>
+                  )}
+                  <span className="text-sm text-slate-600">
+                    {group.lot.name || "Unnamed lot"}
+                  </span>
+                </div>
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                  {group.services.length} services
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <Table className="w-full">
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.HeaderCell>Intervention</Table.HeaderCell>
+                      <Table.HeaderCell>Code</Table.HeaderCell>
+                      <Table.HeaderCell>Tariff</Table.HeaderCell>
+                      <Table.HeaderCell>Vendor Share</Table.HeaderCell>
+                      <Table.HeaderCell>Facility Share</Table.HeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
+                    {group.services.length === 0 ? (
+                      <Table.Empty colSpan={5}>
+                        No services in this lot.
+                      </Table.Empty>
+                    ) : (
+                      group.services.map((s) => (
+                        <Table.Row key={s.id ?? s.code}>
+                          <Table.Cell>
+                            <div className="font-medium text-slate-900">
+                              {s.name}
+                            </div>
+                            {s.capitated && (
+                              <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800 mt-1">
+                                Capitated
+                              </span>
+                            )}
+                          </Table.Cell>
+                          <Table.Cell>
+                            <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
+                              {s.code}
+                            </span>
+                          </Table.Cell>
+                          <Table.Cell>
+                            <span className="text-sm font-medium text-slate-900">
+                              {formatAmount(s.tariff)}
+                            </span>
+                          </Table.Cell>
+                          <Table.Cell>
+                            <span className="text-sm text-slate-700">
+                              {formatAmount(s.vendor_share)}
+                            </span>
+                          </Table.Cell>
+                          <Table.Cell>
+                            <span className="text-sm text-slate-700">
+                              {formatAmount(s.facility_share)}
+                            </span>
+                          </Table.Cell>
+                        </Table.Row>
+                      ))
+                    )}
+                  </Table.Body>
+                </Table>
+              </div>
             </div>
-          </div>
+          ))
         )}
       </div>
     </div>

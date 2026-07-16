@@ -56,7 +56,12 @@ const getStatusIcon = (status: string) => {
 
 function VendorEquipmentsContent() {
   const router = useRouter();
-  const { vendor, vendorId, isLoading: vendorLoading } = useMyVendor();
+  const {
+    vendor,
+    vendorId,
+    missingVendorId,
+    isLoading: vendorLoading,
+  } = useMyVendor();
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -92,6 +97,16 @@ function VendorEquipmentsContent() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (missingVendorId) {
+    return (
+      <ErrorState
+        title="Vendor Account Not Linked"
+        message="Your account has no vendor linked to it, so we can't load your equipment. Sign out and back in, or ask an administrator to link your user to a vendor."
+        fullScreen
+      />
     );
   }
 

@@ -44,9 +44,9 @@ function EditVendorContent() {
   // Populate form with vendor data when available
   useEffect(() => {
     if (vendor) {
-      setValue("vendor_alpha_code", vendor.vendor_alpha_code);
-      setValue("dha_vendor_code", vendor.dha_vendor_code);
-      setValue("sha_vendor_code", vendor.sha_vendor_code);
+      setValue("vendor_alpha_code", vendor.vendor_alpha_code ?? vendor.code ?? "");
+      setValue("dha_vendor_code", vendor.dha_vendor_code ?? "");
+      setValue("sha_vendor_code", vendor.sha_vendor_code ?? "");
       setValue("name", vendor.name);
       setValue("email", vendor.email || "");
       setValue("phone", vendor.phone || "");

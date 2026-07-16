@@ -1,46 +1,61 @@
 import axios from "../lib/axios";
 
-export interface ShaIntervention {
-  id?: string;
-  internal_request_id?: string;
-  request_id?: string;
-  emr_request_id?: string;
-  patient_id?: string;
-  patient_name?: string;
-  id_number?: string | null;
-  procedure?: string | null;
-  procedure_code?: string | null;
-  facility_id?: string;
-  facility_name?: string | null;
-  equipment?: {
-    id?: string;
-    name?: string;
-    asset_id?: string;
-    dicom_aet?: string | null;
-  } | null;
-  status?: string;
-  performed_at?: string | null;
-  completed_at?: string | null;
-  result?: Record<string, unknown> | null;
-  [key: string]: unknown;
+/**
+ * SHA "interventions" are the active lot services available through VEMS,
+ * grouped by lot.
+ */
+export interface ShaInterventionService {
+  id: string;
+  code: string;
+  name: string;
+  tariff?: number | string | null;
+  vendor_share?: number | string | null;
+  facility_share?: number | string | null;
+  capitated?: boolean;
+  is_active?: boolean;
 }
 
-export interface ShaInterventionParams {
-  patient_id?: string;
-  id_number?: string;
-  emr_request_id?: string;
-  facility_id?: string;
-  internal_request_id?: string;
+export interface ShaInterventionLot {
+  lot: {
+    id?: string;
+    number?: string;
+    name?: string;
+  };
+  services: ShaInterventionService[];
 }
+
+/**
+ * The endpoint groups services under their lot. Shapes seen in the wild:
+ *   { data: [ { lot: {...}, services: [...] } ] }
+ *   { data: [ { id, number, name, services: [...] } ] }   // lot fields inline
+ * Normalise both into ShaInterventionLot.
+ */
+const normaliseLot = (raw: unknown): ShaInterventionLot => {
+  const item = (raw ?? {}) as Record<string, unknown>;
+
+  if (item.lot && typeof item.lot === "object") {
+    return {
+      lot: item.lot as ShaInterventionLot["lot"],
+      services: (item.services as ShaInterventionService[]) ?? [],
+    };
+  }
+
+  return {
+    lot: {
+      id: item.id as string | undefined,
+      number: item.number as string | undefined,
+      name: item.name as string | undefined,
+    },
+    services: (item.services as ShaInterventionService[]) ?? [],
+  };
+};
 
 // GET /sha/interventions
-export const getShaInterventions = async (
-  params: ShaInterventionParams = {},
-): Promise<ShaIntervention[]> => {
-  const response = await axios.get<
-    { data: ShaIntervention[] } | ShaIntervention[]
-  >("/sha/interventions", { params });
-  return Array.isArray(response.data)
-    ? response.data
-    : (response.data.data ?? []);
+export const getShaInterventions = async (): Promise<ShaInterventionLot[]> => {
+  const response = await axios.get<unknown>("/sha/interventions");
+  const body = response.data as { data?: unknown };
+  const raw = body?.data ?? response.data;
+
+  if (!Array.isArray(raw)) return [];
+  return raw.map(normaliseLot);
 };

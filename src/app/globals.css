@@ -8,8 +8,17 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: #2563eb; /* Blue-600 */
-  --color-secondary: #1d4ed8; /* Blue-700 */
+  --color-primary: #052c65; /* Brand navy */
+  --color-secondary: #041f47; /* Brand navy, darker (hover/active) */
+
+  /* The UI expresses "primary" through the blue-600/700 utilities rather than
+     a bg-primary class, so the brand colour is applied by redefining those two
+     palette steps. Changing them here recolours every primary button, link and
+     active state at once. The lighter blue steps are left alone — they are
+     used as tints (icon tiles, badges) and still read correctly against navy. */
+  --color-blue-600: #052c65;
+  --color-blue-700: #041f47;
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

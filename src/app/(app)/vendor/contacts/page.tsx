@@ -38,7 +38,7 @@ const CONTACT_TYPE_BADGE: Record<string, string> = {
 };
 
 function VendorContactsContent() {
-  const { vendorId, isLoading: vendorLoading } = useMyVendor();
+  const { vendorId, missingVendorId, isLoading: vendorLoading } = useMyVendor();
   const { contacts, isLoading, error, refetch } = useVendorContacts(vendorId);
   const { createContact, isCreating } = useCreateVendorContact(vendorId);
   const { updateContact, isUpdating } = useUpdateVendorContact(vendorId);
@@ -118,6 +118,16 @@ function VendorContactsContent() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (missingVendorId) {
+    return (
+      <ErrorState
+        title="Vendor Account Not Linked"
+        message="Your account has no vendor linked to it, so we can't load your contacts. Sign out and back in, or ask an administrator to link your user to a vendor."
+        fullScreen
+      />
     );
   }
 

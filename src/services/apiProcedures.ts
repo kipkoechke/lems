@@ -107,12 +107,13 @@ export const createProcedure = async (
   return response.data.data ?? (response.data as unknown as Procedure);
 };
 
-// PUT /procedures/{id}
+// PATCH /procedures/{id} — the API accepts PUT and PATCH; PATCH matches the
+// partial-update semantics of this form (only changed fields are sent).
 export const updateProcedure = async (
   procedureId: string,
   data: ProcedureUpdateRequest,
 ): Promise<Procedure> => {
-  const response = await axios.put<{ data: Procedure }>(
+  const response = await axios.patch<{ data: Procedure }>(
     `/procedures/${procedureId}`,
     data,
   );

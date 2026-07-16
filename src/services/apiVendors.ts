@@ -36,10 +36,16 @@ export interface VendorModality {
 
 export interface Vendor {
   id: string;
-  vendor_alpha_code: string;
-  dha_vendor_code: string;
-  sha_vendor_code: string;
   name: string;
+  // The live /vendors payload returns `code` + `is_active`. The richer
+  // reference fields below are optional because the API does not (yet) send
+  // them on the list/detail responses — treat them as may-be-absent rather
+  // than assuming, or every vendor renders as code-less and "Retired".
+  code?: string;
+  is_active?: boolean;
+  vendor_alpha_code?: string;
+  dha_vendor_code?: string;
+  sha_vendor_code?: string;
   description?: string | null;
   address?: string | null;
   country?: string;
@@ -47,13 +53,30 @@ export interface Vendor {
   phone?: string | null;
   website?: string | null;
   financial_details?: Record<string, unknown> | null;
-  lifecycle_state: VendorLifecycleState;
+  lifecycle_state?: VendorLifecycleState;
   contacts?: VendorContact[];
   modalities?: VendorModality[];
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
 }
+
+/** Display code for a vendor, whichever field the API populated. */
+export const vendorCode = (vendor: Vendor): string =>
+  vendor.vendor_alpha_code || vendor.code || "-";
+
+/**
+ * Whether a vendor is active. Prefers `lifecycle_state` when present and falls
+ * back to the boolean `is_active` the list endpoint actually returns.
+ */
+export const isVendorActive = (vendor: Vendor): boolean =>
+  vendor.lifecycle_state
+    ? vendor.lifecycle_state === "active"
+    : vendor.is_active === true;
+
+/** Human-readable status label matching the same precedence. */
+export const vendorStatusLabel = (vendor: Vendor): string =>
+  vendor.lifecycle_state ?? (vendor.is_active ? "active" : "inactive");
 
 export interface VendorListResponse {
   data: Vendor[];

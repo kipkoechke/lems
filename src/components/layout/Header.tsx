@@ -27,11 +27,12 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
   const logoutMutation = useLogout();
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Update time every minute
+  // Only the date is displayed, so an hourly tick is enough to roll it over
+  // for sessions left open past midnight.
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000);
+    }, 3600000);
     return () => clearInterval(timer);
   }, []);
 
@@ -60,14 +61,6 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
       month: "short",
       day: "numeric",
       year: "numeric",
-    });
-  };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
     });
   };
 
@@ -118,10 +111,9 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
           </div>
         </div>
 
-        {/* Date & Time Badge */}
-        <div className="hidden md:flex bg-green-700 text-white px-4 py-1.5 rounded text-sm items-center gap-2">
+        {/* Date Badge */}
+        <div className="hidden md:flex bg-green-700 text-white px-4 py-1.5 rounded text-sm items-center">
           <span className="font-medium">{formatDate(currentTime)}</span>
-          <span>{formatTime(currentTime)}</span>
         </div>
       </div>
 
