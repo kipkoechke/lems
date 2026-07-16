@@ -20,18 +20,18 @@ import { ErrorState } from "@/components/common/ErrorState";
 export default function VendorDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const vendorCode = params.vendorCode as string;
+  const vendorId = params.vendorCode as string;
 
   const {
     vendor,
     isLoading: vendorLoading,
     error: vendorError,
-  } = useVendor(vendorCode);
+  } = useVendor(vendorId);
 
   const { data: contractsData, isLoading: contractsLoading } = useQuery({
-    queryKey: ["contracts", vendorCode],
-    queryFn: () => getContracts({ vendor_code: vendorCode }),
-    enabled: !!vendorCode,
+    queryKey: ["contracts", vendorId],
+    queryFn: () => getContracts({ vendor_code: vendorId }),
+    enabled: !!vendorId,
   });
 
   const contracts = contractsData?.data || [];
@@ -114,27 +114,33 @@ export default function VendorDetailPage() {
                 </h1>
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                    vendor.is_active === "1"
+                    vendor.lifecycle_state === "active"
                       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : "bg-red-50 text-red-700 border-red-200"
+                      : vendor.lifecycle_state === "disabled"
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : "bg-red-50 text-red-700 border-red-200"
                   }`}
                 >
                   <MdCheckCircle className="w-3.5 h-3.5" />
-                  {vendor.is_active === "1" ? "Active" : "Inactive"}
+                  {vendor.lifecycle_state === "active"
+                    ? "Active"
+                    : vendor.lifecycle_state === "disabled"
+                      ? "Disabled"
+                      : "Retired"}
                 </span>
               </div>
-              <p className="text-sm text-slate-500 font-mono">{vendor.code}</p>
+              <p className="text-sm text-slate-500 font-mono">{vendor.vendor_alpha_code}</p>
             </div>
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => router.push(`/vendors/${vendorCode}/equipments`)}
+              onClick={() => router.push(`/vendors/${vendorId}/equipments`)}
               className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-medium hover:bg-slate-200 transition-colors flex items-center gap-2 text-sm"
             >
               <FaCog className="w-4 h-4" /> Equipment
             </button>
             <button
-              onClick={() => router.push(`/vendors/${vendorCode}/edit`)}
+              onClick={() => router.push(`/vendors/${vendorId}/edit`)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm"
             >
               <FaEdit className="w-4 h-4" /> Edit
@@ -151,7 +157,7 @@ export default function VendorDetailPage() {
             <div className="min-w-0">
               <p className="text-xs text-slate-500">Vendor Code</p>
               <p className="text-sm font-medium text-slate-900 font-mono truncate">
-                {vendor.code}
+                {vendor.vendor_alpha_code}
               </p>
             </div>
           </div>
@@ -206,7 +212,7 @@ export default function VendorDetailPage() {
               </div>
               <button
                 onClick={() =>
-                  router.push(`/contracts/new?vendor=${vendorCode}`)
+                  router.push(`/contracts/new?vendor=${vendorId}`)
                 }
                 className="text-xs text-blue-600 hover:text-blue-700 font-medium"
               >
@@ -222,7 +228,7 @@ export default function VendorDetailPage() {
                 <p className="text-sm text-slate-500">No contracts found</p>
                 <button
                   onClick={() =>
-                    router.push(`/contracts/new?vendor=${vendorCode}`)
+                    router.push(`/contracts/new?vendor=${vendorId}`)
                   }
                   className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
                 >
@@ -293,7 +299,7 @@ export default function VendorDetailPage() {
                   <div className="mt-3 text-center">
                     <button
                       onClick={() =>
-                        router.push(`/vendors/${vendorCode}/contracts`)
+                        router.push(`/vendors/${vendorId}/contracts`)
                       }
                       className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                     >

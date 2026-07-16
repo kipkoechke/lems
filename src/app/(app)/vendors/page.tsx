@@ -35,7 +35,7 @@ function VendorsContent() {
   const filteredVendors = vendors?.filter((vendor) => {
     const matchesSearch =
       vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vendor.code.toLowerCase().includes(searchTerm.toLowerCase());
+      vendor.vendor_alpha_code.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesSearch;
   });
@@ -169,7 +169,7 @@ function VendorsContent() {
                   <p className="text-lg font-bold text-green-600">
                     {
                       filteredVendors.filter(
-                        (v) => v.is_active === true || v.is_active === "1",
+                        (v) => v.lifecycle_state === "active",
                       ).length
                     }
                   </p>
@@ -189,7 +189,7 @@ function VendorsContent() {
                   <p className="text-lg font-bold text-red-600">
                     {
                       filteredVendors.filter(
-                        (v) => v.is_active === false || v.is_active === "0",
+                        (v) => v.lifecycle_state !== "active",
                       ).length
                     }
                   </p>
@@ -227,7 +227,7 @@ function VendorsContent() {
                   <Table.Row key={vendor.id}>
                     <Table.Cell>
                       <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                        {vendor.code}
+                        {vendor.vendor_alpha_code}
                       </span>
                     </Table.Cell>
                     <Table.Cell>
@@ -238,20 +238,21 @@ function VendorsContent() {
                     <Table.Cell>
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                          vendor.is_active === true || vendor.is_active === "1"
+                          vendor.lifecycle_state === "active"
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {vendor.is_active === true ||
-                        vendor.is_active === "1" ? (
+                        {vendor.lifecycle_state === "active" ? (
                           <FaCheck />
                         ) : (
                           <FaTimes />
                         )}
-                        {vendor.is_active === true || vendor.is_active === "1"
+                        {vendor.lifecycle_state === "active"
                           ? "Active"
-                          : "Inactive"}
+                          : vendor.lifecycle_state === "disabled"
+                            ? "Disabled"
+                            : "Retired"}
                       </span>
                     </Table.Cell>
                     <Table.Cell className="text-sm text-gray-600">
@@ -266,7 +267,7 @@ function VendorsContent() {
                         <ActionMenu.Content>
                           <ActionMenu.Item
                             onClick={() =>
-                              router.push(`/vendors/${vendor.code}`)
+                              router.push(`/vendors/${vendor.id}`)
                             }
                           >
                             <FaEye className="h-4 w-4 text-blue-500" />
@@ -274,7 +275,7 @@ function VendorsContent() {
                           </ActionMenu.Item>
                           <ActionMenu.Item
                             onClick={() =>
-                              router.push(`/vendors/${vendor.code}/edit`)
+                              router.push(`/vendors/${vendor.id}/edit`)
                             }
                           >
                             <FaEdit className="h-4 w-4 text-yellow-500" />
@@ -282,7 +283,7 @@ function VendorsContent() {
                           </ActionMenu.Item>
                           <ActionMenu.Item
                             onClick={() =>
-                              router.push(`/contracts?vendor=${vendor.code}`)
+                              router.push(`/contracts?vendor=${vendor.id}`)
                             }
                           >
                             <FaFileContract className="h-4 w-4 text-purple-500" />
@@ -324,38 +325,40 @@ function VendorsContent() {
                       {vendor.name}
                     </h3>
                     <div className="inline-block bg-gray-100 px-2 py-1 rounded text-xs font-mono text-gray-600 mb-2">
-                      {vendor.code}
+                      {vendor.vendor_alpha_code}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                        vendor.is_active === true || vendor.is_active === "1"
+                        vendor.lifecycle_state === "active"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {vendor.is_active === true || vendor.is_active === "1" ? (
+                      {vendor.lifecycle_state === "active" ? (
                         <FaCheck />
                       ) : (
                         <FaTimes />
                       )}
-                      {vendor.is_active === true || vendor.is_active === "1"
+                      {vendor.lifecycle_state === "active"
                         ? "Active"
-                        : "Inactive"}
+                        : vendor.lifecycle_state === "disabled"
+                          ? "Disabled"
+                          : "Retired"}
                     </span>
                     <ActionMenu menuId={`vendor-mobile-${vendor.id}`}>
                       <ActionMenu.Trigger />
                       <ActionMenu.Content>
                         <ActionMenu.Item
-                          onClick={() => router.push(`/vendors/${vendor.code}`)}
+                          onClick={() => router.push(`/vendors/${vendor.id}`)}
                         >
                           <FaEye className="h-4 w-4 text-blue-500" />
                           View Details
                         </ActionMenu.Item>
                         <ActionMenu.Item
                           onClick={() =>
-                            router.push(`/vendors/${vendor.code}/edit`)
+                            router.push(`/vendors/${vendor.id}/edit`)
                           }
                         >
                           <FaEdit className="h-4 w-4 text-yellow-500" />
@@ -363,7 +366,7 @@ function VendorsContent() {
                         </ActionMenu.Item>
                         <ActionMenu.Item
                           onClick={() =>
-                            router.push(`/contracts?vendor=${vendor.code}`)
+                            router.push(`/contracts?vendor=${vendor.id}`)
                           }
                         >
                           <FaFileContract className="h-4 w-4 text-purple-500" />

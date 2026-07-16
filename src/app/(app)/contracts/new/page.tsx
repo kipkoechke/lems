@@ -76,7 +76,7 @@ export default function NewContractPage() {
     ?.filter(
       (vendor) =>
         vendor.name?.toLowerCase().includes(vendorSearch.toLowerCase()) ||
-        vendor.code?.toLowerCase().includes(vendorSearch.toLowerCase()),
+        vendor.vendor_alpha_code?.toLowerCase().includes(vendorSearch.toLowerCase()),
     )
     .slice(0, 50);
 
@@ -175,7 +175,7 @@ export default function NewContractPage() {
                           {vendorsLoading
                             ? "Loading vendors..."
                             : selectedVendor
-                              ? `${selectedVendor.name} (${selectedVendor.code})`
+                              ? `${selectedVendor.name} (${selectedVendor.vendor_alpha_code})`
                               : "Select a vendor"}
                         </span>
                         <FaChevronDown
@@ -218,7 +218,7 @@ export default function NewContractPage() {
                                     {vendor.name}
                                   </div>
                                   <div className="text-sm text-gray-500">
-                                    Code: {vendor.code}
+                                    Code: {vendor.vendor_alpha_code}
                                   </div>
                                 </div>
                               ))

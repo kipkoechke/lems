@@ -51,17 +51,30 @@ export const facilitySchema = z.object({
 
 // Vendor management schemas
 export const vendorSchema = z.object({
+  vendor_alpha_code: z
+    .string()
+    .min(1, "Vendor code is required")
+    .max(10, "Vendor code must be 10 characters or less"),
+  dha_vendor_code: z
+    .string()
+    .min(1, "DHA vendor code is required")
+    .max(50, "DHA vendor code must be 50 characters or less"),
+  sha_vendor_code: z
+    .string()
+    .min(1, "SHA vendor code is required")
+    .max(50, "SHA vendor code must be 50 characters or less"),
   name: z.string().min(1, "Vendor name is required"),
-  code: z.string().min(1, "Vendor code is required"),
+  description: z.string().optional(),
+  address: z.string().optional(),
+  country: z.string().optional(),
   email: z
     .string()
     .email("Please enter a valid email address")
     .optional()
     .or(z.literal("")),
   phone: z.string().optional(),
-  address: z.string().optional(),
-  contact_person: z.string().optional(),
-  is_active: z.boolean().optional(),
+  website: z.string().optional(),
+  lifecycle_state: z.enum(["active", "disabled", "retired"]).optional(),
 });
 
 // Report schemas

@@ -1,4 +1,7 @@
-import { updateVendor, VendorUpdateRequest } from "@/services/apiVendors";
+import {
+  updateVendor,
+  VendorUpdateRequest,
+} from "@/services/apiVendors";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -6,13 +9,22 @@ export const useUpdateVendor = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: VendorUpdateRequest) => updateVendor(data),
+    mutationFn: ({
+      vendorId,
+      data,
+    }: {
+      vendorId: string;
+      data: VendorUpdateRequest;
+    }) => updateVendor(vendorId, data),
     onSuccess: () => {
       toast.success("Vendor updated successfully");
       queryClient.invalidateQueries({ queryKey: ["vendors"] });
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to update vendor");
+    onError: (error: Error) => {
+      toast.error(
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to update vendor",
+      );
     },
   });
 

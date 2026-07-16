@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FaSave, FaTimes } from "react-icons/fa";
 import { vendorSchema, VendorFormData } from "@/lib/validations";
 import { InputField } from "@/components/common/InputField";
+import { SelectField } from "@/components/common/SelectField";
 
 function NewVendorContent() {
   const router = useRouter();
@@ -22,22 +23,31 @@ function NewVendorContent() {
   } = useForm<VendorFormData>({
     resolver: zodResolver(vendorSchema),
     defaultValues: {
-      is_active: true,
+      lifecycle_state: "active",
+      country: "KE",
     },
   });
 
   const onSubmit = (data: VendorFormData) => {
     createVendor(
       {
-        ...data,
-        // New vendors are always created active.
-        is_active: "1",
+        vendor_alpha_code: data.vendor_alpha_code,
+        dha_vendor_code: data.dha_vendor_code,
+        sha_vendor_code: data.sha_vendor_code,
+        name: data.name,
+        description: data.description || undefined,
+        address: data.address || undefined,
+        country: data.country || "KE",
+        email: data.email || undefined,
+        phone: data.phone || undefined,
+        website: data.website || undefined,
+        lifecycle_state: data.lifecycle_state || "active",
       },
       {
         onSuccess: () => {
           router.push("/vendors");
         },
-      }
+      },
     );
   };
 
@@ -57,13 +67,35 @@ function NewVendorContent() {
         <div className="bg-white rounded-lg border border-slate-200">
           <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              {/* Vendor Code */}
+              {/* Vendor Alpha Code */}
               <InputField
-                label="Vendor Code"
+                label="Vendor Alpha Code"
                 type="text"
-                placeholder="Enter vendor code"
-                register={register("code")}
-                error={errors.code?.message}
+                placeholder="Enter vendor alpha code (3-10 chars)"
+                register={register("vendor_alpha_code")}
+                error={errors.vendor_alpha_code?.message}
+                required
+                disabled={isCreating}
+              />
+
+              {/* DHA Vendor Code */}
+              <InputField
+                label="DHA Vendor Code"
+                type="text"
+                placeholder="Enter DHA vendor code"
+                register={register("dha_vendor_code")}
+                error={errors.dha_vendor_code?.message}
+                required
+                disabled={isCreating}
+              />
+
+              {/* SHA Vendor Code */}
+              <InputField
+                label="SHA Vendor Code"
+                type="text"
+                placeholder="Enter SHA vendor code"
+                register={register("sha_vendor_code")}
+                error={errors.sha_vendor_code?.message}
                 required
                 disabled={isCreating}
               />
@@ -78,6 +110,71 @@ function NewVendorContent() {
                 required
                 disabled={isCreating}
               />
+
+              {/* Email */}
+              <InputField
+                label="Email"
+                type="email"
+                placeholder="Enter email address"
+                register={register("email")}
+                error={errors.email?.message}
+                disabled={isCreating}
+              />
+
+              {/* Phone */}
+              <InputField
+                label="Phone"
+                type="text"
+                placeholder="Enter phone number"
+                register={register("phone")}
+                error={errors.phone?.message}
+                disabled={isCreating}
+              />
+
+              {/* Website */}
+              <InputField
+                label="Website"
+                type="text"
+                placeholder="Enter website URL"
+                register={register("website")}
+                error={errors.website?.message}
+                disabled={isCreating}
+              />
+
+              {/* Address */}
+              <InputField
+                label="Address"
+                type="text"
+                placeholder="Enter address"
+                register={register("address")}
+                error={errors.address?.message}
+                disabled={isCreating}
+              />
+
+              {/* Lifecycle State */}
+              <SelectField
+                label="Status"
+                register={register("lifecycle_state")}
+                error={errors.lifecycle_state?.message}
+                disabled={isCreating}
+                options={[
+                  { value: "active", label: "Active" },
+                  { value: "disabled", label: "Disabled" },
+                  { value: "retired", label: "Retired" },
+                ]}
+              />
+
+              {/* Description - full width */}
+              <div className="md:col-span-2">
+                <InputField
+                  label="Description"
+                  type="text"
+                  placeholder="Enter vendor description"
+                  register={register("description")}
+                  error={errors.description?.message}
+                  disabled={isCreating}
+                />
+              </div>
             </div>
 
             {/* Action Buttons */}

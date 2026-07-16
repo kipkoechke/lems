@@ -1,21 +1,21 @@
 import axios from "../lib/axios";
 
 // =============================================
-// NEW Vendor Dashboard API Types (v2)
+// Vendor Dashboard API Types
 // =============================================
 
-interface VendorInfo {
+export interface VendorDashboardVendorInfo {
   id: string;
   name: string;
   code: string;
 }
 
-interface DashboardPeriod {
+export interface VendorDashboardPeriod {
   from: string;
   to: string;
 }
 
-interface EquipmentStats {
+export interface VendorDashboardEquipmentStats {
   total: number;
   by_status: {
     active: number;
@@ -25,7 +25,7 @@ interface EquipmentStats {
   };
 }
 
-interface BookingStats {
+export interface VendorDashboardBookingStats {
   total_bookings: number;
   total_services: number;
   by_service_status: {
@@ -40,7 +40,7 @@ interface BookingStats {
   };
 }
 
-interface RevenueStats {
+export interface VendorDashboardRevenueStats {
   tariff: string;
   vendor_share: string;
   facility_share: string;
@@ -51,44 +51,44 @@ interface RevenueStats {
   };
 }
 
-interface PatientStats {
+export interface VendorDashboardPatientStats {
   unique_count: number;
 }
 
-interface FacilityItem {
+export interface VendorDashboardFacilityItem {
   id: string;
   name: string;
   fr_code: string;
 }
 
-interface FacilitiesStats {
+export interface VendorDashboardFacilitiesStats {
   count: number;
-  list: FacilityItem[];
+  list: VendorDashboardFacilityItem[];
 }
 
-interface LotItem {
+export interface VendorDashboardLotItem {
   id: string;
   number: string;
   name: string;
 }
 
-interface LotsStats {
+export interface VendorDashboardLotsStats {
   count: number;
-  list: LotItem[];
+  list: VendorDashboardLotItem[];
 }
 
-interface ServiceItem {
+export interface VendorDashboardServiceItem {
   id: string;
   code: string;
   name: string;
 }
 
-interface ServicesStats {
+export interface VendorDashboardServicesStats {
   count: number;
-  list: ServiceItem[];
+  list: VendorDashboardServiceItem[];
 }
 
-interface TrendlineDataPoint {
+export interface VendorDashboardTrendlineDataPoint {
   period: string;
   sha: string;
   cash: string;
@@ -98,22 +98,22 @@ interface TrendlineDataPoint {
   services_count: number;
 }
 
-interface TrendlineStats {
+export interface VendorDashboardTrendlineStats {
   grouping: string;
-  data: TrendlineDataPoint[];
+  data: VendorDashboardTrendlineDataPoint[];
 }
 
-interface VendorDashboardResponse {
-  vendor: VendorInfo;
-  period: DashboardPeriod;
-  equipment: EquipmentStats;
-  bookings: BookingStats;
-  revenue: RevenueStats;
-  patients: PatientStats;
-  facilities: FacilitiesStats;
-  lots: LotsStats;
-  services: ServicesStats;
-  trendline: TrendlineStats;
+export interface VendorDashboardResponse {
+  vendor: VendorDashboardVendorInfo;
+  period: VendorDashboardPeriod;
+  equipment: VendorDashboardEquipmentStats;
+  bookings: VendorDashboardBookingStats;
+  revenue: VendorDashboardRevenueStats;
+  patients: VendorDashboardPatientStats;
+  facilities: VendorDashboardFacilitiesStats;
+  lots: VendorDashboardLotsStats;
+  services: VendorDashboardServicesStats;
+  trendline: VendorDashboardTrendlineStats;
 }
 
 // Filter params for vendor dashboard
@@ -126,7 +126,7 @@ export interface VendorDashboardFilters {
   grouping?: "day" | "week" | "month";
 }
 
-// Get vendor dashboard data (NEW v2 endpoint)
+// GET /vendors/{vendorId}/dashboard
 export const getVendorDashboard = async (
   vendorId: string,
   filters?: VendorDashboardFilters,
@@ -143,98 +143,184 @@ export const getVendorDashboard = async (
   const response = await axios.get(`/vendors/${vendorId}/dashboard`, {
     params,
   });
-  return response.data.data;
+  return response.data.data ?? response.data;
 };
 
-export interface VendorTrendFilters {
-  vendor_code: string;
+// =============================================
+// Analytics – Vendor
+// =============================================
+
+export interface VendorAnalyticsFilters {
+  start_time?: string;
+  end_time?: string;
+  procedure_type?: string;
+}
+
+export interface VendorByEquipments {
+  vendor_id: string;
+  vendor_name: string;
+  total_equipment: number;
+}
+
+export interface VendorByFacilities {
+  vendor_id: string;
+  vendor_name: string;
+  total_facilities: number;
+}
+
+export interface VendorByProcedures {
+  vendor_id: string;
+  vendor_name: string;
+  total_procedures: number;
+}
+
+export interface VendorByProcedureType {
+  vendor_id: string;
+  vendor_name: string;
+  procedure_type: string;
+  total: number;
+}
+
+// GET /analytics/vendors/by-equipments
+export const getVendorAnalyticsByEquipments = async (
+  filters?: VendorAnalyticsFilters,
+): Promise<VendorByEquipments[]> => {
+  const response = await axios.get("/analytics/vendors/by-equipments", {
+    params: filters,
+  });
+  return response.data.data ?? response.data;
+};
+
+// GET /analytics/vendors/by-facilities-supporting
+export const getVendorAnalyticsByFacilities = async (
+  filters?: VendorAnalyticsFilters,
+): Promise<VendorByFacilities[]> => {
+  const response = await axios.get("/analytics/vendors/by-facilities-supporting", {
+    params: filters,
+  });
+  return response.data.data ?? response.data;
+};
+
+// GET /analytics/vendors/by-procedures
+export const getVendorAnalyticsByProcedures = async (
+  filters?: VendorAnalyticsFilters,
+): Promise<VendorByProcedures[]> => {
+  const response = await axios.get("/analytics/vendors/by-procedures", {
+    params: filters,
+  });
+  return response.data.data ?? response.data;
+};
+
+// GET /analytics/vendors/by-procedure-type
+export const getVendorAnalyticsByProcedureType = async (
+  filters?: VendorAnalyticsFilters,
+): Promise<VendorByProcedureType[]> => {
+  const response = await axios.get("/analytics/vendors/by-procedure-type", {
+    params: filters,
+  });
+  return response.data.data ?? response.data;
+};
+
+// =============================================
+// Analytics – Facilities
+// =============================================
+
+export interface FacilityByProcedures {
+  facility_id: string;
+  facility_name: string;
+  total_procedures: number;
+}
+
+export interface FacilityByProcedureType {
+  facility_id: string;
+  facility_name: string;
+  procedure_type: string;
+  total: number;
+}
+
+export interface FacilityByVendor {
+  facility_id: string;
+  facility_name: string;
+  total_vendors: number;
+}
+
+// GET /analytics/facilities/by-procedures
+export const getFacilityAnalyticsByProcedures = async (
+  filters?: VendorAnalyticsFilters,
+): Promise<FacilityByProcedures[]> => {
+  const response = await axios.get("/analytics/facilities/by-procedures", {
+    params: filters,
+  });
+  return response.data.data ?? response.data;
+};
+
+// GET /analytics/facilities/by-procedure-type
+export const getFacilityAnalyticsByProcedureType = async (
+  filters?: VendorAnalyticsFilters,
+): Promise<FacilityByProcedureType[]> => {
+  const response = await axios.get("/analytics/facilities/by-procedure-type", {
+    params: filters,
+  });
+  return response.data.data ?? response.data;
+};
+
+// GET /analytics/facilities/by-vendor
+export const getFacilityAnalyticsByVendor = async (
+  filters?: VendorAnalyticsFilters,
+): Promise<FacilityByVendor[]> => {
+  const response = await axios.get("/analytics/facilities/by-vendor", {
+    params: filters,
+  });
+  return response.data.data ?? response.data;
+};
+
+// =============================================
+// Analytics – Reports
+// =============================================
+
+export interface ProcedureCostReport {
+  vendor?: string;
+  facility?: string;
+  equipment?: string;
+  modality?: string;
+  procedure?: string;
+  status?: string;
+  tariff?: number;
+  sha?: number;
+  cash?: number;
+  vendor_share?: number;
+  facility_share?: number;
+  [key: string]: unknown;
+}
+
+export interface ProcedureCostFilters {
+  vendor?: string;
+  facility?: string;
+  equipment?: string;
+  modality?: string;
+  procedure?: string;
+  status?: string;
   start_date?: string;
   end_date?: string;
-  county_code?: string;
-  sub_county_code?: string;
-  facility_code?: string;
-  lot_number?: string;
-  service_code?: string;
-  equipment_id?: string;
-  period?: "daily" | "weekly" | "monthly";
 }
 
-interface FacilityRevenue {
-  facility_code: string;
-  facility_name: string;
-  total_revenue: number;
-  total_bookings: number;
-  vendor_share: number;
-}
-
-interface LotRevenue {
-  lot_number: string;
-  lot_name: string;
-  total_revenue: number;
-  total_bookings: number;
-  vendor_share: number;
-}
-
-interface ServiceRevenue {
-  service_code: string;
-  service_name: string;
-  total_revenue: number;
-  total_bookings: number;
-  vendor_share: number;
-}
-
-// Get revenue by facility
-export const getVendorRevenueByFacility = async (
-  vendorCode: string,
-  filters?: Partial<VendorTrendFilters>,
-): Promise<FacilityRevenue[]> => {
-  const response = await axios.get(`/vendor/revenue-by-facility`, {
-    params: { vendor_code: vendorCode, ...filters },
+// GET /analytics/reports/procedure-costs
+export const getProcedureCostReport = async (
+  filters?: ProcedureCostFilters,
+): Promise<ProcedureCostReport[]> => {
+  const response = await axios.get("/analytics/reports/procedure-costs", {
+    params: filters,
   });
-  return response.data;
+  return response.data.data ?? response.data;
 };
 
-// Get revenue by lot
-export const getVendorRevenueByLot = async (
-  vendorCode: string,
-  filters?: Partial<VendorTrendFilters>,
-): Promise<LotRevenue[]> => {
-  const response = await axios.get(`/vendor/revenue-by-lot`, {
-    params: { vendor_code: vendorCode, ...filters },
+// GET /analytics/reports/procedure-costs/export
+export const exportProcedureCostReport = async (
+  filters?: ProcedureCostFilters,
+): Promise<Blob> => {
+  const response = await axios.get("/analytics/reports/procedure-costs/export", {
+    params: filters,
+    responseType: "blob",
   });
-  return response.data;
-};
-
-// Get revenue by service
-export const getVendorRevenueByService = async (
-  vendorCode: string,
-  filters?: Partial<VendorTrendFilters>,
-): Promise<ServiceRevenue[]> => {
-  const response = await axios.get(`/vendor/revenue-by-service`, {
-    params: { vendor_code: vendorCode, ...filters },
-  });
-  return response.data;
-};
-
-// Use existing booking trends API filtered by vendor
-export const getVendorBookingTrends = async (
-  vendorCode: string,
-  filters?: Partial<VendorTrendFilters>,
-): Promise<any> => {
-  const params: Record<string, string> = {
-    vendor_code: vendorCode,
-    approval_status: "approved",
-  };
-
-  if (filters?.start_date) params.start_date = filters.start_date;
-  if (filters?.end_date) params.end_date = filters.end_date;
-  if (filters?.county_code) params.county_code = filters.county_code;
-  if (filters?.sub_county_code)
-    params.sub_county_code = filters.sub_county_code;
-  if (filters?.facility_code) params.facility_code = filters.facility_code;
-  if (filters?.lot_number) params.lot_number = filters.lot_number;
-  if (filters?.service_code) params.service_code = filters.service_code;
-
-  const response = await axios.get("bookings/trends", { params });
   return response.data;
 };

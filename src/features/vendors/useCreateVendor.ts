@@ -1,4 +1,7 @@
-import { createVendor, VendorCreateRequest } from "@/services/apiVendors";
+import {
+  createVendor,
+  VendorCreateRequest,
+} from "@/services/apiVendors";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -11,8 +14,11 @@ export const useCreateVendor = () => {
       toast.success("Vendor created successfully");
       queryClient.invalidateQueries({ queryKey: ["vendors"] });
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to create vendor");
+    onError: (error: Error) => {
+      toast.error(
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to create vendor",
+      );
     },
   });
 

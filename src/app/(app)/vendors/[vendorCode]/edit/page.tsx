@@ -3,34 +3,25 @@
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useVendors } from "@/features/vendors/useVendors";
+import { useVendor } from "@/features/vendors/useVendor";
 import { useUpdateVendor } from "@/features/vendors/useUpdateVendor";
 import BackButton from "@/components/common/BackButton";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useState, useEffect } from "react";
 import { FaSave, FaTimes } from "react-icons/fa";
-
-const vendorFormSchema = z.object({
-  name: z.string().min(1, "Vendor name is required"),
-  code: z.string().min(1, "Vendor code is required"),
-  is_active: z.boolean(),
-});
-
-type VendorFormData = z.infer<typeof vendorFormSchema>;
+import { InputField } from "@/components/common/InputField";
+import { SelectField } from "@/components/common/SelectField";
+import { vendorSchema, VendorFormData } from "@/lib/validations";
 
 function EditVendorContent() {
   const params = useParams();
   const router = useRouter();
-  const vendorCode = params.vendorCode as string;
+  const vendorId = params.vendorCode as string;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { vendors, isLoading, error } = useVendors();
-  const { updateVendor, isUpdating, error: updateError } = useUpdateVendor();
-
-  // Find the specific vendor from the vendors array
-  const vendor = vendors?.find((v) => v.code === vendorCode);
+  const { vendor, isLoading, error } = useVendor(vendorId);
+  const { updateVendor, isUpdating } = useUpdateVendor();
 
   const {
     register,
@@ -39,20 +30,31 @@ function EditVendorContent() {
     setValue,
     watch,
   } = useForm<VendorFormData>({
-    resolver: zodResolver(vendorFormSchema),
+    resolver: zodResolver(vendorSchema),
     defaultValues: {
+      vendor_alpha_code: "",
+      dha_vendor_code: "",
+      sha_vendor_code: "",
       name: "",
-      code: "",
-      is_active: true,
+      lifecycle_state: "active",
+      country: "KE",
     },
   });
 
   // Populate form with vendor data when available
   useEffect(() => {
     if (vendor) {
+      setValue("vendor_alpha_code", vendor.vendor_alpha_code);
+      setValue("dha_vendor_code", vendor.dha_vendor_code);
+      setValue("sha_vendor_code", vendor.sha_vendor_code);
       setValue("name", vendor.name);
-      setValue("code", vendor.code);
-      setValue("is_active", vendor.is_active === "1");
+      setValue("email", vendor.email || "");
+      setValue("phone", vendor.phone || "");
+      setValue("address", vendor.address || "");
+      setValue("website", vendor.website || "");
+      setValue("description", vendor.description || "");
+      setValue("country", vendor.country || "KE");
+      setValue("lifecycle_state", vendor.lifecycle_state || "active");
     }
   }, [vendor, setValue]);
 
@@ -95,23 +97,33 @@ function EditVendorContent() {
     setIsSubmitting(true);
     updateVendor(
       {
-        id: vendor.id,
-        name: data.name,
-        code: data.code,
-        is_active: data.is_active ? "1" : "0",
+        vendorId: vendor.id,
+        data: {
+          vendor_alpha_code: data.vendor_alpha_code,
+          dha_vendor_code: data.dha_vendor_code,
+          sha_vendor_code: data.sha_vendor_code,
+          name: data.name,
+          description: data.description || undefined,
+          address: data.address || undefined,
+          country: data.country || undefined,
+          email: data.email || undefined,
+          phone: data.phone || undefined,
+          website: data.website || undefined,
+          lifecycle_state: data.lifecycle_state,
+        },
       },
       {
         onSuccess: () => {
-          router.push(`/vendors/${vendorCode}`);
+          router.push(`/vendors/${vendorId}`);
         },
         onSettled: () => {
           setIsSubmitting(false);
         },
-      }
+      },
     );
   };
 
-  const isActive = watch("is_active");
+  const lifecycleState = watch("lifecycle_state");
 
   return (
     <div className="min-h-screen p-3 md:p-6">
@@ -129,75 +141,141 @@ function EditVendorContent() {
         <div className="bg-white rounded-lg border border-slate-200">
           <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              {/* Vendor Code */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Vendor Code *
-                </label>
-                <input
-                  type="text"
-                  {...register("code")}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                    errors.code
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-300 hover:border-gray-400"
-                  }`}
-                  placeholder="Enter vendor code"
-                />
-                {errors.code && (
-                  <p className="text-red-600 text-sm">{errors.code.message}</p>
-                )}
-              </div>
+              {/* Vendor Alpha Code */}
+              <InputField
+                label="Vendor Alpha Code"
+                type="text"
+                placeholder="Enter vendor alpha code"
+                register={register("vendor_alpha_code")}
+                error={errors.vendor_alpha_code?.message}
+                required
+                disabled={isSubmitting}
+              />
+
+              {/* DHA Vendor Code */}
+              <InputField
+                label="DHA Vendor Code"
+                type="text"
+                placeholder="Enter DHA vendor code"
+                register={register("dha_vendor_code")}
+                error={errors.dha_vendor_code?.message}
+                required
+                disabled={isSubmitting}
+              />
+
+              {/* SHA Vendor Code */}
+              <InputField
+                label="SHA Vendor Code"
+                type="text"
+                placeholder="Enter SHA vendor code"
+                register={register("sha_vendor_code")}
+                error={errors.sha_vendor_code?.message}
+                required
+                disabled={isSubmitting}
+              />
 
               {/* Vendor Name */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Vendor Name *
-                </label>
-                <input
-                  type="text"
-                  {...register("name")}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                    errors.name
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-300 hover:border-gray-400"
-                  }`}
-                  placeholder="Enter vendor name"
-                />
-                {errors.name && (
-                  <p className="text-red-600 text-sm">{errors.name.message}</p>
-                )}
-              </div>
+              <InputField
+                label="Vendor Name"
+                type="text"
+                placeholder="Enter vendor name"
+                register={register("name")}
+                error={errors.name?.message}
+                required
+                disabled={isSubmitting}
+              />
 
-              {/* Status */}
-              <div className="space-y-2 md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Status
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer w-fit">
-                  <input
-                    type="checkbox"
-                    {...register("is_active")}
-                    className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                      isActive
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {isActive ? "Active" : "Inactive"}
-                  </span>
-                </label>
+              {/* Email */}
+              <InputField
+                label="Email"
+                type="email"
+                placeholder="Enter email address"
+                register={register("email")}
+                error={errors.email?.message}
+                disabled={isSubmitting}
+              />
+
+              {/* Phone */}
+              <InputField
+                label="Phone"
+                type="text"
+                placeholder="Enter phone number"
+                register={register("phone")}
+                error={errors.phone?.message}
+                disabled={isSubmitting}
+              />
+
+              {/* Website */}
+              <InputField
+                label="Website"
+                type="text"
+                placeholder="Enter website URL"
+                register={register("website")}
+                error={errors.website?.message}
+                disabled={isSubmitting}
+              />
+
+              {/* Address */}
+              <InputField
+                label="Address"
+                type="text"
+                placeholder="Enter address"
+                register={register("address")}
+                error={errors.address?.message}
+                disabled={isSubmitting}
+              />
+
+              {/* Lifecycle State */}
+              <SelectField
+                label="Status"
+                register={register("lifecycle_state")}
+                error={errors.lifecycle_state?.message}
+                disabled={isSubmitting}
+                options={[
+                  { value: "active", label: "Active" },
+                  { value: "disabled", label: "Disabled" },
+                  { value: "retired", label: "Retired" },
+                ]}
+              />
+
+              {/* Description */}
+              <div className="md:col-span-2">
+                <InputField
+                  label="Description"
+                  type="text"
+                  placeholder="Enter vendor description"
+                  register={register("description")}
+                  error={errors.description?.message}
+                  disabled={isSubmitting}
+                />
               </div>
+            </div>
+
+            {/* Current Status Badge */}
+            <div className="mt-4 flex items-center gap-2">
+              <span className="text-sm text-slate-500">Current Status:</span>
+              <span
+                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                  lifecycleState === "active"
+                    ? "bg-green-100 text-green-800"
+                    : lifecycleState === "disabled"
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-red-100 text-red-800"
+                }`}
+              >
+                {lifecycleState === "active"
+                  ? "Active"
+                  : lifecycleState === "disabled"
+                    ? "Disabled"
+                    : "Retired"}
+              </span>
             </div>
 
             {/* Action Buttons */}
             <div className="flex justify-end space-x-4 mt-6 pt-6 border-t border-gray-100">
               <button
                 type="button"
-                onClick={() => router.push(`/vendors/${vendorCode}`)}
+                onClick={() => router.push(`/vendors/${vendorId}`)}
                 className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium transition-all flex items-center space-x-2"
               >
                 <FaTimes className="w-4 h-4" />
@@ -213,19 +291,10 @@ function EditVendorContent() {
                 )}
                 <FaSave className="w-4 h-4" />
                 <span>
-                  {isSubmitting || isUpdating ? "Updating..." : "Update Vendor"}
+                  {isSubmitting || isUpdating ? "Saving..." : "Update Vendor"}
                 </span>
               </button>
             </div>
-
-            {/* Error Message */}
-            {updateError && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-red-600 text-sm">
-                  Failed to update vendor. Please try again.
-                </p>
-              </div>
-            )}
           </form>
         </div>
       </div>

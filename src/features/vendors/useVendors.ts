@@ -1,15 +1,15 @@
-import { getVendors } from "@/services/apiVendors";
+import { getVendors, VendorListParams } from "@/services/apiVendors";
 import { useQuery } from "@tanstack/react-query";
 
-export const useVendors = () => {
+export const useVendors = (params: VendorListParams = {}) => {
   const {
     data: vendors = [],
     isLoading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ["vendors"],
-    queryFn: getVendors,
+    queryKey: ["vendors", params],
+    queryFn: () => getVendors(params),
   });
 
   return {
