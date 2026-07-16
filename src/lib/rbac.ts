@@ -72,7 +72,7 @@ export enum Permission {
   // (/vendors/{vendor}/...) and must never be granted to admin roles, whose
   // equivalents live under the admin endpoints.
   VIEW_VENDOR_PROFILE = "view_vendor_profile",
-  VIEW_VENDOR_CONTACTS = "view_vendor_contacts",
+  VIEW_VENDOR_CONTRACTS = "view_vendor_contracts",
   VIEW_VENDOR_BOOKINGS = "view_vendor_bookings",
   VIEW_VENDOR_EQUIPMENTS = "view_vendor_equipments",
 
@@ -204,7 +204,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     // equipment page instead.
     Permission.VIEW_VENDOR_EQUIPMENTS,
     Permission.VIEW_VENDOR_BOOKINGS,
-    Permission.VIEW_VENDOR_CONTACTS,
+    Permission.VIEW_VENDOR_CONTRACTS,
     Permission.VIEW_VENDOR_PROFILE,
     Permission.VIEW_MAINTENANCE_HISTORY,
     Permission.VIEW_VENDOR_REVENUE,

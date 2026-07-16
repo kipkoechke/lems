@@ -151,7 +151,7 @@ function VendorEquipmentsContent() {
 
             <button
               onClick={() =>
-                router.push(`/vendors/${vendorId}/equipments/new`)
+                router.push(`/vendor/equipments/new`)
               }
               className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
             >
@@ -237,7 +237,7 @@ function VendorEquipmentsContent() {
                           <ActionMenu.Item
                             onClick={() =>
                               router.push(
-                                `/vendors/${vendorId}/equipments/${eq.id}`,
+                                `/vendor/equipments/${eq.id}`,
                               )
                             }
                           >
@@ -246,7 +246,7 @@ function VendorEquipmentsContent() {
                           <ActionMenu.Item
                             onClick={() =>
                               router.push(
-                                `/vendors/${vendorId}/equipments/${eq.id}/edit`,
+                                `/vendor/equipments/${eq.id}/edit`,
                               )
                             }
                           >

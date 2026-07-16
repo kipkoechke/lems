@@ -142,10 +142,10 @@ const NAV_ITEMS: NavItem[] = [
     description: "Bookings on your equipment",
   },
   {
-    label: "Contacts",
-    href: "/vendor/contacts",
-    permission: Permission.VIEW_VENDOR_CONTACTS,
-    description: "Manage your vendor contacts",
+    label: "Contracts",
+    href: "/vendor/contracts",
+    permission: Permission.VIEW_VENDOR_CONTRACTS,
+    description: "Your facility contracts",
   },
   {
     label: "My Profile",

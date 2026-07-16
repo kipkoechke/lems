@@ -160,9 +160,7 @@ export const getVendorEquipment = async (
   _vendorId: string,
   equipmentId: string,
 ): Promise<VendorEquipment> => {
-  const response = await axios.get(
-    `/vendor/equipments/${equipmentId}`,
-  );
+  const response = await axios.get(`/vendor/equipments/${equipmentId}`);
   return response.data?.data ?? response.data;
 };
 
@@ -181,10 +179,7 @@ export const updateVendorEquipment = async (
   equipmentId: string,
   data: VendorEquipmentCreateRequest,
 ): Promise<VendorEquipment> => {
-  const response = await axios.patch(
-    `/vendor/equipments/${equipmentId}`,
-    data,
-  );
+  const response = await axios.patch(`/vendor/equipments/${equipmentId}`, data);
   return response.data?.equipment ?? response.data?.data ?? response.data;
 };
 
@@ -194,6 +189,94 @@ export const deleteVendorEquipment = async (
   equipmentId: string,
 ): Promise<void> => {
   await axios.delete(`/vendor/equipments/${equipmentId}`);
+};
+
+// ============ Vendor Equipment DICOM (vendor portal) ============
+
+export interface VendorEquipmentDicomStatus {
+  ae_title: string | null;
+  ip?: string | null;
+  hl7_host?: string | null;
+  port?: number | null;
+  dicom_port?: number | null;
+  hl7_port?: number | null;
+  is_connected: boolean;
+  last_seen_at?: string | null;
+  orthanc_registered?: boolean;
+  registered?: boolean;
+  mwl_server?: VendorEquipmentVendorConfig | null;
+  vendor_config?: VendorEquipmentVendorConfig | null;
+}
+
+export interface VendorDicomConfigureRequest {
+  ae_title: string;
+  ip: string;
+  port: number;
+}
+
+export interface VendorDicomConfigureResponse {
+  message?: string;
+  ae_title?: string;
+  ip?: string;
+  port?: number;
+  registered?: boolean;
+}
+
+export interface VendorDicomTestResponse {
+  success?: boolean;
+  is_connected?: boolean;
+  connected?: boolean;
+  message?: string;
+}
+
+export interface VendorWorklistTestResponse {
+  success?: boolean;
+  message?: string;
+  [key: string]: unknown;
+}
+
+// GET /vendor/equipments/{id}/dicom-status
+export const getVendorEquipmentDicomStatus = async (
+  equipmentId: string,
+): Promise<VendorEquipmentDicomStatus> => {
+  const response = await axios.get(
+    `/vendor/equipments/${equipmentId}/dicom-status`,
+  );
+  return response.data?.data ?? response.data;
+};
+
+// POST /vendor/equipments/{id}/configure — sets AE title/IP/port and registers
+// the device in Orthanc.
+export const configureVendorEquipmentDicom = async (
+  equipmentId: string,
+  data: VendorDicomConfigureRequest,
+): Promise<VendorDicomConfigureResponse> => {
+  const response = await axios.post(
+    `/vendor/equipments/${equipmentId}/configure`,
+    data,
+  );
+  return response.data?.data ?? response.data;
+};
+
+// POST /vendor/equipments/{id}/test-connection — C-ECHO, updates is_connected
+export const testVendorEquipmentConnection = async (
+  equipmentId: string,
+): Promise<VendorDicomTestResponse> => {
+  const response = await axios.post(
+    `/vendor/equipments/${equipmentId}/test-connection`,
+  );
+  return response.data?.data ?? response.data;
+};
+
+// POST /vendor/worklist-test — creates a test worklist in Orthanc
+export const runVendorWorklistTest = async (
+  equipmentId?: string,
+): Promise<VendorWorklistTestResponse> => {
+  const response = await axios.post(
+    "/vendor/worklist-test",
+    equipmentId ? { equipment_id: equipmentId } : undefined,
+  );
+  return response.data?.data ?? response.data;
 };
 
 // ============ Admin Equipment Types & API ============
@@ -631,7 +714,9 @@ export const configureDicomEquipment = async (
 export const testDicomConnection = async (
   equipmentId: string,
 ): Promise<{ message: string }> => {
-  const response = await axios.post(`/vendor/equipments/${equipmentId}/test-connection`);
+  const response = await axios.post(
+    `/vendor/equipments/${equipmentId}/test-connection`,
+  );
   return response.data;
 };
 
@@ -656,6 +741,8 @@ export const unregisterDicomModality = async (
 export const getDicomEquipmentStatus = async (
   equipmentId: string,
 ): Promise<DicomEquipmentStatus> => {
-  const response = await axios.get(`/vendor/equipments/${equipmentId}/dicom-status`);
+  const response = await axios.get(
+    `/vendor/equipments/${equipmentId}/dicom-status`,
+  );
   return response.data;
 };
