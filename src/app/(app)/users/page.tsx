@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useDeleteUser, useUsers } from "@/features/users/useUsers";
-import { userScopeLabel } from "@/services/apiUsers";
+import { userInstitution, userScopeLabel } from "@/services/apiUsers";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import Pagination from "@/components/common/Pagination";
@@ -106,7 +106,8 @@ function UsersContent() {
               <Table.Row>
                 <Table.HeaderCell>User</Table.HeaderCell>
                 <Table.HeaderCell>Email</Table.HeaderCell>
-                <Table.HeaderCell>Scope</Table.HeaderCell>
+                <Table.HeaderCell>Role</Table.HeaderCell>
+                <Table.HeaderCell>Institution</Table.HeaderCell>
                 <Table.HeaderCell>
                   <ColumnFilter
                     label="Status"
@@ -125,7 +126,7 @@ function UsersContent() {
             </Table.Header>
             <Table.Body>
               {users.length === 0 ? (
-                <Table.Empty colSpan={5}>
+                <Table.Empty colSpan={6}>
                   {search || activeFilter
                     ? "No users match your criteria"
                     : "No users found. Create your first user to get started."}
@@ -133,15 +134,18 @@ function UsersContent() {
               ) : (
                 users.map((user) => {
                   const scope = userScopeLabel(user);
+                  const institution = userInstitution(user);
                   return (
                     <Table.Row key={user.id}>
                       <Table.Cell>
                         <div className="font-medium text-slate-900">
                           {user.name || user.email}
                         </div>
-                        <div className="text-xs text-slate-500">
-                          {user.role}
-                        </div>
+                        {user.phone && (
+                          <div className="text-xs text-slate-500 font-mono">
+                            {user.phone}
+                          </div>
+                        )}
                       </Table.Cell>
                       <Table.Cell>
                         <span className="text-sm text-slate-700">
@@ -154,6 +158,22 @@ function UsersContent() {
                         >
                           {scope.label}
                         </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        {institution ? (
+                          <>
+                            <div className="text-sm text-slate-900">
+                              {institution.name}
+                            </div>
+                            {institution.code && (
+                              <div className="text-xs text-slate-500 font-mono">
+                                {institution.code}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-sm text-slate-400">-</span>
+                        )}
                       </Table.Cell>
                       <Table.Cell>
                         <span

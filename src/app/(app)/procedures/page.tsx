@@ -13,7 +13,9 @@ import {
 import {
   Procedure,
   ProcedureCreateRequest,
-  PROCEDURE_LIFECYCLE_OPTIONS,
+  procedureAmount,
+  procedureCode,
+  procedureStateLabel,
 } from "@/services/apiProcedures";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
@@ -21,27 +23,25 @@ import Pagination from "@/components/common/Pagination";
 import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
 import { SearchField } from "@/components/common/SearchField";
-import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { ErrorState } from "@/components/common/ErrorState";
 import { FaEdit, FaPlus, FaStethoscope, FaTimes, FaTrash } from "react-icons/fa";
 
 const LIFECYCLE_BADGE: Record<string, string> = {
   active: "bg-green-100 text-green-800",
+  inactive: "bg-slate-100 text-slate-700",
   suspended: "bg-amber-100 text-amber-800",
   retired: "bg-red-100 text-red-800",
 };
 
-const formatDate = (value?: string | null) =>
-  value
-    ? new Date(value).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : "-";
+const STATE_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+];
 
-const formatAmount = (value: number | string, currency = "KES") =>
-  `${currency} ${Number(value).toLocaleString()}`;
+/** Amounts arrive as decimal strings (e.g. "61600.00"). */
+const formatAmount = (value?: number, currency = "KES") =>
+  value === undefined ? "-" : `${currency} ${value.toLocaleString("en-KE")}`;
 
 function ProceduresContent() {
   const [page, setPage] = useState(1);
@@ -55,7 +55,7 @@ function ProceduresContent() {
     page,
     page_size: 20,
     search: search || undefined,
-    lifecycle_state: lifecycle || undefined,
+    is_active: lifecycle ? lifecycle === "active" : undefined,
   });
 
   const { createProcedure, isCreating } = useCreateProcedure();
@@ -72,16 +72,15 @@ function ProceduresContent() {
   const openCreate = () => {
     setEditing(null);
     reset({
-      procedure_code: "",
+      code: "",
       name: "",
-      category: "",
-      procedure_type: "",
+      modality: "",
       description: "",
-      reimbursement_amount: 0,
-      currency: "KES",
-      effective_from: "",
-      effective_to: "",
-      lifecycle_state: "active",
+      tariff: 0,
+      vendor_share: 0,
+      facility_share: 0,
+      capitated: false,
+      is_active: true,
     });
     setShowModal(true);
   };
@@ -89,16 +88,15 @@ function ProceduresContent() {
   const openEdit = (procedure: Procedure) => {
     setEditing(procedure);
     reset({
-      procedure_code: procedure.procedure_code,
+      code: procedureCode(procedure) === "-" ? "" : procedureCode(procedure),
       name: procedure.name,
-      category: procedure.category ?? "",
-      procedure_type: procedure.procedure_type ?? "",
+      modality: procedure.modality ?? "",
       description: procedure.description ?? "",
-      reimbursement_amount: Number(procedure.reimbursement_amount),
-      currency: procedure.currency ?? "KES",
-      effective_from: procedure.effective_from?.split("T")[0] ?? "",
-      effective_to: procedure.effective_to?.split("T")[0] ?? "",
-      lifecycle_state: procedure.lifecycle_state,
+      tariff: procedureAmount(procedure) ?? 0,
+      vendor_share: Number(procedure.vendor_share ?? 0),
+      facility_share: Number(procedure.facility_share ?? 0),
+      capitated: procedure.capitated ?? false,
+      is_active: procedure.is_active ?? true,
     });
     setShowModal(true);
   };
@@ -106,11 +104,11 @@ function ProceduresContent() {
   const onSubmit = (data: ProcedureCreateRequest) => {
     const payload = {
       ...data,
-      reimbursement_amount: Number(data.reimbursement_amount),
-      category: data.category || undefined,
-      procedure_type: data.procedure_type || undefined,
+      tariff: Number(data.tariff),
+      vendor_share: Number(data.vendor_share ?? 0),
+      facility_share: Number(data.facility_share ?? 0),
+      modality: data.modality || undefined,
       description: data.description || undefined,
-      effective_to: data.effective_to || undefined,
     };
 
     if (editing) {
@@ -191,36 +189,33 @@ function ProceduresContent() {
 
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-3 p-4 border-b border-slate-100">
-            <div className="w-full sm:w-48">
-              <SearchableSelect
-                label="Lifecycle State"
-                options={PROCEDURE_LIFECYCLE_OPTIONS}
-                value={lifecycle}
-                onChange={(v) => {
-                  setLifecycle(v);
-                  setPage(1);
-                }}
-                placeholder="All States"
-                searchPlaceholder="Search state..."
-              />
-            </div>
-          </div>
-
           <Table className="w-full">
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>Procedure</Table.HeaderCell>
-                <Table.HeaderCell>Category</Table.HeaderCell>
-                <Table.HeaderCell>Reimbursement</Table.HeaderCell>
-                <Table.HeaderCell>Effective From</Table.HeaderCell>
-                <Table.HeaderCell>State</Table.HeaderCell>
+                <Table.HeaderCell>Modality</Table.HeaderCell>
+                <Table.HeaderCell>Tariff</Table.HeaderCell>
+                <Table.HeaderCell>Vendor Share</Table.HeaderCell>
+                <Table.HeaderCell>Facility Share</Table.HeaderCell>
+                <Table.HeaderCell>
+                  <ColumnFilter
+                    label="State"
+                    options={STATE_OPTIONS}
+                    value={lifecycle}
+                    onChange={(v) => {
+                      setLifecycle(v);
+                      setPage(1);
+                    }}
+                    allLabel="All States"
+                    searchable={false}
+                  />
+                </Table.HeaderCell>
                 <Table.HeaderCell align="center">Actions</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
               {procedures.length === 0 ? (
-                <Table.Empty colSpan={6}>
+                <Table.Empty colSpan={7}>
                   {search || lifecycle
                     ? "No procedures match your criteria"
                     : "No procedures defined yet."}
@@ -231,32 +226,50 @@ function ProceduresContent() {
                     <Table.Cell>
                       <div className="font-medium text-slate-900">{p.name}</div>
                       <div className="text-xs text-slate-500 font-mono">
-                        {p.procedure_code}
+                        {procedureCode(p)}
                       </div>
                     </Table.Cell>
                     <Table.Cell>
                       <span className="text-sm text-slate-700">
-                        {p.category || "-"}
+                        {p.modality || "-"}
                       </span>
                     </Table.Cell>
                     <Table.Cell>
                       <span className="text-sm font-medium text-slate-900">
-                        {formatAmount(p.reimbursement_amount, p.currency)}
+                        {formatAmount(procedureAmount(p), p.currency)}
+                      </span>
+                      {p.capitated && (
+                        <div className="text-xs text-slate-500">Capitated</div>
+                      )}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-sm text-slate-700">
+                        {formatAmount(
+                          p.vendor_share === undefined
+                            ? undefined
+                            : Number(p.vendor_share),
+                          p.currency,
+                        )}
                       </span>
                     </Table.Cell>
                     <Table.Cell>
                       <span className="text-sm text-slate-700">
-                        {formatDate(p.effective_from)}
+                        {formatAmount(
+                          p.facility_share === undefined
+                            ? undefined
+                            : Number(p.facility_share),
+                          p.currency,
+                        )}
                       </span>
                     </Table.Cell>
                     <Table.Cell>
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${
-                          LIFECYCLE_BADGE[p.lifecycle_state] ??
+                          LIFECYCLE_BADGE[procedureStateLabel(p)] ??
                           "bg-slate-100 text-slate-700"
                         }`}
                       >
-                        {p.lifecycle_state}
+                        {procedureStateLabel(p)}
                       </span>
                     </Table.Cell>
                     <Table.Cell align="center">
@@ -313,13 +326,13 @@ function ProceduresContent() {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <InputField
-                    label="Procedure Code"
+                    label="SHA Code"
                     type="text"
-                    placeholder="e.g. XRAY-CHEST-PA"
-                    register={register("procedure_code", {
-                      required: "Procedure code is required",
+                    placeholder="e.g. SHA-19-195"
+                    register={register("code", {
+                      required: "SHA code is required",
                     })}
-                    error={errors.procedure_code?.message}
+                    error={errors.code?.message}
                     required
                     disabled={!!editing}
                   />
@@ -332,57 +345,61 @@ function ProceduresContent() {
                     required
                   />
                   <InputField
-                    label="Category"
+                    label="Modality"
                     type="text"
-                    placeholder="e.g. Radiology"
-                    register={register("category")}
+                    placeholder="e.g. XA"
+                    register={register("modality")}
                   />
                   <InputField
-                    label="Procedure Type"
-                    type="text"
-                    placeholder="e.g. Diagnostic"
-                    register={register("procedure_type")}
-                  />
-                  <InputField
-                    label="Reimbursement Amount"
+                    label="Tariff (KES)"
                     type="number"
                     placeholder="e.g. 3500"
-                    register={register("reimbursement_amount", {
-                      required: "Reimbursement amount is required",
+                    register={register("tariff", {
+                      required: "Tariff is required",
                       min: { value: 0, message: "Must be 0 or more" },
                     })}
-                    error={errors.reimbursement_amount?.message}
+                    error={errors.tariff?.message}
                     required
                   />
                   <InputField
-                    label="Currency"
-                    type="text"
-                    placeholder="KES"
-                    register={register("currency")}
-                  />
-                  <InputField
-                    label="Effective From"
-                    type="date"
-                    placeholder=""
-                    register={register("effective_from", {
-                      required: "Effective from is required",
+                    label="Vendor Share (KES)"
+                    type="number"
+                    placeholder="e.g. 3300"
+                    register={register("vendor_share", {
+                      min: { value: 0, message: "Must be 0 or more" },
                     })}
-                    error={errors.effective_from?.message}
-                    required
+                    error={errors.vendor_share?.message}
                   />
                   <InputField
-                    label="Effective To"
-                    type="date"
-                    placeholder=""
-                    register={register("effective_to")}
+                    label="Facility Share (KES)"
+                    type="number"
+                    placeholder="e.g. 200"
+                    register={register("facility_share", {
+                      min: { value: 0, message: "Must be 0 or more" },
+                    })}
+                    error={errors.facility_share?.message}
                   />
                   <SelectField
-                    label="Lifecycle State"
-                    register={register("lifecycle_state")}
+                    label="State"
+                    register={register("is_active", {
+                      setValueAs: (v) => v === "true" || v === true,
+                    })}
                     placeholder="Select state"
-                    options={PROCEDURE_LIFECYCLE_OPTIONS}
+                    options={[
+                      { value: "true", label: "Active" },
+                      { value: "false", label: "Inactive" },
+                    ]}
                   />
                 </div>
+
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    {...register("capitated")}
+                    className="w-4 h-4 rounded border-slate-300"
+                  />
+                  Capitated (paid per member, not per procedure)
+                </label>
 
                 <InputField
                   label="Description"

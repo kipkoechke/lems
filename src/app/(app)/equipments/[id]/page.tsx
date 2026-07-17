@@ -17,11 +17,16 @@ import {
 } from "react-icons/fa";
 import { MdCategory } from "react-icons/md";
 import BackButton from "@/components/common/BackButton";
-import { useCurrentUser } from "@/hooks/useAuth";
 import {
-  useVendorEquipment,
-  useDeleteVendorEquipment,
-} from "@/features/vendors/useVendorEquipments";
+  useDeleteEquipment,
+  useEquipmentDetail,
+} from "@/features/vendors/useEquipmentDetail";
+import {
+  equipmentDicom,
+  equipmentStatus,
+  equipmentStatusLabel,
+} from "@/services/apiEquipment";
+import { ErrorState } from "@/components/common/ErrorState";
 
 // Status badge colors
 const getStatusBadge = (status: string) => {
@@ -59,15 +64,9 @@ const getStatusIcon = (status: string) => {
 export default function EquipmentDetailsPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
-  const user = useCurrentUser();
-  const vendorId = user?.entity?.id || "";
 
-  const {
-    data: equipment,
-    isLoading,
-    error,
-  } = useVendorEquipment(vendorId, params.id);
-  const deleteEquipmentMutation = useDeleteVendorEquipment();
+  const { equipment, isLoading, error, refetch } = useEquipmentDetail(params.id);
+  const { deleteEquipment, isDeleting } = useDeleteEquipment();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -81,15 +80,9 @@ export default function EquipmentDetailsPage() {
   };
 
   const handleDelete = () => {
-    if (!vendorId) return;
-    deleteEquipmentMutation.mutate(
-      { vendorId, equipmentId: params.id },
-      {
-        onSuccess: () => {
-          router.push("/equipments");
-        },
-      },
-    );
+    deleteEquipment(params.id, {
+      onSuccess: () => router.push("/equipments"),
+    });
   };
 
   if (isLoading) {
@@ -111,24 +104,23 @@ export default function EquipmentDetailsPage() {
     );
   }
 
+  // Report the real failure — a permissions or server error is not "not found".
   if (error || !equipment) {
     return (
-      <div className="min-h-screen p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
-            <div className="text-red-500 text-xl mb-2">⚠️</div>
-            <p className="text-slate-600">Equipment not found</p>
-            <button
-              onClick={() => router.push("/equipments")}
-              className="mt-4 text-blue-600 hover:text-blue-700"
-            >
-              Back to Equipment List
-            </button>
-          </div>
-        </div>
-      </div>
+      <ErrorState
+        title="Unable to Load Equipment"
+        error={error}
+        message={
+          !error && !equipment ? "This equipment could not be found." : undefined
+        }
+        action={{ label: "Try Again", onClick: () => refetch() }}
+        fullScreen
+      />
     );
   }
+
+  const status = equipmentStatus(equipment);
+  const dicom = equipmentDicom(equipment);
 
   return (
     <div className="min-h-screen p-4">
@@ -143,34 +135,34 @@ export default function EquipmentDetailsPage() {
                   {equipment.name}
                 </h1>
                 <span
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadge(
-                    equipment.status,
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${getStatusBadge(
+                    status,
                   )}`}
                 >
-                  {getStatusIcon(equipment.status)}
-                  {equipment.status_label}
+                  {getStatusIcon(status)}
+                  {equipmentStatusLabel(equipment)}
                 </span>
-                {equipment.dicom && (
+                {dicom && (
                   <span
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                      equipment.dicom.is_connected
+                      dicom.is_connected
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : "bg-slate-50 text-slate-500 border-slate-200"
                     }`}
                   >
                     <span
                       className={`w-2 h-2 rounded-full ${
-                        equipment.dicom.is_connected
+                        dicom.is_connected
                           ? "bg-emerald-500 animate-pulse"
                           : "bg-slate-300"
                       }`}
                     />
-                    {equipment.dicom.is_connected ? "Live" : "Offline"}
+                    {dicom.is_connected ? "Live" : "Offline"}
                   </span>
                 )}
               </div>
               <p className="text-sm text-slate-500 font-mono">
-                {equipment.code}
+                {equipment.code ?? equipment.asset_id ?? ""}
               </p>
             </div>
           </div>
@@ -199,7 +191,7 @@ export default function EquipmentDetailsPage() {
             <div className="min-w-0">
               <p className="text-xs text-slate-500">Category</p>
               <p className="text-sm font-medium text-slate-900 truncate">
-                {equipment.category_label}
+                {equipment.category_label ?? equipment.category ?? "-"}
               </p>
             </div>
           </div>
@@ -211,7 +203,7 @@ export default function EquipmentDetailsPage() {
             <div className="min-w-0">
               <p className="text-xs text-slate-500">Brand</p>
               <p className="text-sm font-medium text-slate-900 truncate">
-                {equipment.brand || "-"}
+                {equipment.brand || equipment.manufacturer || "-"}
               </p>
             </div>
           </div>
@@ -297,7 +289,7 @@ export default function EquipmentDetailsPage() {
             )}
 
           {/* DICOM Configuration */}
-          {equipment.dicom && (
+          {dicom && (
             <div className="p-4 border-b border-slate-100">
               <h2 className="text-sm font-semibold text-slate-900 mb-3">
                 DICOM Configuration
@@ -306,31 +298,31 @@ export default function EquipmentDetailsPage() {
                 <div>
                   <p className="text-xs text-slate-500">AE Title</p>
                   <p className="text-sm font-mono text-slate-900">
-                    {equipment.dicom.ae_title || "-"}
+                    {dicom.ae_title || "-"}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">Device Host / IP</p>
                   <p className="text-sm font-mono text-slate-900">
-                    {equipment.dicom.hl7_host || "-"}
+                    {dicom.hl7_host || "-"}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">HL7 Port</p>
                   <p className="text-sm font-mono text-slate-900">
-                    {equipment.dicom.hl7_port ?? "-"}
+                    {dicom.hl7_port ?? "-"}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">DICOM Port</p>
                   <p className="text-sm font-mono text-slate-900">
-                    {equipment.dicom.dicom_port ?? "-"}
+                    {dicom.dicom_port ?? "-"}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">Connection Status</p>
                   <p className="text-sm text-slate-900">
-                    {equipment.dicom.is_connected ? (
+                    {dicom.is_connected ? (
                       <span className="inline-flex items-center gap-1 text-emerald-700">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
                         Connected
@@ -343,11 +335,11 @@ export default function EquipmentDetailsPage() {
                     )}
                   </p>
                 </div>
-                {equipment.dicom.last_seen_at && (
+                {dicom.last_seen_at && (
                   <div>
                     <p className="text-xs text-slate-500">Last Seen</p>
                     <p className="text-sm text-slate-900">
-                      {formatDate(equipment.dicom.last_seen_at)}
+                      {formatDate(dicom.last_seen_at)}
                     </p>
                   </div>
                 )}
@@ -427,10 +419,10 @@ export default function EquipmentDetailsPage() {
                 </button>
                 <button
                   onClick={handleDelete}
-                  disabled={deleteEquipmentMutation.isPending}
+                  disabled={isDeleting}
                   className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 font-medium"
                 >
-                  {deleteEquipmentMutation.isPending ? "Deleting..." : "Delete"}
+                  {isDeleting ? "Deleting..." : "Delete"}
                 </button>
               </div>
             </div>

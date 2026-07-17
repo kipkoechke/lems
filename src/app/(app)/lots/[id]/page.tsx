@@ -9,11 +9,14 @@ import {
   FaArrowLeft,
   FaCogs,
   FaEdit,
+  FaEye,
+  FaHospital,
   FaLayerGroup,
   FaCheckCircle,
   FaFileContract,
   FaBuilding,
 } from "react-icons/fa";
+import { ActionMenu } from "@/components/common/ActionMenu";
 
 export default function LotDetailPage() {
   const params = useParams();
@@ -334,7 +337,7 @@ export default function LotDetailPage() {
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
@@ -381,27 +384,40 @@ export default function LotDetailPage() {
                                 contract.status.slice(1)}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-right whitespace-nowrap">
-                            <div className="flex justify-end gap-3">
-                              <button
-                                onClick={() =>
-                                  router.push(`/vendors/${contract.vendor.code}`)
-                                }
-                                className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
-                              >
-                                View Vendor
-                              </button>
-                              <button
-                                onClick={() =>
-                                  router.push(
-                                    `/facilities/${contract.facility.code}`,
-                                  )
-                                }
-                                className="text-green-600 hover:text-green-800 text-sm font-medium transition-colors"
-                              >
-                                View Facility
-                              </button>
-                            </div>
+                          <td className="px-4 py-3 text-center whitespace-nowrap">
+                            <ActionMenu menuId={`lot-contract-${contract.id}`}>
+                              <ActionMenu.Trigger />
+                              <ActionMenu.Content>
+                                <ActionMenu.Item
+                                  onClick={() =>
+                                    router.push(`/contracts/${contract.id}`)
+                                  }
+                                >
+                                  <FaEye className="text-blue-500" /> View
+                                  Contract
+                                </ActionMenu.Item>
+                                <ActionMenu.Item
+                                  onClick={() =>
+                                    router.push(
+                                      `/vendors/${contract.vendor.code}`,
+                                    )
+                                  }
+                                >
+                                  <FaBuilding className="text-indigo-500" /> View
+                                  Vendor
+                                </ActionMenu.Item>
+                                <ActionMenu.Item
+                                  onClick={() =>
+                                    router.push(
+                                      `/facilities/${contract.facility.id}`,
+                                    )
+                                  }
+                                >
+                                  <FaHospital className="text-emerald-500" />{" "}
+                                  View Facility
+                                </ActionMenu.Item>
+                              </ActionMenu.Content>
+                            </ActionMenu>
                           </td>
                         </tr>
                       ))}

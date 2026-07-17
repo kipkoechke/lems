@@ -22,6 +22,14 @@ export interface UserProfile {
   facility?: UserProfileFacility | null;
 }
 
+/** The facility or vendor a user belongs to, as sent by /users. */
+export interface UserInstitution {
+  type: "facility" | "vendor" | string;
+  id: string;
+  code?: string;
+  name: string;
+}
+
 export interface AdminUser {
   id: string;
   name?: string;
@@ -30,17 +38,33 @@ export interface AdminUser {
   role: string;
   role_label?: string;
   is_active: boolean;
+  institution?: UserInstitution | null;
   profile?: UserProfile;
   permissions?: PermissionRecord[];
   created_at?: string;
   updated_at?: string;
 }
 
+/**
+ * The institution a user belongs to. The list endpoint sends a flat
+ * `institution` block; older payloads nested it under `profile`.
+ */
+export const userInstitution = (user: AdminUser): UserInstitution | null => {
+  if (user.institution) return user.institution;
+  if (user.profile?.facility)
+    return { type: "facility", ...user.profile.facility };
+  if (user.profile?.vendor) return { type: "vendor", ...user.profile.vendor };
+  return null;
+};
+
 /** Derive a display name, falling back to email when name is absent. */
 export const userDisplayName = (user: AdminUser): string =>
   user.name || user.email;
 
-/** Map role codes to human-readable labels shown in badges. */
+/**
+ * Badge styling for a user's role. The API sends `role_label`, so that is the
+ * display text; the raw `role` code only selects the colour.
+ */
 export const userScopeLabel = (
   user: AdminUser,
 ): { label: string; cls: string } => {

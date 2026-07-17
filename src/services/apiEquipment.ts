@@ -376,6 +376,71 @@ export const getAdminEquipments = async (
   return response.data;
 };
 
+/**
+ * A single equipment item for the admin-facing detail page.
+ *
+ * This must NOT read /vendor/equipments/{id} — that route is gated to the
+ * vendor role and 403s for admins. `/equipment/{id}` is the shared CRUD route.
+ * Deployments differ on the returned shape (the admin list style with
+ * `status_label`/`dicom`, versus the standalone style with
+ * `operational_status`/`dicom_aet`), so the accessors below read either.
+ */
+export interface EquipmentDetail extends Partial<AdminEquipment> {
+  id: string;
+  name: string;
+  description?: string | null;
+  manufacture_date?: string | null;
+  specifications?: Record<string, unknown> | null;
+  vendor_config?: VendorEquipmentVendorConfig | null;
+
+  // Standalone-shape fields.
+  asset_id?: string;
+  manufacturer?: string;
+  operational_status?: string;
+  lifecycle_state?: string;
+  dicom_aet?: string | null;
+  dicom_host?: string | null;
+  dicom_port?: number | null;
+}
+
+/** Machine-readable status, whichever field the deployment sends. */
+export const equipmentStatus = (equipment: EquipmentDetail): string =>
+  equipment.status ?? equipment.operational_status ?? equipment.lifecycle_state ?? "";
+
+/** Human-readable status label, falling back to a de-slugged status. */
+export const equipmentStatusLabel = (equipment: EquipmentDetail): string => {
+  if (equipment.status_label) return equipment.status_label;
+  const status = equipmentStatus(equipment);
+  return status ? status.replace(/_/g, " ") : "-";
+};
+
+/** DICOM block, synthesised from the flat fields when not sent as an object. */
+export const equipmentDicom = (
+  equipment: EquipmentDetail,
+): AdminEquipmentDicom | null => {
+  if (equipment.dicom) return equipment.dicom;
+  if (!equipment.dicom_aet && !equipment.dicom_host && !equipment.dicom_port) {
+    return null;
+  }
+  return {
+    ae_title: equipment.dicom_aet ?? null,
+    hl7_host: equipment.dicom_host ?? null,
+    dicom_port: equipment.dicom_port ?? null,
+    is_connected: false,
+  };
+};
+
+// GET /equipment/{id}
+export const getEquipmentDetail = async (
+  equipmentId: string,
+): Promise<EquipmentDetail> => {
+  const response = await axios.get<{ data: EquipmentDetail } | EquipmentDetail>(
+    `/equipment/${equipmentId}`,
+  );
+  const body = response.data as { data?: EquipmentDetail };
+  return body.data ?? (response.data as EquipmentDetail);
+};
+
 // ============================================================
 // Standalone Equipment CRUD
 // ============================================================
