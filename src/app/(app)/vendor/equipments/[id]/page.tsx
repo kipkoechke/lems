@@ -154,8 +154,8 @@ function VendorEquipmentDetailContent() {
     { label: "Category", value: equipment.category_label },
     { label: "Modality", value: equipment.modality },
     { label: "AE Title", value: dicom?.ae_title ?? equipment.dicom?.ae_title ?? "Not configured" },
-    { label: "DICOM Port", value: (dicom?.port ?? dicom?.dicom_port ?? equipment.dicom?.dicom_port)?.toString() ?? "—" },
-    { label: "Orthanc", value: registered === undefined ? "—" : registered ? "Registered" : "Not Registered" },
+    { label: "DICOM Port", value: (dicom?.port ?? dicom?.dicom_port ?? equipment.dicom?.dicom_port)?.toString() ?? "-" },
+    { label: "Orthanc", value: registered === undefined ? "-" : registered ? "Registered" : "Not Registered" },
   ];
 
   return (
@@ -378,7 +378,7 @@ function VendorEquipmentDetailContent() {
             </div>
           </div>
         )}
-      </div>
+        </div> {/* End left column (75%) */}
 
       {/* Configure modal */}
       {showConfigure && (
@@ -460,7 +460,6 @@ function VendorEquipmentDetailContent() {
           </div>
         </div>
       )}
-        </div> {/* End left column (75%) */}
 
         {/* Right column: Configuration Card (25%) */}
         <div className="w-full lg:w-1/4">
@@ -474,7 +473,7 @@ function VendorEquipmentDetailContent() {
                 <div key={item.label} className="flex justify-between items-center py-1.5 border-b border-slate-100 last:border-0">
                   <span className="text-xs text-slate-500">{item.label}</span>
                   <span className={`text-xs font-medium ${item.color ?? "text-slate-900"}`}>
-                    {item.value || "—"}
+                    {item.value || "-"}
                   </span>
                 </div>
               ))}
