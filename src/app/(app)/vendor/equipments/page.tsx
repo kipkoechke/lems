@@ -11,6 +11,7 @@ import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
+import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import {
   FaCog,
@@ -58,6 +59,7 @@ function VendorEquipmentsContent() {
   const router = useRouter();
   const { vendor, vendorId, isLoading: vendorLoading } = useMyVendor();
 
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [modality, setModality] = useState("");
@@ -67,9 +69,16 @@ function VendorEquipmentsContent() {
     isLoading,
     error,
     refetch,
-  } = useVendorEquipments(vendorId, { status: status || undefined });
+  } = useVendorEquipments(vendorId, {
+    page,
+    per_page: 20,
+    status: status || undefined,
+    // Search is server-side so it spans all pages, not just the current one.
+    search: search || undefined,
+  });
 
   const equipments: VendorEquipment[] = data?.data ?? [];
+  const pagination = data?.pagination;
 
   // The vendor equipment endpoint has no modality filter param, so the options
   // come from what this vendor actually owns and filtering happens client-side.
@@ -79,16 +88,10 @@ function VendorEquipmentsContent() {
     .sort()
     .map((m) => ({ value: m, label: m }));
 
-  const filtered = equipments.filter((eq) => {
-    if (modality && eq.modality !== modality) return false;
-    const term = search.toLowerCase();
-    if (!term) return true;
-    return (
-      eq.name?.toLowerCase().includes(term) ||
-      eq.code?.toLowerCase().includes(term) ||
-      (eq.serial_number ?? "").toLowerCase().includes(term)
-    );
-  });
+  // Modality has no server param, so it filters the current page client-side.
+  const filtered = modality
+    ? equipments.filter((eq) => eq.modality === modality)
+    : equipments;
 
   if (vendorLoading || isLoading) {
     return (
@@ -131,7 +134,7 @@ function VendorEquipmentsContent() {
                   My Equipment
                 </h1>
                 <p className="text-sm text-slate-500">
-                  {equipments.length} items · {vendor?.name}
+                  {pagination?.total ?? equipments.length} items · {vendor?.name}
                 </p>
               </div>
             </div>
@@ -139,7 +142,10 @@ function VendorEquipmentsContent() {
             <div className="flex-1 max-w-xl w-full mx-auto">
               <SearchField
                 value={search}
-                onChange={setSearch}
+                onChange={(v) => {
+                  setSearch(v);
+                  setPage(1);
+                }}
                 placeholder="Search by name, code, serial number..."
               />
             </div>
@@ -178,7 +184,10 @@ function VendorEquipmentsContent() {
                     label="Status"
                     options={STATUS_OPTIONS}
                     value={status}
-                    onChange={setStatus}
+                    onChange={(v) => {
+                      setStatus(v);
+                      setPage(1);
+                    }}
                     allLabel="All Status"
                     searchable={false}
                   />
@@ -260,6 +269,17 @@ function VendorEquipmentsContent() {
               )}
             </Table.Body>
           </Table>
+
+          {pagination && pagination.last_page > 1 && (
+            <Pagination
+              currentPage={pagination.current_page}
+              lastPage={pagination.last_page}
+              total={pagination.total}
+              from={pagination.from}
+              to={pagination.to}
+              onPageChange={setPage}
+            />
+          )}
         </div>
       </div>
     </div>

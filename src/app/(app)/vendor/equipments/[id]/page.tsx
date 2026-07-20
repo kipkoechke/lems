@@ -286,98 +286,6 @@ function VendorEquipmentDetailContent() {
           </div>
         </div>
 
-        {/* Configuration guide — API-driven setup instructions */}
-        {guide && (
-          <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-            <div className="px-4 md:px-6 py-3 border-b border-slate-100 bg-blue-50/50">
-              <h2 className="text-sm font-semibold text-slate-900">
-                {guide.title}
-              </h2>
-            </div>
-            <div className="p-4 md:p-6 space-y-5">
-              {guide.steps.map((step) => (
-                <div key={step.step} className="flex gap-3">
-                  <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 mt-0.5">
-                    <span className="text-xs font-bold">{step.step}</span>
-                  </div>
-                  <div className="min-w-0 space-y-1.5">
-                    <p className="text-sm font-semibold text-slate-900">
-                      {step.label}
-                    </p>
-                    {step.section && (
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                        {step.section}
-                      </p>
-                    )}
-                    {/* Single field + value (steps 1, 4, 5) */}
-                    {step.field && step.value && (
-                      <div className="bg-slate-50 rounded-md px-3 py-2">
-                        <p className="text-xs text-slate-500">{step.field}</p>
-                        <p className="text-sm font-mono font-medium text-slate-900">
-                          {step.value}
-                        </p>
-                      </div>
-                    )}
-                    {/* Multi-field table (steps 2, 3) */}
-                    {step.fields && step.fields.length > 0 && (
-                      <div className="bg-slate-50 rounded-md overflow-hidden border border-slate-100">
-                        <table className="w-full text-sm">
-                          <tbody>
-                            {step.fields.map((f, i) => (
-                              <tr
-                                key={f.label}
-                                className={i > 0 ? "border-t border-slate-100" : ""}
-                              >
-                                <td className="px-3 py-2 text-xs text-slate-500 w-28">
-                                  {f.label}
-                                </td>
-                                <td className="px-3 py-2 font-mono font-medium text-slate-900">
-                                  {f.value}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                    {step.note && (
-                      <p className="text-xs text-slate-500">{step.note}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Fallback: legacy MWL server config */}
-        {!guide && mwl && (
-          <div className="bg-white rounded-lg border border-slate-200 p-4 md:p-6">
-            <h2 className="text-sm font-semibold text-slate-900 mb-1">
-              MWL Server Configuration
-            </h2>
-            <p className="text-xs text-slate-500 mb-3">
-              Configure the physical device with these details to receive
-              worklists.
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4 bg-slate-50 rounded-lg p-3">
-              {[
-                { label: "MWL Server IP", value: mwl.mwl_server_ip },
-                { label: "MWL Server Port", value: mwl.mwl_server_port },
-                { label: "Server AET", value: mwl.mwl_server_aet },
-                { label: "Equipment AET", value: mwl.equipment_aet },
-                { label: "Connection Type", value: mwl.connection_type },
-              ].map((d) => (
-                <div key={d.label}>
-                  <p className="text-xs text-slate-500">{d.label}</p>
-                  <p className="text-sm font-mono text-slate-900 break-words">
-                    {d.value ?? "-"}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
         </div> {/* End left column (75%) */}
 
       {/* Configure modal */}
@@ -461,9 +369,9 @@ function VendorEquipmentDetailContent() {
         </div>
       )}
 
-        {/* Right column: Configuration Card (25%) */}
-        <div className="w-full lg:w-1/4">
-          <div className="bg-white rounded-lg border border-slate-200 p-4 sticky top-4">
+        {/* Right column (25%): quick config summary + setup guide */}
+        <div className="w-full lg:w-1/4 space-y-4">
+          <div className="bg-white rounded-lg border border-slate-200 p-4">
             <h3 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <FaCog className="w-3.5 h-3.5 text-slate-400" />
               Configuration
@@ -493,6 +401,99 @@ function VendorEquipmentDetailContent() {
               </button>
             </div>
           </div>
+
+          {/* Configuration guide — API-driven setup instructions */}
+          {guide && (
+            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100 bg-blue-50/50">
+                <h2 className="text-sm font-semibold text-slate-900">
+                  {guide.title}
+                </h2>
+              </div>
+              <div className="p-4 space-y-5">
+                {guide.steps.map((step) => (
+                  <div key={step.step} className="flex gap-3">
+                    <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-xs font-bold">{step.step}</span>
+                    </div>
+                    <div className="min-w-0 space-y-1.5">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {step.label}
+                      </p>
+                      {step.section && (
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                          {step.section}
+                        </p>
+                      )}
+                      {/* Single field + value (steps 1, 4, 5) */}
+                      {step.field && step.value && (
+                        <div className="bg-slate-50 rounded-md px-3 py-2">
+                          <p className="text-xs text-slate-500">{step.field}</p>
+                          <p className="text-sm font-mono font-medium text-slate-900 break-all">
+                            {step.value}
+                          </p>
+                        </div>
+                      )}
+                      {/* Multi-field table (steps 2, 3) */}
+                      {step.fields && step.fields.length > 0 && (
+                        <div className="bg-slate-50 rounded-md overflow-hidden border border-slate-100">
+                          <table className="w-full text-sm">
+                            <tbody>
+                              {step.fields.map((f, i) => (
+                                <tr
+                                  key={f.label}
+                                  className={i > 0 ? "border-t border-slate-100" : ""}
+                                >
+                                  <td className="px-3 py-2 text-xs text-slate-500 w-24">
+                                    {f.label}
+                                  </td>
+                                  <td className="px-3 py-2 font-mono font-medium text-slate-900 break-all">
+                                    {f.value}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                      {step.note && (
+                        <p className="text-xs text-slate-500">{step.note}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Fallback: legacy MWL server config */}
+          {!guide && mwl && (
+            <div className="bg-white rounded-lg border border-slate-200 p-4">
+              <h2 className="text-sm font-semibold text-slate-900 mb-1">
+                MWL Server Configuration
+              </h2>
+              <p className="text-xs text-slate-500 mb-3">
+                Configure the physical device with these details to receive
+                worklists.
+              </p>
+              <div className="space-y-3 bg-slate-50 rounded-lg p-3">
+                {[
+                  { label: "MWL Server IP", value: mwl.mwl_server_ip },
+                  { label: "MWL Server Port", value: mwl.mwl_server_port },
+                  { label: "Server AET", value: mwl.mwl_server_aet },
+                  { label: "Equipment AET", value: mwl.equipment_aet },
+                  { label: "Connection Type", value: mwl.connection_type },
+                ].map((d) => (
+                  <div key={d.label}>
+                    <p className="text-xs text-slate-500">{d.label}</p>
+                    <p className="text-sm font-mono text-slate-900 break-words">
+                      {d.value ?? "-"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

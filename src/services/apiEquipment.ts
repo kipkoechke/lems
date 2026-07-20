@@ -83,17 +83,45 @@ export interface VendorEquipment {
   vendor_config?: VendorEquipmentVendorConfig;
 }
 
+export interface VendorEquipmentsPagination {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+  from: number;
+  to: number;
+}
+
 interface VendorEquipmentsResponse {
   data: VendorEquipment[];
-  pagination: {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    from: number;
-    to: number;
-  };
+  pagination: VendorEquipmentsPagination;
 }
+
+/**
+ * The vendor equipments endpoint reports pages as `total_pages` and omits
+ * `from`/`to`; normalise to the shape the shared Pagination component expects.
+ */
+interface RawVendorEquipmentsPagination {
+  current_page: number;
+  per_page: number;
+  total: number;
+  total_pages?: number;
+  last_page?: number;
+  from?: number;
+  to?: number;
+}
+
+const normaliseVendorEquipmentsPagination = (
+  raw?: RawVendorEquipmentsPagination,
+): VendorEquipmentsPagination => {
+  const current_page = raw?.current_page ?? 1;
+  const per_page = raw?.per_page ?? 20;
+  const total = raw?.total ?? 0;
+  const last_page = raw?.last_page ?? raw?.total_pages ?? 1;
+  const from = raw?.from ?? (total === 0 ? 0 : (current_page - 1) * per_page + 1);
+  const to = raw?.to ?? Math.min(current_page * per_page, total);
+  return { current_page, last_page, per_page, total, from, to };
+};
 
 export interface VendorEquipmentCreateRequest {
   name: string;
@@ -152,7 +180,10 @@ export const getVendorEquipments = async (
   const response = await axios.get(`/vendor/equipments`, {
     params,
   });
-  return response.data;
+  return {
+    data: response.data?.data ?? [],
+    pagination: normaliseVendorEquipmentsPagination(response.data?.pagination),
+  };
 };
 
 // GET /vendor/equipments/{id} — vendor inferred from auth token
