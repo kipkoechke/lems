@@ -163,13 +163,13 @@ function VendorEquipmentsContent() {
 
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <Table className="w-full">
+          <Table className="w-full table-fixed">
             <Table.Header>
               <Table.Row>
-                <Table.HeaderCell>Code</Table.HeaderCell>
+                <Table.HeaderCell className="w-40">Code</Table.HeaderCell>
                 <Table.HeaderCell>Name</Table.HeaderCell>
-                <Table.HeaderCell>Category</Table.HeaderCell>
-                <Table.HeaderCell>
+                <Table.HeaderCell className="w-48">Category</Table.HeaderCell>
+                <Table.HeaderCell className="w-32">
                   <ColumnFilter
                     label="Modality"
                     options={modalityOptions}
@@ -192,7 +192,9 @@ function VendorEquipmentsContent() {
                     searchable={false}
                   />
                 </Table.HeaderCell>
-                <Table.HeaderCell align="center">Actions</Table.HeaderCell>
+                <Table.HeaderCell className="w-24" align="center">
+                  Actions
+                </Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
@@ -211,15 +213,20 @@ function VendorEquipmentsContent() {
                       </span>
                     </Table.Cell>
                     <Table.Cell>
-                      <div className="font-medium text-slate-900">{eq.name}</div>
+                      <div
+                        className="font-medium text-slate-900 truncate"
+                        title={eq.name}
+                      >
+                        {eq.name}
+                      </div>
                       {eq.serial_number && (
-                        <div className="text-xs text-slate-500 font-mono">
+                        <div className="text-xs text-slate-500 font-mono truncate">
                           S/N: {eq.serial_number}
                         </div>
                       )}
                     </Table.Cell>
                     <Table.Cell>
-                      <span className="text-sm text-slate-700">
+                      <span className="text-sm text-slate-700 block truncate">
                         {eq.category_label}
                       </span>
                     </Table.Cell>
