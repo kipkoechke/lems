@@ -25,7 +25,6 @@ const formatCurrency = (value?: string | null) =>
 function VendorBookingsContent() {
   const [page, setPage] = useState(1);
   const [serviceStatus, setServiceStatus] = useState("");
-  const [bookingStatus, setBookingStatus] = useState("");
   const [search, setSearch] = useState("");
 
   const {
@@ -40,17 +39,11 @@ function VendorBookingsContent() {
     page,
     per_page: 20,
     service_status: serviceStatus || undefined,
-    booking_status: bookingStatus || undefined,
     search: search || undefined,
   });
 
   // Map available_filters to ColumnFilter options
   const serviceStatusOptions = availableFilters.service_status.map((f) => ({
-    value: f.value,
-    label: f.label,
-  }));
-
-  const bookingStatusOptions = availableFilters.booking_status.map((f) => ({
     value: f.value,
     label: f.label,
   }));
@@ -147,7 +140,7 @@ function VendorBookingsContent() {
             <Table.Body>
               {bookings.length === 0 ? (
                 <Table.Empty colSpan={8}>
-                  {search || serviceStatus || bookingStatus
+                  {search || serviceStatus
                     ? "No service requests match your criteria"
                     : "No service requests found yet"}
                 </Table.Empty>
