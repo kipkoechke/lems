@@ -289,3 +289,88 @@ export interface BookingFilters {
   sub_county_id?: string;
   code?: string;
 }
+
+// ===== Vendor Bookings (GET /vendor/bookings) =====
+
+export interface VendorBookingService {
+  code: string;
+  name: string;
+}
+
+export interface VendorBookingEquipment {
+  id: string;
+  code: string;
+  name: string;
+  ae_title: string;
+}
+
+export interface VendorBookingWorklist {
+  accession_number: string;
+  modality: string;
+  scheduled_at: string;
+  status: string;
+}
+
+export interface VendorBookingInfo {
+  booking_number: string;
+  status: string;
+  created_at: string;
+}
+
+export interface VendorBookingPatient {
+  name: string;
+}
+
+export interface VendorBookingFacility {
+  name: string;
+  fr_code: string;
+}
+
+export interface VendorBookingItem {
+  id: string;
+  status: "not_started" | "in_progress" | "completed" | "cancelled";
+  tariff_amount: string | null;
+  vendor_share: string;
+  service: VendorBookingService;
+  modality: string;
+  equipment: VendorBookingEquipment;
+  worklist: VendorBookingWorklist;
+  booking: VendorBookingInfo;
+  patient: VendorBookingPatient;
+  facility: VendorBookingFacility;
+}
+
+export interface VendorBookingFilterOption {
+  value: string;
+  label: string;
+}
+
+export interface VendorBookingAvailableFilters {
+  service_status: VendorBookingFilterOption[];
+  booking_status: VendorBookingFilterOption[];
+}
+
+export interface VendorBookingsResponse {
+  summary: {
+    not_started: number;
+    total: number;
+  };
+  data: VendorBookingItem[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    total_pages: number;
+  };
+  available_filters: VendorBookingAvailableFilters;
+}
+
+export interface VendorBookingsParams {
+  page?: number;
+  per_page?: number;
+  service_status?: string;
+  booking_status?: string;
+  search?: string;
+  modality?: string;
+  facility_id?: string;
+}

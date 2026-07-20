@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { getVendorBookings } from "@/services/apiVendors";
+import { getVendorBookings, getVendorBookingsPaginated } from "@/services/apiVendors";
+import type { VendorBookingsParams } from "@/types/booking";
 
 export const useVendorBookings = (vendorId: string) => {
   const { data, isLoading, error, refetch } = useQuery({
@@ -10,4 +11,21 @@ export const useVendorBookings = (vendorId: string) => {
   });
 
   return { bookings: data ?? [], isLoading, error, refetch };
+};
+
+export const useVendorBookingsPaginated = (params: VendorBookingsParams = {}) => {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["vendor-bookings-paginated", params],
+    queryFn: () => getVendorBookingsPaginated(params),
+  });
+
+  return {
+    summary: data?.summary ?? { not_started: 0, total: 0 },
+    bookings: data?.data ?? [],
+    pagination: data?.pagination ?? { current_page: 1, per_page: 20, total: 0, total_pages: 1 },
+    availableFilters: data?.available_filters ?? { service_status: [], booking_status: [] },
+    isLoading,
+    error,
+    refetch,
+  };
 };

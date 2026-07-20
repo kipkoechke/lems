@@ -3,67 +3,65 @@
 import { useState } from "react";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
-import { useMyVendor } from "@/features/vendors/useMyVendor";
-import { useVendorBookings } from "@/features/vendors/useVendorBookings";
-import { VendorBooking } from "@/services/apiVendors";
+import { useVendorBookingsPaginated } from "@/features/vendors/useVendorBookings";
+import type { VendorBookingItem } from "@/types/booking";
 import { Table } from "@/components/Table";
 import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { ErrorState } from "@/components/common/ErrorState";
+import Pagination from "@/components/common/Pagination";
 import { FaCalendarCheck } from "react-icons/fa";
 
-const STATUS_OPTIONS = [
-  { value: "pending_otp", label: "Pending OTP" },
-  { value: "active", label: "Active" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-];
-
-const STATUS_BADGE: Record<string, string> = {
-  active: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  completed: "bg-blue-50 text-blue-700 border-blue-200",
+const SERVICE_STATUS_BADGE: Record<string, string> = {
+  not_started: "bg-amber-50 text-amber-700 border-amber-200",
+  in_progress: "bg-blue-50 text-blue-700 border-blue-200",
+  completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
   cancelled: "bg-red-50 text-red-700 border-red-200",
-  pending_otp: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
 const formatCurrency = (value?: string | null) =>
   value ? `KES ${Number(value).toLocaleString()}` : "-";
 
-const formatDate = (value?: string | null) =>
-  value
-    ? new Date(value).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : "-";
-
 function VendorBookingsContent() {
-  const { vendorId, isLoading: vendorLoading } = useMyVendor();
-  const { bookings, isLoading, error, refetch } = useVendorBookings(vendorId);
-
-  const [status, setStatus] = useState("");
+  const [page, setPage] = useState(1);
+  const [serviceStatus, setServiceStatus] = useState("");
+  const [bookingStatus, setBookingStatus] = useState("");
   const [search, setSearch] = useState("");
 
-  // The vendor bookings endpoint returns the full list, so filtering is local.
-  const filtered = bookings.filter((b) => {
-    if (status && b.status !== status) return false;
-    const term = search.toLowerCase();
-    if (!term) return true;
-    return (
-      b.booking_number?.toLowerCase().includes(term) ||
-      b.patient?.name?.toLowerCase().includes(term) ||
-      b.facility?.name?.toLowerCase().includes(term)
-    );
+  const {
+    summary,
+    bookings,
+    pagination,
+    availableFilters,
+    isLoading,
+    error,
+    refetch,
+  } = useVendorBookingsPaginated({
+    page,
+    per_page: 20,
+    service_status: serviceStatus || undefined,
+    booking_status: bookingStatus || undefined,
+    search: search || undefined,
   });
 
-  if (vendorLoading || isLoading) {
+  // Map available_filters to ColumnFilter options
+  const serviceStatusOptions = availableFilters.service_status.map((f) => ({
+    value: f.value,
+    label: f.label,
+  }));
+
+  const bookingStatusOptions = availableFilters.booking_status.map((f) => ({
+    value: f.value,
+    label: f.label,
+  }));
+
+  if (isLoading) {
     return (
       <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg border border-slate-200 p-8 animate-pulse space-y-4">
             <div className="h-8 bg-slate-200 rounded w-1/4" />
-            {[...Array(5)].map((_, i) => (
+            {[...Array(8)].map((_, i) => (
               <div key={i} className="h-14 bg-slate-100 rounded" />
             ))}
           </div>
@@ -94,9 +92,14 @@ function VendorBookingsContent() {
                 <FaCalendarCheck className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-900">Bookings</h1>
+                <h1 className="text-xl font-bold text-slate-900">Service Requests</h1>
                 <p className="text-sm text-slate-500">
-                  {bookings.length} bookings on your equipment
+                  {pagination.total} total
+                  {summary.not_started > 0 && (
+                    <span className="ml-2 text-amber-600 font-medium">
+                      · {summary.not_started} pending
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -104,8 +107,11 @@ function VendorBookingsContent() {
             <div className="flex-1 max-w-xl w-full mx-auto">
               <SearchField
                 value={search}
-                onChange={setSearch}
-                placeholder="Search by booking number, patient or facility..."
+                onChange={(v) => {
+                  setSearch(v);
+                  setPage(1);
+                }}
+                placeholder="Search by booking number, accession number, patient or facility..."
               />
             </div>
           </div>
@@ -117,81 +123,89 @@ function VendorBookingsContent() {
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>Booking #</Table.HeaderCell>
+                <Table.HeaderCell>Accession #</Table.HeaderCell>
                 <Table.HeaderCell>Patient</Table.HeaderCell>
                 <Table.HeaderCell>Facility</Table.HeaderCell>
-                <Table.HeaderCell>Services</Table.HeaderCell>
-                <Table.HeaderCell>Total Tariff</Table.HeaderCell>
                 <Table.HeaderCell>
                   <ColumnFilter
                     label="Status"
-                    options={STATUS_OPTIONS}
-                    value={status}
-                    onChange={setStatus}
+                    options={serviceStatusOptions}
+                    value={serviceStatus}
+                    onChange={(v) => {
+                      setServiceStatus(v);
+                      setPage(1);
+                    }}
                     allLabel="All Status"
                     searchable={false}
                   />
                 </Table.HeaderCell>
-                <Table.HeaderCell>Created</Table.HeaderCell>
+                <Table.HeaderCell>Modality</Table.HeaderCell>
+                <Table.HeaderCell>Equipment</Table.HeaderCell>
+                <Table.HeaderCell align="right">Vendor Share</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {filtered.length === 0 ? (
-                <Table.Empty colSpan={7}>
-                  {search || status
-                    ? "No bookings match your criteria"
-                    : "No bookings found for your equipment yet"}
+              {bookings.length === 0 ? (
+                <Table.Empty colSpan={8}>
+                  {search || serviceStatus || bookingStatus
+                    ? "No service requests match your criteria"
+                    : "No service requests found yet"}
                 </Table.Empty>
               ) : (
-                filtered.map((booking: VendorBooking) => (
-                  <Table.Row key={booking.id}>
+                bookings.map((item: VendorBookingItem) => (
+                  <Table.Row key={item.id}>
                     <Table.Cell>
                       <span className="font-mono text-sm text-slate-900">
-                        {booking.booking_number}
+                        {item.booking.booking_number}
+                      </span>
+                      <div className="text-xs text-slate-400 mt-0.5">
+                        {item.booking.status}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="font-mono text-sm text-slate-700">
+                        {item.worklist.accession_number}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-sm text-slate-900">
+                        {item.patient.name}
                       </span>
                     </Table.Cell>
                     <Table.Cell>
                       <div className="text-sm text-slate-900">
-                        {booking.patient?.name || "-"}
+                        {item.facility.name}
                       </div>
-                      {booking.patient?.identification_no && (
-                        <div className="text-xs text-slate-500 font-mono">
-                          {booking.patient.identification_no}
-                        </div>
-                      )}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="text-sm text-slate-900">
-                        {booking.facility?.name || "-"}
+                      <div className="text-xs text-slate-500 font-mono">
+                        {item.facility.fr_code}
                       </div>
-                      {booking.facility?.fr_code && (
-                        <div className="text-xs text-slate-500 font-mono">
-                          {booking.facility.fr_code}
-                        </div>
-                      )}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {booking.services_count ?? "-"}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm font-medium text-slate-900">
-                        {formatCurrency(booking.total_tariff)}
-                      </span>
                     </Table.Cell>
                     <Table.Cell>
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${
-                          STATUS_BADGE[booking.status] ??
+                          SERVICE_STATUS_BADGE[item.status] ??
                           "bg-slate-50 text-slate-700 border-slate-200"
                         }`}
                       >
-                        {booking.status?.replace(/_/g, " ")}
+                        {item.status.replace(/_/g, " ")}
                       </span>
                     </Table.Cell>
                     <Table.Cell>
-                      <span className="text-sm text-slate-600">
-                        {formatDate(booking.created_at)}
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                        {item.modality}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="text-sm text-slate-900 max-w-[200px] truncate">
+                        {item.equipment.name}
+                      </div>
+                      <div className="text-xs text-slate-500 font-mono">
+                        {item.equipment.code}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell align="right">
+                      <span className="text-sm font-semibold text-emerald-600">
+                        {formatCurrency(item.vendor_share)}
                       </span>
                     </Table.Cell>
                   </Table.Row>
@@ -200,6 +214,14 @@ function VendorBookingsContent() {
             </Table.Body>
           </Table>
         </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={pagination.current_page}
+          lastPage={pagination.total_pages}
+          total={pagination.total}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );
