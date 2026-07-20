@@ -1,4 +1,5 @@
 import axios from "../lib/axios";
+import type { VendorBookingsResponse, VendorBookingsParams } from "@/types/booking";
 
 // ============================================================
 // Shared type aliases
@@ -560,37 +561,9 @@ export const getVendorBookings = async (
 
 // GET /vendor/bookings — paginated with filters (new response format)
 export const getVendorBookingsPaginated = async (
-  params: {
-    page?: number;
-    per_page?: number;
-    service_status?: string;
-    booking_status?: string;
-    search?: string;
-    modality?: string;
-    facility_id?: string;
-  } = {},
-): Promise<{
-  summary: { not_started: number; total: number };
-  data: Array<{
-    id: string;
-    status: string;
-    tariff_amount: string | null;
-    vendor_share: string;
-    service: { code: string; name: string };
-    modality: string;
-    equipment: { id: string; code: string; name: string; ae_title: string };
-    worklist: { accession_number: string; modality: string; scheduled_at: string; status: string };
-    booking: { booking_number: string; status: string; created_at: string };
-    patient: { name: string };
-    facility: { name: string; fr_code: string };
-  }>;
-  pagination: { current_page: number; per_page: number; total: number; total_pages: number };
-  available_filters: {
-    service_status: Array<{ value: string; label: string }>;
-    booking_status: Array<{ value: string; label: string }>;
-  };
-}> => {
-  const response = await axios.get(`/vendor/bookings`, { params });
+  params: VendorBookingsParams = {},
+): Promise<VendorBookingsResponse> => {
+  const response = await axios.get<VendorBookingsResponse>(`/vendor/bookings`, { params });
   return response.data;
 };
 
