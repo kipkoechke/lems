@@ -2,16 +2,21 @@ import axios from "../lib/axios";
 
 export type MedicalRequestStatus =
   | "pending"
+  | "sent"
+  | "acknowledged"
   | "in_progress"
   | "completed"
   | "failed"
   | "cancelled";
 
+// `sent` and `acknowledged` are the HL7 lifecycle states the live API returns.
 export const REQUEST_STATUS_OPTIONS: {
   value: MedicalRequestStatus;
   label: string;
 }[] = [
   { value: "pending", label: "Pending" },
+  { value: "sent", label: "Sent" },
+  { value: "acknowledged", label: "Acknowledged" },
   { value: "in_progress", label: "In Progress" },
   { value: "completed", label: "Completed" },
   { value: "failed", label: "Failed" },
@@ -26,14 +31,49 @@ export interface MedicalRequestEquipment {
   status?: string;
 }
 
+/**
+ * An EMR imaging order.
+ *
+ * The live endpoint returns the HL7/MWL worklist shape (`accession_number`,
+ * `study_description`, `procedure_code`, `scheduled_at`, ids rather than nested
+ * objects). The reference documents a richer shape with patient/facility names
+ * inlined, which this deployment does not send — hence the accessors below.
+ * Reading `request_id`/`patient_first_name`/`facility_name` directly renders
+ * every row as "-".
+ */
 export interface MedicalRequest {
   id?: string;
   internal_request_id?: string;
-  request_id: string;
+  request_id?: string;
+
+  // Live MWL-order fields
+  accession_number?: string;
+  filler_order_number?: string | null;
+  hl7_message_type?: string | null;
+  procedure_code?: string | null;
+  study_description?: string | null;
+  priority?: string | null;
+  order_control?: string | null;
+  scheduled_at?: string | null;
+  sent_at?: string | null;
+  acknowledged_at?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  result_status?: string | null;
+  equipment_id?: string;
+  booked_service_id?: string;
+  orthanc_worklist_id?: string | null;
+  referring_physician?: string | null;
+  performing_technologist?: string | null;
+  interpreting_physician?: string | null;
+  has_critical_values?: boolean;
+
+  // Documented / enriched fields — may be absent.
   patient_id?: string;
   patient_first_name?: string;
   patient_last_name?: string;
   patient_mrn?: string | null;
+  patient?: { id?: string; name?: string; identification_no?: string } | null;
   date_of_birth?: string | null;
   sex?: string | null;
   modality?: string | null;
@@ -42,6 +82,7 @@ export interface MedicalRequest {
   procedures?: string[];
   facility_id?: string;
   facility_name?: string | null;
+  facility?: { id?: string; name?: string; fr_code?: string } | null;
   claim_id?: string | null;
   payor?: string | null;
   preauth_code?: string | null;
@@ -51,6 +92,37 @@ export interface MedicalRequest {
   created_at?: string;
   updated_at?: string;
 }
+
+/** The identifier to route by — accession number is what the live API keys on. */
+export const requestIdentifier = (r: MedicalRequest): string =>
+  r.request_id || r.accession_number || r.internal_request_id || r.id || "";
+
+/** Display label for the request, preferring the accession number. */
+export const requestLabel = (r: MedicalRequest): string =>
+  r.accession_number || r.request_id || r.internal_request_id || "-";
+
+/** Patient name from whichever shape the API returned. */
+export const requestPatientName = (r: MedicalRequest): string => {
+  if (r.patient?.name) return r.patient.name;
+  const full = [r.patient_first_name, r.patient_last_name]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  return full || "-";
+};
+
+/** Facility name, falling back through the shapes then the raw id. */
+export const requestFacility = (r: MedicalRequest): string =>
+  r.facility?.name || r.facility_name || r.institution_name || "-";
+
+/**
+ * What was ordered. The live payload describes a single study rather than a
+ * list of procedure names.
+ */
+export const requestProcedure = (r: MedicalRequest): string => {
+  if (r.procedures?.length) return r.procedures.join(", ");
+  return r.study_description || r.description || r.procedure_code || "-";
+};
 
 export interface MedicalRequestListParams {
   status?: string;

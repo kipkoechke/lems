@@ -12,6 +12,12 @@ import {
 } from "@/features/dicom/useDicom";
 import { useAdminEquipments } from "@/features/vendors/useAdminEquipments";
 import type { AdminEquipment } from "@/services/apiEquipment";
+import {
+  modalityAet,
+  modalityHost,
+  modalityName,
+  modalityPort,
+} from "@/services/apiDicom";
 import { Table } from "@/components/Table";
 import { SearchField } from "@/components/common/SearchField";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -314,36 +320,69 @@ function DicomContent() {
                       <Table.Row>
                         <Table.HeaderCell>Name</Table.HeaderCell>
                         <Table.HeaderCell>AET</Table.HeaderCell>
-                        <Table.HeaderCell>Host</Table.HeaderCell>
-                        <Table.HeaderCell>Port</Table.HeaderCell>
+                        <Table.HeaderCell>Host : Port</Table.HeaderCell>
+                        <Table.HeaderCell>Vendor</Table.HeaderCell>
+                        <Table.HeaderCell>Link</Table.HeaderCell>
+                        <Table.HeaderCell>Last Seen</Table.HeaderCell>
                       </Table.Row>
                     </Table.Header>
                     <Table.Body>
                       {modalities.length === 0 ? (
-                        <Table.Empty colSpan={4}>
+                        <Table.Empty colSpan={6}>
                           No modalities registered in Orthanc.
                         </Table.Empty>
                       ) : (
                         modalities.map((m, idx) => (
-                          <Table.Row key={m.name ?? idx}>
+                          <Table.Row key={modalityAet(m) + idx}>
                             <Table.Cell>
-                              <span className="font-medium text-slate-900">
-                                {m.name || "-"}
-                              </span>
+                              <div className="font-medium text-slate-900">
+                                {modalityName(m)}
+                              </div>
+                              {m.equipment?.code && (
+                                <div className="text-xs text-slate-500 font-mono">
+                                  {m.equipment.code}
+                                </div>
+                              )}
                             </Table.Cell>
                             <Table.Cell>
                               <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
-                                {m.aet || "-"}
+                                {modalityAet(m)}
                               </span>
                             </Table.Cell>
                             <Table.Cell>
                               <span className="text-sm text-slate-700 font-mono">
-                                {m.host || "-"}
+                                {modalityHost(m)}
+                                {modalityPort(m) !== "-"
+                                  ? `:${modalityPort(m)}`
+                                  : ""}
                               </span>
                             </Table.Cell>
                             <Table.Cell>
-                              <span className="text-sm text-slate-700 font-mono">
-                                {m.port ?? "-"}
+                              <span className="text-sm text-slate-700">
+                                {m.vendor?.name || "-"}
+                              </span>
+                            </Table.Cell>
+                            <Table.Cell>
+                              <span
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+                                  m.is_connected
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : "bg-slate-50 text-slate-500 border-slate-200"
+                                }`}
+                              >
+                                <span
+                                  className={`w-2 h-2 rounded-full ${
+                                    m.is_connected
+                                      ? "bg-emerald-500 animate-pulse"
+                                      : "bg-slate-300"
+                                  }`}
+                                />
+                                {m.is_connected ? "Live" : "Offline"}
+                              </span>
+                            </Table.Cell>
+                            <Table.Cell>
+                              <span className="text-sm text-slate-600">
+                                {formatDateTime(m.last_seen_at)}
                               </span>
                             </Table.Cell>
                           </Table.Row>

@@ -19,7 +19,46 @@ export interface DicomServerStatus {
   server: DicomServerInfo;
 }
 
+/**
+ * A modality registered in Orthanc.
+ *
+ * The live endpoint returns the VEMS-enriched shape (`ae_title` plus nested
+ * `equipment`/`network`/`vendor` blocks). Raw Orthanc returns a keyed object of
+ * flat `{aet, host, port}` entries. Both are modelled here and read through the
+ * accessors below — reading `name`/`aet`/`host`/`port` directly renders every
+ * row as "-" against the live API.
+ */
 export interface DicomModality {
+  // VEMS-enriched shape
+  ae_title?: string;
+  equipment?: {
+    id?: string;
+    code?: string;
+    name?: string;
+    category?: string;
+    category_label?: string;
+    modality?: string;
+    status?: string;
+    status_label?: string;
+  } | null;
+  network?: {
+    ip?: string;
+    port?: number;
+  } | null;
+  vendor?: {
+    id?: string;
+    name?: string;
+    code?: string;
+  } | null;
+  facility?: {
+    id?: string;
+    name?: string;
+    fr_code?: string;
+  } | null;
+  is_connected?: boolean;
+  last_seen_at?: string | null;
+
+  // Raw-Orthanc shape
   name?: string;
   aet?: string;
   host?: string;
@@ -27,6 +66,22 @@ export interface DicomModality {
   manufacturer?: string;
   [key: string]: unknown;
 }
+
+/** Display name: the equipment it belongs to, else the raw Orthanc key. */
+export const modalityName = (m: DicomModality): string =>
+  m.equipment?.name || m.name || "-";
+
+/** AE title, whichever shape the API returned. */
+export const modalityAet = (m: DicomModality): string =>
+  m.ae_title || m.aet || "-";
+
+/** Host/IP, whichever shape the API returned. */
+export const modalityHost = (m: DicomModality): string =>
+  m.network?.ip || m.host || "-";
+
+/** DICOM port, whichever shape the API returned. */
+export const modalityPort = (m: DicomModality): string =>
+  (m.network?.port ?? m.port)?.toString() ?? "-";
 
 export interface DicomEquipmentStatus {
   equipment_id?: string;

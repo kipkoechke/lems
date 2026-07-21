@@ -6,8 +6,12 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useMedicalRequests } from "@/features/requests/useRequests";
 import {
-  MedicalRequest,
   REQUEST_STATUS_OPTIONS,
+  requestFacility,
+  requestIdentifier,
+  requestLabel,
+  requestPatientName,
+  requestProcedure,
 } from "@/services/apiRequests";
 import { Table } from "@/components/Table";
 import Pagination from "@/components/common/Pagination";
@@ -18,6 +22,8 @@ import { FaFileMedical } from "react-icons/fa";
 
 const STATUS_BADGE: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700 border-amber-200",
+  sent: "bg-blue-50 text-blue-700 border-blue-200",
+  acknowledged: "bg-indigo-50 text-indigo-700 border-indigo-200",
   in_progress: "bg-blue-50 text-blue-700 border-blue-200",
   completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
   failed: "bg-red-50 text-red-700 border-red-200",
@@ -33,9 +39,6 @@ const formatDateTime = (value?: string | null) =>
         minute: "2-digit",
       })
     : "-";
-
-const patientName = (r: MedicalRequest) =>
-  [r.patient_first_name, r.patient_last_name].filter(Boolean).join(" ") || "-";
 
 function RequestsContent() {
   const router = useRouter();
@@ -146,13 +149,15 @@ function RequestsContent() {
               ) : (
                 requests.map((r) => (
                   <Table.Row
-                    key={r.internal_request_id ?? r.request_id}
-                    onClick={() => router.push(`/requests/${r.request_id}`)}
+                    key={r.internal_request_id ?? requestIdentifier(r)}
+                    onClick={() =>
+                      router.push(`/requests/${requestIdentifier(r)}`)
+                    }
                     className="cursor-pointer hover:bg-gray-50"
                   >
                     <Table.Cell>
                       <div className="font-mono text-sm text-slate-900">
-                        {r.request_id}
+                        {requestLabel(r)}
                       </div>
                       {r.modality && (
                         <div className="text-xs text-slate-500">
@@ -162,7 +167,7 @@ function RequestsContent() {
                     </Table.Cell>
                     <Table.Cell>
                       <div className="text-sm text-slate-900">
-                        {patientName(r)}
+                        {requestPatientName(r)}
                       </div>
                       {r.patient_mrn && (
                         <div className="text-xs text-slate-500 font-mono">
@@ -171,15 +176,18 @@ function RequestsContent() {
                       )}
                     </Table.Cell>
                     <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {r.procedures?.length
-                          ? r.procedures.join(", ")
-                          : "-"}
-                      </span>
+                      <div className="text-sm text-slate-700">
+                        {requestProcedure(r)}
+                      </div>
+                      {r.procedure_code && (
+                        <div className="text-xs text-slate-500 font-mono">
+                          {r.procedure_code}
+                        </div>
+                      )}
                     </Table.Cell>
                     <Table.Cell>
                       <span className="text-sm text-slate-700">
-                        {r.facility_name || r.facility_id || "-"}
+                        {requestFacility(r)}
                       </span>
                     </Table.Cell>
                     <Table.Cell>
