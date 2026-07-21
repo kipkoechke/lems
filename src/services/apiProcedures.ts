@@ -1,4 +1,5 @@
 import axios from "../lib/axios";
+import { normalisePagination } from "./pagination";
 
 export type ProcedureLifecycleState = "active" | "suspended" | "retired";
 
@@ -126,7 +127,7 @@ export const getProcedures = async (
 
   return {
     data: response.data.data ?? [],
-    pagination: response.data.pagination,
+    pagination: normalisePagination(response.data.pagination),
   };
 };
 

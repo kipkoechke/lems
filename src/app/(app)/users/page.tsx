@@ -224,17 +224,16 @@ function UsersContent() {
             </Table.Body>
           </Table>
 
-          {pagination &&
-            (pagination.last_page || pagination.total_pages || 1) > 1 && (
-              <Pagination
-                currentPage={pagination.current_page}
-                lastPage={pagination.last_page ?? pagination.total_pages ?? 1}
-                total={pagination.total}
-                from={pagination.from}
-                to={pagination.to}
-                onPageChange={setPage}
-              />
-            )}
+          {pagination && pagination.last_page > 1 && (
+            <Pagination
+              currentPage={pagination.current_page}
+              lastPage={pagination.last_page}
+              total={pagination.total}
+              from={pagination.from}
+              to={pagination.to}
+              onPageChange={setPage}
+            />
+          )}
         </div>
       </div>
 

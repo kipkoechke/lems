@@ -1,4 +1,5 @@
 import axios from "../lib/axios";
+import { normalisePagination } from "./pagination";
 
 export type MedicalRequestStatus =
   | "pending"
@@ -207,7 +208,7 @@ export const getMedicalRequests = async (
 
   return {
     data: response.data.data ?? [],
-    pagination: response.data.pagination,
+    pagination: normalisePagination(response.data.pagination),
   };
 };
 
