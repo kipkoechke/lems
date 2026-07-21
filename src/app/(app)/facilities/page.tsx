@@ -7,6 +7,8 @@ import {
   useFacilitiesPaginated,
   useUpdateFacility,
 } from "@/features/facilities/useFacilities";
+import { useSearchControl } from "@/hooks/useSearchControl";
+import { SearchField } from "@/components/common/SearchField";
 import {
   useCounties,
   useSubCounties,
@@ -108,8 +110,7 @@ function EditFacilityForm({
 function FacilitiesContent() {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchInput, setSearchInput] = useState("");
+  const search = useSearchControl(() => setCurrentPage(1));
 
   // Filter states
   const [selectedCounty, setSelectedCounty] = useState("");
@@ -190,9 +191,10 @@ function FacilitiesContent() {
 
   // Use facilities hook with filters
   const { isLoading, facilities, pagination, error } = useFacilitiesPaginated({
-    page: currentPage,
-    per_page: 100,
-    search: searchTerm || undefined,
+    // Searching is unpaginated so results span every facility rather than
+    // being capped at one page of matches.
+    ...(search.isSearching ? {} : { page: currentPage, per_page: 100 }),
+    search: search.term || undefined,
     county: selectedCounty || undefined,
     sub_county: selectedSubCounty || undefined,
     ward: selectedWard || undefined,
@@ -205,17 +207,6 @@ function FacilitiesContent() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-  };
-
-  const handleSearch = () => {
-    setSearchTerm(searchInput);
-    setCurrentPage(1);
-  };
-
-  const handleClearSearch = () => {
-    setSearchInput("");
-    setSearchTerm("");
-    setCurrentPage(1);
   };
 
   const handleCountyChange = (county: string) => {
@@ -249,8 +240,7 @@ function FacilitiesContent() {
     setSelectedSubCounty("");
     setSelectedWard("");
     setSelectedLevel("");
-    setSearchTerm("");
-    setSearchInput("");
+    search.clear();
     setCurrentPage(1);
 
     // Clear all search states
@@ -311,7 +301,7 @@ function FacilitiesContent() {
 
   // Show loading state or search results info
   const showEmptyState = !isLoading && facilityData.length === 0;
-  const isSearchingOrFiltering = searchTerm.length > 0 || hasActiveFilters;
+  const isSearchingOrFiltering = search.isSearching || hasActiveFilters;
 
   return (
     <div className="min-h-screen p-3 md:p-6">
@@ -331,34 +321,14 @@ function FacilitiesContent() {
               </div>
             </div>
 
-            <div className="flex-1 max-w-xl w-full mx-auto flex">
-              <div className="relative flex-1">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search facilities..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                  className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                />
-                {searchInput && (
-                  <button
-                    type="button"
-                    onClick={handleClearSearch}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <FaTimes />
-                  </button>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={handleSearch}
-                className="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 text-sm font-medium whitespace-nowrap"
-              >
-                Search
-              </button>
+            <div className="flex-1 max-w-xl w-full mx-auto">
+              <SearchField
+                value={search.input}
+                onChange={search.onInputChange}
+                onSearch={search.submit}
+                onClear={search.clear}
+                placeholder="Search facilities..."
+              />
             </div>
 
             <button

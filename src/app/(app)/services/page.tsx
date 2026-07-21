@@ -5,15 +5,16 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useCurrentFacility } from "@/hooks/useAuth";
 import { useBookingsWithPagination } from "@/features/services/bookings/useBookings";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
+import { SearchField } from "@/components/common/SearchField";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import {
   MdCalendarToday,
   MdCheckCircle,
   MdPending,
-  MdSearch,
   MdAttachMoney,
   MdPeople,
   MdList,
@@ -40,18 +41,19 @@ export default function ServicesPage() {
   const facility = useCurrentFacility();
 
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [source, setSource] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const search = useSearchControl(() => setPage(1));
 
   const filters: BookingFilters = useMemo(
     () => ({
       facility_id: facility?.id || undefined,
-      page,
-      per_page: 15,
-      search: search || undefined,
+      // Searching is unpaginated so results span all bookings rather than
+      // being capped at one page of matches.
+      ...(search.isSearching ? {} : { page, per_page: 15 }),
+      search: search.term || undefined,
       status: status || undefined,
       source: source || undefined,
       from: from || undefined,
@@ -59,7 +61,16 @@ export default function ServicesPage() {
       sort_by: "created_at",
       sort_order: "desc",
     }),
-    [facility?.id, page, search, status, source, from, to],
+    [
+      facility?.id,
+      page,
+      search.term,
+      search.isSearching,
+      status,
+      source,
+      from,
+      to,
+    ],
   );
 
   const { data, isLoading, error } = useBookingsWithPagination(filters);
@@ -179,16 +190,12 @@ export default function ServicesPage() {
             <div className="flex flex-col sm:flex-row flex-wrap gap-3">
               {/* Search */}
               <div className="flex-1 relative min-w-[200px]">
-                <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                <input
-                  type="text"
+                <SearchField
+                  value={search.input}
+                  onChange={search.onInputChange}
+                  onSearch={search.submit}
+                  onClear={search.clear}
                   placeholder="Search booking number, patient, ID..."
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                  className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
               {/* Status */}
@@ -329,7 +336,7 @@ export default function ServicesPage() {
                 )}
               </Table.Body>
             </Table>
-            {pagination && pagination.last_page > 1 && (
+            {!search.isSearching && pagination && pagination.last_page > 1 && (
               <Pagination
                 currentPage={pagination.current_page}
                 lastPage={pagination.last_page}
@@ -383,7 +390,7 @@ export default function ServicesPage() {
                 </div>
               ))
             )}
-            {pagination && pagination.last_page > 1 && (
+            {!search.isSearching && pagination && pagination.last_page > 1 && (
               <div className="bg-white rounded-lg border border-slate-200">
                 <Pagination
                   currentPage={pagination.current_page}

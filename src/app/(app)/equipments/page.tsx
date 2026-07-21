@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   FaCog,
   FaPlus,
-  FaSearch,
   FaWrench,
   FaCheckCircle,
   FaTimesCircle,
@@ -14,9 +13,11 @@ import {
   FaEdit,
 } from "react-icons/fa";
 import { useAdminEquipments } from "@/features/vendors/useAdminEquipments";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import type { AdminEquipment } from "@/services/apiEquipment";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
+import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -56,17 +57,18 @@ export default function EquipmentsPage() {
   const router = useRouter();
 
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [modalityFilter, setModalityFilter] = useState("");
+  const search = useSearchControl(() => setPage(1));
 
   const { equipments, pagination, availableFilters, isLoading, error, refetch } =
     useAdminEquipments({
-      page,
-      per_page: 15,
+      // Searching is unpaginated so results span the whole inventory rather
+      // than being capped at one page of matches.
+      ...(search.isSearching ? {} : { page, per_page: 15 }),
       status: statusFilter || undefined,
       modality: modalityFilter || undefined,
-      search: search || undefined,
+      search: search.term || undefined,
     });
 
   const modalityLabel = (code: string | null) => {
@@ -122,17 +124,13 @@ export default function EquipmentsPage() {
               </div>
             </div>
 
-            <div className="flex-1 max-w-xl w-full mx-auto relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <input
-                type="text"
+            <div className="flex-1 max-w-xl w-full mx-auto">
+              <SearchField
+                value={search.input}
+                onChange={search.onInputChange}
+                onSearch={search.submit}
+                onClear={search.clear}
                 placeholder="Search by name, code, serial number..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
 
@@ -252,7 +250,7 @@ export default function EquipmentsPage() {
               )}
             </Table.Body>
           </Table>
-          {pagination && pagination.last_page > 1 && (
+          {!search.isSearching && pagination && pagination.last_page > 1 && (
             <Pagination
               currentPage={pagination.current_page}
               lastPage={pagination.last_page}
@@ -306,7 +304,7 @@ export default function EquipmentsPage() {
               </div>
             </div>
           ))}
-          {pagination && pagination.last_page > 1 && (
+          {!search.isSearching && pagination && pagination.last_page > 1 && (
             <Pagination
               currentPage={pagination.current_page}
               lastPage={pagination.last_page}

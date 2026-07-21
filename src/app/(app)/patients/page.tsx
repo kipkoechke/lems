@@ -1,12 +1,12 @@
 "use client";
 import Pagination from "@/components/common/Pagination";
 import { usePatientsPaginated } from "@/features/patients/usePatients";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useSearchControl } from "@/hooks/useSearchControl";
+import { SearchField } from "@/components/common/SearchField";
 import { Patient } from "@/services/apiPatient";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
-  FaSearch,
   FaUsers,
   FaUserCheck,
   FaClock,
@@ -26,25 +26,17 @@ import { ActionMenu } from "@/components/common/ActionMenu";
 
 function Patients() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
   // Removed unused modal-related state
   const router = useRouter();
 
-  // Debounce search term to avoid too many API calls
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  // Search applies on submit rather than per keystroke — no debounce needed.
+  const search = useSearchControl(() => setCurrentPage(1));
 
-  // Reset to page 1 when search term changes
-  useEffect(() => {
-    if (debouncedSearchTerm !== searchTerm) {
-      setCurrentPage(1);
-    }
-  }, [debouncedSearchTerm, searchTerm]);
-
-  // Use paginated patients hook with search
   const { isLoading, patients, pagination, error } = usePatientsPaginated({
-    page: currentPage,
-    per_page: 100, // Match the API response
-    search: debouncedSearchTerm || undefined, // Only include search if there's a term
+    // Searching is unpaginated so results span the whole register rather than
+    // being capped at one page of matches.
+    ...(search.isSearching ? {} : { page: currentPage, per_page: 100 }),
+    search: search.term || undefined,
   });
 
   // Calculate statistics from patient data
@@ -80,14 +72,6 @@ function Patients() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-  };
-
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    // Reset to page 1 immediately when user starts typing
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    }
   };
 
   // const handlePatientClick = (patient: Patient) => {
@@ -132,7 +116,7 @@ function Patients() {
 
   // Show loading state or search results info
   const showEmptyState = !isLoading && patientData.length === 0;
-  const isSearching = debouncedSearchTerm.length > 0;
+  const isSearching = search.isSearching;
 
   return (
     <div className="min-h-screen p-3 md:p-6">
@@ -242,13 +226,12 @@ function Patients() {
             <div className="flex items-center gap-3">
               {/* Search Input */}
               <div className="relative w-64">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
-                <input
-                  type="text"
+                <SearchField
+                  value={search.input}
+                  onChange={search.onInputChange}
+                  onSearch={search.submit}
+                  onClear={search.clear}
                   placeholder="Search patients..."
-                  value={searchTerm}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
@@ -290,7 +273,7 @@ function Patients() {
               <div className="ml-auto flex items-center gap-3">
                 <p className="text-sm text-gray-600">
                   {stats.total} patients
-                  {isSearching && ` matching "${debouncedSearchTerm}"`}
+                  {isSearching && ` matching "${search.term}"`}
                 </p>
                 <button className="text-blue-600 hover:text-blue-700 inline-flex items-center">
                   <svg
@@ -482,13 +465,12 @@ function Patients() {
             <div className="space-y-3">
               {/* Search Input */}
               <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
-                <input
-                  type="text"
+                <SearchField
+                  value={search.input}
+                  onChange={search.onInputChange}
+                  onSearch={search.submit}
+                  onClear={search.clear}
                   placeholder="Search patients..."
-                  value={searchTerm}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
@@ -532,7 +514,7 @@ function Patients() {
               <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t border-gray-200">
                 <p>
                   {stats.total} patients
-                  {isSearching && ` matching "${debouncedSearchTerm}"`}
+                  {isSearching && ` matching "${search.term}"`}
                 </p>
                 <button className="text-blue-600 hover:text-blue-700">
                   <svg

@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import {
   FaCog,
   FaPlus,
-  FaSearch,
   FaWrench,
   FaCheckCircle,
   FaTimesCircle,
@@ -15,6 +14,8 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { useVendor } from "@/features/vendors/useVendor";
+import { useSearchControl } from "@/hooks/useSearchControl";
+import { SearchField } from "@/components/common/SearchField";
 import { useAdminEquipments } from "@/features/vendors/useAdminEquipments";
 import { useDeleteEquipment } from "@/features/vendors/useEquipmentDetail";
 import { AdminEquipment } from "@/services/apiEquipment";
@@ -71,7 +72,7 @@ export default function VendorEquipmentsPage() {
 
   // State
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
+  const search = useSearchControl(() => setPage(1));
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
@@ -90,11 +91,12 @@ export default function VendorEquipmentsPage() {
   } = useAdminEquipments(
     {
       vendor_id: vendor?.id,
-      page,
-      per_page: 15,
+      // Searching is unpaginated so results span this vendor's whole
+      // inventory rather than being capped at one page of matches.
+      ...(search.isSearching ? {} : { page, per_page: 15 }),
       status: statusFilter || undefined,
       category: categoryFilter || undefined,
-      search: search || undefined,
+      search: search.term || undefined,
     },
     { enabled: !!vendor?.id },
   );
@@ -110,20 +112,9 @@ export default function VendorEquipmentsPage() {
     return Array.from(byCode, ([value, label]) => ({ value, label }));
   }, [equipments]);
 
-  // Filtered equipments (client-side filtering for search)
-  const filteredEquipments = useMemo(() => {
-    if (!search.trim()) return equipments;
-    const s = search.toLowerCase();
-    return equipments.filter(
-      (eq) =>
-        eq.name?.toLowerCase().includes(s) ||
-        eq.code?.toLowerCase().includes(s) ||
-        eq.serial_number?.toLowerCase().includes(s) ||
-        eq.brand?.toLowerCase().includes(s) ||
-        eq.model?.toLowerCase().includes(s) ||
-        eq.category_label?.toLowerCase().includes(s),
-    );
-  }, [equipments, search]);
+  // Search is applied server-side; re-filtering here would only hide rows the
+  // API already matched on fields this list doesn't show.
+  const filteredEquipments = equipments;
 
   const handleDelete = (equipmentId: string) => {
     deleteEquipment(equipmentId, {
@@ -195,13 +186,12 @@ export default function VendorEquipmentsPage() {
         <div className="flex flex-wrap gap-3">
           {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+            <SearchField
+              value={search.input}
+              onChange={search.onInputChange}
+              onSearch={search.submit}
+              onClear={search.clear}
               placeholder="Search equipments..."
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 

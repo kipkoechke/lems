@@ -2,10 +2,12 @@
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useContracts } from "@/features/vendors/useContracts";
+import { useSearchControl } from "@/hooks/useSearchControl";
+import { SearchField } from "@/components/common/SearchField";
 import { Contract } from "@/services/apiVendors";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { FaEye, FaFileContract, FaPlus, FaSearch } from "react-icons/fa";
+import { FaEye, FaFileContract, FaPlus } from "react-icons/fa";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
@@ -21,27 +23,28 @@ const CONTRACT_STATUS_OPTIONS = [
 
 export default function ContractsPage() {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
+  const search = useSearchControl(() => setPage(1));
 
   const { contracts, pagination, isLoading, error } = useContracts({
-    page,
-    per_page: 25,
+    // This endpoint has no search param, so filtering is client-side. Drop
+    // pagination while searching, or the filter only ever sees one page of
+    // contracts and most matches are invisible.
+    ...(search.isSearching ? {} : { page, per_page: 25 }),
   });
 
   // Filter contracts based on search and status
+  const term = search.term.toLowerCase();
   const filteredContracts = contracts?.filter((contract: Contract) => {
     if (statusFilter && contract.status !== statusFilter) return false;
+    if (!term) return true;
 
-    const matchesSearch =
-      contract.vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.contract_number
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-    return matchesSearch;
+    return (
+      contract.vendor.name.toLowerCase().includes(term) ||
+      contract.facility.name.toLowerCase().includes(term) ||
+      contract.contract_number?.toLowerCase().includes(term)
+    );
   });
 
   // Helper function to format date
@@ -115,14 +118,13 @@ export default function ContractsPage() {
               </div>
             </div>
 
-            <div className="flex-1 max-w-xl w-full mx-auto relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
+            <div className="flex-1 max-w-xl w-full mx-auto">
+              <SearchField
+                value={search.input}
+                onChange={search.onInputChange}
+                onSearch={search.submit}
+                onClear={search.clear}
                 placeholder="Search contracts by vendor, facility, or lot..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
 
@@ -186,12 +188,12 @@ export default function ContractsPage() {
           {filteredContracts?.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-gray-500 text-xl mb-4">
-                {searchTerm
+                {search.isSearching
                   ? "No contracts match your search criteria"
                   : "No contracts found"}
               </div>
               <p className="text-gray-400">
-                {searchTerm
+                {search.isSearching
                   ? "Try adjusting your search terms"
                   : "Create your first contract to get started"}
               </p>
@@ -301,7 +303,7 @@ export default function ContractsPage() {
               </Table>
 
               {/* Pagination */}
-              {pagination && (
+              {!search.isSearching && pagination && (
                 <div className="bg-white px-4 py-3 border-t border-gray-200">
                   <Pagination
                     currentPage={pagination.current_page}
@@ -319,7 +321,7 @@ export default function ContractsPage() {
         <div className="md:hidden space-y-3">
           {filteredContracts?.length === 0 ? (
             <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
-              {searchTerm
+              {search.isSearching
                 ? "No contracts match your search criteria"
                 : "No contracts found. Create your first contract!"}
             </div>
@@ -386,7 +388,7 @@ export default function ContractsPage() {
               ))}
 
               {/* Pagination for Mobile */}
-              {pagination && (
+              {!search.isSearching && pagination && (
                 <div className="bg-white rounded-xl shadow-lg p-4">
                   <Pagination
                     currentPage={pagination.current_page}

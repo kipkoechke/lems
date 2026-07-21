@@ -3,8 +3,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bookings } from "@/services/apiBooking";
 import { useBookings } from "@/features/services/bookings/useBookings";
+import { useSearchControl } from "@/hooks/useSearchControl";
+import { SearchField } from "@/components/common/SearchField";
 import {
-  FaSearch,
   FaCheckCircle,
   FaClock,
   FaUser,
@@ -17,7 +18,7 @@ import { maskPhoneNumber } from "@/lib/maskUtils";
 
 export default function LabServicesPage() {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState("");
+  const search = useSearchControl();
   const [selectedBooking, setSelectedBooking] = useState<Bookings | null>(null);
 
   // Fetch bookings with booking_status=confirmed
@@ -35,13 +36,13 @@ export default function LabServicesPage() {
   });
 
   const filteredBookings = bookings?.filter((booking: Bookings) => {
-    if (!searchTerm) return true;
-    const search = searchTerm.toLowerCase();
+    const term = search.term.toLowerCase();
+    if (!term) return true;
     return (
-      booking.booking_number?.toLowerCase().includes(search) ||
-      booking.patient?.name?.toLowerCase().includes(search) ||
-      booking.patient?.phone?.includes(search) ||
-      booking.patient?.identification_no?.toLowerCase().includes(search)
+      booking.booking_number?.toLowerCase().includes(term) ||
+      booking.patient?.name?.toLowerCase().includes(term) ||
+      booking.patient?.phone?.includes(term) ||
+      booking.patient?.identification_no?.toLowerCase().includes(term)
     );
   });
 
@@ -105,13 +106,12 @@ export default function LabServicesPage() {
 
           {/* Search Bar */}
           <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
+            <SearchField
+              value={search.input}
+              onChange={search.onInputChange}
+              onSearch={search.submit}
+              onClear={search.clear}
               placeholder="Search by booking number, patient name, phone, or ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -189,7 +189,7 @@ export default function LabServicesPage() {
               <FaClock className="w-16 h-16 mb-4 text-gray-300" />
               <p className="text-lg font-medium">No pending bookings</p>
               <p className="text-sm">
-                {searchTerm
+                {search.isSearching
                   ? "No bookings match your search"
                   : "All services have been completed"}
               </p>

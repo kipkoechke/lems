@@ -2,6 +2,8 @@
 
 import BackButton from "@/components/common/BackButton";
 import Pagination from "@/components/common/Pagination";
+import { SearchField } from "@/components/common/SearchField";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import { useWorklist } from "@/features/worklist/useWorklist";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 import type { WorklistBooking, WorklistService } from "@/types/worklist";
@@ -17,7 +19,6 @@ import {
   MdPending,
   MdPerson,
   MdPlayCircle,
-  MdSearch,
 } from "react-icons/md";
 
 const statusConfig = {
@@ -65,13 +66,14 @@ const bookingStatusConfig = {
 export default function PractitionerWorklistPage() {
   const router = useRouter();
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const search = useSearchControl(() => setPage(1));
 
   const { data, isLoading, error } = useWorklist({
-    page,
-    per_page: 15,
-    search: search || undefined,
+    // Searching is unpaginated so results span the whole worklist rather than
+    // being capped at one page of matches.
+    ...(search.isSearching ? {} : { page, per_page: 15 }),
+    search: search.term || undefined,
     status: statusFilter || undefined,
   });
 
@@ -185,13 +187,12 @@ export default function PractitionerWorklistPage() {
         <div className="flex flex-col md:flex-row gap-3">
           {/* Search */}
           <div className="flex-1 relative">
-            <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input
-              type="text"
+            <SearchField
+              value={search.input}
+              onChange={search.onInputChange}
+              onSearch={search.submit}
+              onClear={search.clear}
               placeholder="Search by patient name, booking number..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -414,7 +415,7 @@ export default function PractitionerWorklistPage() {
       )}
 
       {/* Pagination */}
-      {pagination && pagination.last_page > 1 && (
+      {!search.isSearching && pagination && pagination.last_page > 1 && (
         <div className="mt-4">
           <Pagination
             currentPage={pagination.current_page}

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useVendors } from "@/features/vendors/useVendors";
+import { useSearchControl } from "@/hooks/useSearchControl";
+import { SearchField } from "@/components/common/SearchField";
 import { useDeleteVendor } from "@/features/vendors/useDeleteVendor";
 import {
   isVendorActive,
@@ -20,7 +22,6 @@ import {
   FaEye,
   FaFileContract,
   FaPlus,
-  FaSearch,
   FaTimes,
   FaTrash,
 } from "react-icons/fa";
@@ -31,14 +32,14 @@ function VendorsContent() {
   const { deleteVendor, isDeleting } = useDeleteVendor();
 
   // State management
-  const [searchTerm, setSearchTerm] = useState("");
+  const search = useSearchControl();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null,
   );
 
   // Filter vendors based on search
   const filteredVendors = vendors?.filter((vendor) => {
-    const term = searchTerm.toLowerCase();
+    const term = search.term.toLowerCase();
     return (
       vendor.name.toLowerCase().includes(term) ||
       vendorCode(vendor).toLowerCase().includes(term)
@@ -124,14 +125,13 @@ function VendorsContent() {
               </div>
             </div>
 
-            <div className="flex-1 max-w-xl w-full mx-auto relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
+            <div className="flex-1 max-w-xl w-full mx-auto">
+              <SearchField
+                value={search.input}
+                onChange={search.onInputChange}
+                onSearch={search.submit}
+                onClear={search.clear}
                 placeholder="Search vendors by name or code..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
               />
             </div>
 
@@ -215,7 +215,7 @@ function VendorsContent() {
             <Table.Body>
               {filteredVendors?.length === 0 ? (
                 <Table.Empty colSpan={6}>
-                  {searchTerm
+                  {search.isSearching
                     ? "No vendors match your search criteria"
                     : "No vendors found. Create your first vendor!"}
                 </Table.Empty>
@@ -298,7 +298,7 @@ function VendorsContent() {
         <div className="md:hidden space-y-3">
           {filteredVendors?.length === 0 ? (
             <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
-              {searchTerm
+              {search.isSearching
                 ? "No vendors match your search criteria"
                 : "No vendors found. Create your first vendor!"}
             </div>
