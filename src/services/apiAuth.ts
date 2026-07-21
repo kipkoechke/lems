@@ -26,6 +26,8 @@ interface ApiUser {
   email: string;
   phone: string;
   role: UserRole;
+  // API-returned permission grants (keyed by permission code, e.g. "manage_equipment")
+  permissions?: Record<string, boolean>;
   profile?: {
     salutation: string | null;
     gender: string | null;
@@ -50,6 +52,8 @@ export interface User {
   roleLabel?: string;
   roleType?: string;
   entity?: UserEntity;
+  // API-returned permission grants (keyed by permission code, e.g. "manage_equipment")
+  permissions?: Record<string, boolean>;
 }
 
 export interface Facility {
@@ -107,6 +111,7 @@ const normalizeUser = (apiUser: ApiUser): User => {
     roleLabel: apiUser.role?.label,
     roleType: apiUser.role?.type,
     entity,
+    permissions: apiUser.permissions,
   };
 };
 

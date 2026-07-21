@@ -234,26 +234,143 @@ export const getUserPermissions = (role: UserRole): Permission[] => {
   return ROLE_PERMISSIONS[role] || [];
 };
 
+// ---------------------------------------------------------------------------
+// API permission mapping
+//
+// When the login response includes a `permissions` object (e.g.
+// { "manage_equipment": true, "view_contracts": true }), those grants are
+// mapped to internal Permission enum values so they can be checked with the
+// same hasPermission / PermissionGate primitives used everywhere else.
+// ---------------------------------------------------------------------------
+
+/**
+ * Map of API permission codes (as returned in the login `permissions` object)
+ * to the corresponding internal {@link Permission} enum value(s).
+ *
+ * Add entries here as the API exposes new permission codes.
+ */
+const API_PERMISSION_MAP: Record<string, Permission[]> = {
+  // -- Vendor-scoped permissions --
+  manage_equipment: [Permission.VIEW_VENDOR_EQUIPMENTS],
+  view_contracts: [Permission.VIEW_VENDOR_CONTRACTS, Permission.VIEW_CONTRACTS],
+  view_bookings: [Permission.VIEW_VENDOR_BOOKINGS, Permission.VIEW_BOOKINGS],
+  view_reports: [Permission.VIEW_REPORTS],
+  view_dashboard: [Permission.VIEW_DASHBOARD],
+  view_patients: [Permission.VIEW_PATIENTS],
+  view_equipments: [Permission.VIEW_EQUIPMENTS],
+  view_facilities: [Permission.VIEW_FACILITIES],
+  view_vendors: [Permission.VIEW_VENDORS],
+  view_lots: [Permission.VIEW_LOTS],
+  view_services: [Permission.VIEW_SERVICES],
+  view_payments: [Permission.VIEW_PAYMENTS],
+  view_trends: [Permission.VIEW_TRENDS],
+  view_maintenance_history: [Permission.VIEW_MAINTENANCE_HISTORY],
+  view_vendor_revenue: [Permission.VIEW_VENDOR_REVENUE],
+  view_vendor_payments: [Permission.VIEW_VENDOR_PAYMENTS],
+  view_vendor_profile: [Permission.VIEW_VENDOR_PROFILE],
+  // -- Facility-scoped permissions --
+  request_maintenance: [Permission.REQUEST_MAINTENANCE],
+  view_facility_payments: [Permission.VIEW_FACILITY_PAYMENTS],
+  // -- Admin-scoped permissions --
+  manage_permissions: [Permission.MANAGE_PERMISSIONS],
+  view_equipment_status: [Permission.VIEW_EQUIPMENT_STATUS],
+  manage_revenue_distributions: [Permission.MANAGE_REVENUE_DISTRIBUTIONS],
+  manage_dicom: [Permission.MANAGE_DICOM],
+  view_medical_requests: [Permission.VIEW_MEDICAL_REQUESTS],
+  view_sha_interventions: [Permission.VIEW_SHA_INTERVENTIONS],
+  // -- Practitioner permissions --
+  get_patient_from_registry: [Permission.GET_PATIENT_FROM_REGISTRY],
+  select_services: [Permission.SELECT_SERVICES],
+  patient_booking_consent: [Permission.PATIENT_BOOKING_CONSENT],
+  send_patient_to_finance: [Permission.SEND_PATIENT_TO_FINANCE],
+  view_booked_services: [Permission.VIEW_BOOKED_SERVICES],
+  view_confirmed_bookings: [Permission.VIEW_CONFIRMED_BOOKINGS],
+  // -- Finance permissions --
+  check_sha_eligibility: [Permission.CHECK_SHA_ELIGIBILITY],
+  process_payment_modes: [Permission.PROCESS_PAYMENT_MODES],
+  send_patient_to_equipment_room: [Permission.SEND_PATIENT_TO_EQUIPMENT_ROOM],
+  cancel_booking: [Permission.CANCEL_BOOKING],
+  view_patient_queue: [Permission.VIEW_PATIENT_QUEUE],
+  sync_to_sha: [Permission.SYNC_TO_SHA],
+  finance_approval: [Permission.FINANCE_APPROVAL],
+  view_approved_services: [Permission.VIEW_APPROVED_SERVICES],
+  // -- Equipment user (Lab) permissions --
+  service_completion: [Permission.SERVICE_COMPLETION],
+  view_completed_services: [Permission.VIEW_COMPLETED_SERVICES],
+  // -- Integration roles --
+  view_provider_bookings: [Permission.VIEW_PROVIDER_BOOKINGS],
+  validate_payer_services: [Permission.VALIDATE_PAYER_SERVICES],
+  // -- Admin onboarding --
+  onboard_facility: [Permission.ONBOARD_FACILITY],
+  create_facility_users: [Permission.CREATE_FACILITY_USERS],
+  onboard_vendors: [Permission.ONBOARD_VENDORS],
+  onboard_equipment: [Permission.ONBOARD_EQUIPMENT],
+  create_contracts: [Permission.CREATE_CONTRACTS],
+  onboard_lots: [Permission.ONBOARD_LOTS],
+  onboard_services: [Permission.ONBOARD_SERVICES],
+};
+
+/**
+ * Translate API-returned permission grants into internal {@link Permission}
+ * values. Permissions whose value is `false` (or absent) are ignored.
+ */
+export const resolveApiPermissions = (
+  apiPermissions: Record<string, boolean> | undefined,
+): Permission[] => {
+  if (!apiPermissions) return [];
+
+  const resolved: Permission[] = [];
+  for (const [code, granted] of Object.entries(apiPermissions)) {
+    if (!granted) continue;
+    const mapped = API_PERMISSION_MAP[code];
+    if (mapped) {
+      resolved.push(...mapped);
+    }
+  }
+  return resolved;
+};
+
+/**
+ * Get the effective permissions for a user by merging role-based permissions
+ * with any API-returned permission grants.
+ */
+export const getEffectivePermissions = (
+  role: UserRole,
+  apiPermissions?: Record<string, boolean>,
+): Permission[] => {
+  const rolePermissions = getUserPermissions(role);
+  const apiResolved = resolveApiPermissions(apiPermissions);
+  // Merge and deduplicate
+  return [...new Set([...rolePermissions, ...apiResolved])];
+};
+
 export const hasPermission = (
   userRole: UserRole,
   permission: Permission,
+  apiPermissions?: Record<string, boolean>,
 ): boolean => {
-  const permissions = getUserPermissions(userRole);
-  return permissions.includes(permission);
+  const effective = getEffectivePermissions(userRole, apiPermissions);
+  return effective.includes(permission);
 };
 
 export const hasAnyPermission = (
   userRole: UserRole,
   permissions: Permission[],
+  apiPermissions?: Record<string, boolean>,
 ): boolean => {
-  return permissions.some((permission) => hasPermission(userRole, permission));
+  return permissions.some((permission) =>
+    hasPermission(userRole, permission, apiPermissions),
+  );
 };
 
 export const hasAllPermissions = (
   userRole: UserRole,
   permissions: Permission[],
+  apiPermissions?: Record<string, boolean>,
 ): boolean => {
-  return permissions.every((permission) => hasPermission(userRole, permission));
+  return permissions.every((permission) =>
+    hasPermission(userRole, permission, apiPermissions),
+  );
 };
 
 // Role display names
