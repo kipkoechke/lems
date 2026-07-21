@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import { useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
@@ -60,9 +61,9 @@ function VendorEquipmentsContent() {
   const { vendor, vendorId, isLoading: vendorLoading } = useMyVendor();
 
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [modality, setModality] = useState("");
+  const search = useSearchControl(() => setPage(1));
 
   const {
     data,
@@ -70,11 +71,11 @@ function VendorEquipmentsContent() {
     error,
     refetch,
   } = useVendorEquipments(vendorId, {
-    page,
-    per_page: 20,
+    // Search is server-side and unpaginated, so it spans the whole inventory
+    // rather than being capped at one page of matches.
+    ...(search.isSearching ? {} : { page, per_page: 20 }),
     status: status || undefined,
-    // Search is server-side so it spans all pages, not just the current one.
-    search: search || undefined,
+    search: search.term || undefined,
   });
 
   const equipments: VendorEquipment[] = data?.data ?? [];
@@ -141,11 +142,10 @@ function VendorEquipmentsContent() {
 
             <div className="flex-1 max-w-xl w-full mx-auto">
               <SearchField
-                value={search}
-                onChange={(v) => {
-                  setSearch(v);
-                  setPage(1);
-                }}
+                value={search.input}
+                onChange={search.onInputChange}
+                onSearch={search.submit}
+                onClear={search.clear}
                 placeholder="Search by name, code, serial number..."
               />
             </div>
@@ -200,7 +200,7 @@ function VendorEquipmentsContent() {
             <Table.Body>
               {filtered.length === 0 ? (
                 <Table.Empty colSpan={6}>
-                  {search || status || modality
+                  {search.isSearching || status || modality
                     ? "No equipment matches your criteria"
                     : "No equipment yet. Add your first item to get started."}
                 </Table.Empty>
@@ -277,7 +277,7 @@ function VendorEquipmentsContent() {
             </Table.Body>
           </Table>
 
-          {pagination && pagination.last_page > 1 && (
+          {!search.isSearching && pagination && pagination.last_page > 1 && (
             <Pagination
               currentPage={pagination.current_page}
               lastPage={pagination.last_page}

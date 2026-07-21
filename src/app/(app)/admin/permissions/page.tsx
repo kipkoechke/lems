@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import { useForm } from "react-hook-form";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
@@ -21,16 +22,17 @@ import { FaEdit, FaKey, FaPlus, FaTrash, FaTimes } from "react-icons/fa";
 
 function PermissionsContent() {
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
+  const search = useSearchControl(() => setPage(1));
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<PermissionRecord | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const { permissions, pagination, isLoading, error, refetch } =
     usePermissionsCatalog({
-      page,
-      page_size: 20,
-      search: search || undefined,
+      // Searching is unpaginated so results span the whole catalogue rather
+      // than being capped at one page of matches.
+      ...(search.isSearching ? {} : { page, page_size: 20 }),
+      search: search.term || undefined,
     });
 
   const { createPermission, isCreating } = useCreatePermission();
@@ -129,11 +131,10 @@ function PermissionsContent() {
 
             <div className="flex-1 max-w-xl w-full mx-auto">
               <SearchField
-                value={search}
-                onChange={(v) => {
-                  setSearch(v);
-                  setPage(1);
-                }}
+                value={search.input}
+                onChange={search.onInputChange}
+                onSearch={search.submit}
+                onClear={search.clear}
                 placeholder="Search by name, code or resource..."
               />
             </div>
@@ -163,7 +164,7 @@ function PermissionsContent() {
             <Table.Body>
               {permissions.length === 0 ? (
                 <Table.Empty colSpan={6}>
-                  {search
+                  {search.isSearching
                     ? "No permissions match your search"
                     : "No permissions defined yet."}
                 </Table.Empty>
@@ -223,7 +224,7 @@ function PermissionsContent() {
             </Table.Body>
           </Table>
 
-          {pagination && pagination.last_page > 1 && (
+          {!search.isSearching && pagination && pagination.last_page > 1 && (
             <Pagination
               currentPage={pagination.current_page}
               lastPage={pagination.last_page}

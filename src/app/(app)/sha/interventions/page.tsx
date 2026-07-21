@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useShaInterventions } from "@/features/sha/useSha";
@@ -16,11 +17,11 @@ const formatAmount = (value?: number | string | null) =>
 
 function ShaInterventionsContent() {
   const { lots, isLoading, error, refetch } = useShaInterventions();
-  const [search, setSearch] = useState("");
+  const search = useSearchControl();
 
   // Filter services within each lot, dropping lots left with no matches.
   const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term = search.term.toLowerCase();
     if (!term) return lots;
 
     return lots
@@ -38,7 +39,7 @@ function ShaInterventionsContent() {
           group.lot.name?.toLowerCase().includes(term) ||
           group.lot.number?.toLowerCase().includes(term),
       );
-  }, [lots, search]);
+  }, [lots, search.term]);
 
   const totalServices = lots.reduce((sum, g) => sum + g.services.length, 0);
 
@@ -90,8 +91,10 @@ function ShaInterventionsContent() {
 
             <div className="flex-1 max-w-xl w-full mx-auto">
               <SearchField
-                value={search}
-                onChange={setSearch}
+                value={search.input}
+                onChange={search.onInputChange}
+                onSearch={search.submit}
+                onClear={search.clear}
                 placeholder="Search interventions by name, code or lot..."
               />
             </div>
@@ -105,7 +108,7 @@ function ShaInterventionsContent() {
               <FaStethoscope className="w-5 h-5 text-slate-400" />
             </div>
             <p className="text-sm font-medium text-slate-600">
-              {search
+              {search.isSearching
                 ? "No interventions match your search"
                 : "No active interventions available."}
             </p>

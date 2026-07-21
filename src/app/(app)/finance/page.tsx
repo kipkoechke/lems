@@ -3,6 +3,7 @@ import { ActionMenu } from "@/components/common/ActionMenu";
 import Modal from "@/components/common/Modal";
 import Pagination from "@/components/common/Pagination";
 import { SearchField } from "@/components/common/SearchField";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import { useFinanceApproval } from "@/features/bookings/useFinanceApproval";
 import { useEligibilityCheck } from "@/features/patients/useEligibilityCheck";
 import { useWorklist } from "@/features/worklist/useWorklist";
@@ -20,12 +21,13 @@ import {
 
 export default function FinanceApprovalPage() {
   const [page, setPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
+  const search = useSearchControl(() => setPage(1));
 
   const { data, isLoading } = useWorklist({
-    page,
-    per_page: 20,
-    search: searchTerm || undefined,
+    // Searching is unpaginated so results span the whole queue rather than
+    // being capped at one page of matches.
+    ...(search.isSearching ? {} : { page, per_page: 20 }),
+    search: search.term || undefined,
     finance_approved: false,
   });
 
@@ -56,8 +58,10 @@ export default function FinanceApprovalPage() {
       {/* Search */}
       <div className="mb-6">
         <SearchField
-          value={searchTerm}
-          onChange={setSearchTerm}
+          value={search.input}
+          onChange={search.onInputChange}
+          onSearch={search.submit}
+          onClear={search.clear}
           placeholder="Search by booking number, patient name, or phone..."
         />
       </div>
@@ -140,7 +144,7 @@ export default function FinanceApprovalPage() {
                         No pending bookings found
                       </p>
                       <p className="text-sm">
-                        {searchTerm
+                        {search.isSearching
                           ? "Try adjusting your search criteria"
                           : "All bookings have been processed"}
                       </p>
@@ -201,7 +205,7 @@ export default function FinanceApprovalPage() {
         </div>
 
         {/* Pagination */}
-        {pagination && pagination.last_page > 1 && (
+        {!search.isSearching && pagination && pagination.last_page > 1 && (
           <div className="bg-white px-4 py-3 border-t border-gray-200">
             <Pagination
               currentPage={pagination.current_page}

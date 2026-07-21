@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import { useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
@@ -41,17 +42,19 @@ function VendorContractsContent() {
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
-  const [search, setSearch] = useState("");
+  const search = useSearchControl(() => setPage(1));
 
   const { contracts, summary, pagination, isLoading, error, refetch } =
     useVendorContracts({
-      page,
-      per_page: 15,
+      // This endpoint has no search param, so filtering is client-side. Drop
+      // pagination while searching, or the filter only ever sees one page of
+      // contracts and most matches are invisible.
+      ...(search.isSearching ? {} : { page, per_page: 15 }),
       status: status || undefined,
     });
 
   const filtered = contracts.filter((c: VendorContract) => {
-    const term = search.toLowerCase();
+    const term = search.term.toLowerCase();
     if (!term) return true;
     return (
       c.contract_number?.toLowerCase().includes(term) ||
@@ -114,8 +117,10 @@ function VendorContractsContent() {
 
             <div className="flex-1 max-w-xl w-full mx-auto">
               <SearchField
-                value={search}
-                onChange={setSearch}
+                value={search.input}
+                onChange={search.onInputChange}
+                onSearch={search.submit}
+                onClear={search.clear}
                 placeholder="Search by contract number, facility or lot..."
               />
             </div>
@@ -168,7 +173,7 @@ function VendorContractsContent() {
             <Table.Body>
               {filtered.length === 0 ? (
                 <Table.Empty colSpan={7}>
-                  {search || status
+                  {search.isSearching || status
                     ? "No contracts match your criteria"
                     : "No contracts found for your vendor yet."}
                 </Table.Empty>
@@ -235,7 +240,7 @@ function VendorContractsContent() {
             </Table.Body>
           </Table>
 
-          {pagination && pagination.last_page > 1 && (
+          {!search.isSearching && pagination && pagination.last_page > 1 && (
             <Pagination
               currentPage={pagination.current_page}
               lastPage={pagination.last_page}

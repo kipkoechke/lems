@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import {
@@ -45,16 +46,17 @@ const formatAmount = (value?: number, currency = "KES") =>
 
 function ProceduresContent() {
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
   const [lifecycle, setLifecycle] = useState("");
+  const search = useSearchControl(() => setPage(1));
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Procedure | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const { procedures, pagination, isLoading, error, refetch } = useProcedures({
-    page,
-    page_size: 20,
-    search: search || undefined,
+    // Searching is unpaginated so results span the whole catalogue rather than
+    // being capped at one page of matches.
+    ...(search.isSearching ? {} : { page, page_size: 20 }),
+    search: search.term || undefined,
     is_active: lifecycle ? lifecycle === "active" : undefined,
   });
 
@@ -169,11 +171,10 @@ function ProceduresContent() {
 
             <div className="flex-1 max-w-xl w-full mx-auto">
               <SearchField
-                value={search}
-                onChange={(v) => {
-                  setSearch(v);
-                  setPage(1);
-                }}
+                value={search.input}
+                onChange={search.onInputChange}
+                onSearch={search.submit}
+                onClear={search.clear}
                 placeholder="Search by name, code or category..."
               />
             </div>
@@ -216,7 +217,7 @@ function ProceduresContent() {
             <Table.Body>
               {procedures.length === 0 ? (
                 <Table.Empty colSpan={7}>
-                  {search || lifecycle
+                  {search.isSearching || lifecycle
                     ? "No procedures match your criteria"
                     : "No procedures defined yet."}
                 </Table.Empty>
@@ -293,7 +294,7 @@ function ProceduresContent() {
             </Table.Body>
           </Table>
 
-          {pagination && pagination.last_page > 1 && (
+          {!search.isSearching && pagination && pagination.last_page > 1 && (
             <Pagination
               currentPage={pagination.current_page}
               lastPage={pagination.last_page}

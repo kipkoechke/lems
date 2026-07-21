@@ -84,8 +84,14 @@ export interface ServiceUpdateRequest {
 }
 
 // Lot CRUD operations
-export const getLots = async (page: number = 1): Promise<LotsResponse> => {
-  const response = await axios.get<LotsResponse>(`/lots?page=${page}`);
+/**
+ * Pass `page` to fetch one page, or omit it to fetch the unpaginated list —
+ * client-side search needs every lot, not just the page in view.
+ */
+export const getLots = async (page?: number): Promise<LotsResponse> => {
+  const response = await axios.get<LotsResponse>("/lots", {
+    params: page ? { page } : undefined,
+  });
   return response.data;
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import { useParams, useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
@@ -23,7 +24,7 @@ function UserPermissionsContent() {
   const userId = params.id as string;
   const currentUser = useCurrentUser();
 
-  const [search, setSearch] = useState("");
+  const search = useSearchControl();
 
   const { user, isLoading: userLoading } = useUser(userId);
   const {
@@ -46,7 +47,7 @@ function UserPermissionsContent() {
 
   // Group the catalog by resource so a long flat list stays navigable.
   const grouped = useMemo(() => {
-    const term = search.toLowerCase();
+    const term = search.term.toLowerCase();
     const filtered = catalog.filter(
       (p) =>
         !term ||
@@ -113,8 +114,10 @@ function UserPermissionsContent() {
           </div>
           <div className="flex-1 min-w-[200px] max-w-md ml-auto">
             <SearchField
-              value={search}
-              onChange={setSearch}
+              value={search.input}
+              onChange={search.onInputChange}
+              onSearch={search.submit}
+              onClear={search.clear}
               placeholder="Search permissions..."
             />
           </div>
@@ -123,7 +126,7 @@ function UserPermissionsContent() {
         {/* Catalog grouped by resource */}
         {Object.keys(grouped).length === 0 ? (
           <div className="bg-white rounded-lg border border-slate-200 p-8 text-center text-slate-500">
-            {search
+            {search.isSearching
               ? "No permissions match your search"
               : "No permissions have been defined yet."}
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+
+import { useSearchControl } from "@/hooks/useSearchControl";
 import { useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
@@ -28,11 +29,11 @@ const formatDate = (value?: string | null) =>
 
 function ProviderBookingsContent() {
   const router = useRouter();
-  const [search, setSearch] = useState("");
+  const search = useSearchControl();
   const { bookings, isLoading, error, refetch } = useProviderBookings();
 
   const filtered = bookings.filter((b) => {
-    const term = search.toLowerCase();
+    const term = search.term.toLowerCase();
     if (!term) return true;
     return (
       b.booking_number?.toLowerCase().includes(term) ||
@@ -89,8 +90,10 @@ function ProviderBookingsContent() {
 
             <div className="flex-1 max-w-xl w-full mx-auto">
               <SearchField
-                value={search}
-                onChange={setSearch}
+                value={search.input}
+                onChange={search.onInputChange}
+                onSearch={search.submit}
+                onClear={search.clear}
                 placeholder="Search by booking number, visit ID or patient..."
               />
             </div>
@@ -115,7 +118,7 @@ function ProviderBookingsContent() {
               <Table.Body>
                 {filtered.length === 0 ? (
                   <Table.Empty colSpan={7}>
-                    {search
+                    {search.isSearching
                       ? "No bookings match your search"
                       : "No provider portal bookings yet."}
                   </Table.Empty>

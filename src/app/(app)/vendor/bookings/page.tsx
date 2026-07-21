@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useVendorBookingsPaginated } from "@/features/vendors/useVendorBookings";
@@ -25,7 +26,7 @@ const formatCurrency = (value?: string | null) =>
 function VendorBookingsContent() {
   const [page, setPage] = useState(1);
   const [serviceStatus, setServiceStatus] = useState("");
-  const [search, setSearch] = useState("");
+  const search = useSearchControl(() => setPage(1));
 
   const {
     summary,
@@ -36,10 +37,11 @@ function VendorBookingsContent() {
     error,
     refetch,
   } = useVendorBookingsPaginated({
-    page,
-    per_page: 20,
+    // Searching is unpaginated so results span all bookings rather than being
+    // capped at one page of matches.
+    ...(search.isSearching ? {} : { page, per_page: 20 }),
     service_status: serviceStatus || undefined,
-    search: search || undefined,
+    search: search.term || undefined,
   });
 
   // Map available_filters to ColumnFilter options
@@ -99,11 +101,10 @@ function VendorBookingsContent() {
 
             <div className="flex-1 max-w-xl w-full mx-auto">
               <SearchField
-                value={search}
-                onChange={(v) => {
-                  setSearch(v);
-                  setPage(1);
-                }}
+                value={search.input}
+                onChange={search.onInputChange}
+                onSearch={search.submit}
+                onClear={search.clear}
                 placeholder="Search by booking number, accession number, patient or facility..."
               />
             </div>
@@ -140,7 +141,7 @@ function VendorBookingsContent() {
             <Table.Body>
               {bookings.length === 0 ? (
                 <Table.Empty colSpan={8}>
-                  {search || serviceStatus
+                  {search.isSearching || serviceStatus
                     ? "No service requests match your criteria"
                     : "No service requests found yet"}
                 </Table.Empty>
@@ -209,12 +210,14 @@ function VendorBookingsContent() {
         </div>
 
         {/* Pagination */}
-        <Pagination
-          currentPage={pagination.current_page}
-          lastPage={pagination.total_pages}
-          total={pagination.total}
-          onPageChange={setPage}
-        />
+        {!search.isSearching && pagination.total_pages > 1 && (
+          <Pagination
+            currentPage={pagination.current_page}
+            lastPage={pagination.total_pages}
+            total={pagination.total}
+            onPageChange={setPage}
+          />
+        )}
       </div>
     </div>
   );

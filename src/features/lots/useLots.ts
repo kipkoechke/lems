@@ -1,7 +1,8 @@
 import { getLots, Lot, PaginationMeta } from "@/services/apiLots";
 import { useQuery } from "@tanstack/react-query";
 
-export const useLots = (page: number = 1) => {
+/** Pass `undefined` to load every lot (used while searching). */
+export const useLots = (page: number | undefined = 1) => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["lots", page],
     queryFn: () => getLots(page),

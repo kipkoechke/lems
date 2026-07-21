@@ -6,6 +6,7 @@ import { useDeleteLot } from "@/features/lots/useDeleteLot";
 import { Lot } from "@/services/apiLots";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import {
   FaLayerGroup,
   FaPlus,
@@ -22,20 +23,23 @@ import Pagination from "@/components/common/Pagination";
 
 export default function LotsPage() {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const search = useSearchControl(() => setCurrentPage(1));
 
-  const { lots, pagination, isLoading, error, refetch } = useLots(currentPage);
+  // The lots endpoint has no search param, so filtering is client-side. Load
+  // every lot while searching, or the filter only sees the page in view.
+  const { lots, pagination, isLoading, error, refetch } = useLots(
+    search.isSearching ? undefined : currentPage,
+  );
   const { deleteLot, isDeleting } = useDeleteLot();
 
-  // Filter lots based on search
-  const filteredLots = lots?.filter((lot: Lot) => {
-    const matchesSearch =
-      lot.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lot.number.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return matchesSearch;
-  });
+  const term = search.term.toLowerCase();
+  const filteredLots = lots?.filter(
+    (lot: Lot) =>
+      !term ||
+      lot.name.toLowerCase().includes(term) ||
+      lot.number.toLowerCase().includes(term),
+  );
 
   // Calculate total services count
   const totalServicesCount =
@@ -103,8 +107,10 @@ export default function LotsPage() {
 
             <div className="flex-1 max-w-xl w-full mx-auto">
               <SearchField
-                value={searchTerm}
-                onChange={setSearchTerm}
+                value={search.input}
+                onChange={search.onInputChange}
+                onSearch={search.submit}
+                onClear={search.clear}
                 placeholder="Search lots by name or number..."
               />
             </div>
@@ -169,12 +175,12 @@ export default function LotsPage() {
           {filteredLots?.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-gray-500 text-xl mb-4">
-                {searchTerm
+                {search.isSearching
                   ? "No lots match your search criteria"
                   : "No lots found"}
               </div>
               <p className="text-gray-400">
-                {searchTerm
+                {search.isSearching
                   ? "Try adjusting your search terms"
                   : "Create your first lot to get started"}
               </p>
@@ -266,7 +272,7 @@ export default function LotsPage() {
           )}
 
           {/* Pagination */}
-          {pagination && pagination.last_page > 1 && (
+          {!search.isSearching && pagination && pagination.last_page > 1 && (
             <div className="p-4 border-t border-gray-200">
               <Pagination
                 currentPage={pagination.current_page}
@@ -284,7 +290,7 @@ export default function LotsPage() {
         <div className="md:hidden space-y-3">
           {filteredLots?.length === 0 ? (
             <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
-              {searchTerm
+              {search.isSearching
                 ? "No lots match your search criteria"
                 : "No lots found. Create your first lot!"}
             </div>

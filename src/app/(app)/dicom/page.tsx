@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import {
@@ -43,7 +44,7 @@ const formatDateTime = (value?: string | null) =>
 
 function DicomContent() {
   const [tab, setTab] = useState<"equipment" | "modalities">("equipment");
-  const [search, setSearch] = useState("");
+  const search = useSearchControl();
 
   const { status, isLoading: statusLoading } = useDicomServerStatus();
   const {
@@ -58,8 +59,9 @@ function DicomContent() {
     useUnregisterEquipmentModality();
 
   const { equipments, isLoading: equipmentLoading } = useAdminEquipments({
-    per_page: 100,
-    search: search || undefined,
+    // Unpaginated while searching so matches are not capped at one page.
+    ...(search.isSearching ? {} : { per_page: 100 }),
+    search: search.term || undefined,
   });
 
   // Only imaging devices with DICOM details are relevant here.
@@ -183,8 +185,10 @@ function DicomContent() {
             {tab === "equipment" && (
               <div className="w-64 py-2">
                 <SearchField
-                  value={search}
-                  onChange={setSearch}
+                  value={search.input}
+                  onChange={search.onInputChange}
+                  onSearch={search.submit}
+                  onClear={search.clear}
                   placeholder="Search equipment..."
                 />
               </div>
@@ -216,7 +220,7 @@ function DicomContent() {
                     <Table.Body>
                       {dicomEquipment.length === 0 ? (
                         <Table.Empty colSpan={6}>
-                          {search
+                          {search.isSearching
                             ? "No DICOM equipment matches your search"
                             : "No equipment has DICOM configured yet."}
                         </Table.Empty>
