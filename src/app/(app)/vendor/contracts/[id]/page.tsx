@@ -8,6 +8,12 @@ import {
   useVendorContract,
   useVendorContractServices,
 } from "@/features/vendors/useVendorContracts";
+import {
+  contractLot,
+  contractServiceCode,
+  contractServiceName,
+  contractServiceTariff,
+} from "@/services/apiVendorContracts";
 import { Table } from "@/components/Table";
 import BackButton from "@/components/common/BackButton";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -82,7 +88,7 @@ function VendorContractDetailContent({ contractId }: { contractId: string }) {
       label: "Facility Code",
       value: contract.facility?.code ?? contract.facility?.fr_code,
     },
-    { label: "Lot", value: contract.lot?.name },
+    { label: "Lot", value: contractLot(contract)?.name },
     { label: "Start Date", value: formatDate(contract.start_date) },
     { label: "End Date", value: formatDate(contract.end_date) },
     {
@@ -168,11 +174,16 @@ function VendorContractDetailContent({ contractId }: { contractId: string }) {
                   <Table.Row key={s.id}>
                     <Table.Cell>
                       <div className="font-medium text-slate-900">
-                        {s.name || "-"}
+                        {contractServiceName(s)}
                       </div>
-                      {s.code && (
+                      {contractServiceCode(s) && (
                         <div className="text-xs text-slate-500 font-mono">
-                          {s.code}
+                          {contractServiceCode(s)}
+                        </div>
+                      )}
+                      {s.lot?.name && (
+                        <div className="text-xs text-slate-400">
+                          LOT {s.lot.number} · {s.lot.name}
                         </div>
                       )}
                     </Table.Cell>
@@ -188,7 +199,7 @@ function VendorContractDetailContent({ contractId }: { contractId: string }) {
                     </Table.Cell>
                     <Table.Cell>
                       <span className="text-sm text-slate-700">
-                        {formatTariff(s.tariff)}
+                        {formatTariff(contractServiceTariff(s))}
                       </span>
                     </Table.Cell>
                     <Table.Cell>

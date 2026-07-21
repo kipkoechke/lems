@@ -7,6 +7,11 @@ import axios from "../lib/axios";
 export interface VendorContract {
   id: string;
   contract_number: string;
+  vendor?: {
+    id?: string;
+    name?: string;
+    code?: string;
+  } | null;
   facility?: {
     id?: string;
     name?: string;
@@ -22,7 +27,10 @@ export interface VendorContract {
   end_date?: string | null;
   status: string;
   services_count?: number;
+  // The list response now embeds the full service lines, not just a count.
+  services?: VendorContractServiceItem[];
   notes?: string | null;
+  created_by?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -116,12 +124,27 @@ export const getVendorContracts = async (
   };
 };
 
+/**
+ * A contracted service line.
+ *
+ * The live API nests the SHA service under `service` and carries the lot per
+ * line rather than on the contract. Older/documented responses flattened
+ * `code`/`name`/`tariff` onto the item, so both are modelled and read through
+ * the accessors below.
+ */
 export interface VendorContractServiceItem {
   id: string;
+  service?: {
+    id?: string;
+    code?: string;
+    name?: string;
+    tariff?: number | string;
+  } | null;
   code?: string;
   name?: string;
   tariff?: number | string;
   lot?: {
+    id?: string;
     number?: string;
     name?: string;
   } | null;
@@ -129,14 +152,34 @@ export interface VendorContractServiceItem {
     id?: string;
     code?: string;
     name?: string;
+    category?: string;
     status?: string;
   } | null;
   is_active?: boolean;
 }
 
+export const contractServiceCode = (s: VendorContractServiceItem): string =>
+  s.service?.code || s.code || "";
+
+export const contractServiceName = (s: VendorContractServiceItem): string =>
+  s.service?.name || s.name || "-";
+
+export const contractServiceTariff = (
+  s: VendorContractServiceItem,
+): number | string | undefined => s.service?.tariff ?? s.tariff;
+
 export interface VendorContractDetail extends VendorContract {
   services?: VendorContractServiceItem[];
 }
+
+/**
+ * The lot a contract covers. No longer sent on the contract itself — it now
+ * hangs off each service line, so read it from the first one.
+ */
+export const contractLot = (
+  contract: VendorContract & { services?: VendorContractServiceItem[] },
+): { number?: string; name?: string } | null =>
+  contract.lot ?? contract.services?.[0]?.lot ?? null;
 
 // GET /vendor/contracts/{id}
 export const getVendorContract = async (

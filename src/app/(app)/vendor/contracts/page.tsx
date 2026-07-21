@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useVendorContracts } from "@/features/vendors/useVendorContracts";
-import { VendorContract } from "@/services/apiVendorContracts";
+import { contractLot, VendorContract } from "@/services/apiVendorContracts";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import Pagination from "@/components/common/Pagination";
@@ -59,7 +59,7 @@ function VendorContractsContent() {
     return (
       c.contract_number?.toLowerCase().includes(term) ||
       c.facility?.name?.toLowerCase().includes(term) ||
-      c.lot?.name?.toLowerCase().includes(term)
+      contractLot(c)?.name?.toLowerCase().includes(term)
     );
   });
 
@@ -197,7 +197,7 @@ function VendorContractsContent() {
                     </Table.Cell>
                     <Table.Cell>
                       <span className="text-sm text-slate-700">
-                        {c.lot?.name || "-"}
+                        {contractLot(c)?.name || "-"}
                       </span>
                     </Table.Cell>
                     <Table.Cell>
