@@ -4,7 +4,10 @@ import {
   AdminEquipmentParams,
 } from "@/services/apiEquipment";
 
-export const useAdminEquipments = (params: AdminEquipmentParams = {}) => {
+export const useAdminEquipments = (
+  params: AdminEquipmentParams = {},
+  options: { enabled?: boolean } = {},
+) => {
   const {
     data,
     isLoading,
@@ -13,6 +16,9 @@ export const useAdminEquipments = (params: AdminEquipmentParams = {}) => {
   } = useQuery({
     queryKey: ["admin-equipments", params],
     queryFn: () => getAdminEquipments(params),
+    // Callers scoping by vendor must wait for the id, or the first request
+    // returns every vendor's equipment.
+    enabled: options.enabled ?? true,
   });
 
   return {

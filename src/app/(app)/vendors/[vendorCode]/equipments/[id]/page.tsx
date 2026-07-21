@@ -17,9 +17,13 @@ import {
 } from "react-icons/fa";
 import { useVendor } from "@/features/vendors/useVendor";
 import {
-  useVendorEquipment,
-  useDeleteVendorEquipment,
-} from "@/features/vendors/useVendorEquipments";
+  useDeleteEquipment,
+  useEquipmentDetail,
+} from "@/features/vendors/useEquipmentDetail";
+import {
+  equipmentStatus,
+  equipmentStatusLabel,
+} from "@/services/apiEquipment";
 import BackButton from "@/components/common/BackButton";
 
 // Status badge colors
@@ -61,17 +65,19 @@ export default function VendorEquipmentDetailPage() {
   const vendorCode = params.vendorCode as string;
   const equipmentId = params.id as string;
 
-  const { vendor, isLoading: vendorLoading } = useVendor(vendorCode);
+  const { isLoading: vendorLoading } = useVendor(vendorCode);
+  // Admins read the shared /equipment/{id} route; /vendor/equipments/{id} is
+  // gated to the vendor role and 403s here.
   const {
-    data: equipment,
+    equipment,
     isLoading: equipmentLoading,
     error: equipmentError,
-  } = useVendorEquipment(vendor?.id || "", equipmentId);
-  const deleteEquipmentMutation = useDeleteVendorEquipment();
+  } = useEquipmentDetail(equipmentId);
+  const { deleteEquipment, isDeleting } = useDeleteEquipment();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return "-";
     return new Date(dateStr).toLocaleDateString("en-GB", {
       day: "numeric",
@@ -81,15 +87,10 @@ export default function VendorEquipmentDetailPage() {
   };
 
   const handleDelete = () => {
-    if (!vendor?.id || !equipmentId) return;
-    deleteEquipmentMutation.mutate(
-      { vendorId: vendor.id, equipmentId },
-      {
-        onSuccess: () => {
-          router.push(`/vendors/${vendorCode}/equipments`);
-        },
-      },
-    );
+    if (!equipmentId) return;
+    deleteEquipment(equipmentId, {
+      onSuccess: () => router.push(`/vendors/${vendorCode}/equipments`),
+    });
   };
 
   const isLoading = vendorLoading || equipmentLoading;
@@ -134,12 +135,12 @@ export default function VendorEquipmentDetailPage() {
                 {equipment.name}
               </h1>
               <span
-                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(
-                  equipment.status,
+                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border capitalize ${getStatusBadge(
+                  equipmentStatus(equipment),
                 )}`}
               >
-                {getStatusIcon(equipment.status)}
-                {equipment.status_label}
+                {getStatusIcon(equipmentStatus(equipment))}
+                {equipmentStatusLabel(equipment)}
               </span>
             </div>
             <p className="text-sm text-slate-500 font-mono">{equipment.code}</p>
@@ -227,7 +228,9 @@ export default function VendorEquipmentDetailPage() {
             </div>
             <div>
               <p className="text-xs text-slate-500">Vendor</p>
-              <p className="text-sm text-slate-900">{vendor?.name || "-"}</p>
+              <p className="text-sm text-slate-900">
+                {equipment.vendor?.name || "-"}
+              </p>
             </div>
           </div>
         </div>
@@ -395,10 +398,10 @@ export default function VendorEquipmentDetailPage() {
               </button>
               <button
                 onClick={handleDelete}
-                disabled={deleteEquipmentMutation.isPending}
+                disabled={isDeleting}
                 className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
               >
-                {deleteEquipmentMutation.isPending ? "Deleting..." : "Delete"}
+                {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

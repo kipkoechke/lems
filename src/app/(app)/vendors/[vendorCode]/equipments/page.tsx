@@ -15,11 +15,9 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { useVendor } from "@/features/vendors/useVendor";
-import {
-  useVendorEquipments,
-  useDeleteVendorEquipment,
-} from "@/features/vendors/useVendorEquipments";
-import { VendorEquipment } from "@/services/apiEquipment";
+import { useAdminEquipments } from "@/features/vendors/useAdminEquipments";
+import { useDeleteEquipment } from "@/features/vendors/useEquipmentDetail";
+import { AdminEquipment } from "@/services/apiEquipment";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import Pagination from "@/components/common/Pagination";
@@ -80,34 +78,36 @@ export default function VendorEquipmentsPage() {
     null,
   );
 
-  // Fetch equipments
+  // Admins read the admin equipment list scoped to this vendor. The
+  // /vendor/equipments route infers the vendor from the token and is gated to
+  // the vendor role, so it 403s here.
   const {
-    data: equipmentsData,
+    equipments,
+    pagination,
     isLoading: equipmentsLoading,
     error: equipmentsError,
-  } = useVendorEquipments(vendor?.id || "", {
-    page,
-    per_page: 15,
-    status: statusFilter || undefined,
-    category: categoryFilter || undefined,
-    search: search || undefined,
-  });
-
-  const deleteEquipmentMutation = useDeleteVendorEquipment();
-
-  const equipments = useMemo(
-    () => equipmentsData?.data || [],
-    [equipmentsData?.data],
+    refetch,
+  } = useAdminEquipments(
+    {
+      vendor_id: vendor?.id,
+      page,
+      per_page: 15,
+      status: statusFilter || undefined,
+      category: categoryFilter || undefined,
+      search: search || undefined,
+    },
+    { enabled: !!vendor?.id },
   );
-  const pagination = equipmentsData?.pagination;
 
-  // Get unique categories for filter
+  const { deleteEquipment, isDeleting } = useDeleteEquipment();
+
+  // Category options: filter by the code the API expects, show the label.
   const categories = useMemo(() => {
-    const cats = new Set<string>();
+    const byCode = new Map<string, string>();
     equipments.forEach((eq) => {
-      if (eq.category_label) cats.add(eq.category_label);
+      if (eq.category) byCode.set(eq.category, eq.category_label || eq.category);
     });
-    return Array.from(cats);
+    return Array.from(byCode, ([value, label]) => ({ value, label }));
   }, [equipments]);
 
   // Filtered equipments (client-side filtering for search)
@@ -126,21 +126,8 @@ export default function VendorEquipmentsPage() {
   }, [equipments, search]);
 
   const handleDelete = (equipmentId: string) => {
-    if (!vendor?.id) return;
-    deleteEquipmentMutation.mutate(
-      { vendorId: vendor.id, equipmentId },
-      {
-        onSuccess: () => setShowDeleteConfirm(null),
-      },
-    );
-  };
-
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
+    deleteEquipment(equipmentId, {
+      onSuccess: () => setShowDeleteConfirm(null),
     });
   };
 
@@ -177,10 +164,7 @@ export default function VendorEquipmentsPage() {
       <ErrorState
         title="Unable to Load Equipment"
         error={equipmentsError}
-        action={{
-          label: "Try Again",
-          onClick: () => window.location.reload(),
-        }}
+        action={{ label: "Try Again", onClick: () => refetch() }}
         fullScreen
       />
     );
@@ -249,8 +233,8 @@ export default function VendorEquipmentsPage() {
           >
             <option value="">All Categories</option>
             {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
               </option>
             ))}
           </select>
@@ -336,13 +320,13 @@ export default function VendorEquipmentsPage() {
                     <Table.HeaderCell>Category</Table.HeaderCell>
                     <Table.HeaderCell>Brand / Model</Table.HeaderCell>
                     <Table.HeaderCell>Serial Number</Table.HeaderCell>
-                    <Table.HeaderCell>Manufacture Date</Table.HeaderCell>
+                    <Table.HeaderCell>Modality</Table.HeaderCell>
                     <Table.HeaderCell>Status</Table.HeaderCell>
                     <Table.HeaderCell>Actions</Table.HeaderCell>
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                  {filteredEquipments.map((equipment: VendorEquipment) => (
+                  {filteredEquipments.map((equipment: AdminEquipment) => (
                     <Table.Row key={equipment.id}>
                       <Table.Cell>
                         <div>
@@ -376,7 +360,7 @@ export default function VendorEquipmentsPage() {
                       </Table.Cell>
                       <Table.Cell>
                         <span className="text-sm text-slate-700">
-                          {formatDate(equipment.manufacture_date)}
+                          {equipment.modality || "-"}
                         </span>
                       </Table.Cell>
                       <Table.Cell>
@@ -428,7 +412,7 @@ export default function VendorEquipmentsPage() {
 
             {/* Mobile Cards */}
             <div className="md:hidden space-y-3 p-4">
-              {filteredEquipments.map((equipment: VendorEquipment) => (
+              {filteredEquipments.map((equipment: AdminEquipment) => (
                 <div
                   key={equipment.id}
                   className="bg-slate-50 rounded-lg p-4 border border-slate-100"
@@ -540,10 +524,10 @@ export default function VendorEquipmentsPage() {
               </button>
               <button
                 onClick={() => handleDelete(showDeleteConfirm)}
-                disabled={deleteEquipmentMutation.isPending}
+                disabled={isDeleting}
                 className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
               >
-                {deleteEquipmentMutation.isPending ? "Deleting..." : "Delete"}
+                {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
