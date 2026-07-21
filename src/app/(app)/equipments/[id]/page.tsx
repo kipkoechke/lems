@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useForm } from "react-hook-form";
 import {
   FaCog,
   FaEdit,
@@ -14,6 +15,9 @@ import {
   FaTimesCircle,
   FaClock,
   FaInfoCircle,
+  FaPlug,
+  FaListAlt,
+  FaTimes,
 } from "react-icons/fa";
 import { MdCategory } from "react-icons/md";
 import BackButton from "@/components/common/BackButton";
@@ -22,10 +26,19 @@ import {
   useEquipmentDetail,
 } from "@/features/vendors/useEquipmentDetail";
 import {
+  useConfigureEquipmentDicom,
+  useEquipmentDicomStatus,
+  useRegisterEquipmentModality,
+  useTestEquipmentDicom,
+  useWorklistTest,
+} from "@/features/dicom/useDicom";
+import type { DicomConfigureRequest } from "@/services/apiDicom";
+import {
   equipmentDicom,
   equipmentStatus,
   equipmentStatusLabel,
 } from "@/services/apiEquipment";
+import { InputField } from "@/components/common/InputField";
 import { ErrorState } from "@/components/common/ErrorState";
 
 // Status badge colors
@@ -68,7 +81,32 @@ export default function EquipmentDetailsPage() {
   const { equipment, isLoading, error, refetch } = useEquipmentDetail(params.id);
   const { deleteEquipment, isDeleting } = useDeleteEquipment();
 
+  // Admin DICOM surface — /dicom/equipment/{id}/*, not the vendor-gated routes.
+  const { status: dicomStatus } = useEquipmentDicomStatus(params.id);
+  const { configureDicom, isConfiguring } = useConfigureEquipmentDicom();
+  const { testConnection, isTesting } = useTestEquipmentDicom();
+  const { registerModality, isRegistering } = useRegisterEquipmentModality();
+  const { runWorklistTest, isRunningTest } = useWorklistTest();
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showConfigure, setShowConfigure] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<DicomConfigureRequest>();
+
+  // Prefill the configure form with whatever is already set.
+  useEffect(() => {
+    if (!dicomStatus) return;
+    reset({
+      ae_title: dicomStatus.ae_title ?? "",
+      ip: dicomStatus.hl7_host ?? "",
+      port: dicomStatus.dicom_port ?? undefined,
+    });
+  }, [dicomStatus, reset]);
 
   const formatDate = (dateString: string | undefined | null) => {
     if (!dateString) return "-";
@@ -120,7 +158,18 @@ export default function EquipmentDetailsPage() {
   }
 
   const status = equipmentStatus(equipment);
-  const dicom = equipmentDicom(equipment);
+  // The dedicated DICOM status endpoint is authoritative and reflects live
+  // connection state; the equipment payload is the fallback.
+  const dicom = dicomStatus?.ae_title
+    ? {
+        ae_title: dicomStatus.ae_title ?? null,
+        hl7_host: dicomStatus.hl7_host ?? null,
+        hl7_port: dicomStatus.hl7_port ?? null,
+        dicom_port: dicomStatus.dicom_port ?? null,
+        is_connected: dicomStatus.is_connected ?? false,
+        last_seen_at: dicomStatus.last_seen_at ?? null,
+      }
+    : equipmentDicom(equipment);
 
   return (
     <div className="min-h-screen p-4">
@@ -288,12 +337,58 @@ export default function EquipmentDetailsPage() {
               </div>
             )}
 
-          {/* DICOM Configuration */}
-          {dicom && (
-            <div className="p-4 border-b border-slate-100">
-              <h2 className="text-sm font-semibold text-slate-900 mb-3">
+          {/* DICOM Configuration — always shown so equipment with no DICOM
+              details yet can still be configured. */}
+          <div className="p-4 border-b border-slate-100">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <h2 className="text-sm font-semibold text-slate-900">
                 DICOM Configuration
               </h2>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setShowConfigure(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                >
+                  <FaCog className="w-3 h-3" /> Configure
+                </button>
+                <button
+                  onClick={() => testConnection(params.id)}
+                  disabled={isTesting || !dicom?.ae_title}
+                  title={
+                    dicom?.ae_title
+                      ? undefined
+                      : "Configure an AE title before testing"
+                  }
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 text-slate-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-colors disabled:opacity-50"
+                >
+                  <FaPlug className="w-3 h-3" />
+                  {isTesting ? "Testing..." : "Test Connection"}
+                </button>
+                <button
+                  onClick={() => runWorklistTest(params.id)}
+                  disabled={isRunningTest}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 text-slate-600 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200 transition-colors disabled:opacity-50"
+                >
+                  <FaListAlt className="w-3 h-3" />
+                  {isRunningTest ? "Running..." : "MWL Test"}
+                </button>
+                <button
+                  onClick={() => registerModality(params.id)}
+                  disabled={isRegistering || !dicom?.ae_title}
+                  title={
+                    dicom?.ae_title
+                      ? undefined
+                      : "Configure an AE title before registering"
+                  }
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors disabled:opacity-50"
+                >
+                  <FaCheckCircle className="w-3 h-3" />
+                  {isRegistering ? "Registering..." : "Register Modality"}
+                </button>
+              </div>
+            </div>
+
+            {dicom ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs text-slate-500">AE Title</p>
@@ -344,8 +439,12 @@ export default function EquipmentDetailsPage() {
                   </div>
                 )}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-slate-500">
+                No DICOM details configured for this equipment yet.
+              </p>
+            )}
+          </div>
 
           {/* Vendor Config (MWL Server Details) */}
           {equipment.vendor_config && (
@@ -393,6 +492,90 @@ export default function EquipmentDetailsPage() {
           )}
         </div>
       </div>
+
+      {/* Configure DICOM modal */}
+      {showConfigure && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900">
+                Configure DICOM
+              </h3>
+              <button
+                onClick={() => setShowConfigure(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <FaTimes className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-sm text-slate-600 mb-4">
+              Saving registers this device as a modality in Orthanc.
+            </p>
+
+            <form
+              onSubmit={handleSubmit((data) =>
+                configureDicom(
+                  {
+                    equipmentId: params.id,
+                    data: { ...data, port: Number(data.port) },
+                  },
+                  { onSuccess: () => setShowConfigure(false) },
+                ),
+              )}
+              className="space-y-4"
+            >
+              <InputField
+                label="AE Title"
+                type="text"
+                placeholder="e.g. GEXR001 (max 16 chars)"
+                register={register("ae_title", {
+                  required: "AE title is required",
+                  maxLength: { value: 16, message: "Maximum 16 characters" },
+                })}
+                error={errors.ae_title?.message}
+                required
+              />
+              <InputField
+                label="Device IP / Host"
+                type="text"
+                placeholder="e.g. 192.168.1.50"
+                register={register("ip", { required: "IP/host is required" })}
+                error={errors.ip?.message}
+                required
+              />
+              <InputField
+                label="DICOM Port"
+                type="number"
+                placeholder="e.g. 11112"
+                register={register("port", {
+                  required: "Port is required",
+                  min: { value: 1, message: "Must be between 1 and 65535" },
+                  max: { value: 65535, message: "Must be between 1 and 65535" },
+                })}
+                error={errors.port?.message}
+                required
+              />
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowConfigure(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isConfiguring}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                >
+                  {isConfiguring ? "Saving..." : "Save & Register"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (

@@ -342,31 +342,23 @@ export const getVendor = async (vendorId: string): Promise<Vendor> => {
 export const getMyVendorProfile = async (
   vendorId?: string,
 ): Promise<Vendor> => {
-  try {
-    const response = await axios.get<VendorDetailResponse>("/vendor/profile");
-    return response.data.data ?? response.data;
-  } catch (error) {
-    const status = (error as { response?: { status?: number } })?.response
-      ?.status;
-    if (status === 404 && vendorId) return getVendor(vendorId);
-    throw error;
-  }
+  // The documented route is /vendors/{vendor}; try it first when we know the
+  // id. /vendor/profile is not part of the API — it 404s — so it is only a
+  // last resort for sessions that carry no vendor id at all.
+  if (vendorId) return getVendor(vendorId);
+
+  const response = await axios.get<VendorDetailResponse>("/vendor/profile");
+  return response.data.data ?? response.data;
 };
 
-// PUT /vendor/profile — update own vendor record
 export const updateMyVendorProfile = async (
   data: VendorUpdateRequest,
   vendorId?: string,
 ): Promise<Vendor> => {
-  try {
-    const response = await axios.put<{ data: Vendor }>("/vendor/profile", data);
-    return response.data.data ?? response.data;
-  } catch (error) {
-    const status = (error as { response?: { status?: number } })?.response
-      ?.status;
-    if (status === 404 && vendorId) return updateVendor(vendorId, data);
-    throw error;
-  }
+  if (vendorId) return updateVendor(vendorId, data);
+
+  const response = await axios.put<{ data: Vendor }>("/vendor/profile", data);
+  return response.data.data ?? response.data;
 };
 
 // POST /vendors — create vendor

@@ -8,6 +8,7 @@ import {
   getEquipmentDicomStatus,
   registerAllModalities,
   registerEquipmentModality,
+  runWorklistTest,
   testEquipmentDicom,
   unregisterEquipmentModality,
 } from "@/services/apiDicom";
@@ -106,6 +107,23 @@ export const useTestEquipmentDicom = () => {
   });
 
   return { testConnection: mutate, isTesting: isPending };
+};
+
+export const useWorklistTest = () => {
+  const { mutate, isPending } = useMutation({
+    mutationFn: (equipmentId?: string) => runWorklistTest(equipmentId),
+    onSuccess: (result) => {
+      if (result?.success === false) {
+        toast.error(result?.message || "Worklist test failed");
+      } else {
+        toast.success(result?.message || "Test worklist created in Orthanc");
+      }
+    },
+    onError: (error: { response?: { data?: { message?: string } } }) =>
+      toast.error(error?.response?.data?.message || "Worklist test failed"),
+  });
+
+  return { runWorklistTest: mutate, isRunningTest: isPending };
 };
 
 export const useRegisterEquipmentModality = () => {

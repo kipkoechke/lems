@@ -116,6 +116,28 @@ export interface DicomTestResult {
   [key: string]: unknown;
 }
 
+export interface WorklistTestResult {
+  success?: boolean;
+  message?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * POST /worklist-test — creates a test worklist entry in Orthanc.
+ *
+ * Same endpoint as the vendor portal's `/vendor/worklist-test`, minus the
+ * role prefix, matching the rest of the admin surface.
+ */
+export const runWorklistTest = async (
+  equipmentId?: string,
+): Promise<WorklistTestResult> => {
+  const response = await axios.post(
+    "/worklist-test",
+    equipmentId ? { equipment_id: equipmentId } : undefined,
+  );
+  return response.data?.data ?? response.data;
+};
+
 // ============================================================
 // Server / modalities
 // ============================================================
