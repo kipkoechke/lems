@@ -111,7 +111,7 @@ export const useTestEquipmentDicom = () => {
 
 export const useWorklistTest = () => {
   const { mutate, isPending } = useMutation({
-    mutationFn: (equipmentId?: string) => runWorklistTest(equipmentId),
+    mutationFn: (equipmentId: string) => runWorklistTest(equipmentId),
     onSuccess: (result) => {
       if (result?.success === false) {
         toast.error(result?.message || "Worklist test failed");

@@ -123,17 +123,17 @@ export interface WorklistTestResult {
 }
 
 /**
- * POST /worklist-test — creates a test worklist entry in Orthanc.
+ * POST /dicom/equipment/{id}/worklist-test — creates a test worklist entry.
  *
- * Same endpoint as the vendor portal's `/vendor/worklist-test`, minus the
- * role prefix, matching the rest of the admin surface.
+ * Equipment-scoped like the C-ECHO test alongside it, rather than the vendor
+ * portal's token-scoped `/vendor/worklist-test`: an admin isn't bound to one
+ * vendor, so the equipment has to be named in the path.
  */
 export const runWorklistTest = async (
-  equipmentId?: string,
+  equipmentId: string,
 ): Promise<WorklistTestResult> => {
   const response = await axios.post(
-    "/worklist-test",
-    equipmentId ? { equipment_id: equipmentId } : undefined,
+    `/dicom/equipment/${equipmentId}/worklist-test`,
   );
   return response.data?.data ?? response.data;
 };
