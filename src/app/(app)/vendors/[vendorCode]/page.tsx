@@ -4,14 +4,19 @@ import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   MdBusiness,
-  MdCalendarToday,
   MdHandshake,
   MdLocationCity,
   MdCheckCircle,
 } from "react-icons/md";
 import { FaEdit, FaFileContract, FaCog } from "react-icons/fa";
 import { useVendor } from "@/features/vendors/useVendor";
-import { getContracts } from "@/services/apiVendors";
+import {
+  getContracts,
+  isVendorActive,
+  vendorCode,
+  vendorContactName,
+  vendorContactRole,
+} from "@/services/apiVendors";
 import { useQuery } from "@tanstack/react-query";
 import BackButton from "@/components/common/BackButton";
 import { Table } from "@/components/Table";
@@ -30,7 +35,7 @@ export default function VendorDetailPage() {
 
   const { data: contractsData, isLoading: contractsLoading } = useQuery({
     queryKey: ["contracts", vendorId],
-    queryFn: () => getContracts({ vendor_code: vendorId }),
+    queryFn: () => getContracts({ vendor_id: vendorId }),
     enabled: !!vendorId,
   });
 
@@ -98,7 +103,11 @@ export default function VendorDetailPage() {
   }
 
   const activeContracts = contracts.filter((c) => c.status === "active").length;
-  const uniqueFacilities = new Set(contracts.map((c) => c.facility.code)).size;
+  // Contracts may be vendor-wide rather than facility-scoped, in which case
+  // `facility` comes back null — don't count those as a facility.
+  const uniqueFacilities = new Set(
+    contracts.map((c) => c.facility?.code).filter(Boolean),
+  ).size;
 
   return (
     <div className="min-h-screen p-4">
@@ -114,7 +123,7 @@ export default function VendorDetailPage() {
                 </h1>
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                    vendor.lifecycle_state === "active"
+                    isVendorActive(vendor)
                       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                       : vendor.lifecycle_state === "disabled"
                         ? "bg-amber-50 text-amber-700 border-amber-200"
@@ -122,14 +131,16 @@ export default function VendorDetailPage() {
                   }`}
                 >
                   <MdCheckCircle className="w-3.5 h-3.5" />
-                  {vendor.lifecycle_state === "active"
+                  {isVendorActive(vendor)
                     ? "Active"
                     : vendor.lifecycle_state === "disabled"
                       ? "Disabled"
                       : "Retired"}
                 </span>
               </div>
-              <p className="text-sm text-slate-500 font-mono">{vendor.vendor_alpha_code}</p>
+              <p className="text-sm text-slate-500 font-mono">
+                {vendorCode(vendor)}
+              </p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -157,7 +168,7 @@ export default function VendorDetailPage() {
             <div className="min-w-0">
               <p className="text-xs text-slate-500">Vendor Code</p>
               <p className="text-sm font-medium text-slate-900 font-mono truncate">
-                {vendor.vendor_alpha_code}
+                {vendorCode(vendor)}
               </p>
             </div>
           </div>
@@ -188,12 +199,12 @@ export default function VendorDetailPage() {
 
           <div className="bg-white rounded-lg border border-slate-200 p-3 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
-              <MdCalendarToday className="w-5 h-5 text-amber-600" />
+              <FaCog className="w-4 h-4 text-amber-600" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs text-slate-500">Created</p>
-              <p className="text-sm font-medium text-slate-900 truncate">
-                {formatDate(vendor.created_at)}
+              <p className="text-xs text-slate-500">Equipment</p>
+              <p className="text-sm font-medium text-slate-900">
+                {vendor.equipment_count ?? "-"}
               </p>
             </div>
           </div>
@@ -201,6 +212,55 @@ export default function VendorDetailPage() {
 
         {/* Main Content Card */}
         <div className="bg-white rounded-lg border border-slate-200">
+          {/* Contact Details */}
+          <div className="p-4 border-b border-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900 mb-3">
+              Contact Details
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4">
+              {[
+                { label: "Email", value: vendor.email },
+                { label: "Phone", value: vendor.phone },
+                { label: "Address", value: vendor.address },
+              ].map((d) => (
+                <div key={d.label}>
+                  <p className="text-xs text-slate-500">{d.label}</p>
+                  <p className="text-sm font-medium text-slate-900 break-words">
+                    {d.value || "-"}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {vendor.contacts && vendor.contacts.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
+                {vendor.contacts.map((contact, index) => (
+                  <div
+                    key={contact.id ?? contact.email ?? index}
+                    className="flex flex-wrap items-baseline gap-x-3 gap-y-1"
+                  >
+                    <span className="text-sm font-medium text-slate-900">
+                      {vendorContactName(contact)}
+                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                      {vendorContactRole(contact)}
+                    </span>
+                    {contact.email && (
+                      <span className="text-xs text-slate-500">
+                        {contact.email}
+                      </span>
+                    )}
+                    {contact.phone && (
+                      <span className="text-xs text-slate-500">
+                        {contact.phone}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Contracts Section */}
           <div className="p-4 border-b border-slate-100">
             <div className="flex items-center justify-between mb-4">
@@ -258,11 +318,13 @@ export default function VendorDetailPage() {
                         <Table.Cell>
                           <div>
                             <p className="text-sm text-slate-900">
-                              {contract.facility.name}
+                              {contract.facility?.name || "All facilities"}
                             </p>
-                            <p className="text-xs text-slate-500 font-mono">
-                              {contract.facility.code}
-                            </p>
+                            {contract.facility?.code && (
+                              <p className="text-xs text-slate-500 font-mono">
+                                {contract.facility.code}
+                              </p>
+                            )}
                           </div>
                         </Table.Cell>
                         <Table.Cell>

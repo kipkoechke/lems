@@ -12,19 +12,39 @@ export type VendorLifecycleState = "active" | "disabled" | "retired";
 // Types
 // ============================================================
 
+/**
+ * A vendor contact.
+ *
+ * The live vendor detail payload embeds a trimmed `{name, email, phone, role}`
+ * shape with no id. The richer fields below come from the dedicated
+ * /vendors/{id}/contacts CRUD endpoints, so everything is optional and read
+ * through the accessors underneath.
+ */
 export interface VendorContact {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
+  id?: string;
+  name?: string;
+  role?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
   phone?: string;
-  contact_type: VendorContactType;
+  contact_type?: VendorContactType;
   title?: string;
   department?: string;
-  is_primary: boolean;
+  is_primary?: boolean;
   created_at?: string;
   updated_at?: string;
 }
+
+/** Full name, whichever shape the API returned. */
+export const vendorContactName = (contact: VendorContact): string =>
+  contact.name ||
+  [contact.first_name, contact.last_name].filter(Boolean).join(" ") ||
+  "-";
+
+/** The contact's role/title, whichever field is populated. */
+export const vendorContactRole = (contact: VendorContact): string =>
+  contact.role || contact.title || contact.contact_type || "-";
 
 export interface VendorModality {
   id: string;
@@ -56,6 +76,7 @@ export interface Vendor {
   financial_details?: Record<string, unknown> | null;
   lifecycle_state?: VendorLifecycleState;
   contacts?: VendorContact[];
+  equipment_count?: number;
   modalities?: VendorModality[];
   created_at?: string;
   updated_at?: string;
@@ -305,7 +326,7 @@ export interface ContractCreateRequest {
 export interface ContractFilterParams {
   facility_code?: string;
   lot_number?: string;
-  vendor_code?: string;
+  vendor_id?: string;
   page?: number;
   per_page?: number;
 }
@@ -570,8 +591,7 @@ export const getContracts = async (
   if (params?.facility_code)
     queryParams.append("facility_code", params.facility_code);
   if (params?.lot_number) queryParams.append("lot_number", params.lot_number);
-  if (params?.vendor_code)
-    queryParams.append("vendor_code", params.vendor_code);
+  if (params?.vendor_id) queryParams.append("vendor_id", params.vendor_id);
   if (params?.page) queryParams.append("page", params.page.toString());
   if (params?.per_page)
     queryParams.append("per_page", params.per_page.toString());
