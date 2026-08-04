@@ -183,12 +183,13 @@ export default function EquipmentsPage() {
                     searchable={false}
                   />
                 </Table.HeaderCell>
+                <Table.HeaderCell>Linked</Table.HeaderCell>
                 <Table.HeaderCell align="center">Actions</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
               {equipments.length === 0 ? (
-                <Table.Empty colSpan={7}>No equipment found</Table.Empty>
+                <Table.Empty colSpan={8}>No equipment found</Table.Empty>
               ) : (
                 equipments.map((eq: AdminEquipment) => (
                   <Table.Row key={eq.id}>
@@ -227,6 +228,17 @@ export default function EquipmentsPage() {
                         {getStatusIcon(eq.status)}
                         {eq.status_label}
                       </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      {eq.linked === true ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200">
+                          Linked
+                        </span>
+                      ) : eq.linked === false ? (
+                        <span className="text-xs text-slate-400">—</span>
+                      ) : (
+                        <span className="text-xs text-slate-400">—</span>
+                      )}
                     </Table.Cell>
                     <Table.Cell align="center">
                       <ActionMenu menuId={`equipment-${eq.id}`}>

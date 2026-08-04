@@ -100,13 +100,9 @@ function RequestDetailContent() {
     );
   }
 
-  const assignedEquipment: MedicalRequestEquipment[] = Array.isArray(
-    request.equipment,
-  )
-    ? request.equipment
-    : request.equipment
-      ? [request.equipment]
-      : [];
+  const assignedEquipment: MedicalRequestEquipment[] = request.equipment
+    ? [request.equipment]
+    : [];
 
   const patientName = requestPatientName(request);
 
@@ -118,13 +114,18 @@ function RequestDetailContent() {
     { label: "Date of Birth", value: request.date_of_birth },
     { label: "Modality", value: request.modality },
     { label: "Facility", value: requestFacility(request) },
-    { label: "Institution", value: request.institution_name },
+    { label: "Equipment", value: request.equipment_code || request.equipment?.name || "-" },
     { label: "Accession Number", value: request.accession_number },
     { label: "Filler Order", value: request.filler_order_number },
     { label: "Study Description", value: requestProcedure(request) },
     { label: "Procedure Code", value: request.procedure_code },
     { label: "Priority", value: request.priority },
+    { label: "Order Control", value: request.order_control },
+    { label: "HL7 Message Type", value: request.hl7_message_type },
     { label: "Referring Physician", value: request.referring_physician },
+    { label: "Status Reason", value: request.status_reason },
+    { label: "Result Status", value: request.result_status },
+    { label: "Specimen Type", value: request.specimen_type },
     { label: "Claim ID", value: request.claim_id },
     { label: "Payor", value: request.payor },
     { label: "Preauth Code", value: request.preauth_code },

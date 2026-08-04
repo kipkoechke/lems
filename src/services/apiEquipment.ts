@@ -346,6 +346,7 @@ export interface AdminEquipment {
   vendor_id: string;
   vendor: AdminEquipmentVendor;
   owner_type: "vendor" | "facility";
+  linked?: boolean;
   dicom: AdminEquipmentDicom | null;
   description?: string | null;
   specifications?: Record<string, unknown> | null;

@@ -123,6 +123,7 @@ function RequestsContent() {
                 <Table.HeaderCell>Patient</Table.HeaderCell>
                 <Table.HeaderCell>Procedures</Table.HeaderCell>
                 <Table.HeaderCell>Facility</Table.HeaderCell>
+                <Table.HeaderCell>Equipment</Table.HeaderCell>
                 <Table.HeaderCell>
                   <ColumnFilter
                     label="Status"
@@ -141,7 +142,7 @@ function RequestsContent() {
             </Table.Header>
             <Table.Body>
               {requests.length === 0 ? (
-                <Table.Empty colSpan={6}>
+                <Table.Empty colSpan={7}>
                   {status || patient
                     ? "No requests match your criteria"
                     : "No medical requests received yet."}
@@ -188,6 +189,11 @@ function RequestsContent() {
                     <Table.Cell>
                       <span className="text-sm text-slate-700">
                         {requestFacility(r)}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-xs font-mono text-slate-500">
+                        {r.equipment_code || r.equipment?.name || "-"}
                       </span>
                     </Table.Cell>
                     <Table.Cell>

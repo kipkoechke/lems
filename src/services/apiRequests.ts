@@ -26,28 +26,47 @@ export const REQUEST_STATUS_OPTIONS: {
 
 export interface MedicalRequestEquipment {
   id?: string;
-  asset_id?: string;
+  code?: string;
   name?: string;
+  asset_id?: string;
   dicom_aet?: string | null;
+  facility_id?: string;
+  facility?: { id?: string; name?: string } | null;
   status?: string;
+}
+
+export interface MedicalRequestBookedService {
+  id?: string;
+  booking_id?: string;
+  contract_service_id?: string;
+  equipment_id?: string;
+  scheduled_date?: string;
+  tariff?: string;
+  cash?: string;
+  sha?: string;
+  other_insurance?: string;
+  vendor_share?: string;
+  facility_share?: string;
+  status?: string;
+  booking?: {
+    id?: string;
+    patient_id?: string;
+    patient?: { id?: string; name?: string } | null;
+  } | null;
 }
 
 /**
  * An EMR imaging order.
  *
- * The live endpoint returns the HL7/MWL worklist shape (`accession_number`,
- * `study_description`, `procedure_code`, `scheduled_at`, ids rather than nested
- * objects). The reference documents a richer shape with patient/facility names
- * inlined, which this deployment does not send — hence the accessors below.
- * Reading `request_id`/`patient_first_name`/`facility_name` directly renders
- * every row as "-".
+ * The live API now returns enriched fields (patient_name, facility_name,
+ * equipment_code) alongside nested equipment / booked_service objects.
  */
 export interface MedicalRequest {
   id?: string;
   internal_request_id?: string;
   request_id?: string;
 
-  // Live MWL-order fields
+  // MWL / HL7 order fields
   accession_number?: string;
   filler_order_number?: string | null;
   hl7_message_type?: string | null;
@@ -61,6 +80,11 @@ export interface MedicalRequest {
   started_at?: string | null;
   completed_at?: string | null;
   result_status?: string | null;
+  result_received_at?: string | null;
+  result_body?: string | null;
+  result_observations?: string | null;
+  specimen_type?: string | null;
+  specimen_received_at?: string | null;
   equipment_id?: string;
   booked_service_id?: string;
   orthanc_worklist_id?: string | null;
@@ -68,9 +92,17 @@ export interface MedicalRequest {
   performing_technologist?: string | null;
   interpreting_physician?: string | null;
   has_critical_values?: boolean;
+  status_reason?: string | null;
 
-  // Documented / enriched fields — may be absent.
+  // HL7 raw data
+  hl7_message_control_id?: string | null;
+  hl7_raw_request?: string | null;
+  hl7_raw_response?: string | null;
+  hl7_errors?: string | null;
+
+  // Patient / facility — convenience flat fields from API
   patient_id?: string;
+  patient_name?: string;
   patient_first_name?: string;
   patient_last_name?: string;
   patient_mrn?: string | null;
@@ -84,12 +116,19 @@ export interface MedicalRequest {
   facility_id?: string;
   facility_name?: string | null;
   facility?: { id?: string; name?: string; fr_code?: string } | null;
+  equipment_code?: string;
+
+  // Enriched nested objects — API now sends single equipment object
+  equipment?: MedicalRequestEquipment | null;
+  booked_service?: MedicalRequestBookedService | null;
+
+  // Claim / payer
   claim_id?: string | null;
   payor?: string | null;
   preauth_code?: string | null;
+
   status: MedicalRequestStatus | string;
   status_message?: string | null;
-  equipment?: MedicalRequestEquipment[] | MedicalRequestEquipment | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -102,9 +141,11 @@ export const requestIdentifier = (r: MedicalRequest): string =>
 export const requestLabel = (r: MedicalRequest): string =>
   r.accession_number || r.request_id || r.internal_request_id || "-";
 
-/** Patient name from whichever shape the API returned. */
+/** Patient name — uses the convenience flat field the API now sends. */
 export const requestPatientName = (r: MedicalRequest): string => {
+  if (r.patient_name) return r.patient_name;
   if (r.patient?.name) return r.patient.name;
+  if (r.booked_service?.booking?.patient?.name) return r.booked_service.booking.patient.name;
   const full = [r.patient_first_name, r.patient_last_name]
     .filter(Boolean)
     .join(" ")
@@ -112,9 +153,13 @@ export const requestPatientName = (r: MedicalRequest): string => {
   return full || "-";
 };
 
-/** Facility name, falling back through the shapes then the raw id. */
+/** Facility name — uses the convenience flat field the API now sends. */
 export const requestFacility = (r: MedicalRequest): string =>
-  r.facility?.name || r.facility_name || r.institution_name || "-";
+  r.facility_name ||
+  r.facility?.name ||
+  (r.equipment && "facility" in r.equipment ? r.equipment.facility?.name : undefined) ||
+  r.institution_name ||
+  "-";
 
 /**
  * What was ordered. The live payload describes a single study rather than a
