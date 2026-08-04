@@ -222,6 +222,7 @@ export default function VendorDetailPage() {
                 { label: "Email", value: vendor.email },
                 { label: "Phone", value: vendor.phone },
                 { label: "Address", value: vendor.address },
+                { label: "Website", value: vendor.website },
               ].map((d) => (
                 <div key={d.label}>
                   <p className="text-xs text-slate-500">{d.label}</p>
@@ -231,6 +232,13 @@ export default function VendorDetailPage() {
                 </div>
               ))}
             </div>
+
+            {vendor.description && (
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <p className="text-xs text-slate-500 mb-1">Description</p>
+                <p className="text-sm text-slate-700">{vendor.description}</p>
+              </div>
+            )}
 
             {vendor.contacts && vendor.contacts.length > 0 && (
               <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">

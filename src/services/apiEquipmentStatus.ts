@@ -16,13 +16,29 @@ export interface EquipmentStatusLog {
 }
 
 export interface EquipmentStatusSummary {
-  total_equipment: number;
-  operational: number;
-  maintenance: number;
-  non_operational: number;
-  unknown: number;
-  total_downtime_hours: number;
-  average_mtbf_hours: number;
+  total_incidents: number;
+  total_downtime_minutes: number;
+  total_downtime_formatted: string;
+  average_downtime_minutes: number;
+  average_downtime_formatted: string;
+  max_downtime_minutes: number;
+  max_downtime_formatted: string;
+  affected_equipment_count: number;
+  active_downtimes_count: number;
+}
+
+export interface TopDowntimeEquipment {
+  equipment_id: string;
+  equipment_code: string;
+  equipment_name: string;
+  incident_count: number;
+  total_downtime_minutes: number;
+  total_downtime_formatted: string;
+}
+
+export interface EquipmentStatusSummaryResponse {
+  summary: EquipmentStatusSummary;
+  top_downtime_equipment: TopDowntimeEquipment[];
 }
 
 export interface EquipmentStatusListParams {
@@ -79,12 +95,14 @@ export const createEquipmentStatusLog = async (
 
 // GET /equipment-status/summary
 export const getEquipmentStatusSummary =
-  async (): Promise<EquipmentStatusSummary> => {
+  async (): Promise<EquipmentStatusSummaryResponse> => {
     const response = await axios.get<
-      { data: EquipmentStatusSummary } | EquipmentStatusSummary
+      { data: EquipmentStatusSummaryResponse } | EquipmentStatusSummaryResponse
     >("/equipment-status/summary");
-    const body = response.data as { data?: EquipmentStatusSummary };
-    return (body.data ?? response.data) as EquipmentStatusSummary;
+    const body = response.data as { data?: EquipmentStatusSummaryResponse };
+    const payload = (body.data ?? response.data) as EquipmentStatusSummaryResponse;
+    // The API nests the summary under a "summary" key
+    return payload.summary ? payload : { summary: payload as unknown as EquipmentStatusSummary, top_downtime_equipment: [] };
   };
 
 // GET /equipment-status/active-downtimes

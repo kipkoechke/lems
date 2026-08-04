@@ -1,85 +1,106 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
+import { useFacilityByCode } from "@/features/facilities/useFacilityByCode";
+import { useUpdateFacility } from "@/features/facilities/useUpdateFacility";
+import type { EditFacilityForm } from "@/services/apiFacility";
 
-interface FacilityFormData {
-  name: string;
-  code: string;
-  location: string;
-  phone?: string;
-  email?: string;
-  kephLevel: string;
-  facilityType: string;
-  description?: string;
-  status: string;
-}
+const KEPH_LEVELS = [
+  { value: "1", label: "Level 1" },
+  { value: "2", label: "Level 2" },
+  { value: "3", label: "Level 3" },
+  { value: "4", label: "Level 4" },
+  { value: "5", label: "Level 5" },
+  { value: "6", label: "Level 6" },
+];
 
-// Mock facility data - replace with actual API call
-const mockFacility = {
-  id: "1",
-  name: "City General Hospital",
-  code: "CGH001",
-  location: "Downtown Nairobi",
-  phone: "+254712345678",
-  email: "info@citygeneral.co.ke",
-  kephLevel: "5",
-  facilityType: "Hospital",
-  description:
-    "A comprehensive healthcare facility providing specialized medical services to the community.",
-  status: "Active",
-};
+const FACILITY_TYPES = [
+  "National Referral Hospital",
+  "County Referral Hospital",
+  "Sub-County Hospital",
+  "Health Centre",
+  "Dispensary",
+  "Clinic",
+  "Medical Centre",
+  "Nursing Home",
+];
+
+const OPERATION_STATUSES = [
+  "Operational",
+  "Closed",
+  "Under Construction",
+  "Under Renovation",
+];
+
+const REGULATORY_STATUSES = [
+  "Licensed",
+  "Provisional License",
+  "Not Licensed",
+  "Exempt",
+];
 
 export default function EditFacilityPage() {
   const router = useRouter();
   const params = useParams();
-  const facilityId = params?.facility_code as string;
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const facilityCode = params?.facility_code as string;
 
-  // TODO: Replace with actual API call to fetch facility data
-  const facility = mockFacility;
+  const { data: facility, isLoading, error: fetchError } = useFacilityByCode({ facilityCode });
+  const { updateFacility, isUpdating } = useUpdateFacility();
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
-  } = useForm<FacilityFormData>({
-    defaultValues: {
-      name: facility.name,
-      code: facility.code,
-      location: facility.location,
-      phone: facility.phone,
-      email: facility.email,
-      kephLevel: facility.kephLevel,
-      facilityType: facility.facilityType,
-      description: facility.description,
-      status: facility.status,
-    },
-  });
+  } = useForm<EditFacilityForm>();
 
-  const onSubmit = async (data: FacilityFormData) => {
-    setIsSubmitting(true);
-    try {
-      // TODO: Replace with actual API call
-      console.log("Updating facility:", data);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Redirect to facility details page
-      router.push(`/facilities/${facilityId}`);
-    } catch (error) {
-      console.error("Error updating facility:", error);
-    } finally {
-      setIsSubmitting(false);
+  // Pre-fill form when facility data loads
+  useEffect(() => {
+    if (facility) {
+      reset({
+        name: facility.name || "",
+        code: facility.code || "",
+        county_id: facility.county?.id || "",
+        sub_county_id: facility.sub_county?.id || "",
+        ward_id: facility.ward?.id || "",
+        keph_level: String(facility.keph_level || ""),
+        facility_type: facility.facility_type || "",
+        owner: facility.facility_ownership || facility.owner || "",
+        operation_status: facility.operation_status || "Operational",
+        regulatory_status: facility.sha_contract_status || "Licensed",
+        is_active: facility.is_active ? "true" : "false",
+      });
     }
+  }, [facility, reset]);
+
+  const onSubmit = (data: EditFacilityForm) => {
+    updateFacility(
+      { id: facility?.id || facilityCode, data },
+      {
+        onSuccess: () => router.push(`/facilities/${facilityCode}`),
+      },
+    );
   };
 
-  if (!facility) {
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="bg-white rounded-lg border border-slate-200 p-8 animate-pulse space-y-4">
+          <div className="h-8 bg-slate-200 rounded w-1/4" />
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-14 bg-slate-100 rounded" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchError || !facility) {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center py-12">
@@ -87,7 +108,7 @@ export default function EditFacilityPage() {
             Facility Not Found
           </h1>
           <p className="text-gray-600 mb-6">
-            The facility you&apos;re trying to edit doesn&apos;t exist.
+            {fetchError ? "Error loading facility." : "The facility you're trying to edit doesn't exist."}
           </p>
           <Link
             href="/facilities"
@@ -113,7 +134,7 @@ export default function EditFacilityPage() {
               You don&apos;t have permission to edit facilities.
             </p>
             <Link
-              href={`/facilities/${facilityId}`}
+              href={`/facilities/${facilityCode}`}
               className="text-blue-600 hover:text-blue-800 mt-4 inline-block"
             >
               Back to Facility Details
@@ -131,7 +152,7 @@ export default function EditFacilityPage() {
             </Link>
             <span>/</span>
             <Link
-              href={`/facilities/${facilityId}`}
+              href={`/facilities/${facilityCode}`}
               className="hover:text-blue-600"
             >
               {facility.name}
@@ -187,63 +208,26 @@ export default function EditFacilityPage() {
               </div>
             </div>
 
-            {/* Contact Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location *
-                </label>
-                <input
-                  type="text"
-                  {...register("location", {
-                    required: "Location is required",
-                  })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter location"
-                />
-                {errors.location && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors.location.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  {...register("phone")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter phone number"
-                />
-              </div>
-            </div>
-
-            {/* Additional Information */}
+            {/* Classification */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   KEPH Level *
                 </label>
                 <select
-                  {...register("kephLevel", {
+                  {...register("keph_level", {
                     required: "KEPH level is required",
                   })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select KEPH Level</option>
-                  <option value="1">Level 1</option>
-                  <option value="2">Level 2</option>
-                  <option value="3">Level 3</option>
-                  <option value="4">Level 4</option>
-                  <option value="5">Level 5</option>
-                  <option value="6">Level 6</option>
+                  {KEPH_LEVELS.map((l) => (
+                    <option key={l.value} value={l.value}>{l.label}</option>
+                  ))}
                 </select>
-                {errors.kephLevel && (
+                {errors.keph_level && (
                   <p className="text-red-600 text-sm mt-1">
-                    {errors.kephLevel.message}
+                    {errors.keph_level.message}
                   </p>
                 )}
               </div>
@@ -253,85 +237,109 @@ export default function EditFacilityPage() {
                   Facility Type *
                 </label>
                 <select
-                  {...register("facilityType", {
+                  {...register("facility_type", {
                     required: "Facility type is required",
                   })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select Facility Type</option>
-                  <option value="Hospital">Hospital</option>
-                  <option value="Clinic">Clinic</option>
-                  <option value="Health Center">Health Center</option>
-                  <option value="Dispensary">Dispensary</option>
-                  <option value="Medical Center">Medical Center</option>
+                  {FACILITY_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
                 </select>
-                {errors.facilityType && (
+                {errors.facility_type && (
                   <p className="text-red-600 text-sm mt-1">
-                    {errors.facilityType.message}
+                    {errors.facility_type.message}
                   </p>
                 )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status *
+                  Ownership *
                 </label>
                 <select
-                  {...register("status", { required: "Status is required" })}
+                  {...register("owner", {
+                    required: "Ownership is required",
+                  })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                  <option value="Suspended">Suspended</option>
+                  <option value="">Select Ownership</option>
+                  <option value="Public">Public</option>
+                  <option value="Private">Private</option>
+                  <option value="Faith Based">Faith Based</option>
+                  <option value="NGO">NGO</option>
+                  <option value="Parastatal">Parastatal</option>
+                  <option value="Military">Military</option>
                 </select>
-                {errors.status && (
+                {errors.owner && (
                   <p className="text-red-600 text-sm mt-1">
-                    {errors.status.message}
+                    {errors.owner.message}
                   </p>
                 )}
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                {...register("email")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter email address"
-              />
-            </div>
+            {/* Status Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Operation Status
+                </label>
+                <select
+                  {...register("operation_status")}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {OPERATION_STATUSES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                {...register("description")}
-                rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter facility description (optional)"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Regulatory Status
+                </label>
+                <select
+                  {...register("regulatory_status")}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {REGULATORY_STATUSES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Active Status
+                </label>
+                <select
+                  {...register("is_active")}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </div>
             </div>
 
             {/* Form Actions */}
             <div className="flex gap-4 pt-6 border-t">
               <button
                 type="button"
-                onClick={() => router.push(`/facilities/${facilityId}`)}
+                onClick={() => router.push(`/facilities/${facilityCode}`)}
                 className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={isSubmitting}
+                disabled={isUpdating}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isUpdating}
                 className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? "Updating..." : "Update Facility"}
+                {isUpdating ? "Updating..." : "Update Facility"}
               </button>
             </div>
           </form>

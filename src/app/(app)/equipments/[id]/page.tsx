@@ -446,8 +446,8 @@ export default function EquipmentDetailsPage() {
             )}
           </div>
 
-          {/* Vendor Config (MWL Server Details) */}
-          {equipment.vendor_config && (
+          {/* Vendor Config (MWL Server Details) — from equipment payload or DICOM status */}
+          {(equipment.vendor_config || dicomStatus?.vendor_config) && (
             <div className="p-4">
               <h2 className="text-sm font-semibold text-slate-900 mb-1">
                 MWL Server Configuration
@@ -460,31 +460,31 @@ export default function EquipmentDetailsPage() {
                 <div>
                   <p className="text-xs text-slate-500">MWL Server IP</p>
                   <p className="text-sm font-mono text-slate-900">
-                    {equipment.vendor_config.mwl_server_ip}
+                    {(equipment.vendor_config || dicomStatus?.vendor_config)?.mwl_server_ip ?? "-"}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">MWL Server Port</p>
                   <p className="text-sm font-mono text-slate-900">
-                    {equipment.vendor_config.mwl_server_port}
+                    {(equipment.vendor_config || dicomStatus?.vendor_config)?.mwl_server_port ?? "-"}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">Server AET</p>
                   <p className="text-sm font-mono text-slate-900">
-                    {equipment.vendor_config.mwl_server_aet}
+                    {(equipment.vendor_config || dicomStatus?.vendor_config)?.mwl_server_aet ?? "-"}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">Equipment AET</p>
                   <p className="text-sm font-mono text-slate-900">
-                    {equipment.vendor_config.equipment_aet}
+                    {(equipment.vendor_config || dicomStatus?.vendor_config)?.equipment_aet ?? "-"}
                   </p>
                 </div>
                 <div className="sm:col-span-2">
                   <p className="text-xs text-slate-500">Connection Type</p>
                   <p className="text-sm text-slate-900">
-                    {equipment.vendor_config.connection_type}
+                    {(equipment.vendor_config || dicomStatus?.vendor_config)?.connection_type ?? "-"}
                   </p>
                 </div>
               </div>

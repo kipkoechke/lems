@@ -10,6 +10,7 @@ import {
   MdMoney,
   MdTrendingUp,
   MdRadio,
+  MdLink,
 } from "react-icons/md";
 import {
   PieChart,
@@ -322,7 +323,7 @@ export default function BookingTrends() {
         </div>
 
         {/* Quick Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
           <StatCard
             icon={<MdPeople className="w-4 h-4 text-blue-600" />}
             bg="bg-blue-50"
@@ -360,6 +361,19 @@ export default function BookingTrends() {
             label="Active Worklists"
             value={counts.active_worklists}
           />
+          {counts.link_coverage && (
+            <StatCard
+              icon={<MdLink className="w-4 h-4 text-violet-600" />}
+              bg="bg-violet-50"
+              label="Link Coverage"
+              value={`${counts.link_coverage.linked}/${counts.link_coverage.total}`}
+              sub={
+                counts.link_coverage.unlinked > 0
+                  ? `· ${counts.link_coverage.unlinked} unlinked`
+                  : undefined
+              }
+            />
+          )}
         </div>
 
         {/* Donut Charts Row — 3 columns */}

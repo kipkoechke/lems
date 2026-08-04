@@ -32,7 +32,12 @@ export const useEquipmentStatusSummary = () => {
     queryFn: getEquipmentStatusSummary,
   });
 
-  return { summary: data, isLoading, error };
+  return {
+    summary: data?.summary,
+    topDowntime: data?.top_downtime_equipment ?? [],
+    isLoading,
+    error,
+  };
 };
 
 export const useActiveDowntimes = () => {

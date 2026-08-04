@@ -44,206 +44,220 @@ All requests and responses use `application/json`. Authenticated endpoints requi
 
 Full system access — all endpoints.
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/auth/login` | POST | Authenticate |
-| `/auth/logout` | POST | Logout |
-| `/users` | GET/POST | List / Create users |
-| `/users/{id}` | GET/PUT/DELETE | User CRUD |
-| `/admin/dashboard` | GET | Dashboard overview |
-| `/admin/equipment` | GET | Equipment listing |
-| `/admin/permissions` | GET/POST | List / Create permissions |
-| `/admin/permissions/{id}` | GET/PUT/DELETE | Permission CRUD |
-| `/admin/users/{id}/permissions` | GET | List user permissions |
-| `/admin/users/{id}/permissions/{pid}` | POST/DELETE | Assign / Unassign permission |
-| `/equipment-status/*` | * | Equipment status logs |
-| `/dicom/server/status` | GET | DICOM server status |
-| `/dicom/modalities` | GET | List modalities |
-| `/dicom/modalities/register-all` | POST | Register all modalities |
-| `/dicom/equipment/{id}/configure` | POST | Configure DICOM |
-| `/dicom/equipment/{id}/register` | POST/DELETE | Register / Unregister |
-| `/dicom/equipment/{id}/test` | POST | Test connection |
-| `/dicom/equipment/{id}/status` | GET | Equipment DICOM status |
-| `/dicom/discovered` | POST | Discover equipment |
-| `/dicom/orthanc/started` | POST | Sync modalities |
-| `/dicom/callback/result` | POST | DICOM result callback |
-| `/dicom/callback/status` | POST | DICOM status callback |
-| `/procedures` | GET/POST | List / Create SHA procedures |
-| `/procedures/{id}` | GET/PUT/DELETE | Procedure CRUD |
-| `/procedures/modality-mappings` | GET/POST | Modality-procedure mappings |
-| `/procedures/modality-mappings/{id}` | DELETE | Remove mapping |
-| `/requests` | GET | List medical requests |
-| `/requests/{id}` | GET | Request details |
-| `/requests/{id}/cancel` | POST | Cancel request |
-| `/requests/{id}/retarget` | POST | Retarget request |
-| `/requests/{id}/mwl/regenerate` | POST | Regenerate MWL |
-| `/requests/{id}/simulate-orthanc-result` | POST | Simulate Orthanc result |
-| `/requests/stats/summary` | GET | Request stats |
-| `/settings/revenue-distributions` | GET/POST | Revenue distributions |
-| `/settings/revenue-distributions/{id}` | PUT | Update distribution |
-| `/analytics/*` | GET | All analytics endpoints |
-| `/sha/interventions` | GET | SHA interventions list |
-| `/sha/callback/claim-status` | POST | SHA claim status callback |
+| Endpoint                                 | Method         | Description                    |
+| ---------------------------------------- | -------------- | ------------------------------ |
+| `/auth/login`                            | POST           | Authenticate                   |
+| `/auth/logout`                           | POST           | Logout                         |
+| `/auth/me`                               | GET            | Current user                   |
+| `/users`                                 | GET/POST       | List / Create users            |
+| `/users/{id}`                            | GET/PUT/DELETE | User CRUD                      |
+| `/admin/dashboard`                       | GET            | Dashboard overview             |
+| `/admin/equipment`                       | GET            | Equipment listing              |
+| `/admin/permissions`                     | GET/POST       | List / Create permissions      |
+| `/admin/permissions/{id}`                | GET/PUT/DELETE | Permission CRUD                |
+| `/admin/users/{id}/permissions`          | GET            | List user permissions          |
+| `/admin/users/{id}/permissions/{pid}`    | POST/DELETE    | Assign / Unassign permission   |
+| `/equipment-status/*`                    | *              | Equipment status logs          |
+| `/dicom/server/status`                   | GET            | DICOM server status            |
+| `/dicom/modalities`                      | GET            | List modalities                |
+| `/dicom/modalities/register-all`         | POST           | Register all modalities        |
+| `/dicom/equipment/{id}/configure`        | POST           | Configure DICOM                |
+| `/dicom/equipment/{id}/register`         | POST/DELETE    | Register / Unregister          |
+| `/dicom/equipment/{id}/test`             | POST           | Test connection                |
+| `/dicom/equipment/{id}/status`           | GET            | Equipment DICOM status         |
+| `/dicom/events/ping-events`              | GET            | DICOM ping events              |
+| `/dicom/dead-letters`                    | GET            | Failed DICOM events            |
+| `/dicom/callback/result`                 | POST           | DICOM result callback          |
+| `/dicom/callback/status`                 | POST           | DICOM status callback          |
+| `/equipment/ping-requests/*`             | *              | Equipment ping requests        |
+| `/equipment/{id}/publish-orthanc`        | POST           | Publish to Orthanc             |
+| `/equipment/sync-dicom-aet`              | POST           | Sync DICOM AET                 |
+| `/equipment/facility/{id}/operational`   | GET            | Facility operational equipment |
+| `/procedures`                            | GET/POST       | List / Create SHA procedures   |
+| `/procedures/{id}`                       | GET/PUT/DELETE | Procedure CRUD                 |
+| `/requests`                              | GET            | List medical requests          |
+| `/requests/{id}`                         | GET            | Request details                |
+| `/requests/{id}/cancel`                  | POST           | Cancel request                 |
+| `/requests/{id}/retarget`                | POST           | Retarget request               |
+| `/requests/{id}/mwl/regenerate`          | POST           | Regenerate MWL                 |
+| `/requests/{id}/simulate-orthanc-result` | POST           | Simulate Orthanc result        |
+| `/requests/stats/summary`                | GET            | Request stats                  |
+| `/lots`                                  | GET/POST       | List / Create lots             |
+| `/lots/{id}`                             | GET/PUT/DELETE | Lot CRUD                       |
+| `/lots/{id}/services`                    | GET/POST       | Lot services                   |
+| `/contracts`                             | GET/POST       | List / Create contracts        |
+| `/contracts/{id}`                        | GET/PUT/DELETE | Contract CRUD                  |
+| `/contracts/{id}/services`               | GET/POST       | Contract services              |
+| `/vendors`                               | GET/POST       | List / Create vendors          |
+| `/vendors/{id}`                          | GET/PUT/DELETE | Vendor CRUD                    |
+| `/vendors/{id}/equipments`               | GET/POST       | Vendor equipment               |
+| `/vendors/{id}/equipments/{eid}`         | GET/PATCH      | Vendor equipment detail        |
+| `/vendors/{id}/bookings`                 | GET            | Vendor bookings                |
+| `/vendors/{id}/dashboard`                | GET            | Vendor dashboard               |
+| `/settings/revenue-distributions`        | GET/POST       | Revenue distributions          |
+| `/settings/revenue-distributions/{id}`   | PUT            | Update distribution            |
+| `/analytics/*`                           | GET            | All analytics endpoints        |
+| `/sha/interventions`                     | GET            | SHA interventions list         |
+| `/sha/callback/claim-status`             | POST           | SHA claim status callback      |
 
 ### NESP Admin (`nesp`) / MOH Admin (`moh`) / COG Admin (`cog`)
 
 Read-only oversight across the system.
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/auth/login` | POST | Authenticate |
-| `/auth/logout` | POST | Logout |
-| `/facilities` | GET | List facilities |
-| `/facilities/{id}` | GET | Get facility |
-| `/facilities/fr/search` | GET | Search FR registry |
-| `/equipment` | GET | List equipment |
-| `/equipment/{id}` | GET | Get equipment |
-| `/vendors` | GET | List vendors |
-| `/vendors/{id}` | GET | Get vendor |
-| `/admin/dashboard` | GET | Dashboard overview |
-| `/admin/equipment` | GET | Equipment listing |
-| `/analytics/*` | GET | All analytics endpoints |
-| `/requests/stats/summary` | GET | Request stats |
-| `/sha/interventions` | GET | SHA interventions list |
+| Endpoint                               | Method | Description                    |
+| -------------------------------------- | ------ | ------------------------------ |
+| `/auth/login`                          | POST   | Authenticate                   |
+| `/auth/logout`                         | POST   | Logout                         |
+| `/auth/me`                             | GET    | Current user                   |
+| `/facilities`                          | GET    | List facilities                |
+| `/facilities/{id}`                     | GET    | Get facility                   |
+| `/facilities/fr/search`                | GET    | Search FR registry             |
+| `/equipment/{id}`                      | GET    | Get equipment (admin view)     |
+| `/equipment/facility/{id}/operational` | GET    | Facility operational equipment |
+| `/vendors`                             | GET    | List vendors                   |
+| `/vendors/{id}`                        | GET    | Get vendor                     |
+| `/vendors/{id}/equipments`             | GET    | Vendor equipment               |
+| `/vendors/{id}/bookings`               | GET    | Vendor bookings                |
+| `/vendors/{id}/dashboard`              | GET    | Vendor dashboard               |
+| `/admin/dashboard`                     | GET    | Dashboard overview             |
+| `/admin/equipment`                     | GET    | Equipment listing              |
+| `/analytics/*`                         | GET    | All analytics endpoints        |
+| `/requests/stats/summary`              | GET    | Request stats                  |
+| `/sha/interventions`                   | GET    | SHA interventions list         |
 
 ### Vendor User (`vendor`)
 
-Manage own vendor profile, equipment, contacts, and bookings.
+Manage own vendor profile, equipment, and bookings via the dedicated Vendor Portal (`/vendor` prefix). Admin-level vendor endpoints are also accessible via `/vendors/{vendor}` for own vendor.
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/auth/login` | POST | Authenticate |
-| `/auth/logout` | POST | Logout |
-| `/vendors/{vendor}` | GET/PUT | Get / Update own vendor |
-| `/vendors/{vendor}/equipments` | GET/POST | List / Add equipment |
-| `/vendors/{vendor}/equipments/{id}` | GET/PATCH | Get / Update equipment |
-| `/vendors/{vendor}/contacts` | GET/POST | List / Add contacts |
-| `/vendors/{vendor}/contacts/{id}` | PUT/DELETE | Update / Delete contact |
-| `/vendors/{vendor}/bookings` | GET | View bookings for own equipment |
-| `/vendors/{vendor}/dashboard` | GET | Vendor dashboard |
-| `/vendors/dropdown-config` | GET/POST | Modality config |
-| `/vendors/modalities` | GET/POST | Modality aliases |
-| `/equipment` | GET/POST | List / Create equipment |
-| `/equipment/{id}` | GET/PUT/DELETE | Equipment CRUD |
-| `/equipment/{id}/capabilities` | GET | Equipment capabilities |
-| `/equipment/{id}/procedures` | GET/POST/DELETE | Equipment procedures |
-| `/equipment/{id}/publish-orthanc` | POST | Publish to Orthanc |
-| `/equipment/ping-requests` | POST | Capture ping request |
-| `/equipment/ping-requests/pending` | GET | Pending ping requests |
-| `/equipment/ping-requests/realtime` | GET | Realtime ping requests |
-| `/equipment/sync-dicom-aet` | POST | Sync DICOM AET |
-| `/dicom/equipment/{id}/configure` | POST | Configure DICOM |
-| `/dicom/equipment/{id}/test` | POST | Test DICOM connection |
-| `/dicom/equipment/{id}/register` | POST/DELETE | Register / Unregister modality |
-| `/dicom/equipment/{id}/status` | GET | DICOM status |
+**Vendor Portal** (`/vendor` prefix — `role:vendor`)
+
+| Endpoint                                  | Method | Description                     |
+| ----------------------------------------- | ------ | ------------------------------- |
+| `/vendor/equipments`                      | GET    | List own equipment              |
+| `/vendor/equipments/{id}`                 | GET    | Equipment detail                |
+| `/vendor/equipments/{id}/configure`       | POST   | Configure DICOM                 |
+| `/vendor/equipments/{id}/test-connection` | POST   | Test C-ECHO                     |
+| `/vendor/equipments/{id}/dicom-status`    | GET    | DICOM connection status         |
+| `/vendor/worklist-test`                   | POST   | Send test worklist              |
+| `/vendor/bookings`                        | GET    | View bookings for own equipment |
+| `/vendor/dashboard`                       | GET    | Vendor dashboard                |
+| `/vendor/contracts`                       | GET    | View own contracts              |
+| `/vendor/contracts/{id}`                  | GET    | Contract detail                 |
+| `/vendor/contracts/{id}/services`         | GET    | Contract services               |
+
+**Admin Vendor Endpoints** (auth:sanctum, own vendor only)
+
+| Endpoint                            | Method    | Description             |
+| ----------------------------------- | --------- | ----------------------- |
+| `/vendors/{vendor}`                 | GET/PUT   | Get / Update own vendor |
+| `/vendors/{vendor}/equipments`      | GET/POST  | List / Add equipment    |
+| `/vendors/{vendor}/equipments/{id}` | GET/PATCH | Get / Update equipment  |
+| `/vendors/{vendor}/bookings`        | GET       | View bookings           |
+| `/vendors/{vendor}/dashboard`       | GET       | Vendor dashboard        |
+| `/vendors/{vendor}/contracts`       | GET       | View contracts          |
 
 ### Facility Admin (`f_admin`)
 
 Manage facility, bookings, patients, contracts, and users.
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/auth/login` | POST | Authenticate |
-| `/auth/logout` | POST | Logout |
-| `/facilities` | GET/POST | List / Create facilities |
-| `/facilities/{id}` | GET/PUT | Get / Update facility |
-| `/facilities/fr/search` | GET | Search FR registry |
-| `/patients` | GET/POST | List / Fetch patients |
-| `/patients/{id}` | GET/DELETE | Get / Delete patient |
-| `/patients/{id}/bookings` | GET | Patient bookings |
-| `/patients/eligibility` | POST | Check SHA eligibility |
-| `/lots` | GET/POST | List / Create lots |
-| `/lots/{id}` | GET/PUT/DELETE | Lot CRUD |
-| `/lots/{lot}/services` | GET/POST | List / Add lot services |
-| `/lots/{lot}/services/{id}` | GET/PATCH/DELETE | Service CRUD |
-| `/contracts` | GET/POST | List / Create contracts |
-| `/contracts/{id}` | GET/PUT/DELETE | Contract CRUD |
-| `/contracts/{contract}/services` | GET/POST | List / Add contract services |
-| `/contracts/{contract}/services/{id}` | PATCH/DELETE | Update / Delete contract service |
-| `/contracts/facility/{facility}/discover` | GET | Discover contract services |
-| `/bookings` | GET/POST | List / Create bookings |
-| `/bookings/{id}` | GET | Booking details |
-| `/bookings/{booking}/cancel` | POST | Cancel booking |
-| `/bookings/{booking}/services` | GET | Booking services |
-| `/bookings/{booking}/approve-finance` | POST | Approve finance |
-| `/bookings/{booking}/services/{sid}/assign-equipment` | POST | Assign equipment |
-| `/bookings/{booking}/services/{sid}/request-completion` | POST | Request completion OTP |
-| `/bookings/{booking}/services/{sid}/verify-completion` | POST | Verify completion OTP |
-| `/bookings/{booking}/services/{sid}/resend-completion` | POST | Resend completion OTP |
-| `/bookings/{booking}/services/{sid}/complete` | POST | Complete service |
-| `/bookings/initiate` | POST | Initiate OTP booking |
-| `/bookings/verify-otp` | POST | Verify booking OTP |
-| `/bookings/resend-otp` | POST | Resend booking OTP |
-| `/bookings/session-status` | GET | Poll session status |
-| `/professionals` | POST | Register professional |
-| `/practitioner/worklist` | GET | Practitioner worklist |
-| `/users` | GET/POST | List / Create facility users |
-| `/users/{id}` | GET/PUT/DELETE | Facility user CRUD |
-| `/equipment` | GET | List equipment |
-| `/equipment/{id}` | GET | Get equipment |
-| `/equipment/facility/{facility}/operational` | GET | Facility operational equipment |
-| `/admin/dashboard` | GET | Facility dashboard |
+| Endpoint                                                | Method           | Description                      |
+| ------------------------------------------------------- | ---------------- | -------------------------------- |
+| `/auth/login`                                           | POST             | Authenticate                     |
+| `/auth/logout`                                          | POST             | Logout                           |
+| `/facilities`                                           | GET/POST         | List / Create facilities         |
+| `/facilities/{id}`                                      | GET/PUT          | Get / Update facility            |
+| `/facilities/fr/search`                                 | GET              | Search FR registry               |
+| `/patients`                                             | GET/POST         | List / Fetch patients            |
+| `/patients/{id}`                                        | GET/DELETE       | Get / Delete patient             |
+| `/patients/{id}/bookings`                               | GET              | Patient bookings                 |
+| `/patients/eligibility`                                 | POST             | Check SHA eligibility            |
+| `/lots`                                                 | GET/POST         | List / Create lots               |
+| `/lots/{id}`                                            | GET/PUT/DELETE   | Lot CRUD                         |
+| `/lots/{lot}/services`                                  | GET/POST         | List / Add lot services          |
+| `/lots/{lot}/services/{id}`                             | GET/PATCH/DELETE | Service CRUD                     |
+| `/contracts`                                            | GET/POST         | List / Create contracts          |
+| `/contracts/{id}`                                       | GET/PUT/DELETE   | Contract CRUD                    |
+| `/contracts/{contract}/services`                        | GET/POST         | List / Add contract services     |
+| `/contracts/{contract}/services/{id}`                   | PATCH/DELETE     | Update / Delete contract service |
+| `/contracts/facility/{facility}/discover`               | GET              | Discover contract services       |
+| `/bookings`                                             | GET/POST         | List / Create bookings           |
+| `/bookings/{id}`                                        | GET              | Booking details                  |
+| `/bookings/{booking}/cancel`                            | POST             | Cancel booking                   |
+| `/bookings/{booking}/services`                          | GET              | Booking services                 |
+| `/bookings/{booking}/approve-finance`                   | POST             | Approve finance                  |
+| `/bookings/{booking}/services/{sid}/assign-equipment`   | POST             | Assign equipment                 |
+| `/bookings/{booking}/services/{sid}/request-completion` | POST             | Request completion OTP           |
+| `/bookings/{booking}/services/{sid}/verify-completion`  | POST             | Verify completion OTP            |
+| `/bookings/{booking}/services/{sid}/resend-completion`  | POST             | Resend completion OTP            |
+| `/bookings/{booking}/services/{sid}/complete`           | POST             | Complete service                 |
+| `/bookings/initiate`                                    | POST             | Initiate OTP booking             |
+| `/bookings/verify-otp`                                  | POST             | Verify booking OTP               |
+| `/bookings/resend-otp`                                  | POST             | Resend booking OTP               |
+| `/bookings/session-status`                              | GET              | Poll session status              |
+| `/professionals`                                        | POST             | Register professional            |
+| `/practitioner/worklist`                                | GET              | Practitioner worklist            |
+| `/users`                                                | GET/POST         | List / Create facility users     |
+| `/users/{id}`                                           | GET/PUT/DELETE   | Facility user CRUD               |
+| `/equipment/facility/{facility}/operational`            | GET              | Facility operational equipment   |
+| `/admin/dashboard`                                      | GET              | Facility dashboard               |
 
 ### Finance Manager (`f_finance`)
 
 Approve bookings, manage payments.
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/auth/login` | POST | Authenticate |
-| `/auth/logout` | POST | Logout |
-| `/bookings` | GET | List bookings |
-| `/bookings/{id}` | GET | Booking details |
-| `/bookings/{booking}/services` | GET | Booking services |
-| `/bookings/{booking}/approve-finance` | POST | Approve finance |
-| `/bookings/{booking}/services/{sid}/assign-equipment` | POST | Assign equipment |
-| `/patients/eligibility` | POST | Check SHA eligibility |
+| Endpoint                                              | Method | Description           |
+| ----------------------------------------------------- | ------ | --------------------- |
+| `/auth/login`                                         | POST   | Authenticate          |
+| `/auth/logout`                                        | POST   | Logout                |
+| `/bookings`                                           | GET    | List bookings         |
+| `/bookings/{id}`                                      | GET    | Booking details       |
+| `/bookings/{booking}/services`                        | GET    | Booking services      |
+| `/bookings/{booking}/approve-finance`                 | POST   | Approve finance       |
+| `/bookings/{booking}/services/{sid}/assign-equipment` | POST   | Assign equipment      |
+| `/patients/eligibility`                               | POST   | Check SHA eligibility |
 
 ### Practitioner (`f_practitioner`)
 
 Clinical operations — recommend and complete services.
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/auth/login` | POST | Authenticate |
-| `/auth/logout` | POST | Logout |
-| `/patients` | GET/POST | List / Fetch patients |
-| `/patients/{id}` | GET | Get patient |
-| `/patients/{id}/bookings` | GET | Patient bookings |
-| `/patients/eligibility` | POST | Check SHA eligibility |
-| `/practitioner/worklist` | GET | Practitioner worklist |
-| `/bookings` | GET/POST | List / Create bookings |
-| `/bookings/{id}` | GET | Booking details |
-| `/bookings/{booking}/services` | GET | Booking services |
-| `/bookings/{booking}/services/{sid}/request-completion` | POST | Request completion OTP |
-| `/bookings/{booking}/services/{sid}/verify-completion` | POST | Verify completion OTP |
-| `/bookings/{booking}/services/{sid}/resend-completion` | POST | Resend completion OTP |
-| `/bookings/{booking}/services/{sid}/complete` | POST | Complete service |
-| `/bookings/initiate` | POST | Initiate OTP booking |
-| `/bookings/verify-otp` | POST | Verify booking OTP |
-| `/bookings/resend-otp` | POST | Resend booking OTP |
-| `/bookings/session-status` | GET | Poll session status |
-| `/equipment/facility/{facility}/operational` | GET | Facility operational equipment |
-| `/equipment/{id}/capabilities` | GET | Equipment capabilities |
-| `/equipment/{id}/procedures` | GET | Equipment procedures |
+| Endpoint                                                | Method   | Description                    |
+| ------------------------------------------------------- | -------- | ------------------------------ |
+| `/auth/login`                                           | POST     | Authenticate                   |
+| `/auth/logout`                                          | POST     | Logout                         |
+| `/patients`                                             | GET/POST | List / Fetch patients          |
+| `/patients/{id}`                                        | GET      | Get patient                    |
+| `/patients/{id}/bookings`                               | GET      | Patient bookings               |
+| `/patients/eligibility`                                 | POST     | Check SHA eligibility          |
+| `/practitioner/worklist`                                | GET      | Practitioner worklist          |
+| `/bookings`                                             | GET/POST | List / Create bookings         |
+| `/bookings/{id}`                                        | GET      | Booking details                |
+| `/bookings/{booking}/services`                          | GET      | Booking services               |
+| `/bookings/{booking}/services/{sid}/request-completion` | POST     | Request completion OTP         |
+| `/bookings/{booking}/services/{sid}/verify-completion`  | POST     | Verify completion OTP          |
+| `/bookings/{booking}/services/{sid}/resend-completion`  | POST     | Resend completion OTP          |
+| `/bookings/{booking}/services/{sid}/complete`           | POST     | Complete service               |
+| `/bookings/initiate`                                    | POST     | Initiate OTP booking           |
+| `/bookings/verify-otp`                                  | POST     | Verify booking OTP             |
+| `/bookings/resend-otp`                                  | POST     | Resend booking OTP             |
+| `/bookings/session-status`                              | GET      | Poll session status            |
+| `/equipment/facility/{facility}/operational`            | GET      | Facility operational equipment |
 
 ### Equipment User (`f_equipment_user`)
 
 Equipment operation only.
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/auth/login` | POST | Authenticate |
-| `/auth/logout` | POST | Logout |
-| `/bookings/{booking}/services` | GET | Booking services |
-| `/bookings/{booking}/services/{sid}/request-completion` | POST | Request completion OTP |
-| `/bookings/{booking}/services/{sid}/verify-completion` | POST | Verify completion OTP |
-| `/bookings/{booking}/services/{sid}/resend-completion` | POST | Resend completion OTP |
-| `/bookings/{booking}/services/{sid}/complete` | POST | Complete service |
-| `/equipment/facility/{facility}/operational` | GET | Facility operational equipment |
-| `/equipment/{id}/capabilities` | GET | Equipment capabilities |
-| `/dicom/equipment/{id}/test` | POST | Test DICOM connection |
-| `/dicom/equipment/{id}/status` | GET | Equipment DICOM status |
+| Endpoint                                                | Method | Description                    |
+| ------------------------------------------------------- | ------ | ------------------------------ |
+| `/auth/login`                                           | POST   | Authenticate                   |
+| `/auth/logout`                                          | POST   | Logout                         |
+| `/bookings/{booking}/services`                          | GET    | Booking services               |
+| `/bookings/{booking}/services/{sid}/request-completion` | POST   | Request completion OTP         |
+| `/bookings/{booking}/services/{sid}/verify-completion`  | POST   | Verify completion OTP          |
+| `/bookings/{booking}/services/{sid}/resend-completion`  | POST   | Resend completion OTP          |
+| `/bookings/{booking}/services/{sid}/complete`           | POST   | Complete service               |
+| `/equipment/facility/{facility}/operational`            | GET    | Facility operational equipment |
+| `/dicom/equipment/{id}/test`                            | POST   | Test DICOM connection          |
+| `/dicom/equipment/{id}/status`                          | GET    | Equipment DICOM status         |
 
 ### Provider Portal (`provider_portal`)
 
@@ -251,17 +265,17 @@ HMIS integration — create worklist bookings from external systems.
 
 All routes require `role:provider_portal` under the `/provider` prefix.
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/auth/login` | POST | Authenticate (returns token only) |
-| `/auth/logout` | POST | Logout |
-| `/provider/facilities/services` | GET | Facility services |
-| `/provider/book` | POST | Create booking worklist |
-| `/provider/bookings` | GET | List bookings |
-| `/provider/bookings/{visitId}` | GET | Get booking |
-| `/provider/bookings/{visitId}/costs` | GET | Booking cost breakdown |
-| `/provider/bookings/{visitId}/claim` | POST | Assign claim ID |
-| `/provider/bookings/{visitId}/services` | POST | Add services to booking |
+| Endpoint                        | Method | Description                                                  |
+| ------------------------------- | ------ | ------------------------------------------------------------ |
+| `/auth/login`                   | POST   | Authenticate (returns token only)                            |
+| `/auth/logout`                  | POST   | Logout                                                       |
+| `/provider/facilities/services` | GET    | Facility services                                            |
+| `/provider/book`                | POST   | Create booking worklist                                      |
+| `/provider/bookings`            | GET    | List bookings                                                |
+| `/provider/bookings/show`       | GET    | Get booking (query: `?visit_id=` or `?claim_id=`)            |
+| `/provider/bookings/costs`      | GET    | Booking cost breakdown (query: `?visit_id=` or `?claim_id=`) |
+| `/provider/bookings/claim`      | POST   | Assign claim ID                                              |
+| `/provider/bookings/services`   | POST   | Add services to booking                                      |
 
 ### Payer (`payer`)
 
@@ -269,11 +283,11 @@ Validate services in VEMS for claim processing.
 
 All routes require `role:payer` under the `/payer` prefix.
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/auth/login` | POST | Authenticate (returns token only) |
-| `/auth/logout` | POST | Logout |
-| `/payer/validate` | GET | Validate services for payer |
+| Endpoint          | Method | Description                       |
+| ----------------- | ------ | --------------------------------- |
+| `/auth/login`     | POST   | Authenticate (returns token only) |
+| `/auth/logout`    | POST   | Logout                            |
+| `/payer/validate` | GET    | Validate services for payer       |
 
 ---
 
@@ -285,11 +299,11 @@ Authenticates a user and returns a bearer token.
 
 **Request Body**
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `login` | string | Yes* | Email or phone. Use either `login` or `email`. |
-| `email` | string | Yes* | Alias for `login`. |
-| `password` | string | Yes | |
+| Field      | Type   | Required | Notes                                          |
+| ---------- | ------ | -------- | ---------------------------------------------- |
+| `login`    | string | Yes*     | Email or phone. Use either `login` or `email`. |
+| `email`    | string | Yes*     | Alias for `login`.                             |
+| `password` | string | Yes      |                                                |
 
 **Response `200`** — Standard user roles
 
@@ -370,17 +384,17 @@ List patients with optional filters.
 
 **Query Parameters**
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `search` | string | Searches name, ID number, phone, CR number, SHA number |
-| `county_id` | uuid | |
-| `sub_county_id` | uuid | |
-| `ward_id` | uuid | |
-| `is_dependant` | boolean | `true` = dependants only |
-| `is_alive` | boolean | |
-| `sort_by` | string | `name`, `date_of_birth`, `created_at` |
-| `sort_order` | string | `asc`, `desc` |
-| `per_page` | integer | 1–100, default 15 |
+| Param           | Type    | Notes                                                  |
+| --------------- | ------- | ------------------------------------------------------ |
+| `search`        | string  | Searches name, ID number, phone, CR number, SHA number |
+| `county_id`     | uuid    |                                                        |
+| `sub_county_id` | uuid    |                                                        |
+| `ward_id`       | uuid    |                                                        |
+| `is_dependant`  | boolean | `true` = dependants only                               |
+| `is_alive`      | boolean |                                                        |
+| `sort_by`       | string  | `name`, `date_of_birth`, `created_at`                  |
+| `sort_order`    | string  | `asc`, `desc`                                          |
+| `per_page`      | integer | 1–100, default 15                                      |
 
 **Response `200`**
 
@@ -424,10 +438,10 @@ Fetch a patient from HIE by ID number and store locally. Returns `409` if patien
 
 **Request Body**
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `identification_type` | string | Yes | `National ID`, `Birth Certificate`, `Passport`, `SHA Number`, `CR Number` |
-| `identification_number` | string | Yes | The patient's ID number |
+| Field                   | Type   | Required | Notes                                                                     |
+| ----------------------- | ------ | -------- | ------------------------------------------------------------------------- |
+| `identification_type`   | string | Yes      | `National ID`, `Birth Certificate`, `Passport`, `SHA Number`, `CR Number` |
+| `identification_number` | string | Yes      | The patient's ID number                                                   |
 
 **Response `201`** — Created
 
@@ -495,12 +509,12 @@ List bookings for a specific patient.
 
 **Query Parameters**
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `status` | string | `pending_otp`, `active`, `completed`, `cancelled` |
-| `sort_by` | string | `created_at`, `booking_number`, `status` |
-| `sort_order` | string | `asc`, `desc` |
-| `per_page` | integer | 1–100, default 15 |
+| Param        | Type    | Notes                                             |
+| ------------ | ------- | ------------------------------------------------- |
+| `status`     | string  | `pending_otp`, `active`, `completed`, `cancelled` |
+| `sort_by`    | string  | `created_at`, `booking_number`, `status`          |
+| `sort_order` | string  | `asc`, `desc`                                     |
+| `per_page`   | integer | 1–100, default 15                                 |
 
 **Response `200`** — Paginated booking list (see [Booking Object](#booking-object)).
 
@@ -512,10 +526,10 @@ Check a patient's SHA coverage eligibility. Fetches/stores the patient from HIE 
 
 **Request Body**
 
-| Field | Type | Required |
-|-------|------|----------|
-| `identificationType` | string | Yes — same values as `POST /patients` |
-| `identificationNumber` | string | Yes |
+| Field                  | Type   | Required                              |
+| ---------------------- | ------ | ------------------------------------- |
+| `identificationType`   | string | Yes — same values as `POST /patients` |
+| `identificationNumber` | string | Yes                                   |
 
 **Response `200`** — Eligible
 
@@ -604,12 +618,12 @@ Register a health professional. Fetches practitioner data from the HIE registry.
 
 **Request Body**
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `identification_type` | string | Yes | `Registration Number`, `License Number` |
-| `identification_number` | string | Yes | The professional's registration/license number |
-| `regulator` | string | Yes | e.g. `KMPDC`, `Nursing Council` |
-| `facility_id` | uuid | Yes | Facility the professional is associated with |
+| Field                   | Type   | Required | Notes                                          |
+| ----------------------- | ------ | -------- | ---------------------------------------------- |
+| `identification_type`   | string | Yes      | `Registration Number`, `License Number`        |
+| `identification_number` | string | Yes      | The professional's registration/license number |
+| `regulator`             | string | Yes      | e.g. `KMPDC`, `Nursing Council`                |
+| `facility_id`           | uuid   | Yes      | Facility the professional is associated with   |
 
 **Response `201`**
 
@@ -638,12 +652,12 @@ Get the current practitioner's worklist — services assigned to them across all
 
 **Query Parameters**
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `status` | string | `not_started`, `in_progress`, `completed` |
-| `from` | date | `Y-m-d` |
-| `to` | date | `Y-m-d` |
-| `per_page` | integer | 1–100, default 15 |
+| Param      | Type    | Notes                                     |
+| ---------- | ------- | ----------------------------------------- |
+| `status`   | string  | `not_started`, `in_progress`, `completed` |
+| `from`     | date    | `Y-m-d`                                   |
+| `to`       | date    | `Y-m-d`                                   |
+| `per_page` | integer | 1–100, default 15                         |
 
 **Response `200`**
 
@@ -675,10 +689,10 @@ Search the external FR Facility Registry by identifier and sync the result local
 
 **Query Parameters**
 
-| Param | Type | Required | Default | Notes |
-|-------|------|----------|---------|-------|
-| `identifier` | string | Yes | — | FR facility identifier value (min 3 chars) |
-| `identifier-type` | string | No | `fr-code` | e.g. `fr-code`, `hmis-code` |
+| Param             | Type   | Required | Default   | Notes                                      |
+| ----------------- | ------ | -------- | --------- | ------------------------------------------ |
+| `identifier`      | string | Yes      | —         | FR facility identifier value (min 3 chars) |
+| `identifier-type` | string | No       | `fr-code` | e.g. `fr-code`, `hmis-code`                |
 
 **Response `200`**
 
@@ -704,17 +718,48 @@ List facilities with pagination and filtering.
 
 **Query Parameters**
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `county` | string | County name filter |
-| `hmis` | string | HMIS code filter |
-| `status` | string | `active`, `inactive`, `suspended` |
-| `sha_contract_status` | string | `active`, `pending`, `inactive`, `expired` |
-| `search` | string | Free-text search |
-| `page` | integer | Default 1 |
-| `page_size` | integer | 1–100, default 20 |
+| Param                 | Type    | Notes                                      |
+| --------------------- | ------- | ------------------------------------------ |
+| `county`              | string  | County name filter                         |
+| `hmis`                | string  | HMIS code filter                           |
+| `status`              | string  | `active`, `inactive`, `suspended`          |
+| `sha_contract_status` | string  | `active`, `pending`, `inactive`, `expired` |
+| `search`              | string  | Free-text search                           |
+| `page`                | integer | Default 1                                  |
+| `page_size`           | integer | 1–100, default 20                          |
 
 **Response `200`** — Paginated facility list.
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Kenyatta National Hospital",
+      "code": "KNH",
+      "fr_code": "14062",
+      "keph_level": "6",
+      "facility_type": "National Referral Hospital",
+      "facility_ownership": "Public",
+      "sha_contract_status": "active",
+      "phone_number": "+254202720300",
+      "email": "info@knh.or.ke",
+      "is_active": true,
+      "county": { "id": "uuid", "name": "Nairobi", "code": "001" },
+      "sub_county": { "id": "uuid", "name": "Westlands", "code": "001" },
+      "ward": { "id": "uuid", "name": "Parklands", "code": "001" }
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "last_page": 5,
+    "per_page": 20,
+    "total": 95,
+    "from": 1,
+    "to": 20
+  }
+}
+```
 
 ---
 
@@ -724,23 +769,54 @@ Create a new facility. **Auth required.**
 
 **Request Body**
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `id` | string | Yes | Facility identifier (FR code), max 50 chars |
-| `name` | string | Yes | Official name, max 255 chars |
-| `keph_level` | integer | Yes | 1–6 |
-| `ownership` | string | Yes | `public`, `private`, `faith_based`, `ngo`, `parastatal`, `military` |
-| `county` | string | Yes | Max 100 chars |
-| `subcounty` | string | Yes | Max 100 chars |
-| `ward` | string | Yes | Max 100 chars |
-| `hmis` | string | Yes | HMIS code, max 100 chars |
-| `callback_url` | uri | Yes | EMR callback URL |
-| `username` | string | No | Facility system username |
-| `password` | string | No | Facility system password |
-| `status` | string | No | Default `active` |
-| `sha_contract_status` | string | No | Default `pending` |
+| Field                 | Type    | Required | Notes                                                               |
+| --------------------- | ------- | -------- | ------------------------------------------------------------------- |
+| `id`                  | string  | Yes      | Facility identifier (FR code), max 50 chars                         |
+| `name`                | string  | Yes      | Official name, max 255 chars                                        |
+| `keph_level`          | integer | Yes      | 1–6                                                                 |
+| `ownership`           | string  | Yes      | `public`, `private`, `faith_based`, `ngo`, `parastatal`, `military` |
+| `county`              | string  | Yes      | Max 100 chars                                                       |
+| `subcounty`           | string  | Yes      | Max 100 chars                                                       |
+| `ward`                | string  | Yes      | Max 100 chars                                                       |
+| `hmis`                | string  | Yes      | HMIS code, max 100 chars                                            |
+| `callback_url`        | uri     | Yes      | EMR callback URL                                                    |
+| `username`            | string  | No       | Facility system username                                            |
+| `password`            | string  | No       | Facility system password                                            |
+| `status`              | string  | No       | Default `active`                                                    |
+| `sha_contract_status` | string  | No       | Default `pending`                                                   |
 
 **Response `201`** — Facility created.
+
+```json
+{
+  "message": "Facility created successfully.",
+  "facility": {
+    "id": "uuid",
+    "name": "Kenyatta National Hospital",
+    "code": "KNH",
+    "fr_code": "14062",
+    "keph_level": "6",
+    "facility_type": "National Referral Hospital",
+    "facility_ownership": "Public",
+    "sha_contract_status": "active",
+    "phone_number": "+254202720300",
+    "email": "info@knh.or.ke",
+    "is_active": true,
+    "county": { "id": "uuid", "name": "Nairobi", "code": "001" },
+    "sub_county": { "id": "uuid", "name": "Westlands", "code": "001" },
+    "ward": { "id": "uuid", "name": "Parklands", "code": "001" },
+    "facility_admin": {
+      "id": "uuid",
+      "name": "Admin User",
+      "email": "admin@knh.or.ke",
+      "phone": "+254700000000",
+      "role": "f_admin"
+    }
+  }
+}
+```
+
+**Response `409`** — Facility already exists.
 
 ---
 
@@ -749,6 +825,31 @@ Create a new facility. **Auth required.**
 Get a facility by ID.
 
 **Response `200`** — Full facility object.
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "Kenyatta National Hospital",
+    "code": "KNH",
+    "fr_code": "14062",
+    "keph_level": "6",
+    "facility_type": "National Referral Hospital",
+    "facility_ownership": "Public",
+    "sha_contract_status": "active",
+    "phone_number": "+254202720300",
+    "email": "info@knh.or.ke",
+    "is_active": true,
+    "county": { "id": "uuid", "name": "Nairobi", "code": "001" },
+    "sub_county": { "id": "uuid", "name": "Westlands", "code": "001" },
+    "ward": { "id": "uuid", "name": "Parklands", "code": "001" },
+    "created_at": "2025-05-01T09:00:00+03:00",
+    "updated_at": "2025-05-01T09:00:00+03:00"
+  }
+}
+```
+
+**Response `404`** — Facility not found.
 
 ---
 
@@ -772,14 +873,39 @@ List vendors with pagination and filtering.
 
 **Query Parameters**
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `lifecycle_state` | string | `active`, `disabled`, `retired` |
-| `search` | string | Free-text search |
-| `page` | integer | Default 1 |
-| `page_size` | integer | 1–100, default 20 |
+| Param             | Type    | Notes                           |
+| ----------------- | ------- | ------------------------------- |
+| `lifecycle_state` | string  | `active`, `disabled`, `retired` |
+| `search`          | string  | Free-text search                |
+| `page`            | integer | Default 1                       |
+| `page_size`       | integer | 1–100, default 20               |
 
-**Response `200`** — Paginated vendor list with contacts and modalities.
+**Response `200`** — Paginated vendor list.
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Melco Kenya Ltd",
+      "code": "VEN001",
+      "email": "info@melco.co.ke",
+      "phone": "+254700000000",
+      "is_active": true,
+      "created_at": "2025-05-01T09:00:00+03:00",
+      "updated_at": "2025-05-01T09:00:00+03:00"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "last_page": 3,
+    "per_page": 20,
+    "total": 45,
+    "from": 1,
+    "to": 20
+  }
+}
+```
 
 ---
 
@@ -789,35 +915,84 @@ Create a new vendor. **Auth required.**
 
 **Request Body**
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `vendor_alpha_code` | string | Yes | 3–10 chars, unique |
-| `dha_vendor_code` | string | Yes | DHA code, max 50 chars |
-| `sha_vendor_code` | string | Yes | SHA code, max 50 chars |
-| `name` | string | Yes | Max 255 chars |
-| `description` | string | No | |
-| `address` | string | No | |
-| `country` | string | No | ISO 2-letter, default `KE` |
-| `email` | string | No | |
-| `phone` | string | No | Max 20 chars |
-| `website` | string | No | |
-| `financial_details` | object | No | |
-| `lifecycle_state` | string | No | Default `active` |
-| `modality_ids` | array | No | UUID array of modality references |
+| Field               | Type   | Required | Notes                             |
+| ------------------- | ------ | -------- | --------------------------------- |
+| `vendor_alpha_code` | string | Yes      | 3–10 chars, unique                |
+| `dha_vendor_code`   | string | Yes      | DHA code, max 50 chars            |
+| `sha_vendor_code`   | string | Yes      | SHA code, max 50 chars            |
+| `name`              | string | Yes      | Max 255 chars                     |
+| `description`       | string | No       |                                   |
+| `address`           | string | No       |                                   |
+| `country`           | string | No       | ISO 2-letter, default `KE`        |
+| `email`             | string | No       |                                   |
+| `phone`             | string | No       | Max 20 chars                      |
+| `website`           | string | No       |                                   |
+| `financial_details` | object | No       |                                   |
+| `lifecycle_state`   | string | No       | Default `active`                  |
+| `modality_ids`      | array  | No       | UUID array of modality references |
 
 **Response `201`** — Vendor created.
+
+```json
+{
+  "message": "Vendor created successfully.",
+  "vendor": {
+    "id": "uuid",
+    "name": "Melco Kenya Ltd",
+    "code": "VEN001",
+    "email": "info@melco.co.ke",
+    "phone": "+254700000000",
+    "is_active": true,
+    "created_at": "2025-05-01T09:00:00+03:00",
+    "updated_at": "2025-05-01T09:00:00+03:00"
+  },
+  "admin": {
+    "id": "uuid",
+    "name": "Vendor Admin",
+    "email": "admin@melco.co.ke",
+    "phone": "+254711000000",
+    "role": "vendor"
+  }
+}
+```
+
+**Response `409`** — Vendor code already exists.
 
 ---
 
 ### GET `/vendors/{vendor_id}`
 
-Get vendor by ID. Includes contacts and modalities.
+Get vendor by ID. Includes contacts and equipment count.
+
+**Response `200`**
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "Melco Kenya Ltd",
+    "code": "VEN001",
+    "email": "info@melco.co.ke",
+    "phone": "+254700000000",
+    "is_active": true,
+    "address": "Nairobi, Kenya",
+    "contacts": [
+      { "name": "John Doe", "phone": "+254700000001", "email": "john@melco.co.ke", "role": "technical" }
+    ],
+    "equipment_count": 6,
+    "created_at": "2025-05-01T09:00:00+03:00",
+    "updated_at": "2025-05-01T09:00:00+03:00"
+  }
+}
+```
+
+**Response `404`** — Vendor not found.
 
 ---
 
 ### PUT `/vendors/{vendor_id}`
 
-Update vendor. All fields optional.
+Update vendor. All fields optional. Returns updated vendor object.
 
 ---
 
@@ -827,108 +1002,123 @@ Soft-delete (mark as `retired`). Returns `204`.
 
 ---
 
-### Vendor Dropdown Config
-
-#### GET `/vendors/dropdown-config`
-
-List dropdown config entries (modality categories and codes).
-
-**Query Parameters**
-
-| Param | Type | Notes |
-|-------|------|-------|
-| `category` | string | Filter by category |
-| `status` | string | `active`, `disabled` |
-
-#### POST `/vendors/dropdown-config`
-
-Create a dropdown config entry.
-
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `category` | string | Yes | 2–50 chars |
-| `name` | string | Yes | 1–100 chars |
-| `code` | string | Yes | 2–50 chars |
-| `status` | string | No | Default `active` |
-
-#### PUT `/vendors/dropdown-config/{dropdown_id}`
-
-Update a dropdown config entry. All fields optional.
-
----
-
-### Vendor Modalities
-
-#### GET `/vendors/modalities`
-
-List modality aliases (compatibility alias for legacy endpoint).
-
-#### POST `/vendors/modalities`
-
-Create modality alias. Same schema as dropdown config.
-
-#### PUT `/vendors/modalities/{modality_id}`
-
-Update modality alias.
-
-#### GET `/vendors/{vendor_id}/modalities`
-
-List modality associations for a vendor.
-
-#### POST `/vendors/{vendor_id}/modalities`
-
-Add modality associations for a vendor.
-
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `modality_ids` | array[uuid] | Yes | Modality UUIDs to associate |
-
-#### PUT `/vendors/{vendor_id}/modalities`
-
-Replace vendor modality associations.
-
----
-
-### Vendor Contacts
-
-#### GET `/vendors/{vendor_id}/contacts`
-
-List contacts for a vendor.
-
-#### POST `/vendors/{vendor_id}/contacts`
-
-Create a new vendor contact.
-
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `first_name` | string | Yes | 1–100 chars |
-| `last_name` | string | Yes | 1–100 chars |
-| `email` | email | Yes | |
-| `phone` | string | No | Max 20 chars |
-| `contact_type` | string | Yes | `technical`, `support`, `finance`, `general` |
-| `title` | string | No | Max 100 chars |
-| `department` | string | No | Max 100 chars |
-| `is_primary` | boolean | No | Default `false` |
-
-#### PUT `/vendors/{vendor_id}/contacts/{contact_id}`
-
-Update a vendor contact. All fields optional.
-
-#### DELETE `/vendors/{vendor_id}/contacts/{contact_id}`
-
-Delete a vendor contact. Returns `204`.
-
----
-
 ### Vendor Bookings & Dashboard
 
 #### GET `/vendors/{vendor}/bookings`
 
 List bookings for all equipment belonging to the vendor.
 
+**Response `200`**
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "booking": {
+        "id": "uuid",
+        "booking_number": "BK-2025-00042",
+        "status": "completed",
+        "source": "standalone",
+        "created_at": "2025-05-01T09:00:00+03:00"
+      },
+      "patient": { "name": "John Kamau" },
+      "facility": { "name": "Kenyatta National Hospital" },
+      "lot": { "number": "1", "name": "Diagnostics Imaging X-ray" },
+      "service": { "code": "XRAY-CHEST-PA", "name": "Chest X-Ray PA" },
+      "equipment": { "code": "XRAY-001", "serial_number": "SN-12345", "name": "GE Discovery XR656" },
+      "scheduled_date": "2025-06-01",
+      "status": "completed",
+      "tariff": 3500.00,
+      "payment": { "sha": 3000.00, "cash": 500.00, "other_insurance": 0.00 },
+      "revenue": { "vendor_share": 2100.00, "facility_share": 1400.00 },
+      "started_at": "2025-06-01T09:30:00+03:00",
+      "completed_at": "2025-06-01T10:00:00+03:00",
+      "notes": null
+    }
+  ],
+  "summary": {
+    "total_services": 156,
+    "total_bookings": 42,
+    "unique_patients": 38,
+    "by_service_status": { "not_started": 10, "completed": 140, "cancelled": 6 },
+    "revenue": {
+      "tariff": "546000.00",
+      "vendor_share": "327600.00",
+      "facility_share": "218400.00",
+      "sha": "400000.00",
+      "cash": "100000.00",
+      "other_insurance": "46000.00"
+    }
+  },
+  "pagination": {
+    "current_page": 1,
+    "last_page": 8,
+    "per_page": 20,
+    "total": 156,
+    "from": 1,
+    "to": 20
+  }
+}
+```
+
 #### GET `/vendors/{vendor}/dashboard`
 
 Get vendor-specific dashboard with equipment counts, booking stats, and revenue summaries.
+
+**Response `200`**
+
+```json
+{
+  "data": {
+    "vendor": { "id": "uuid", "name": "Melco Kenya Ltd", "code": "VEN001" },
+    "period": { "from": "2026-01-01", "to": "2026-08-04" },
+    "equipment": {
+      "total": 6,
+      "by_status": { "active": 4, "maintenance": 1, "decommissioned": 0, "pending": 1 }
+    },
+    "bookings": {
+      "total_bookings": 42,
+      "total_services": 156,
+      "by_service_status": { "not_started": 10, "completed": 140, "cancelled": 6 },
+      "by_source": { "standalone": 60, "hmis": 40, "provider_portal": 56 }
+    },
+    "revenue": {
+      "tariff": "546000.00",
+      "vendor_share": "327600.00",
+      "facility_share": "218400.00",
+      "by_payment_type": { "sha": "400000.00", "cash": "100000.00", "other_insurance": "46000.00" }
+    },
+    "patients": { "unique_count": 38 },
+    "facilities": {
+      "count": 5,
+      "list": [{ "id": "uuid", "name": "Kenyatta National Hospital", "fr_code": "14062" }]
+    },
+    "lots": {
+      "count": 3,
+      "list": [{ "id": "uuid", "number": "1", "name": "Diagnostics Imaging X-ray" }]
+    },
+    "services": {
+      "count": 12,
+      "list": [{ "id": "uuid", "code": "XRAY-CHEST-PA", "name": "Chest X-Ray PA" }]
+    },
+    "trendline": {
+      "grouping": "monthly",
+      "data": [
+        {
+          "period": "2026-07",
+          "sha": "50000.00",
+          "cash": "12500.00",
+          "other_insurance": "5000.00",
+          "vendor_share": "41250.00",
+          "total": "67500.00",
+          "services_count": 20
+        }
+      ]
+    }
+  }
+}
+```
 
 ---
 
@@ -947,43 +1137,43 @@ Returns all valid equipment category values.
 
 **All category values:**
 
-| Value | Description |
-|-------|-------------|
-| `xray_digital` | Digital X-Ray |
-| `xray_mobile` | Mobile X-Ray |
-| `xray_portable` | Portable X-Ray |
-| `fluoroscopy` | Fluoroscopy |
-| `c_arm` | C-Arm |
-| `ultrasound_general` | General Ultrasound |
-| `ultrasound_3d_4d` | 3D/4D Ultrasound |
-| `ultrasound_portable` | Portable Ultrasound |
-| `doppler` | Doppler |
-| `mammography_digital` | Digital Mammography |
-| `mammography_3d` | 3D Mammography |
-| `ct_scanner` | CT Scanner |
+| Value                    | Description            |
+| ------------------------ | ---------------------- |
+| `xray_digital`           | Digital X-Ray          |
+| `xray_mobile`            | Mobile X-Ray           |
+| `xray_portable`          | Portable X-Ray         |
+| `fluoroscopy`            | Fluoroscopy            |
+| `c_arm`                  | C-Arm                  |
+| `ultrasound_general`     | General Ultrasound     |
+| `ultrasound_3d_4d`       | 3D/4D Ultrasound       |
+| `ultrasound_portable`    | Portable Ultrasound    |
+| `doppler`                | Doppler                |
+| `mammography_digital`    | Digital Mammography    |
+| `mammography_3d`         | 3D Mammography         |
+| `ct_scanner`             | CT Scanner             |
 | `ct_scanner_multi_slice` | Multi-Slice CT Scanner |
-| `mri_scanner` | MRI Scanner |
-| `mri_open` | Open MRI |
-| `linear_accelerator` | Linear Accelerator |
-| `brachytherapy` | Brachytherapy |
-| `cobalt_60` | Cobalt-60 |
-| `treatment_planning` | Treatment Planning |
-| `simulator` | Simulator |
-| `gamma_camera` | Gamma Camera |
-| `spect` | SPECT |
-| `pet_scanner` | PET Scanner |
-| `pet_ct` | PET-CT |
-| `cyclotron` | Cyclotron |
-| `angiography` | Angiography |
-| `cath_lab` | Cath Lab |
-| `dsa` | DSA |
-| `ecg` | ECG |
-| `echocardiography` | Echocardiography |
-| `holter_monitor` | Holter Monitor |
-| `stress_test` | Stress Test |
-| `pacemaker_programmer` | Pacemaker Programmer |
-| `tmt` | TMT |
-| `anesthesia_machine` | Anesthesia Machine |
+| `mri_scanner`            | MRI Scanner            |
+| `mri_open`               | Open MRI               |
+| `linear_accelerator`     | Linear Accelerator     |
+| `brachytherapy`          | Brachytherapy          |
+| `cobalt_60`              | Cobalt-60              |
+| `treatment_planning`     | Treatment Planning     |
+| `simulator`              | Simulator              |
+| `gamma_camera`           | Gamma Camera           |
+| `spect`                  | SPECT                  |
+| `pet_scanner`            | PET Scanner            |
+| `pet_ct`                 | PET-CT                 |
+| `cyclotron`              | Cyclotron              |
+| `angiography`            | Angiography            |
+| `cath_lab`               | Cath Lab               |
+| `dsa`                    | DSA                    |
+| `ecg`                    | ECG                    |
+| `echocardiography`       | Echocardiography       |
+| `holter_monitor`         | Holter Monitor         |
+| `stress_test`            | Stress Test            |
+| `pacemaker_programmer`   | Pacemaker Programmer   |
+| `tmt`                    | TMT                    |
+| `anesthesia_machine`     | Anesthesia Machine     |
 
 ---
 
@@ -1010,21 +1200,21 @@ Returns all valid equipment status values.
 
 **Request Body**
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `name` | string | Yes | Max 255 chars |
-| `category` | string | Yes | See category values above |
-| `serial_number` | string | No | Must be unique, max 100 chars |
-| `model` | string | No | Max 100 chars |
-| `brand` | string | No | Max 100 chars |
-| `manufacture_date` | date | No | |
-| `description` | string | No | Max 1000 chars |
-| `specifications` | object | No | Free-form JSON key/value |
-| `status` | string | No | Defaults to `pending_installation`. See status values above. |
-| `ae_title` | string | No | DICOM AE Title — alphanumeric + underscore, max 16 chars. Auto-uppercased. |
-| `hl7_host` | string | No | IP address or hostname of the physical device |
-| `hl7_port` | integer | No | 1–65535 |
-| `dicom_port` | integer | No | 1–65535 |
+| Field              | Type    | Required | Notes                                                                      |
+| ------------------ | ------- | -------- | -------------------------------------------------------------------------- |
+| `name`             | string  | Yes      | Max 255 chars                                                              |
+| `category`         | string  | Yes      | See category values above                                                  |
+| `serial_number`    | string  | No       | Must be unique, max 100 chars                                              |
+| `model`            | string  | No       | Max 100 chars                                                              |
+| `brand`            | string  | No       | Max 100 chars                                                              |
+| `manufacture_date` | date    | No       |                                                                            |
+| `description`      | string  | No       | Max 1000 chars                                                             |
+| `specifications`   | object  | No       | Free-form JSON key/value                                                   |
+| `status`           | string  | No       | Defaults to `pending_installation`. See status values above.               |
+| `ae_title`         | string  | No       | DICOM AE Title — alphanumeric + underscore, max 16 chars. Auto-uppercased. |
+| `hl7_host`         | string  | No       | IP address or hostname of the physical device                              |
+| `hl7_port`         | integer | No       | 1–65535                                                                    |
+| `dicom_port`       | integer | No       | 1–65535                                                                    |
 
 **Response `201`**
 
@@ -1181,12 +1371,12 @@ Set or update DICOM connection details (AE title, IP, port) and register with Or
 
 **Request Body**
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `ae_title` | string | Yes | DICOM AE title, max 16 chars, auto-uppercased |
-| `ip` | string | Yes | IP address or hostname of the physical device |
-| `port` | integer | Yes | DICOM port, 1–65535 |
-| `vendor_id` | string | No | UUID of the vendor to assign |
+| Field       | Type    | Required | Notes                                         |
+| ----------- | ------- | -------- | --------------------------------------------- |
+| `ae_title`  | string  | Yes      | DICOM AE title, max 16 chars, auto-uppercased |
+| `ip`        | string  | Yes      | IP address or hostname of the physical device |
+| `port`      | integer | Yes      | DICOM port, 1–65535                           |
+| `vendor_id` | string  | No       | UUID of the vendor to assign                  |
 
 **Response `200`**
 
@@ -1213,11 +1403,11 @@ Auto-discovers a DICOM device. Creates a new equipment record under the **Uncate
 
 **Request Body**
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `ae_title` | string | Yes | DICOM AE Title, max 16 chars |
-| `remote_ip` | string | No | IP address of the connecting device |
-| `remote_port` | integer | No | Port the device uses to communicate (1–65535) |
+| Field         | Type    | Required | Notes                                         |
+| ------------- | ------- | -------- | --------------------------------------------- |
+| `ae_title`    | string  | Yes      | DICOM AE Title, max 16 chars                  |
+| `remote_ip`   | string  | No       | IP address of the connecting device           |
+| `remote_port` | integer | No       | Port the device uses to communicate (1–65535) |
 
 **Response `201`** — First discovery
 
@@ -1260,144 +1450,23 @@ Auto-discovers a DICOM device. Creates a new equipment record under the **Uncate
 
 ## 7. Equipment
 
-Standalone equipment endpoints (alternative to vendor-nested routes).
+Equipment management is done through vendor-nested routes (`/vendors/{vendor}/equipments`) and the admin equipment section (`/admin/equipment`). The following endpoints provide additional equipment-level operations.
 
-### GET `/equipment`
+### GET `/equipment/{equipment}`
 
-List equipment with pagination and filtering.
+Get a single equipment with full details. **Auth required** (admin/nesp/moh/cog).
 
-**Query Parameters**
+### GET `/equipment/facility/{facility}/operational`
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `facility_id` | string | Filter by facility |
-| `facility_name` | string | Filter by facility name |
-| `lifecycle_state` | string | `active`, `inactive`, `maintenance`, `disabled`, `retired` |
-| `operational_status` | string | `operational`, `non_operational`, `maintenance`, `unknown` |
-| `search` | string | Free-text search |
-| `page` | integer | Default 1 |
-| `page_size` | integer | 1–100, default 20 |
+Get all operational equipment at a facility. **Auth required** (admin/nesp/moh/cog).
 
-**Response `200`** — Paginated equipment list.
+### POST `/equipment/{equipment}/publish-orthanc`
 
----
-
-### POST `/equipment`
-
-Create new equipment. **Auth required.**
-
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `vendor_id` | uuid | Yes | Owning vendor |
-| `name` | string | Yes | Max 255 chars |
-| `category` | string | Yes | Equipment category value |
-| `facility_id` | string | Yes | Facility identifier |
-| `asset_id` | string | No | Unique asset tag |
-| `serial_number` | string | No | Max 100 chars |
-| `manufacturer` | string | No | Max 255 chars |
-| `model` | string | No | Max 100 chars |
-| `model_version` | string | No | Max 50 chars |
-| `software_version` | string | No | Max 50 chars |
-| `department` | string | No | Max 100 chars |
-| `location` | string | No | Max 255 chars |
-| `country_of_origin` | string | No | ISO 2-letter, default `KE` |
-| `worklist_ingestion_method` | string | No | `dicom_mwl`, `hl7_mwl`, `custom_api`, `file_transfer` |
-| `transmission_method` | string | No | `dicom_mpps`, `dicom_c_store`, `hl7_orm`, `rest_api`, `fhir_api` |
-| `dicom_aet` | string | No | DICOM AE Title, max 16 chars |
-| `dicom_host` | string | No | IP/hostname |
-| `dicom_port` | integer | No | 1–65535 |
-| `lifecycle_state` | string | No | Default `active` |
-| `operational_status` | string | No | Default `operational` |
-| `last_maintenance` | datetime | No | |
-| `next_maintenance` | datetime | No | |
-| `maintenance_notes` | string | No | |
-
-**Response `201`** — Equipment created.
-
----
-
-### GET `/equipment/{equipment_id}`
-
-Get equipment by ID. Includes procedure mappings.
-
----
-
-### PUT `/equipment/{equipment_id}`
-
-Update equipment. All fields optional.
-
----
-
-### DELETE `/equipment/{equipment_id}`
-
-Soft-delete (mark as `retired`). Returns `204`.
-
----
-
-### GET `/equipment/{equipment_id}/capabilities`
-
-Get equipment capabilities and supported procedures resolved via modality.
-
-**Response `200`**
-
-```json
-{
-  "equipment_id": "uuid",
-  "asset_id": "XRAY-001",
-  "name": "GE Discovery XR656",
-  "facility_id": "14062",
-  "capable_procedures": ["XRAY-CHEST-PA", "XRAY-ABDOMEN"],
-  "operational_status": "operational"
-}
-```
-
----
-
-### GET `/equipment/{equipment_id}/procedures`
-
-List procedures for equipment, resolved via modality mapping.
-
----
-
-### POST `/equipment/{equipment_id}/procedures`
-
-Map a procedure to equipment. (Deprecated — use modality mappings instead.)
-
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `procedure_id` | uuid | Yes | |
-| `sha_procedure_code` | string | Yes | Max 50 chars |
-| `equipment_specific_code` | string | No | Max 100 chars |
-| `is_capable` | boolean | No | Default `true` |
-| `processing_time_minutes` | integer | No | |
-
----
-
-### DELETE `/equipment/{equipment_id}/procedures/{procedure_id}`
-
-Remove a direct equipment-procedure mapping. Returns `204`.
-
----
-
-### GET `/equipment/facility/{facility_id}/operational`
-
-Get all operational equipment at a facility.
-
-**Response `200`** — Array of equipment capability objects.
-
----
-
-### POST `/equipment/{equipment_id}/publish-orthanc`
-
-Republish a single equipment modality entry to Orthanc.
-
-**Response `200`** — Publication result.
-
----
+Republish a single equipment modality entry to Orthanc. **Auth required** (admin/nesp/moh/cog).
 
 ### POST `/equipment/sync-dicom-aet`
 
-Populate missing `dicom_aet` from `asset_id` when possible and normalize identifier casing.
+Populate missing `dicom_aet` from `asset_id` when possible and normalize identifier casing. **Auth required** (admin/nesp/moh/cog).
 
 ---
 
@@ -1405,52 +1474,52 @@ Populate missing `dicom_aet` from `asset_id` when possible and normalize identif
 
 #### POST `/equipment/ping-requests`
 
-Capture a machine ping/storage/test-connection event for approval review.
+Capture a machine ping/storage/test-connection event for approval review. **Public** (no auth).
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `ae_title` | string | Yes | DICOM AE title, 1–64 chars |
-| `ip_addr` | string | Yes | IP address, 1–64 chars |
-| `port` | integer | Yes | 1–65535 |
-| `request_type` | string | No | Default `ping` |
-| `modality` | string | No | Max 32 chars |
-| `device_name_ae_title` | string | No | Max 16 chars |
-| `machine_features` | object | No | |
-| `payload` | object | No | |
-| `equipment_id` | uuid | No | Link to known equipment |
+| Field                  | Type    | Required | Notes                      |
+| ---------------------- | ------- | -------- | -------------------------- |
+| `ae_title`             | string  | Yes      | DICOM AE title, 1–64 chars |
+| `ip_addr`              | string  | Yes      | IP address, 1–64 chars     |
+| `port`                 | integer | Yes      | 1–65535                    |
+| `request_type`         | string  | No       | Default `ping`             |
+| `modality`             | string  | No       | Max 32 chars               |
+| `device_name_ae_title` | string  | No       | Max 16 chars               |
+| `machine_features`     | object  | No       |                            |
+| `payload`              | object  | No       |                            |
+| `equipment_id`         | uuid    | No       | Link to known equipment    |
 
 **Response `201`** — Ping request captured.
 
 #### GET `/equipment/ping-requests/pending`
 
-List pending ping requests waiting for approval.
+List pending ping requests waiting for approval. **Auth required** (admin/nesp/moh/cog).
 
 #### GET `/equipment/ping-requests/realtime`
 
-Realtime polling endpoint for the approval queue.
+Realtime polling endpoint for the approval queue. **Auth required** (admin/nesp/moh/cog).
 
-| Param | Type | Notes |
-|-------|------|-------|
+| Param   | Type     | Notes                                     |
+| ------- | -------- | ----------------------------------------- |
 | `since` | datetime | Return requests seen since this timestamp |
 
 #### GET `/equipment/ping-requests/linked-equipment-ids`
 
-Return distinct equipment IDs already referenced by any ping request.
+Return distinct equipment IDs already referenced by any ping request. **Auth required** (admin/nesp/moh/cog).
 
-#### POST `/equipment/ping-requests/{ping_request_id}/approve`
+#### POST `/equipment/ping-requests/{id}/approve`
 
-Approve a pending machine ping request.
+Approve a pending machine ping request. **Auth required** (admin/nesp/moh/cog).
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `approval_reason` | string | No | |
-| `equipment_id` | uuid | No | Link to equipment |
-| `ae_title_source` | string | No | `machine_ping`, `system_generated`, `custom` |
-| `selected_ae_title` | string | No | Custom AE title |
+| Field               | Type   | Required | Notes                                        |
+| ------------------- | ------ | -------- | -------------------------------------------- |
+| `approval_reason`   | string | No       |                                              |
+| `equipment_id`      | uuid   | No       | Link to equipment                            |
+| `ae_title_source`   | string | No       | `machine_ping`, `system_generated`, `custom` |
+| `selected_ae_title` | string | No       | Custom AE title                              |
 
-#### POST `/equipment/ping-requests/{ping_request_id}/reject`
+#### POST `/equipment/ping-requests/{id}/reject`
 
-Reject a pending machine ping request. Same body as approve.
+Reject a pending machine ping request. Same body as approve. **Auth required** (admin/nesp/moh/cog).
 
 ---
 
@@ -1479,11 +1548,50 @@ Get the Orthanc DICOM server status and connectivity.
 
 List all registered DICOM modalities in Orthanc.
 
+**Response `200`**
+
+```json
+{
+  "data": [
+    {
+      "ae_title": "GEXR001",
+      "equipment": {
+        "id": "uuid",
+        "code": "XRAY-001",
+        "name": "GE Discovery XR656",
+        "category": "xray_digital",
+        "category_label": "Digital X-Ray",
+        "modality": "DX",
+        "status": "active",
+        "status_label": "Active"
+      },
+      "network": { "ip": "192.168.1.50", "port": 11112 },
+      "vendor": { "id": "uuid", "name": "Melco Kenya Ltd", "code": "VEN001" },
+      "facility": { "id": "uuid", "name": "Kenyatta National Hospital", "fr_code": "14062" },
+      "is_connected": true,
+      "last_seen_at": "2025-05-01T10:30:00+03:00"
+    }
+  ]
+}
+```
+
 ---
 
 ### POST `/dicom/modalities/register-all`
 
 Bulk-register all equipment with DICOM config as Orthanc modalities.
+
+**Response `200`**
+
+```json
+{
+  "total": 15,
+  "results": [
+    { "ae_title": "GEXR001", "status": "registered" },
+    { "ae_title": "SOMATOM02", "status": "failed", "error": "Connection refused" }
+  ]
+}
+```
 
 ---
 
@@ -1493,12 +1601,12 @@ Set or update DICOM connection details (AE title, IP, port) and register with Or
 
 **Request Body**
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `ae_title` | string | Yes | DICOM AE title, max 16 chars, auto-uppercased |
-| `ip` | string | Yes | IP address or hostname of the physical device |
-| `port` | integer | Yes | DICOM port, 1–65535 |
-| `vendor_id` | string | No | UUID of the vendor to assign |
+| Field       | Type    | Required | Notes                                         |
+| ----------- | ------- | -------- | --------------------------------------------- |
+| `ae_title`  | string  | Yes      | DICOM AE title, max 16 chars, auto-uppercased |
+| `ip`        | string  | Yes      | IP address or hostname of the physical device |
+| `port`      | integer | Yes      | DICOM port, 1–65535                           |
+| `vendor_id` | string  | No       | UUID of the vendor to assign                  |
 
 **Response `200`**
 
@@ -1521,11 +1629,45 @@ Set or update DICOM connection details (AE title, IP, port) and register with Or
 
 Test the DICOM echo (C-ECHO) connection to an equipment modality.
 
+**Response `200`**
+
+```json
+{
+  "equipment_id": "uuid",
+  "ae_title": "GEXR001",
+  "host": "192.168.1.50",
+  "dicom_port": 11112,
+  "registered": true,
+  "echo_success": true,
+  "is_connected": true,
+  "message": "C-ECHO successful — device is online."
+}
+```
+
+**Response `422`** — Equipment not configured (no AE title or host).
+
+**Response `503`** — Orthanc server unreachable.
+
 ---
 
 ### POST `/dicom/equipment/{equipment}/register`
 
 Register equipment as a DICOM modality in Orthanc.
+
+**Response `200`**
+
+```json
+{
+  "equipment_id": "uuid",
+  "ae_title": "GEXR001",
+  "registered": true,
+  "message": "Equipment registered as DICOM modality in Orthanc."
+}
+```
+
+**Response `422`** — Equipment missing AE title or host.
+
+**Response `502`** — Orthanc registration failed.
 
 ---
 
@@ -1539,6 +1681,30 @@ Unregister equipment from Orthanc modalities.
 
 Get equipment DICOM connectivity status (last seen, connected state).
 
+**Response `200`**
+
+```json
+{
+  "equipment_id": "uuid",
+  "name": "GE Discovery XR656",
+  "serial_number": "SN-12345",
+  "ae_title": "GEXR001",
+  "host": "192.168.1.50",
+  "dicom_port": 11112,
+  "registered_in_orthanc": true,
+  "is_connected": true,
+  "last_seen_at": "2025-05-01T10:30:00+03:00",
+  "connected_at": "2025-05-01T08:00:00+03:00",
+  "vendor_config": {
+    "mwl_server_ip": "10.0.0.1",
+    "mwl_server_port": 4242,
+    "mwl_server_aet": "VEMSSCP",
+    "equipment_aet": "GEXR001",
+    "connection_type": "DICOM C-FIND Worklist (MWL)"
+  }
+}
+```
+
 ---
 
 ### POST `/dicom/discovered`
@@ -1549,11 +1715,11 @@ Auto-discovers a DICOM device. Creates a new equipment record under the **Uncate
 
 **Request Body**
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `ae_title` | string | Yes | DICOM AE Title, max 16 chars |
-| `remote_ip` | string | No | IP address of the connecting device |
-| `remote_port` | integer | No | Port the device uses to communicate (1–65535) |
+| Field         | Type    | Required | Notes                                         |
+| ------------- | ------- | -------- | --------------------------------------------- |
+| `ae_title`    | string  | Yes      | DICOM AE Title, max 16 chars                  |
+| `remote_ip`   | string  | No       | IP address of the connecting device           |
+| `remote_port` | integer | No       | Port the device uses to communicate (1–65535) |
 
 **Response `201`** — First discovery
 
@@ -1582,6 +1748,30 @@ Auto-discovers a DICOM device. Creates a new equipment record under the **Uncate
 
 ---
 
+### POST `/dicom/equipment/heartbeat`
+
+> **Internal endpoint** — called by Orthanc's Lua scripts when equipment sends a periodic heartbeat/ping. Updates the equipment's connectivity timestamp (`last_seen_at`) and marks it as connected.
+
+**Request Body**
+
+| Field         | Type    | Required | Notes                               |
+| ------------- | ------- | -------- | ----------------------------------- |
+| `ae_title`    | string  | Yes      | DICOM AE Title of the equipment     |
+| `remote_ip`   | string  | No       | IP address of the connecting device |
+| `remote_port` | integer | No       | Port the device uses                |
+
+**Response `200`** — Heartbeat recorded.
+
+```json
+{
+  "acknowledged": true,
+  "ae_title": "GEXR001",
+  "last_seen_at": "2026-08-04T10:30:00+03:00"
+}
+```
+
+---
+
 ### DICOM Callbacks (Internal)
 
 #### POST `/dicom/callback/result`
@@ -1602,13 +1792,42 @@ List equipment status change logs.
 
 **Query Parameters**
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `equipment_id` | uuid | Filter by equipment |
-| `status` | string | Filter by status value |
-| `from` | date | `Y-m-d` |
-| `to` | date | `Y-m-d` |
-| `per_page` | integer | 1–100, default 15 |
+| Param          | Type    | Notes                  |
+| -------------- | ------- | ---------------------- |
+| `equipment_id` | uuid    | Filter by equipment    |
+| `status`       | string  | Filter by status value |
+| `from`         | date    | `Y-m-d`                |
+| `to`           | date    | `Y-m-d`                |
+| `per_page`     | integer | 1–100, default 15      |
+
+**Response `200`**
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "equipment_id": "uuid",
+      "equipment_code": "XRAY-001",
+      "equipment_name": "GE Discovery XR656",
+      "status": "maintenance",
+      "started_at": "2025-05-01T09:00:00+03:00",
+      "ended_at": null,
+      "downtime_minutes": null,
+      "downtime_formatted": null,
+      "reason": "Scheduled maintenance",
+      "recorded_by": "Admin User",
+      "resolved_by": null
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "per_page": 15,
+    "total": 25,
+    "total_pages": 2
+  }
+}
+```
 
 ---
 
@@ -1616,11 +1835,53 @@ List equipment status change logs.
 
 Log an equipment status change.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `equipment_id` | uuid | Yes | |
-| `status` | string | Yes | New status value |
-| `notes` | string | No | Reason for status change |
+| Field          | Type   | Required | Notes                    |
+| -------------- | ------ | -------- | ------------------------ |
+| `equipment_id` | uuid   | Yes      |                          |
+| `status`       | string | Yes      | New status value         |
+| `notes`        | string | No       | Reason for status change |
+
+**Response `201`** — Downtime started.
+
+```json
+{
+  "message": "Equipment status logged successfully.",
+  "log": {
+    "id": "uuid",
+    "equipment_id": "uuid",
+    "equipment_code": "XRAY-001",
+    "equipment_name": "GE Discovery XR656",
+    "status": "maintenance",
+    "started_at": "2025-05-01T09:00:00+03:00",
+    "ended_at": null,
+    "downtime_minutes": null,
+    "downtime_formatted": null,
+    "reason": "Scheduled maintenance",
+    "recorded_by": "Admin User",
+    "resolved_by": null
+  }
+}
+```
+
+**Response `201`** — Equipment brought back up (downtime resolved).
+
+```json
+{
+  "message": "Equipment status resolved.",
+  "log": {
+    "id": "uuid",
+    "equipment_id": "uuid",
+    "status": "active",
+    "started_at": "2025-05-01T09:00:00+03:00",
+    "ended_at": "2025-05-01T12:00:00+03:00",
+    "downtime_minutes": 180,
+    "downtime_formatted": "3h 0m",
+    "reason": "Maintenance completed"
+  }
+}
+```
+
+**Response `409`** — Equipment already in downtime.
 
 ---
 
@@ -1628,11 +1889,63 @@ Log an equipment status change.
 
 Get a single status log entry.
 
+**Response `200`**
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "equipment_id": "uuid",
+    "equipment_code": "XRAY-001",
+    "equipment_name": "GE Discovery XR656",
+    "status": "maintenance",
+    "started_at": "2025-05-01T09:00:00+03:00",
+    "ended_at": null,
+    "downtime_minutes": null,
+    "downtime_formatted": null,
+    "reason": "Scheduled maintenance",
+    "recorded_by": "Admin User",
+    "resolved_by": null,
+    "notes": "Annual service",
+    "created_at": "2025-05-01T09:00:00+03:00",
+    "updated_at": "2025-05-01T09:00:00+03:00",
+    "current_downtime_minutes": 45,
+    "current_downtime_formatted": "0h 45m"
+  }
+}
+```
+
 ---
 
 ### GET `/equipment-status/active-downtimes`
 
 List equipment currently in downtime (maintenance/non-operational).
+
+**Response `200`**
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "equipment_id": "uuid",
+      "equipment_code": "XRAY-001",
+      "equipment_name": "GE Discovery XR656",
+      "status": "maintenance",
+      "started_at": "2025-05-01T09:00:00+03:00",
+      "ended_at": null,
+      "downtime_minutes": null,
+      "downtime_formatted": null,
+      "reason": "Scheduled maintenance",
+      "recorded_by": "Admin User",
+      "resolved_by": null,
+      "current_downtime_minutes": 120,
+      "current_downtime_formatted": "2h 0m"
+    }
+  ],
+  "total_active_downtimes": 3
+}
+```
 
 ---
 
@@ -1644,13 +1957,27 @@ Get status summary across all equipment.
 
 ```json
 {
-  "total_equipment": 42,
-  "operational": 35,
-  "maintenance": 4,
-  "non_operational": 2,
-  "unknown": 1,
-  "total_downtime_hours": 156.5,
-  "average_mtbf_hours": 720
+  "summary": {
+    "total_incidents": 42,
+    "total_downtime_minutes": 9390,
+    "total_downtime_formatted": "156h 30m",
+    "average_downtime_minutes": 223,
+    "average_downtime_formatted": "3h 43m",
+    "max_downtime_minutes": 1440,
+    "max_downtime_formatted": "24h 0m",
+    "affected_equipment_count": 15,
+    "active_downtimes_count": 3
+  },
+  "top_downtime_equipment": [
+    {
+      "equipment_id": "uuid",
+      "equipment_code": "CT-002",
+      "equipment_name": "Siemens Somatom",
+      "incident_count": 5,
+      "total_downtime_minutes": 2400,
+      "total_downtime_formatted": "40h 0m"
+    }
+  ]
 }
 ```
 
@@ -1659,6 +1986,41 @@ Get status summary across all equipment.
 ### GET `/equipment-status/equipment/{equipment}/stats`
 
 Get status statistics for a specific equipment over time.
+
+**Response `200`**
+
+```json
+{
+  "equipment": {
+    "id": "uuid",
+    "code": "XRAY-001",
+    "name": "GE Discovery XR656",
+    "status": "active"
+  },
+  "statistics": {
+    "total_downtimes": 3,
+    "total_downtime_minutes": 540,
+    "total_downtime_formatted": "9h 0m",
+    "average_downtime_minutes": 180,
+    "average_downtime_formatted": "3h 0m",
+    "max_downtime_minutes": 240,
+    "max_downtime_formatted": "4h 0m",
+    "min_downtime_minutes": 120,
+    "min_downtime_formatted": "2h 0m"
+  },
+  "active_downtime": {
+    "id": "uuid",
+    "started_at": "2025-05-01T09:00:00+03:00",
+    "reason": "Scheduled maintenance",
+    "current_downtime_minutes": 120,
+    "current_downtime_formatted": "2h 0m"
+  },
+  "common_reasons": [
+    { "reason": "Scheduled maintenance", "count": 2 },
+    { "reason": "Power failure", "count": 1 }
+  ]
+}
+```
 
 ---
 
@@ -1670,17 +2032,45 @@ List SHA procedures with filtering.
 
 **Query Parameters**
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `lifecycle_state` | string | `active`, `suspended`, `retired` |
-| `category` | string | Procedure category |
-| `search` | string | Free-text search |
-| `page` | integer | Default 1 |
-| `page_size` | integer | 1–500, default 20 |
-| `skip` | integer | Offset (alternative to page) |
-| `limit` | integer | 1–500 |
+| Param             | Type    | Notes                            |
+| ----------------- | ------- | -------------------------------- |
+| `lifecycle_state` | string  | `active`, `suspended`, `retired` |
+| `category`        | string  | Procedure category               |
+| `search`          | string  | Free-text search                 |
+| `page`            | integer | Default 1                        |
+| `page_size`       | integer | 1–500, default 20                |
+| `skip`            | integer | Offset (alternative to page)     |
+| `limit`           | integer | 1–500                            |
 
 **Response `200`** — Array of procedure objects.
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "procedure_code": "XRAY-CHEST-PA",
+      "name": "Chest X-Ray PA",
+      "category": "Radiology",
+      "procedure_type": "Diagnostic",
+      "description": "Posteroanterior chest radiograph",
+      "reimbursement_amount": 3500.00,
+      "currency": "KES",
+      "effective_from": "2025-01-01T00:00:00+03:00",
+      "effective_to": null,
+      "lifecycle_state": "active",
+      "created_at": "2025-01-01T00:00:00+03:00",
+      "updated_at": "2025-01-01T00:00:00+03:00"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "per_page": 20,
+    "total": 150,
+    "total_pages": 8
+  }
+}
+```
 
 ---
 
@@ -1688,20 +2078,20 @@ List SHA procedures with filtering.
 
 Create a new SHA procedure.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `procedure_code` | string | Yes | 1–50 chars, unique |
-| `name` | string | Yes | 1–255 chars |
-| `category` | string | No | Max 100 chars |
-| `procedure_type` | string | No | Max 100 chars |
-| `description` | string | No | |
-| `reimbursement_amount` | number | Yes | Minimum 0 |
-| `currency` | string | No | Default `KES` |
-| `effective_from` | datetime | Yes | |
-| `effective_to` | datetime | No | |
-| `lifecycle_state` | string | No | Default `active` |
+| Field                  | Type     | Required | Notes              |
+| ---------------------- | -------- | -------- | ------------------ |
+| `procedure_code`       | string   | Yes      | 1–50 chars, unique |
+| `name`                 | string   | Yes      | 1–255 chars        |
+| `category`             | string   | No       | Max 100 chars      |
+| `procedure_type`       | string   | No       | Max 100 chars      |
+| `description`          | string   | No       |                    |
+| `reimbursement_amount` | number   | Yes      | Minimum 0          |
+| `currency`             | string   | No       | Default `KES`      |
+| `effective_from`       | datetime | Yes      |                    |
+| `effective_to`         | datetime | No       |                    |
+| `lifecycle_state`      | string   | No       | Default `active`   |
 
-**Response `201`** — Procedure created.
+**Response `201`** — Procedure created. Returns the full procedure object.
 
 ---
 
@@ -1709,10 +2099,25 @@ Create a new SHA procedure.
 
 List only active procedures (returns simple list for frontend dropdowns).
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `skip` | integer | Default 0 |
+| Param   | Type    | Notes              |
+| ------- | ------- | ------------------ |
+| `skip`  | integer | Default 0          |
 | `limit` | integer | 1–500, default 100 |
+
+**Response `200`** — Flat array (not wrapped in `data`).
+
+```json
+[
+  {
+    "id": "uuid",
+    "procedure_code": "XRAY-CHEST-PA",
+    "name": "Chest X-Ray PA",
+    "category": "Radiology",
+    "reimbursement_amount": 3500.00,
+    "currency": "KES"
+  }
+]
+```
 
 ---
 
@@ -1740,34 +2145,6 @@ Soft-delete (mark as `retired`). Returns `204`.
 
 ---
 
-### Modality-Procedure Mappings
-
-#### GET `/procedures/modality-mappings`
-
-List all modality-procedure mappings, optionally filtered by modality.
-
-| Param | Type | Notes |
-|-------|------|-------|
-| `modality_code` | string | e.g. `CT`, `MRI` |
-| `modality_id` | uuid | |
-
-#### POST `/procedures/modality-mappings`
-
-Map a procedure to a modality.
-
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `modality_id` | uuid | Yes | |
-| `procedure_id` | uuid | Yes | |
-| `sha_procedure_code` | string | Yes | Max 50 chars |
-| `is_capable` | boolean | No | Default `true` |
-| `processing_time_minutes` | integer | No | |
-| `notes` | string | No | |
-
-#### DELETE `/procedures/modality-mappings/{mapping_id}`
-
-Remove a procedure mapping from a modality. Returns `204`.
-
 ---
 
 ## 11. Lots & Services
@@ -1776,21 +2153,77 @@ Remove a procedure mapping from a modality. Returns `204`.
 
 List equipment/contract lots.
 
+**Response `200`**
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "number": "1",
+      "name": "Diagnostics Imaging X-ray",
+      "is_active": true,
+      "services_count": 8
+    }
+  ],
+  "pagination": { "current_page": 1, "per_page": 20, "total": 12, "total_pages": 1 }
+}
+```
+
 ---
 
 ### POST `/lots`
 
 Create a new lot.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `name` | string | Yes | |
-| `number` | string | Yes | Unique lot number |
-| `facility_id` | uuid | Yes | |
-| `vendor_id` | uuid | No | |
-| `description` | string | No | |
+| Field         | Type   | Required | Notes             |
+| ------------- | ------ | -------- | ----------------- |
+| `name`        | string | Yes      |                   |
+| `number`      | string | Yes      | Unique lot number |
+| `facility_id` | uuid   | Yes      |                   |
+| `vendor_id`   | uuid   | No       |                   |
+| `description` | string | No       |                   |
+
+**Response `201`**
+
+```json
+{
+  "message": "Lot created successfully.",
+  "lot": {
+    "id": "uuid",
+    "number": "1",
+    "name": "Diagnostics Imaging X-ray",
+    "is_active": true,
+    "services_count": 0
+  }
+}
+```
+
+**Response `409`** — Lot number already exists.
 
 ---
+
+### GET `/lots/{lot}`
+
+Get lot details.
+
+**Response `200`**
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "number": "1",
+    "name": "Diagnostics Imaging X-ray",
+    "is_active": true,
+    "services_count": 8,
+    "created_at": "2025-01-01T00:00:00+03:00",
+    "updated_at": "2025-01-01T00:00:00+03:00"
+  }
+}
+```
+
+**Response `404`** — Lot not found.
 
 ### GET `/lots/{lot}`
 
@@ -1816,21 +2249,71 @@ Delete a lot (must have no active services).
 
 List services defined under a lot.
 
+**Response `200`**
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "lot_id": "uuid",
+      "name": "Chest X-Ray PA",
+      "code": "XRAY-CHEST-PA",
+      "modality": "DX",
+      "tariff": 3500.00,
+      "vendor_share": 2100.00,
+      "facility_share": 1400.00,
+      "capitated": false,
+      "is_active": true
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "last_page": 1,
+    "per_page": 15,
+    "total": 8,
+    "from": 1,
+    "to": 8
+  }
+}
+```
+
 #### POST `/lots/{lot}/services`
 
 Add a service to a lot.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `code` | string | Yes | Service/procedure code |
-| `name` | string | Yes | |
-| `tariff` | number | Yes | |
-| `modality` | string | No | DICOM modality code |
-| `category` | string | No | |
+| Field      | Type   | Required | Notes                  |
+| ---------- | ------ | -------- | ---------------------- |
+| `code`     | string | Yes      | Service/procedure code |
+| `name`     | string | Yes      |                        |
+| `tariff`   | number | Yes      |                        |
+| `modality` | string | No       | DICOM modality code    |
+| `category` | string | No       |                        |
 
 #### GET `/lots/{lot}/services/{service}`
 
 Get a single lot service.
+
+**Response `200`**
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "lot_id": "uuid",
+    "name": "Chest X-Ray PA",
+    "code": "XRAY-CHEST-PA",
+    "modality": "DX",
+    "tariff": 3500.00,
+    "vendor_share": 2100.00,
+    "facility_share": 1400.00,
+    "capitated": false,
+    "is_active": true,
+    "created_at": "2025-01-01T00:00:00+03:00",
+    "updated_at": "2025-01-01T00:00:00+03:00"
+  }
+}
+```
 
 #### PATCH `/lots/{lot}/services/{service}`
 
@@ -1850,27 +2333,94 @@ Remove service from lot.
 
 List contracts with pagination.
 
+**Response `200`**
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "contract_number": "VEMS/2025/001",
+      "vendor": { "id": "uuid", "name": "Melco Kenya Ltd", "code": "VEN001" },
+      "facility": { "id": "uuid", "name": "Kenyatta National Hospital", "code": "KNH" },
+      "start_date": "2025-01-01",
+      "end_date": "2025-12-31",
+      "status": "active",
+      "notes": null,
+      "created_by": { "id": "uuid", "name": "Admin User" },
+      "created_at": "2025-01-01T00:00:00+03:00",
+      "services_count": 5,
+      "services": [
+        {
+          "id": "uuid",
+          "lot": { "id": "uuid", "number": "1", "name": "Diagnostics Imaging X-ray" },
+          "service": { "id": "uuid", "code": "XRAY-CHEST-PA", "name": "Chest X-Ray PA", "tariff": 3500.00 },
+          "equipment": { "id": "uuid", "code": "XRAY-001", "name": "GE Discovery XR656", "category": "xray_digital", "status": "active" },
+          "is_active": true
+        }
+      ]
+    }
+  ],
+  "pagination": { "current_page": 1, "per_page": 20, "total": 30, "total_pages": 2 }
+}
+```
+
 ---
 
 ### POST `/contracts`
 
 Create a new contract between a vendor and facility.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `vendor_id` | uuid | Yes | |
-| `facility_id` | uuid | Yes | |
-| `contract_number` | string | Yes | Unique |
-| `start_date` | date | Yes | |
-| `end_date` | date | No | |
-| `status` | string | No | `active`, `inactive`, `expired` |
-| `terms` | string | No | |
+| Field             | Type   | Required | Notes                           |
+| ----------------- | ------ | -------- | ------------------------------- |
+| `vendor_id`       | uuid   | Yes      |                                 |
+| `facility_id`     | uuid   | Yes      |                                 |
+| `contract_number` | string | Yes      | Unique                          |
+| `start_date`      | date   | Yes      |                                 |
+| `end_date`        | date   | No       |                                 |
+| `status`          | string | No       | `active`, `inactive`, `expired` |
+| `terms`           | string | No       |                                 |
 
 ---
 
 ### GET `/contracts/{contract}`
 
 Get contract details with services.
+
+**Response `200`**
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "contract_number": "VEMS/2025/001",
+    "vendor": { "id": "uuid", "name": "Melco Kenya Ltd", "code": "VEN001", "email": "info@melco.co.ke", "phone": "+254700000000" },
+    "facility": { "id": "uuid", "name": "KNH", "code": "KNH", "keph_level": "6", "facility_type": "National Referral Hospital" },
+    "start_date": "2025-01-01",
+    "end_date": "2025-12-31",
+    "status": "active",
+    "is_currently_active": true,
+    "is_expired": false,
+    "notes": null,
+    "created_by": { "id": "uuid", "name": "Admin User" },
+    "created_at": "2025-01-01T00:00:00+03:00",
+    "services_count": 5,
+    "lots": [
+      {
+        "lot": { "id": "uuid", "number": "1", "name": "Diagnostics Imaging X-ray" },
+        "services": [
+          {
+            "id": "uuid",
+            "service": { "id": "uuid", "code": "XRAY-CHEST-PA", "name": "Chest X-Ray PA", "tariff": 3500.00, "vendor_share": 2100.00, "facility_share": 1400.00 },
+            "equipment": { "id": "uuid", "code": "XRAY-001", "name": "GE Discovery XR656", "category": "xray_digital", "status": "active" },
+            "is_active": true
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
 ---
 
@@ -1890,6 +2440,37 @@ Delete contract.
 
 Discover services available to a facility through its active contracts.
 
+**Response `200`**
+
+```json
+{
+  "facility_id": "uuid",
+  "total_contracts": 2,
+  "data": [
+    {
+      "contract": {
+        "id": "uuid",
+        "contract_number": "VEMS/2025/001",
+        "vendor": { "id": "uuid", "name": "Melco Kenya Ltd", "code": "VEN001" },
+        "end_date": "2025-12-31"
+      },
+      "lots": [
+        {
+          "lot": { "id": "uuid", "number": "1", "name": "Diagnostics Imaging X-ray" },
+          "services": [
+            {
+              "contract_service_id": "uuid",
+              "service": { "id": "uuid", "code": "XRAY-CHEST-PA", "name": "Chest X-Ray PA", "tariff": 3500.00 },
+              "equipment": { "id": "uuid", "code": "XRAY-001", "name": "GE Discovery XR656", "status": "active" }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 ### Contract Services
@@ -1898,16 +2479,38 @@ Discover services available to a facility through its active contracts.
 
 List services under a contract.
 
+**Response `200`**
+
+```json
+{
+  "contract": { "id": "uuid", "contract_number": "VEMS/2025/001" },
+  "total_services": 5,
+  "data": [
+    {
+      "lot": { "id": "uuid", "number": "1", "name": "Diagnostics Imaging X-ray" },
+      "services": [
+        {
+          "id": "uuid",
+          "service": { "id": "uuid", "code": "XRAY-CHEST-PA", "name": "Chest X-Ray PA", "tariff": 3500.00 },
+          "equipment": { "id": "uuid", "code": "XRAY-001", "name": "GE Discovery XR656" },
+          "is_active": true
+        }
+      ]
+    }
+  ]
+}
+```
+
 #### POST `/contracts/{contract}/services`
 
 Add a service to a contract.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `lot_service_id` | uuid | Yes | Reference to a lot service |
-| `tariff` | number | Yes | Contract-specific tariff |
-| `vendor_share_percentage` | number | No | 0–100 |
-| `facility_share_percentage` | number | No | 0–100 |
+| Field                       | Type   | Required | Notes                      |
+| --------------------------- | ------ | -------- | -------------------------- |
+| `lot_service_id`            | uuid   | Yes      | Reference to a lot service |
+| `tariff`                    | number | Yes      | Contract-specific tariff   |
+| `vendor_share_percentage`   | number | No       | 0–100                      |
+| `facility_share_percentage` | number | No       | 0–100                      |
 
 #### PATCH `/contracts/{contract}/services/{service}`
 
@@ -1955,17 +2558,17 @@ Validates services, sends an OTP to the patient's phone, and returns a session t
 }
 ```
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `facility_id` | uuid | Yes | |
-| `patient_id` | uuid | Yes | |
-| `override` | boolean | No | Skip finance approval |
-| `notes` | string | No | Max 2000 chars |
-| `services` | array | Yes | Min 1 item |
-| `services.*.contract_service_id` | uuid | Yes | Must belong to this facility's active contract |
-| `services.*.practitioner_id` | uuid | No | |
-| `services.*.scheduled_date` | string | Yes | Format `Y-m-d H:i`, must be today or future |
-| `services.*.notes` | string | No | Max 500 chars |
+| Field                            | Type    | Required | Notes                                          |
+| -------------------------------- | ------- | -------- | ---------------------------------------------- |
+| `facility_id`                    | uuid    | Yes      |                                                |
+| `patient_id`                     | uuid    | Yes      |                                                |
+| `override`                       | boolean | No       | Skip finance approval                          |
+| `notes`                          | string  | No       | Max 2000 chars                                 |
+| `services`                       | array   | Yes      | Min 1 item                                     |
+| `services.*.contract_service_id` | uuid    | Yes      | Must belong to this facility's active contract |
+| `services.*.practitioner_id`     | uuid    | No       |                                                |
+| `services.*.scheduled_date`      | string  | Yes      | Format `Y-m-d H:i`, must be today or future    |
+| `services.*.notes`               | string  | No       | Max 500 chars                                  |
 
 **Response `200`**
 
@@ -2098,9 +2701,9 @@ Poll the state of a booking session.
 
 **Query Parameters**
 
-| Param | Type | Required |
-|-------|------|----------|
-| `session_id` | string | Yes |
+| Param        | Type   | Required |
+| ------------ | ------ | -------- |
+| `session_id` | string | Yes      |
 
 **Response `200`**
 
@@ -2133,20 +2736,20 @@ List bookings. Returns a summary alongside paginated results.
 
 **Query Parameters**
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `fr_code` | string | Filter by facility FR code |
-| `facility_id` | uuid | |
-| `patient_id` | uuid | |
-| `status` | string | `pending_otp`, `active`, `completed`, `cancelled` |
-| `source` | string | `provider_portal`, `hmis`, `standalone` |
-| `from` | date | `Y-m-d` |
-| `to` | date | `Y-m-d` |
-| `search` | string | Booking number, patient name, ID number |
-| `sort_by` | string | `booking_number`, `status`, `created_at` |
-| `sort_order` | string | `asc`, `desc` |
-| `per_page` | integer | 1–100, default 15 |
-| `finance_approved` | boolean | |
+| Param              | Type    | Notes                                             |
+| ------------------ | ------- | ------------------------------------------------- |
+| `fr_code`          | string  | Filter by facility FR code                        |
+| `facility_id`      | uuid    |                                                   |
+| `patient_id`       | uuid    |                                                   |
+| `status`           | string  | `pending_otp`, `active`, `completed`, `cancelled` |
+| `source`           | string  | `provider_portal`, `hmis`, `standalone`           |
+| `from`             | date    | `Y-m-d`                                           |
+| `to`               | date    | `Y-m-d`                                           |
+| `search`           | string  | Booking number, patient name, ID number           |
+| `sort_by`          | string  | `booking_number`, `status`, `created_at`          |
+| `sort_order`       | string  | `asc`, `desc`                                     |
+| `per_page`         | integer | 1–100, default 15                                 |
+| `finance_approved` | boolean |                                                   |
 
 **Response `200`**
 
@@ -2250,8 +2853,8 @@ List all booked services for a booking.
 
 **Query Parameters**
 
-| Param | Notes |
-|-------|-------|
+| Param    | Notes                    |
+| -------- | ------------------------ |
 | `status` | Filter by service status |
 
 **Response `200`**
@@ -2455,6 +3058,12 @@ All routes require `auth:sanctum` + `role:provider_portal`.
 
 Get services available at a facility.
 
+**Query Parameters**
+
+| Param     | Type   | Required | Notes                  |
+| --------- | ------ | -------- | ---------------------- |
+| `fr_code` | string | Yes      | Facility Registry code |
+
 ---
 
 ### POST `/provider/book`
@@ -2487,12 +3096,12 @@ Create a booking worklist from the provider portal (HMIS integration). The `visi
 }
 ```
 
-| Field | Notes |
-|-------|-------|
-| `visit_id` | UUID, must be unique across all bookings |
-| `fr_code` | Facility Registry code |
+| Field                        | Notes                                                                                                                         |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `visit_id`                   | UUID, must be unique across all bookings                                                                                      |
+| `fr_code`                    | Facility Registry code                                                                                                        |
 | `patient.identificationType` | `National ID`, `Temporary ID`, `Alien ID`, `Refugee ID`, `Mandate Number`, `Birth Certificate`, `Birth Notification`, `CR ID` |
-| `services.*.practitioner` | Optional; all three sub-fields required if provided |
+| `services.*.practitioner`    | Optional; all three sub-fields required if provided                                                                           |
 
 **Response `201`**
 
@@ -2520,15 +3129,29 @@ List bookings created via the provider portal.
 
 ---
 
-### GET `/provider/bookings/{booking}`
+### GET `/provider/bookings/show`
 
-Get a single provider portal booking.
+Get a single provider portal booking by `visit_id` or `claim_id`.
+
+**Query Parameters** (one required)
+
+| Param      | Type | Notes                 |
+| ---------- | ---- | --------------------- |
+| `visit_id` | uuid | HMIS visit identifier |
+| `claim_id` | uuid | SHA claim identifier  |
 
 ---
 
-### GET `/provider/bookings/{booking}/costs`
+### GET `/provider/bookings/costs`
 
 Get cost breakdown for all services in a booking.
+
+**Query Parameters** (one required)
+
+| Param      | Type | Notes                 |
+| ---------- | ---- | --------------------- |
+| `visit_id` | uuid | HMIS visit identifier |
+| `claim_id` | uuid | SHA claim identifier  |
 
 **Response `200`**
 
@@ -2574,7 +3197,7 @@ Get cost breakdown for all services in a booking.
 
 ---
 
-### POST `/provider/bookings/{visitId}/claim`
+### POST `/provider/bookings/claim`
 
 Assign a SHA claim ID to an existing booking.
 
@@ -2600,9 +3223,9 @@ Assign a SHA claim ID to an existing booking.
 
 ---
 
-### POST `/provider/bookings/{visitId}/services`
+### POST `/provider/bookings/services`
 
-Add additional services to an existing booking by `visit_id`.
+Add additional services to an existing booking. Identifies the booking by `visit_id` or `claim_id` in the request body.
 
 **Request Body** — same `services` array shape as `POST /provider/book`.
 
@@ -2630,10 +3253,10 @@ Validate services for a payer using a booking reference or claim ID. Returns ful
 
 **Query Parameters**
 
-| Param | Type | Required | Values |
-|-------|------|----------|--------|
-| `reference_type` | string | Yes | `booking_reference`, `claim_id` |
-| `reference_number` | string | Yes | The booking number or claim UUID |
+| Param              | Type   | Required | Values                           |
+| ------------------ | ------ | -------- | -------------------------------- |
+| `reference_type`   | string | Yes      | `booking_reference`, `claim_id`  |
+| `reference_number` | string | Yes      | The booking number or claim UUID |
 
 **Response `200`** — Found
 
@@ -2733,28 +3356,28 @@ Main entry point for EMR requests. Validates procedures, selects equipment, pers
 
 **Request Body**
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `request_id` | string | Yes | EMR system request ID, 1–100 chars |
-| `patient_id` | string | Yes | Patient identifier, 1–100 chars |
-| `patient_first_name` | string | Yes | 1–100 chars |
-| `patient_last_name` | string | No | Max 100 chars |
-| `patient_mrn` | string | No | Medical record number |
-| `date_of_birth` | date | No | |
-| `sex` | string | No | `M`, `F`, `U`, `O`, default `U` |
-| `modality` | string | No | Legacy modality code, max 32 chars |
-| `description` | string | No | Max 500 chars |
-| `institution_name` | string | No | Max 255 chars |
-| `procedures` | array | Yes | SHA procedure codes (min 1) |
-| `facility_id` | string | Yes | 1–50 chars |
-| `claim_id` | string | No | Max 100 chars |
-| `payor` | string | No | Max 100 chars |
-| `preauth_code` | string | No | Max 100 chars |
-| `callback_url` | uri | No | Max 2083 chars |
-| `callback_auth_type` | string | No | Default `Bearer` |
-| `callback_auth_token` | string | No | Max 500 chars |
-| `idempotency_key` | string | Yes | Unique key for idempotency |
-| `request_metadata` | object | No | |
+| Field                 | Type   | Required | Notes                              |
+| --------------------- | ------ | -------- | ---------------------------------- |
+| `request_id`          | string | Yes      | EMR system request ID, 1–100 chars |
+| `patient_id`          | string | Yes      | Patient identifier, 1–100 chars    |
+| `patient_first_name`  | string | Yes      | 1–100 chars                        |
+| `patient_last_name`   | string | No       | Max 100 chars                      |
+| `patient_mrn`         | string | No       | Medical record number              |
+| `date_of_birth`       | date   | No       |                                    |
+| `sex`                 | string | No       | `M`, `F`, `U`, `O`, default `U`    |
+| `modality`            | string | No       | Legacy modality code, max 32 chars |
+| `description`         | string | No       | Max 500 chars                      |
+| `institution_name`    | string | No       | Max 255 chars                      |
+| `procedures`          | array  | Yes      | SHA procedure codes (min 1)        |
+| `facility_id`         | string | Yes      | 1–50 chars                         |
+| `claim_id`            | string | No       | Max 100 chars                      |
+| `payor`               | string | No       | Max 100 chars                      |
+| `preauth_code`        | string | No       | Max 100 chars                      |
+| `callback_url`        | uri    | No       | Max 2083 chars                     |
+| `callback_auth_type`  | string | No       | Default `Bearer`                   |
+| `callback_auth_token` | string | No       | Max 500 chars                      |
+| `idempotency_key`     | string | Yes      | Unique key for idempotency         |
+| `request_metadata`    | object | No       |                                    |
 
 **Response `202`**
 
@@ -2775,13 +3398,13 @@ Main entry point for EMR requests. Validates procedures, selects equipment, pers
 
 Attach or clear the EMR claim ID after claim posting.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `claim_id` | string | Yes | 1–100 chars |
-| `payor` | string | No | Max 100 chars |
-| `preauth_code` | string | No | Max 100 chars |
-| `request_id` | string | No | EMR request ID |
-| `internal_request_id` | string | No | Middleware request ID |
+| Field                 | Type   | Required | Notes                 |
+| --------------------- | ------ | -------- | --------------------- |
+| `claim_id`            | string | Yes      | 1–100 chars           |
+| `payor`               | string | No       | Max 100 chars         |
+| `preauth_code`        | string | No       | Max 100 chars         |
+| `request_id`          | string | No       | EMR request ID        |
+| `internal_request_id` | string | No       | Middleware request ID |
 
 ---
 
@@ -2791,15 +3414,15 @@ List medical requests with filtering and pagination.
 
 **Query Parameters**
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `status` | string | `pending`, `in_progress`, `completed`, `failed`, `cancelled` |
-| `patient_id` | string | |
-| `patient` | string | Patient name search |
-| `facility_id` | string | |
-| `facility_name` | string | |
-| `page` | integer | Default 1 |
-| `page_size` | integer | 1–100, default 20 |
+| Param           | Type    | Notes                                                        |
+| --------------- | ------- | ------------------------------------------------------------ |
+| `status`        | string  | `pending`, `in_progress`, `completed`, `failed`, `cancelled` |
+| `patient_id`    | string  |                                                              |
+| `patient`       | string  | Patient name search                                          |
+| `facility_id`   | string  |                                                              |
+| `facility_name` | string  |                                                              |
+| `page`          | integer | Default 1                                                    |
+| `page_size`     | integer | 1–100, default 20                                            |
 
 ---
 
@@ -2831,8 +3454,8 @@ Get callback logs for a request (EMR notification history).
 
 Return only equipment that can handle this request's procedures for the given facility.
 
-| Param | Type | Notes |
-|-------|------|-------|
+| Param         | Type   | Notes           |
+| ------------- | ------ | --------------- |
 | `facility_id` | string | Target facility |
 
 ---
@@ -2841,10 +3464,10 @@ Return only equipment that can handle this request's procedures for the given fa
 
 Change request target facility/equipment and reset assignment for worklist resend.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `facility_id` | string | Yes | 1–50 chars |
-| `equipment_id` | uuid | Yes | |
+| Field          | Type   | Required | Notes      |
+| -------------- | ------ | -------- | ---------- |
+| `facility_id`  | string | Yes      | 1–50 chars |
+| `equipment_id` | uuid   | Yes      |            |
 
 **Response `200`**
 
@@ -2887,13 +3510,13 @@ Resend worklist(s) through Orthanc's API and verify MWL publication.
 
 Simulate a C-STORE result from Orthanc and send the EMR callback. (Testing only.)
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `equipment_id` | uuid | No | |
-| `procedure_code` | string | No | 1–50 chars |
-| `status` | string | No | Default `final` |
-| `performed_at` | datetime | No | |
-| `result_payload` | object | No | |
+| Field            | Type     | Required | Notes           |
+| ---------------- | -------- | -------- | --------------- |
+| `equipment_id`   | uuid     | No       |                 |
+| `procedure_code` | string   | No       | 1–50 chars      |
+| `status`         | string   | No       | Default `final` |
+| `performed_at`   | datetime | No       |                 |
+| `result_payload` | object   | No       |                 |
 
 ---
 
@@ -2901,10 +3524,10 @@ Simulate a C-STORE result from Orthanc and send the EMR callback. (Testing only.
 
 Get request statistics.
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `facility_id` | string | Filter by facility |
-| `days` | integer | 1–90, default 7 |
+| Param         | Type    | Notes              |
+| ------------- | ------- | ------------------ |
+| `facility_id` | string  | Filter by facility |
+| `days`        | integer | 1–90, default 7    |
 
 ---
 
@@ -2914,15 +3537,15 @@ Get request statistics.
 
 Receive MPPS (Modality Performed Procedure Step) event update from equipment.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `internal_request_id` | string | Yes | |
-| `equipment_id` | string | No | Equipment UUID |
-| `equipment_code` | string | No | Equipment code, asset_id, or DICOM AET |
-| `procedure_code` | string | Yes | |
-| `status` | string | Yes | |
-| `performed_at` | datetime | No | |
-| `payload` | object | No | |
+| Field                 | Type     | Required | Notes                                  |
+| --------------------- | -------- | -------- | -------------------------------------- |
+| `internal_request_id` | string   | Yes      |                                        |
+| `equipment_id`        | string   | No       | Equipment UUID                         |
+| `equipment_code`      | string   | No       | Equipment code, asset_id, or DICOM AET |
+| `procedure_code`      | string   | Yes      |                                        |
+| `status`              | string   | Yes      |                                        |
+| `performed_at`        | datetime | No       |                                        |
+| `payload`             | object   | No       |                                        |
 
 ---
 
@@ -2930,14 +3553,14 @@ Receive MPPS (Modality Performed Procedure Step) event update from equipment.
 
 Receive C-STORE payload and persist structured result.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `internal_request_id` | string | Yes | |
-| `equipment_id` | string | No | Equipment UUID |
-| `equipment_code` | string | No | Equipment code, asset_id, or DICOM AET |
-| `procedure_code` | string | Yes | |
-| `performed_at` | datetime | No | |
-| `result_payload` | object | Yes | |
+| Field                 | Type     | Required | Notes                                  |
+| --------------------- | -------- | -------- | -------------------------------------- |
+| `internal_request_id` | string   | Yes      |                                        |
+| `equipment_id`        | string   | No       | Equipment UUID                         |
+| `equipment_code`      | string   | No       | Equipment code, asset_id, or DICOM AET |
+| `procedure_code`      | string   | Yes      |                                        |
+| `performed_at`        | datetime | No       |                                        |
+| `result_payload`      | object   | Yes      |                                        |
 
 ---
 
@@ -2953,12 +3576,12 @@ Same body as `POST /equipment/ping-requests`.
 
 List Orthanc ping events.
 
-| Param | Type | Default | Notes |
-|-------|------|---------|-------|
-| `event_type` | string | `ping` | |
-| `forwarded` | boolean | `false` | |
-| `page` | integer | 1 | |
-| `page_size` | integer | 50 | 1–500 |
+| Param        | Type    | Default | Notes |
+| ------------ | ------- | ------- | ----- |
+| `event_type` | string  | `ping`  |       |
+| `forwarded`  | boolean | `false` |       |
+| `page`       | integer | 1       |       |
+| `page_size`  | integer | 50      | 1–500 |
 
 ---
 
@@ -2966,8 +3589,8 @@ List Orthanc ping events.
 
 List dead-lettered DICOM events for operations follow-up.
 
-| Param | Type | Notes |
-|-------|------|-------|
+| Param    | Type   | Notes                          |
+| -------- | ------ | ------------------------------ |
 | `status` | string | `open`, `retrying`, `resolved` |
 
 ---
@@ -2982,12 +3605,12 @@ Verify equipment use for SHA using patient/procedure/facility/time tuple.
 
 If `time_done` is provided, a ±15 minute matching window is used.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `patient_id` | string | Yes | |
-| `procedure` | string | Yes | Procedure code |
-| `facility_id` | string | Yes | |
-| `time_done` | datetime | No | |
+| Field         | Type     | Required | Notes          |
+| ------------- | -------- | -------- | -------------- |
+| `patient_id`  | string   | Yes      |                |
+| `procedure`   | string   | Yes      | Procedure code |
+| `facility_id` | string   | Yes      |                |
+| `time_done`   | datetime | No       |                |
 
 **Response `200`**
 
@@ -3011,10 +3634,22 @@ Verify equipment use using request identifiers.
 
 Accepts `request_id` (EMR request id) or `internal_request_id` (middleware id). At least one identifier required.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `request_id` | string | No | 1–100 chars |
-| `internal_request_id` | string | No | 1–100 chars |
+| Field                 | Type   | Required | Notes       |
+| --------------------- | ------ | -------- | ----------- |
+| `request_id`          | string | No       | 1–100 chars |
+| `internal_request_id` | string | No       | 1–100 chars |
+
+**Response `200`**
+
+```json
+{
+  "emr_request_id": "REQ-2025-00123",
+  "middleware_id": "uuid",
+  "validate_equipment_use": true
+}
+```
+
+**Response `422`** — Neither request_id nor internal_request_id provided.
 
 ---
 
@@ -3024,11 +3659,37 @@ Return EMR booking and service details for SHA claim verification.
 
 Accepts `request_id`, `internal_request_id`, or `claim_id`. At least one identifier required.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `request_id` | string | No | EMR booking number |
-| `internal_request_id` | string | No | Middleware ID |
-| `claim_id` | string | No | Claim ID |
+| Field                 | Type   | Required | Notes              |
+| --------------------- | ------ | -------- | ------------------ |
+| `request_id`          | string | No       | EMR booking number |
+| `internal_request_id` | string | No       | Middleware ID      |
+| `claim_id`            | string | No       | Claim ID           |
+
+**Response `200`**
+
+```json
+{
+  "message": "Claim verification details retrieved.",
+  "booking": { /* Booking object */ },
+  "patient": { /* Patient object */ },
+  "facility": { /* Facility object */ },
+  "financial_summary": { /* Financial summary */ },
+  "services": [ /* Service list */ ]
+}
+```
+
+**Response `200`** — No results found.
+
+```json
+{
+  "message": "No matching booking found.",
+  "booking": null,
+  "patient": null,
+  "facility": null,
+  "financial_summary": null,
+  "services": []
+}
+```
 
 ---
 
@@ -3039,10 +3700,10 @@ Verify claim details by source.
 - `hmis` uses the middleware's internal claim lookup.
 - `provider_portal` proxies the request to VEMS.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `claim_id` | string | Yes | 1–100 chars |
-| `source` | string | Yes | `provider_portal` or `hmis` |
+| Field      | Type   | Required | Notes                       |
+| ---------- | ------ | -------- | --------------------------- |
+| `claim_id` | string | Yes      | 1–100 chars                 |
+| `source`   | string | Yes      | `provider_portal` or `hmis` |
 
 ---
 
@@ -3052,13 +3713,38 @@ Expose completed interventions with request, equipment, timing, and result detai
 
 **Query Parameters**
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `patient_id` | string | |
-| `id_number` | string | National ID / MRN lookup |
-| `emr_request_id` | string | |
-| `facility_id` | string | |
-| `internal_request_id` | string | |
+| Param                 | Type   | Notes                    |
+| --------------------- | ------ | ------------------------ |
+| `patient_id`          | string |                          |
+| `id_number`           | string | National ID / MRN lookup |
+| `emr_request_id`      | string |                          |
+| `facility_id`         | string |                          |
+| `internal_request_id` | string |                          |
+
+**Response `200`**
+
+```json
+{
+  "data": [
+    {
+      "lot_number": "1",
+      "lot_name": "Diagnostics Imaging X-ray",
+      "services": [
+        {
+          "id": "uuid",
+          "code": "XRAY-CHEST-PA",
+          "name": "Chest X-Ray PA",
+          "description": "Posteroanterior chest radiograph",
+          "tariff_amount": 3500.00,
+          "vendor_share_percent": 60.00,
+          "facility_share_percent": 40.00
+        }
+      ]
+    }
+  ],
+  "pagination": { "current_page": 1, "per_page": 20, "total": 50, "total_pages": 3 }
+}
+```
 
 ---
 
@@ -3117,16 +3803,16 @@ Paginated equipment listing with modality, category, status, search, and vendor 
 
 **Query Parameters**
 
-| Param | Type | Default | Values |
-|-------|------|---------|--------|
-| `modality` | string | — | `CT`, `DX`, `MR`, `US`, `MG`, `NM`, `PT`, `XA`, `RF`, `ECG`, `RTPLAN`, `RTSIM`, `non_imaging` |
-| `category` | string | — | Any equipment category value |
-| `status` | string | — | Any equipment status value |
-| `search` | string | — | Free-text search |
-| `vendor_id` | uuid | — | |
-| `sort_by` | string | `name` | `name`, `code`, `category`, `status`, `created_at` |
-| `sort_order` | string | `asc` | `asc`, `desc` |
-| `per_page` | integer | 15 | 1–100 |
+| Param        | Type    | Default | Values                                                                                        |
+| ------------ | ------- | ------- | --------------------------------------------------------------------------------------------- |
+| `modality`   | string  | —       | `CT`, `DX`, `MR`, `US`, `MG`, `NM`, `PT`, `XA`, `RF`, `ECG`, `RTPLAN`, `RTSIM`, `non_imaging` |
+| `category`   | string  | —       | Any equipment category value                                                                  |
+| `status`     | string  | —       | Any equipment status value                                                                    |
+| `search`     | string  | —       | Free-text search                                                                              |
+| `vendor_id`  | uuid    | —       |                                                                                               |
+| `sort_by`    | string  | `name`  | `name`, `code`, `category`, `status`, `created_at`                                            |
+| `sort_order` | string  | `asc`   | `asc`, `desc`                                                                                 |
+| `per_page`   | integer | 15      | 1–100                                                                                         |
 
 ---
 
@@ -3134,17 +3820,17 @@ Paginated equipment listing with modality, category, status, search, and vendor 
 
 All analytics require authentication.
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /analytics/vendors/by-equipments` | Vendor ranking by equipment count |
+| Endpoint                                          | Description                            |
+| ------------------------------------------------- | -------------------------------------- |
+| `GET /analytics/vendors/by-equipments`            | Vendor ranking by equipment count      |
 | `GET /analytics/vendors/by-facilities-supporting` | Vendor ranking by facilities supported |
-| `GET /analytics/vendors/by-procedures` | Vendor ranking by procedures performed |
-| `GET /analytics/vendors/by-procedure-type` | Vendor breakdown by procedure type |
-| `GET /analytics/facilities/by-procedures` | Facility ranking by procedures |
-| `GET /analytics/facilities/by-procedure-type` | Facility breakdown by procedure type |
-| `GET /analytics/facilities/by-vendor` | Facility ranking by vendors engaged |
-| `GET /analytics/reports/procedure-costs` | Procedure cost report |
-| `GET /analytics/reports/procedure-costs/export` | Export procedure cost report |
+| `GET /analytics/vendors/by-procedures`            | Vendor ranking by procedures performed |
+| `GET /analytics/vendors/by-procedure-type`        | Vendor breakdown by procedure type     |
+| `GET /analytics/facilities/by-procedures`         | Facility ranking by procedures         |
+| `GET /analytics/facilities/by-procedure-type`     | Facility breakdown by procedure type   |
+| `GET /analytics/facilities/by-vendor`             | Facility ranking by vendors engaged    |
+| `GET /analytics/reports/procedure-costs`          | Procedure cost report                  |
+| `GET /analytics/reports/procedure-costs/export`   | Export procedure cost report           |
 
 Procedure analytics accept `start_time`, `end_time`, and `procedure_type` query params. Cost reports accept `vendor`, `facility`, `equipment`, `modality`, `procedure`, `status`, `start_date`, `end_date`.
 
@@ -3158,12 +3844,39 @@ Admin user and permission management. **Auth required.**
 
 List users with pagination and filtering.
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `is_active` | boolean | |
-| `search` | string | |
-| `page` | integer | Default 1 |
+| Param       | Type    | Notes             |
+| ----------- | ------- | ----------------- |
+| `is_active` | boolean |                   |
+| `search`    | string  |                   |
+| `page`      | integer | Default 1         |
 | `page_size` | integer | 1–100, default 20 |
+
+**Response `200`**
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Jane Doe",
+      "email": "jane@hospital.co.ke",
+      "phone": "+254700000000",
+      "role": "f_admin",
+      "role_label": "Facility Admin",
+      "is_active": true,
+      "institution": {
+        "type": "facility",
+        "id": "uuid",
+        "code": "KNH",
+        "name": "Kenyatta National Hospital"
+      },
+      "created_at": "2025-01-01T00:00:00+03:00",
+      "updated_at": "2025-01-01T00:00:00+03:00"
+    }
+  ],
+  "pagination": { "current_page": 1, "per_page": 20, "total": 50, "total_pages": 3 }
+}
+```
 
 ---
 
@@ -3171,24 +3884,57 @@ List users with pagination and filtering.
 
 Create a new user.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `username` | string | Yes | 3–100 chars |
-| `email` | email | Yes | 3–255 chars |
-| `password` | string | Yes | 8–72 chars |
-| `full_name` | string | No | Max 255 chars |
-| `is_active` | boolean | No | Default `true` |
-| `is_superuser` | boolean | No | Default `false` |
-| `is_facility` | boolean | No | Default `false` |
-| `is_vendor` | boolean | No | Default `false` |
-| `facility_id` | string | No | Max 50 chars |
-| `vendor_id` | uuid | No | |
+| Field          | Type    | Required | Notes           |
+| -------------- | ------- | -------- | --------------- |
+| `username`     | string  | Yes      | 3–100 chars     |
+| `email`        | email   | Yes      | 3–255 chars     |
+| `password`     | string  | Yes      | 8–72 chars      |
+| `full_name`    | string  | No       | Max 255 chars   |
+| `is_active`    | boolean | No       | Default `true`  |
+| `is_superuser` | boolean | No       | Default `false` |
+| `is_facility`  | boolean | No       | Default `false` |
+| `is_vendor`    | boolean | No       | Default `false` |
+| `facility_id`  | string  | No       | Max 50 chars    |
+| `vendor_id`    | uuid    | No       |                 |
 
 ---
 
 ### GET `/users/{user_id}`
 
 Get user by ID. Includes assigned permissions.
+
+**Response `200`**
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "Jane Doe",
+    "email": "jane@hospital.co.ke",
+    "phone": "+254700000000",
+    "role": "f_admin",
+    "role_label": "Facility Admin",
+    "is_active": true,
+    "email_verified_at": "2025-01-01T00:00:00+03:00",
+    "profile": {
+      "id": "uuid",
+      "salutation": "Dr.",
+      "gender": "female",
+      "professional_id": "R/12345",
+      "registration_id": "KMPDC/2020/00123",
+      "identification_type": "National ID",
+      "identification_number": "12345678",
+      "postal_address": null,
+      "vendor": null,
+      "facility": { "id": "uuid", "name": "Kenyatta National Hospital" }
+    },
+    "created_at": "2025-01-01T00:00:00+03:00",
+    "updated_at": "2025-01-01T00:00:00+03:00"
+  }
+}
+```
+
+**Response `404`** — User not found.
 
 ---
 
@@ -3210,25 +3956,25 @@ Soft-delete user. Returns `204`.
 
 List permissions with pagination.
 
-| Param | Type | Notes |
-|-------|------|-------|
-| `is_active` | boolean | |
-| `search` | string | |
-| `page` | integer | Default 1 |
+| Param       | Type    | Notes             |
+| ----------- | ------- | ----------------- |
+| `is_active` | boolean |                   |
+| `search`    | string  |                   |
+| `page`      | integer | Default 1         |
 | `page_size` | integer | 1–100, default 20 |
 
 #### POST `/admin/permissions`
 
 Create a permission.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `code` | string | Yes | 3–50 chars, unique |
-| `name` | string | Yes | 1–150 chars |
-| `description` | string | No | |
-| `resource` | string | Yes | 1–100 chars |
-| `action` | string | Yes | 1–50 chars |
-| `is_active` | boolean | No | Default `true` |
+| Field         | Type    | Required | Notes              |
+| ------------- | ------- | -------- | ------------------ |
+| `code`        | string  | Yes      | 3–50 chars, unique |
+| `name`        | string  | Yes      | 1–150 chars        |
+| `description` | string  | No       |                    |
+| `resource`    | string  | Yes      | 1–100 chars        |
+| `action`      | string  | Yes      | 1–50 chars         |
+| `is_active`   | boolean | No       | Default `true`     |
 
 #### GET `/admin/permissions/{permission_id}`
 
@@ -3254,9 +4000,9 @@ List permissions assigned to a user.
 
 Assign a permission to a user.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `granted_by` | string | No | Admin user ID |
+| Field        | Type   | Required | Notes         |
+| ------------ | ------ | -------- | ------------- |
+| `granted_by` | string | No       | Admin user ID |
 
 #### DELETE `/admin/users/{user_id}/permissions/{permission_id}`
 
@@ -3272,19 +4018,39 @@ Manage revenue share distribution periods between vendors and facilities. **Auth
 
 List active revenue distribution periods.
 
+**Response `200`**
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "vendor_percentage": 60.00,
+      "facility_percentage": 40.00,
+      "start_date": "2025-01-01",
+      "end_date": "2025-12-31",
+      "active": true,
+      "created_at": "2025-01-01T00:00:00+03:00",
+      "updated_at": "2025-01-01T00:00:00+03:00"
+    }
+  ],
+  "pagination": { "current_page": 1, "per_page": 20, "total": 3, "total_pages": 1 }
+}
+```
+
 ---
 
 ### POST `/settings/revenue-distributions`
 
 Create a revenue distribution period.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `vendor_percentage` | number | Yes | 0–100 |
-| `facility_percentage` | number | Yes | 0–100 |
-| `start_date` | date | Yes | |
-| `end_date` | date | Yes | |
-| `active` | boolean | No | Default `true` |
+| Field                 | Type    | Required | Notes          |
+| --------------------- | ------- | -------- | -------------- |
+| `vendor_percentage`   | number  | Yes      | 0–100          |
+| `facility_percentage` | number  | Yes      | 0–100          |
+| `start_date`          | date    | Yes      |                |
+| `end_date`            | date    | Yes      |                |
+| `active`              | boolean | No       | Default `true` |
 
 **Response `201`** — Distribution created.
 
@@ -3324,38 +4090,38 @@ Root endpoint — returns API information.
 
 ### Common Error Codes
 
-| Code | Meaning |
-|------|---------|
-| `VALIDATION_ERROR` | Request body failed validation — check `errors` object |
-| `INVALID_SERVICES` | All services in the request are invalid |
-| `SERVICE_NOT_FOUND` | `contract_service_id` does not exist |
-| `SERVICE_FACILITY_MISMATCH` | Service does not belong to the selected facility |
-| `CONTRACT_INACTIVE` | The service's contract is not active |
-| `SERVICE_INACTIVE` | The specific service is disabled |
-| `EQUIPMENT_UNAVAILABLE` | Equipment linked to service is not active |
-| `NO_VALID_SERVICES` | No services could be booked — full rollback |
-| `SESSION_EXPIRED` | OTP session has timed out |
-| `MAX_ATTEMPTS_EXCEEDED` | Too many wrong OTP attempts — session locked |
-| `MAX_RESENDS_EXCEEDED` | Too many OTP resend requests |
-| `SERVICE_ALREADY_COMPLETED` | Cannot act on an already-completed service |
-| `SERVICE_CANCELLED` | Cannot act on a cancelled service |
-| `AMOUNT_MISMATCH` | Finance breakdown totals do not equal the tariff |
+| Code                        | Meaning                                                |
+| --------------------------- | ------------------------------------------------------ |
+| `VALIDATION_ERROR`          | Request body failed validation — check `errors` object |
+| `INVALID_SERVICES`          | All services in the request are invalid                |
+| `SERVICE_NOT_FOUND`         | `contract_service_id` does not exist                   |
+| `SERVICE_FACILITY_MISMATCH` | Service does not belong to the selected facility       |
+| `CONTRACT_INACTIVE`         | The service's contract is not active                   |
+| `SERVICE_INACTIVE`          | The specific service is disabled                       |
+| `EQUIPMENT_UNAVAILABLE`     | Equipment linked to service is not active              |
+| `NO_VALID_SERVICES`         | No services could be booked — full rollback            |
+| `SESSION_EXPIRED`           | OTP session has timed out                              |
+| `MAX_ATTEMPTS_EXCEEDED`     | Too many wrong OTP attempts — session locked           |
+| `MAX_RESENDS_EXCEEDED`      | Too many OTP resend requests                           |
+| `SERVICE_ALREADY_COMPLETED` | Cannot act on an already-completed service             |
+| `SERVICE_CANCELLED`         | Cannot act on a cancelled service                      |
+| `AMOUNT_MISMATCH`           | Finance breakdown totals do not equal the tariff       |
 
 ### HTTP Status Codes
 
-| Status | When |
-|--------|------|
-| `200` | Success (GET, updates) |
-| `201` | Created (POST — new resource) |
-| `400` | Business rule violation |
-| `401` | Missing or invalid token |
-| `403` | Account inactive or insufficient permissions |
-| `404` | Resource not found |
-| `409` | Conflict (e.g., patient already exists) |
-| `410` | Gone — session expired or consumed |
-| `422` | Validation failed |
-| `429` | Rate limited |
-| `500` | Server error |
+| Status | When                                         |
+| ------ | -------------------------------------------- |
+| `200`  | Success (GET, updates)                       |
+| `201`  | Created (POST — new resource)                |
+| `400`  | Business rule violation                      |
+| `401`  | Missing or invalid token                     |
+| `403`  | Account inactive or insufficient permissions |
+| `404`  | Resource not found                           |
+| `409`  | Conflict (e.g., patient already exists)      |
+| `410`  | Gone — session expired or consumed           |
+| `422`  | Validation failed                            |
+| `429`  | Rate limited                                 |
+| `500`  | Server error                                 |
 
 ---
 

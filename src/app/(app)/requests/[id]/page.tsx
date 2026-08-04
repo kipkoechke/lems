@@ -12,7 +12,13 @@ import {
   useRequestCallbackLogs,
   useRetargetMedicalRequest,
 } from "@/features/requests/useRequests";
-import { MedicalRequestEquipment } from "@/services/apiRequests";
+import {
+  MedicalRequestEquipment,
+  requestPatientName,
+  requestFacility,
+  requestProcedure,
+  requestLabel,
+} from "@/services/apiRequests";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { ErrorState } from "@/components/common/ErrorState";
 import { Table } from "@/components/Table";
@@ -102,20 +108,23 @@ function RequestDetailContent() {
       ? [request.equipment]
       : [];
 
-  const patientName =
-    [request.patient_first_name, request.patient_last_name]
-      .filter(Boolean)
-      .join(" ") || "-";
+  const patientName = requestPatientName(request);
 
   const details = [
     { label: "Patient", value: patientName },
-    { label: "Patient ID", value: request.patient_id },
+    { label: "Patient ID", value: request.patient_id || request.patient?.identification_no },
     { label: "MRN", value: request.patient_mrn },
     { label: "Sex", value: request.sex },
     { label: "Date of Birth", value: request.date_of_birth },
     { label: "Modality", value: request.modality },
-    { label: "Facility", value: request.facility_name || request.facility_id },
+    { label: "Facility", value: requestFacility(request) },
     { label: "Institution", value: request.institution_name },
+    { label: "Accession Number", value: request.accession_number },
+    { label: "Filler Order", value: request.filler_order_number },
+    { label: "Study Description", value: requestProcedure(request) },
+    { label: "Procedure Code", value: request.procedure_code },
+    { label: "Priority", value: request.priority },
+    { label: "Referring Physician", value: request.referring_physician },
     { label: "Claim ID", value: request.claim_id },
     { label: "Payor", value: request.payor },
     { label: "Preauth Code", value: request.preauth_code },
@@ -138,7 +147,7 @@ function RequestDetailContent() {
           </button>
           <div className="min-w-0">
             <h1 className="text-xl md:text-2xl font-bold text-slate-900 truncate">
-              {request.request_id}
+              {requestLabel(request)}
             </h1>
             <p className="text-sm text-slate-500">{patientName}</p>
           </div>
@@ -221,23 +230,92 @@ function RequestDetailContent() {
                 ))}
               </div>
 
-              {/* Procedures */}
+              {/* Study / Procedures */}
               <div>
-                <p className="text-xs text-slate-500 mb-2">Procedures</p>
-                {request.procedures?.length ? (
-                  <div className="flex flex-wrap gap-2">
-                    {request.procedures.map((p) => (
-                      <span
-                        key={p}
-                        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-blue-50 text-blue-700 border-blue-200 font-mono"
-                      >
-                        {p}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-500">None</p>
-                )}
+                <p className="text-xs text-slate-500 mb-2">Study / Procedures</p>
+                <div className="space-y-2">
+                  {request.study_description && (
+                    <div className="text-sm text-slate-700 bg-blue-50 rounded-lg px-3 py-2">
+                      <span className="font-medium">Study: </span>
+                      {request.study_description}
+                    </div>
+                  )}
+                  {request.description &&
+                    request.description !== request.study_description && (
+                      <div className="text-sm text-slate-700 bg-slate-50 rounded-lg px-3 py-2">
+                        <span className="font-medium">Description: </span>
+                        {request.description}
+                      </div>
+                    )}
+                  {request.procedures?.length ? (
+                    <div className="flex flex-wrap gap-2">
+                      {request.procedures.map((p) => (
+                        <span
+                          key={p}
+                          className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-blue-50 text-blue-700 border-blue-200 font-mono"
+                        >
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    !request.study_description &&
+                    !request.description && (
+                      <p className="text-sm text-slate-500">
+                        {requestProcedure(request) !== "-"
+                          ? requestProcedure(request)
+                          : "None"}
+                      </p>
+                    )
+                  )}
+                </div>
+              </div>
+
+              {/* Timestamps */}
+              <div>
+                <p className="text-xs text-slate-500 mb-2">Timeline</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2">
+                  {request.scheduled_at && (
+                    <div>
+                      <p className="text-xs text-slate-400">Scheduled</p>
+                      <p className="text-sm text-slate-700">
+                        {formatDateTime(request.scheduled_at)}
+                      </p>
+                    </div>
+                  )}
+                  {request.sent_at && (
+                    <div>
+                      <p className="text-xs text-slate-400">Sent (HL7)</p>
+                      <p className="text-sm text-slate-700">
+                        {formatDateTime(request.sent_at)}
+                      </p>
+                    </div>
+                  )}
+                  {request.acknowledged_at && (
+                    <div>
+                      <p className="text-xs text-slate-400">Acknowledged</p>
+                      <p className="text-sm text-slate-700">
+                        {formatDateTime(request.acknowledged_at)}
+                      </p>
+                    </div>
+                  )}
+                  {request.started_at && (
+                    <div>
+                      <p className="text-xs text-slate-400">Started</p>
+                      <p className="text-sm text-slate-700">
+                        {formatDateTime(request.started_at)}
+                      </p>
+                    </div>
+                  )}
+                  {request.completed_at && (
+                    <div>
+                      <p className="text-xs text-slate-400">Completed</p>
+                      <p className="text-sm text-slate-700">
+                        {formatDateTime(request.completed_at)}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Assigned equipment */}

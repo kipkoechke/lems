@@ -7,6 +7,12 @@ export interface EquipmentByOwner {
   facility_owned: number;
 }
 
+export interface LinkCoverage {
+  linked: number;
+  unlinked: number;
+  total: number;
+}
+
 export interface DashboardCounts {
   total_vendors: number;
   total_equipment: number;
@@ -14,6 +20,7 @@ export interface DashboardCounts {
   total_facilities: number;
   completed_studies: number;
   active_worklists: number;
+  link_coverage?: LinkCoverage;
 }
 
 export interface ShaClaimPaid {

@@ -147,8 +147,26 @@ export const getDicomServerStatus = async (): Promise<DicomServerStatus> => {
   const response = await axios.get<DicomServerStatus | { data: DicomServerStatus }>(
     "/dicom/server/status",
   );
-  const body = response.data as { data?: DicomServerStatus };
-  return (body.data ?? response.data) as DicomServerStatus;
+  const body = response.data as { data?: Record<string, unknown> };
+  const raw = (body.data ?? response.data) as Record<string, unknown>;
+
+  // The live API returns flat fields — map them to the nested shape the UI expects.
+  if (raw && !raw.server) {
+    return {
+      connected: (raw.connected as boolean) ?? false,
+      server: {
+        version: (raw.orthanc_version as string) || "-",
+        dicom_aet: (raw.ae_title as string) || "-",
+        dicom_port: (raw.port as number) ?? 0,
+        server_ip: (raw.host as string) || "-",
+        plugins_enabled: false,
+        worklist_plugin_loaded: false,
+        modalities_count: (raw.registered_modalities as number) ?? 0,
+      },
+    };
+  }
+
+  return raw as unknown as DicomServerStatus;
 };
 
 // GET /dicom/modalities — Orthanc returns a keyed object; normalise to an array.

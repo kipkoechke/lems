@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import {
   approvePingRequest,
+  getLinkedEquipmentIds,
   getPendingPingRequests,
   PingRequestDecision,
   rejectPingRequest,
@@ -19,6 +20,16 @@ export const usePendingPingRequests = () => {
   });
 
   return { pingRequests: data ?? [], isLoading, error, refetch };
+};
+
+export const useLinkedEquipmentIds = () => {
+  const { data, isLoading } = useQuery({
+    queryKey: [...key, "linked-ids"],
+    queryFn: getLinkedEquipmentIds,
+    staleTime: 60_000,
+  });
+
+  return { linkedIds: data ?? [], isLoading };
 };
 
 export const useApprovePingRequest = () => {

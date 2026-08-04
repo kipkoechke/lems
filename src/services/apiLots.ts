@@ -18,6 +18,7 @@ export interface Service {
   lot_id: string;
   name: string;
   code: string;
+  modality?: string;
   tariff: number;
   vendor_share: number;
   facility_share: number;

@@ -6,6 +6,7 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import {
   useApprovePingRequest,
+  useLinkedEquipmentIds,
   usePendingPingRequests,
   useRejectPingRequest,
 } from "@/features/pingRequests/usePingRequests";
@@ -46,6 +47,7 @@ interface DecisionForm {
 
 function PingRequestsContent() {
   const { pingRequests, isLoading, error, refetch } = usePendingPingRequests();
+  const { linkedIds } = useLinkedEquipmentIds();
   const { approveRequest, isApproving } = useApprovePingRequest();
   const { rejectRequest, isRejecting } = useRejectPingRequest();
   const { equipments } = useAdminEquipments({ per_page: 100 });
@@ -132,7 +134,7 @@ function PingRequestsContent() {
                 Machine Ping Requests
               </h1>
               <p className="text-sm text-slate-500">
-                {pingRequests.length} pending approval · refreshes automatically
+                {pingRequests.length} pending approval · {linkedIds.length} linked equipment · refreshes automatically
               </p>
             </div>
           </div>
@@ -144,6 +146,7 @@ function PingRequestsContent() {
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>AE Title</Table.HeaderCell>
+                <Table.HeaderCell>Device Name</Table.HeaderCell>
                 <Table.HeaderCell>Source Address</Table.HeaderCell>
                 <Table.HeaderCell>Type</Table.HeaderCell>
                 <Table.HeaderCell>Modality</Table.HeaderCell>
@@ -154,7 +157,7 @@ function PingRequestsContent() {
             </Table.Header>
             <Table.Body>
               {pingRequests.length === 0 ? (
-                <Table.Empty colSpan={7}>
+                <Table.Empty colSpan={8}>
                   No ping requests are waiting for approval.
                 </Table.Empty>
               ) : (
@@ -163,6 +166,11 @@ function PingRequestsContent() {
                     <Table.Cell>
                       <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
                         {req.ae_title}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-sm text-slate-700">
+                        {req.device_name_ae_title || "-"}
                       </span>
                     </Table.Cell>
                     <Table.Cell>

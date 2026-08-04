@@ -336,16 +336,22 @@ export interface AdminEquipment {
   serial_number: string;
   model: string;
   brand: string;
+  manufacture_date?: string | null;
   category: string;
   category_label: string;
   modality: string | null;
+  worklist_category?: string | null;
   status: string;
   status_label: string;
   vendor_id: string;
   vendor: AdminEquipmentVendor;
   owner_type: "vendor" | "facility";
   dicom: AdminEquipmentDicom | null;
+  description?: string | null;
+  specifications?: Record<string, unknown> | null;
+  vendor_config?: VendorEquipmentVendorConfig | null;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface AdminEquipmentResponse {

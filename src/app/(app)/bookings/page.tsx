@@ -538,7 +538,7 @@ const BookingReport: React.FC = () => {
                                     {booking.facility?.name || "N/A"}
                                   </div>
                                   <div className="text-xs text-blue-600 mt-1">
-                                    Status: {service.service_status}
+                                    Status: {service.service_status || service.status?.replace(/_/g, " ") || "-"}
                                   </div>
                                   {booking.services.length > 1 &&
                                     index < booking.services.length - 1 && (
@@ -579,6 +579,7 @@ const BookingReport: React.FC = () => {
                                         {formatCurrency(
                                           service.service?.sha_rate ||
                                             service.tariff ||
+                                            service.sha ||
                                             "0",
                                         )}
                                       </span>
@@ -589,7 +590,9 @@ const BookingReport: React.FC = () => {
                                       </span>
                                       <span className="font-medium">
                                         {formatCurrency(
-                                          service.vendor_share || "0",
+                                          service.vendor_share ||
+                                            service.revenue?.vendor_share ||
+                                            "0",
                                         )}
                                       </span>
                                     </div>
@@ -599,7 +602,9 @@ const BookingReport: React.FC = () => {
                                       </span>
                                       <span className="font-medium">
                                         {formatCurrency(
-                                          service.facility_share || "0",
+                                          service.facility_share ||
+                                            service.revenue?.facility_share ||
+                                            "0",
                                         )}
                                       </span>
                                     </div>
