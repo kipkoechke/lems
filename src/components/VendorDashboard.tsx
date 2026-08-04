@@ -319,6 +319,16 @@ const VendorDashboard: React.FC = () => {
       }));
   }, [dashboard]);
 
+  // Equipment linkage pie data
+  const equipmentLinkageData = useMemo(() => {
+    if (!dashboard?.equipment?.by_linkage) return [];
+    const { linked, not_linked } = dashboard.equipment.by_linkage;
+    return [
+      { name: "Linked", value: linked, color: "#8b5cf6" },
+      { name: "Not Linked", value: not_linked, color: "#e2e8f0" },
+    ].filter((item) => item.value > 0);
+  }, [dashboard]);
+
   // Equipment status pie chart data
   const equipmentStatusData = useMemo(() => {
     if (!dashboard?.equipment?.by_status) return [];
@@ -611,7 +621,43 @@ const VendorDashboard: React.FC = () => {
       </div>
 
       {/* Status Charts Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Equipment Linkage Donut */}
+        {equipmentLinkageData.length > 0 && (
+          <div className="bg-white rounded-lg border border-slate-200 p-4">
+            <h3 className="text-sm font-semibold text-slate-900 mb-3">
+              Equipment Linkage
+            </h3>
+            <div className="h-[180px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={equipmentLinkageData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={65}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {equipmentLinkageData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => [value, "Count"]} />
+                  <Legend
+                    iconSize={8}
+                    wrapperStyle={{ fontSize: "11px" }}
+                    formatter={(value) => (
+                      <span className="text-slate-600">{value}</span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
         {/* Equipment Status Donut */}
         <div className="bg-white rounded-lg border border-slate-200 p-4">
           <h3 className="text-sm font-semibold text-slate-900 mb-3">

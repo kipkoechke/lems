@@ -42,6 +42,7 @@ const formatDate = (dateString: string) => {
 // ===== Donut Chart Colors =====
 const DONUT_COLORS = {
   equipment: ["#6366f1", "#10b981"], // indigo, emerald
+  linkage: ["#8b5cf6", "#e2e8f0"], // violet, slate
   sha: ["#10b981", "#ef4444", "#f59e0b"], // emerald, red, amber
   efficiency: ["#10b981", "#ef4444", "#3b82f6"], // emerald, red, blue (completed, cancelled, remaining)
 };
@@ -225,6 +226,16 @@ export default function BookingTrends() {
     ];
   }, [dashboardData]);
 
+  // Equipment linkage donut data
+  const equipmentLinkageData = useMemo(() => {
+    const el = dashboardData?.counts?.equipment_by_linkage;
+    if (!el) return [];
+    return [
+      { name: "Linked", value: el.linked },
+      { name: "Not Linked", value: el.not_linked },
+    ];
+  }, [dashboardData]);
+
   // SHA claims donut data (paid / rejected / pending)
   const shaDonutData = useMemo(() => {
     if (!shaClaims) return [];
@@ -361,23 +372,19 @@ export default function BookingTrends() {
             label="Active Worklists"
             value={counts.active_worklists}
           />
-          {counts.link_coverage && (
+          {counts.equipment_by_linkage && (
             <StatCard
               icon={<MdLink className="w-4 h-4 text-violet-600" />}
               bg="bg-violet-50"
-              label="Link Coverage"
-              value={`${counts.link_coverage.linked}/${counts.link_coverage.total}`}
-              sub={
-                counts.link_coverage.unlinked > 0
-                  ? `· ${counts.link_coverage.unlinked} unlinked`
-                  : undefined
-              }
+              label="Linked Equipment"
+              value={counts.equipment_by_linkage.linked}
+              sub={`of ${counts.total_equipment} total`}
             />
           )}
         </div>
 
         {/* Donut Charts Row — 3 columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Equipment Ownership Donut */}
           <DonutCard
             title="Equipment Ownership"
@@ -399,6 +406,30 @@ export default function BookingTrends() {
               },
             ]}
           />
+
+          {/* Equipment Linkage Donut */}
+          {counts.equipment_by_linkage && (
+            <DonutCard
+              title="Equipment Linkage"
+              icon={<MdLink className="w-3.5 h-3.5" />}
+              data={equipmentLinkageData}
+              colors={DONUT_COLORS.linkage}
+              centerLabel="Linked"
+              centerValue={counts.equipment_by_linkage.linked}
+              legendItems={[
+                {
+                  label: "Linked",
+                  value: counts.equipment_by_linkage.linked,
+                  color: DONUT_COLORS.linkage[0],
+                },
+                {
+                  label: "Not Linked",
+                  value: counts.equipment_by_linkage.not_linked,
+                  color: DONUT_COLORS.linkage[1],
+                },
+              ]}
+            />
+          )}
 
           {/* SHA Claims Donut */}
           {shaClaims && (
