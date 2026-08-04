@@ -95,15 +95,17 @@ export interface Efficiency {
 
 export interface DashboardResponse {
   counts: DashboardCounts;
-  sha_claims: ShaClaims;
-  modalities: ModalityBreakdown[];
-  recent_activity: RecentActivity[];
-  efficiency: Efficiency;
+  sha_claims?: ShaClaims | null;
+  modalities?: ModalityBreakdown[] | null;
+  recent_activity?: RecentActivity[] | null;
+  efficiency?: Efficiency | null;
 }
 
 // ===== API Functions =====
 
 export const getDashboard = async (): Promise<DashboardResponse> => {
   const response = await axios.get("/admin/dashboard");
-  return response.data;
+  // Handle both wrapped and unwrapped responses
+  const body = response.data as { data?: DashboardResponse } & DashboardResponse;
+  return (body.data ?? response.data) as DashboardResponse;
 };
