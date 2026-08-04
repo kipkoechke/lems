@@ -2,59 +2,44 @@ import axios from "../lib/axios";
 
 export interface RevenueDistribution {
   id: string;
-  vendor_percentage: number;
-  facility_percentage: number;
-  start_date: string;
-  end_date: string;
-  active: boolean;
+  lot_id: string;
+  name: string;
+  code: string;
+  tariff: string;
+  vendor_share: string;
+  facility_share: string;
+  capitated: boolean;
+  is_active: boolean;
+  modality?: string | null;
   created_at?: string;
   updated_at?: string;
 }
 
-export interface RevenueDistributionCreateRequest {
-  vendor_percentage: number;
-  facility_percentage: number;
-  start_date: string;
-  end_date: string;
-  active?: boolean;
+export interface RevenueDistributionListResponse {
+  data: RevenueDistribution[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    total_pages: number;
+  };
 }
 
-export type RevenueDistributionUpdateRequest =
-  Partial<RevenueDistributionCreateRequest>;
+export interface RevenueDistributionParams {
+  page?: number;
+  per_page?: number;
+  search?: string;
+  lot_id?: string;
+  is_active?: boolean;
+}
 
 // GET /settings/revenue-distributions
-export const getRevenueDistributions = async (): Promise<
-  RevenueDistribution[]
-> => {
-  const response = await axios.get<{ data: RevenueDistribution[] }>(
+export const getRevenueDistributions = async (
+  params: RevenueDistributionParams = {},
+): Promise<RevenueDistributionListResponse> => {
+  const response = await axios.get<RevenueDistributionListResponse>(
     "/settings/revenue-distributions",
+    { params },
   );
-  return response.data.data ?? (response.data as unknown as RevenueDistribution[]);
-};
-
-// POST /settings/revenue-distributions
-export const createRevenueDistribution = async (
-  data: RevenueDistributionCreateRequest,
-): Promise<RevenueDistribution> => {
-  const response = await axios.post<{ data: RevenueDistribution }>(
-    "/settings/revenue-distributions",
-    data,
-  );
-  return (
-    response.data.data ?? (response.data as unknown as RevenueDistribution)
-  );
-};
-
-// PUT /settings/revenue-distributions/{id}
-export const updateRevenueDistribution = async (
-  distributionId: string,
-  data: RevenueDistributionUpdateRequest,
-): Promise<RevenueDistribution> => {
-  const response = await axios.put<{ data: RevenueDistribution }>(
-    `/settings/revenue-distributions/${distributionId}`,
-    data,
-  );
-  return (
-    response.data.data ?? (response.data as unknown as RevenueDistribution)
-  );
+  return response.data;
 };
