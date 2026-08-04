@@ -93,6 +93,11 @@ export interface BookingServiceEquipment {
   name: string;
   code?: string;
   status?: string;
+  ae_title?: string;
+  vendor?: {
+    id: string;
+    name: string;
+  } | null;
 }
 
 export interface BookingServicePractitioner {

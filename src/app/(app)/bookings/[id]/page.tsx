@@ -186,7 +186,16 @@ function ServiceList({ services }: { services: BookingService[] }) {
                     : "-"}
                 </span>
                 <span className="col-span-2 text-xs text-slate-500 truncate">
-                  {svc.equipment?.name || "-"}
+                  {svc.equipment ? (
+                    <>
+                      {svc.equipment.name}
+                      {svc.equipment.vendor && (
+                        <span className="text-slate-400"> · {svc.equipment.vendor.name}</span>
+                      )}
+                    </>
+                  ) : (
+                    "-"
+                  )}
                 </span>
                 <span className="col-span-2 text-xs text-slate-500 truncate">
                   {svc.practitioner?.name || "-"}
@@ -240,6 +249,12 @@ function ServiceList({ services }: { services: BookingService[] }) {
                         <>
                           <InfoRow label="Equipment" value={svc.equipment.name} />
                           <InfoRow label="Code" value={svc.equipment.code} />
+                          {svc.equipment.ae_title && (
+                            <InfoRow label="AE Title" value={<span className="font-mono text-[10px]">{svc.equipment.ae_title}</span>} />
+                          )}
+                          {svc.equipment.vendor && (
+                            <InfoRow label="Vendor" value={svc.equipment.vendor.name} />
+                          )}
                           <InfoRow
                             label="Status"
                             value={
