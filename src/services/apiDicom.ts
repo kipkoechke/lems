@@ -83,6 +83,14 @@ export const modalityHost = (m: DicomModality): string =>
 export const modalityPort = (m: DicomModality): string =>
   (m.network?.port ?? m.port)?.toString() ?? "-";
 
+export interface DicomEquipmentVendorConfig {
+  mwl_server_ip: string;
+  mwl_server_port: number;
+  mwl_server_aet: string;
+  equipment_aet: string;
+  connection_type: string;
+}
+
 export interface DicomEquipmentStatus {
   equipment_id?: string;
   ae_title?: string | null;
@@ -91,6 +99,7 @@ export interface DicomEquipmentStatus {
   dicom_port?: number | null;
   is_connected?: boolean;
   last_seen_at?: string | null;
+  vendor_config?: DicomEquipmentVendorConfig | null;
 }
 
 export interface DicomConfigureRequest {
