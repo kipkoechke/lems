@@ -299,73 +299,54 @@ const VendorDashboard: React.FC = () => {
     if (!dashboard?.trendline?.data) return [];
     return dashboard.trendline.data.map((point) => ({
       date: point.period,
-      total: parseFloat(point.total),
-      vendorShare: parseFloat(point.vendor_share),
-      sha: parseFloat(point.sha),
-      cash: parseFloat(point.cash),
-      otherInsurance: parseFloat(point.other_insurance),
-      servicesCount: point.services_count,
+      total: point.total ? parseFloat(String(point.total)) : 0,
+      vendorShare: point.vendor_share ? parseFloat(String(point.vendor_share)) : 0,
+      sha: point.sha ? parseFloat(String(point.sha)) : 0,
+      cash: point.cash ? parseFloat(String(point.cash)) : 0,
+      otherInsurance: point.other_insurance ? parseFloat(String(point.other_insurance)) : 0,
+      servicesCount: point.services_count ?? 0,
     }));
   }, [dashboard]);
 
-  // Payment mode pie chart data
+  // Payment mode pie chart data — dynamic from Record
   const paymentModeData = useMemo(() => {
     if (!dashboard?.revenue?.by_payment_type) return [];
-    const { sha, cash, other_insurance } = dashboard.revenue.by_payment_type;
-    return [
-      { name: "SHA", value: parseFloat(sha) || 0 },
-      { name: "Cash", value: parseFloat(cash) || 0 },
-      { name: "Other Insurance", value: parseFloat(other_insurance) || 0 },
-    ].filter((item) => item.value > 0);
+    return Object.entries(dashboard.revenue.by_payment_type)
+      .filter(([, v]) => (typeof v === "string" ? parseFloat(v) : Number(v)) > 0)
+      .map(([key, value]) => ({
+        name: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, " "),
+        value: typeof value === "string" ? parseFloat(value) : Number(value),
+      }));
   }, [dashboard]);
 
   // Equipment status pie chart data
   const equipmentStatusData = useMemo(() => {
     if (!dashboard?.equipment?.by_status) return [];
-    const { active, maintenance, decommissioned, pending } =
-      dashboard.equipment.by_status;
-    return [
-      { name: "Active", value: active, color: EQUIPMENT_STATUS_COLORS.Active },
-      {
-        name: "Maintenance",
-        value: maintenance,
-        color: EQUIPMENT_STATUS_COLORS.Maintenance,
-      },
-      {
-        name: "Decommissioned",
-        value: decommissioned,
-        color: EQUIPMENT_STATUS_COLORS.Decommissioned,
-      },
-      {
-        name: "Pending",
-        value: pending,
-        color: EQUIPMENT_STATUS_COLORS.Pending,
-      },
-    ].filter((item) => item.value > 0);
+    return Object.entries(dashboard.equipment.by_status)
+      .filter(([, v]) => v > 0)
+      .map(([status, count]) => ({
+        name: status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " "),
+        value: count,
+        color:
+          (EQUIPMENT_STATUS_COLORS as Record<string, string>)[
+            status.charAt(0).toUpperCase() + status.slice(1)
+          ] || "#94a3b8",
+      }));
   }, [dashboard]);
 
   // Booking status pie chart data
   const bookingStatusData = useMemo(() => {
     if (!dashboard?.bookings?.by_service_status) return [];
-    const { not_started, completed, cancelled } =
-      dashboard.bookings.by_service_status;
-    return [
-      {
-        name: "Not Started",
-        value: not_started,
-        color: BOOKING_STATUS_COLORS["Not Started"],
-      },
-      {
-        name: "Completed",
-        value: completed,
-        color: BOOKING_STATUS_COLORS.Completed,
-      },
-      {
-        name: "Cancelled",
-        value: cancelled,
-        color: BOOKING_STATUS_COLORS.Cancelled,
-      },
-    ].filter((item) => item.value > 0);
+    return Object.entries(dashboard.bookings.by_service_status)
+      .filter(([, v]) => v > 0)
+      .map(([status, count]) => ({
+        name: status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " "),
+        value: count,
+        color:
+          (BOOKING_STATUS_COLORS as Record<string, string>)[
+            status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ")
+          ] || "#94a3b8",
+      }));
   }, [dashboard]);
 
   if (vendorLoading) {
@@ -415,7 +396,7 @@ const VendorDashboard: React.FC = () => {
             value={facilityId}
             onChange={setFacilityId}
             options={
-              dashboard?.facilities?.list?.map((f) => ({
+              dashboard?.facilities_served?.map((f) => ({
                 value: f.id,
                 label: f.name,
               })) || []
@@ -428,8 +409,8 @@ const VendorDashboard: React.FC = () => {
             value={lotId}
             onChange={handleLotChange}
             options={
-              dashboard?.lots?.list?.map((l) => ({
-                value: l.id,
+              dashboard?.lots_covered?.map((l) => ({
+                value: l.number,
                 label: `${l.number} - ${l.name}`,
               })) || []
             }
@@ -464,18 +445,18 @@ const VendorDashboard: React.FC = () => {
       </div>
 
       {/* Stats Cards - Using common StatCard with compact mode */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
         <StatCard
           title="Total Equipment"
           mainValue={dashboard?.equipment?.total || 0}
-          subtitle={`${dashboard?.equipment?.by_status?.active || 0} active`}
+          subtitle={`${dashboard?.equipment?.by_status?.["active"] ?? dashboard?.equipment?.by_status?.["Active"] ?? 0} active`}
           compact
         >
           <FaCog className="w-4 h-4 text-blue-500" />
         </StatCard>
         <StatCard
           title="Facilities"
-          mainValue={dashboard?.facilities?.count || 0}
+          mainValue={dashboard?.facilities_served?.length || 0}
           compact
         >
           <FaHospital className="w-4 h-4 text-emerald-500" />
@@ -489,8 +470,7 @@ const VendorDashboard: React.FC = () => {
         </StatCard>
         <StatCard
           title="Lots"
-          mainValue={dashboard?.lots?.count || 0}
-          subtitle={`${dashboard?.services?.count || 0} services`}
+          mainValue={dashboard?.lots_covered?.length || 0}
           compact
         >
           <FaBoxes className="w-4 h-4 text-pink-500" />
@@ -504,8 +484,16 @@ const VendorDashboard: React.FC = () => {
           <FaClipboardList className="w-4 h-4 text-cyan-500" />
         </StatCard>
         <StatCard
+          title="Linked Equipment"
+          mainValue={dashboard?.equipment?.by_linkage?.linked || 0}
+          subtitle={`of ${dashboard?.equipment?.total || 0} total`}
+          compact
+        >
+          <FaCog className="w-4 h-4 text-violet-500" />
+        </StatCard>
+        <StatCard
           title="Gross Revenue"
-          mainValue={formatNumber(dashboard?.revenue?.tariff || 0)}
+          mainValue={formatNumber(dashboard?.revenue?.total_tariff || 0)}
           subtitle={`Share: ${formatNumber(dashboard?.revenue?.vendor_share || 0)}`}
           compact
         >
@@ -758,34 +746,32 @@ const VendorDashboard: React.FC = () => {
             Booking Source
           </h3>
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600">Standalone</span>
-              <span className="text-sm font-semibold text-slate-900">
-                {dashboard?.bookings?.by_source?.standalone || 0}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600">HMIS</span>
-              <span className="text-sm font-semibold text-slate-900">
-                {dashboard?.bookings?.by_source?.hmis || 0}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600">Provider Portal</span>
-              <span className="text-sm font-semibold text-slate-900">
-                {dashboard?.bookings?.by_source?.provider_portal || 0}
-              </span>
-            </div>
+            {dashboard?.bookings?.by_source
+              ? Object.entries(dashboard.bookings.by_source).map(([source, count]) => (
+                  <div key={source} className="flex items-center justify-between">
+                    <span className="text-sm text-slate-600 capitalize">
+                      {source.replace(/_/g, " ")}
+                    </span>
+                    <span className="text-sm font-semibold text-slate-900">
+                      {count}
+                    </span>
+                  </div>
+                ))
+              : (
+                <div className="text-center text-slate-400 text-xs py-4">
+                  No source data
+                </div>
+              )}
           </div>
         </div>
 
         {/* Facilities List */}
         <div className="bg-white rounded-lg border border-slate-200 p-4">
           <h3 className="text-sm font-semibold text-slate-900 mb-3">
-            Facilities ({dashboard?.facilities?.count || 0})
+            Facilities ({dashboard?.facilities_served?.length || 0})
           </h3>
           <div className="space-y-2 max-h-[140px] overflow-y-auto">
-            {dashboard?.facilities?.list?.slice(0, 5).map((facility, index) => (
+            {dashboard?.facilities_served?.slice(0, 5).map((facility, index) => (
               <div
                 key={facility.id}
                 className="flex items-center gap-2 p-1.5 bg-slate-50 rounded"
@@ -805,8 +791,8 @@ const VendorDashboard: React.FC = () => {
                 </div>
               </div>
             ))}
-            {(!dashboard?.facilities?.list ||
-              dashboard.facilities.list.length === 0) && (
+            {(!dashboard?.facilities_served ||
+              dashboard.facilities_served.length === 0) && (
               <div className="text-center text-slate-400 text-xs py-4">
                 No facilities
               </div>
@@ -817,12 +803,12 @@ const VendorDashboard: React.FC = () => {
         {/* Lots List */}
         <div className="bg-white rounded-lg border border-slate-200 p-4">
           <h3 className="text-sm font-semibold text-slate-900 mb-3">
-            Lots ({dashboard?.lots?.count || 0})
+            Lots ({dashboard?.lots_covered?.length || 0})
           </h3>
           <div className="space-y-2 max-h-[140px] overflow-y-auto">
-            {dashboard?.lots?.list?.slice(0, 5).map((lot, index) => (
+            {dashboard?.lots_covered?.slice(0, 5).map((lot, index) => (
               <div
-                key={lot.id}
+                key={lot.number}
                 className="flex items-center gap-2 p-1.5 bg-slate-50 rounded"
               >
                 <span
@@ -838,7 +824,7 @@ const VendorDashboard: React.FC = () => {
                 </span>
               </div>
             ))}
-            {(!dashboard?.lots?.list || dashboard.lots.list.length === 0) && (
+            {(!dashboard?.lots_covered || dashboard.lots_covered.length === 0) && (
               <p className="text-xs text-slate-400 text-center py-4">No lots</p>
             )}
           </div>

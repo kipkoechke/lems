@@ -1,101 +1,60 @@
 import axios from "../lib/axios";
 
 // =============================================
-// Vendor Dashboard API Types
+// Vendor Dashboard API Types — matched to live API response
 // =============================================
 
 export interface VendorDashboardVendorInfo {
   id: string;
   name: string;
   code: string;
+  email?: string | null;
 }
 
-export interface VendorDashboardPeriod {
-  from: string;
-  to: string;
+export interface VendorDashboardEquipmentLinkage {
+  linked: number;
+  not_linked: number;
 }
 
 export interface VendorDashboardEquipmentStats {
   total: number;
-  by_status: {
-    active: number;
-    maintenance: number;
-    decommissioned: number;
-    pending: number;
-  };
+  by_status: Record<string, number>;
+  by_linkage?: VendorDashboardEquipmentLinkage;
 }
 
 export interface VendorDashboardBookingStats {
   total_bookings: number;
   total_services: number;
-  by_service_status: {
-    not_started: number;
-    completed: number;
-    cancelled: number;
-  };
-  by_source: {
-    standalone: number;
-    hmis: number;
-    provider_portal: number;
-  };
+  by_service_status?: Record<string, number>;
+  by_source?: Record<string, number>;
 }
 
 export interface VendorDashboardRevenueStats {
-  tariff: string;
-  vendor_share: string;
-  facility_share: string;
-  by_payment_type: {
-    sha: string;
-    cash: string;
-    other_insurance: string;
-  };
+  total_tariff: number;
+  vendor_share: number;
+  facility_share?: number;
+  by_payment_type: Record<string, number>;
 }
 
-export interface VendorDashboardPatientStats {
-  unique_count: number;
-}
-
-export interface VendorDashboardFacilityItem {
+export interface VendorDashboardFacilityServed {
   id: string;
   name: string;
   fr_code: string;
 }
 
-export interface VendorDashboardFacilitiesStats {
-  count: number;
-  list: VendorDashboardFacilityItem[];
-}
-
-export interface VendorDashboardLotItem {
-  id: string;
+export interface VendorDashboardLotCovered {
   number: string;
   name: string;
 }
 
-export interface VendorDashboardLotsStats {
-  count: number;
-  list: VendorDashboardLotItem[];
-}
-
-export interface VendorDashboardServiceItem {
-  id: string;
-  code: string;
-  name: string;
-}
-
-export interface VendorDashboardServicesStats {
-  count: number;
-  list: VendorDashboardServiceItem[];
-}
-
 export interface VendorDashboardTrendlineDataPoint {
   period: string;
-  sha: string;
-  cash: string;
-  other_insurance: string;
-  vendor_share: string;
-  total: string;
-  services_count: number;
+  sha?: string;
+  cash?: string;
+  other_insurance?: string;
+  vendor_share?: string;
+  total?: string;
+  services_count?: number;
 }
 
 export interface VendorDashboardTrendlineStats {
@@ -105,15 +64,14 @@ export interface VendorDashboardTrendlineStats {
 
 export interface VendorDashboardResponse {
   vendor: VendorDashboardVendorInfo;
-  period: VendorDashboardPeriod;
   equipment: VendorDashboardEquipmentStats;
   bookings: VendorDashboardBookingStats;
   revenue: VendorDashboardRevenueStats;
-  patients: VendorDashboardPatientStats;
-  facilities: VendorDashboardFacilitiesStats;
-  lots: VendorDashboardLotsStats;
-  services: VendorDashboardServicesStats;
-  trendline: VendorDashboardTrendlineStats;
+  facilities_served?: VendorDashboardFacilityServed[];
+  lots_covered?: VendorDashboardLotCovered[];
+  patients?: { unique_count: number };
+  services?: { count: number; list: { id: string; code: string; name: string }[] };
+  trendline?: VendorDashboardTrendlineStats;
 }
 
 // Filter params for vendor dashboard
