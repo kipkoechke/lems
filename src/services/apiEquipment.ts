@@ -444,6 +444,26 @@ export const equipmentDicom = (
   };
 };
 
+/**
+ * Admin-facing equipment update.
+ *
+ * Admins must NOT use PATCH /vendor/equipments/{id} — that route infers the
+ * vendor from the auth token and is gated to the vendor role. The vendor-nested
+ * admin route takes the vendor explicitly.
+ */
+// PATCH /vendors/{vendor}/equipments/{equipment}
+export const updateAdminVendorEquipment = async (
+  vendorId: string,
+  equipmentId: string,
+  data: Partial<VendorEquipmentCreateRequest>,
+): Promise<VendorEquipment> => {
+  const response = await axios.patch(
+    `/vendors/${vendorId}/equipments/${equipmentId}`,
+    data,
+  );
+  return response.data?.equipment ?? response.data?.data ?? response.data;
+};
+
 // GET /equipment/{id}
 export const getEquipmentDetail = async (
   equipmentId: string,

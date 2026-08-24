@@ -7,9 +7,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useVendor } from "@/features/vendors/useVendor";
 import {
-  useVendorEquipment,
-  useUpdateVendorEquipment,
-} from "@/features/vendors/useVendorEquipments";
+  useEquipmentDetail,
+  useUpdateAdminEquipment,
+} from "@/features/vendors/useEquipmentDetail";
+import {
+  equipmentDicom,
+  equipmentStatus,
+} from "@/services/apiEquipment";
 import { useVendors } from "@/features/vendors/useVendors";
 import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
@@ -117,13 +121,14 @@ export default function EditVendorEquipmentPage() {
 
   const vendorOptions = vendors.map((v) => ({ value: v.id, label: v.name }));
 
-  // Always fetch equipment from the original vendor (URL param) — selectedVendorId is only used on submit
+  // Admin read of the shared /equipment/{id} route — the vendor-portal route is
+  // gated to the vendor role. selectedVendorId is only used on submit.
   const {
-    data: equipment,
+    equipment,
     isLoading: equipmentLoading,
     error: equipmentError,
-  } = useVendorEquipment(vendor?.id || "", equipmentId);
-  const updateEquipmentMutation = useUpdateVendorEquipment();
+  } = useEquipmentDetail(equipmentId);
+  const updateEquipmentMutation = useUpdateAdminEquipment();
 
   // Specifications state
   const [specifications, setSpecifications] = useState<Record<string, string>>(
@@ -146,7 +151,7 @@ export default function EditVendorEquipmentPage() {
     if (equipment) {
       reset({
         name: equipment.name,
-        category: equipment.category,
+        category: equipment.category || "",
         serial_number: equipment.serial_number || "",
         model: equipment.model || "",
         brand: equipment.brand || "",
@@ -154,11 +159,13 @@ export default function EditVendorEquipmentPage() {
           ? equipment.manufacture_date.split("T")[0]
           : "",
         description: equipment.description || "",
-        status: equipment.status,
-        ae_title: equipment.dicom?.ae_title || "",
-        hl7_host: equipment.dicom?.hl7_host || "",
-        hl7_port: equipment.dicom?.hl7_port ?? undefined,
-        dicom_port: equipment.dicom?.dicom_port ?? undefined,
+        status: equipmentStatus(
+          equipment,
+        ) as EquipmentFormData["status"],
+        ae_title: equipmentDicom(equipment)?.ae_title || "",
+        hl7_host: equipmentDicom(equipment)?.hl7_host || "",
+        hl7_port: equipmentDicom(equipment)?.hl7_port ?? undefined,
+        dicom_port: equipmentDicom(equipment)?.dicom_port ?? undefined,
       });
 
       if (equipment.specifications) {

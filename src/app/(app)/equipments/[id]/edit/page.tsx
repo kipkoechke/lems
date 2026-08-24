@@ -11,9 +11,13 @@ import { SelectField } from "@/components/common/SelectField";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { useCurrentUser } from "@/hooks/useAuth";
 import {
-  useVendorEquipment,
-  useUpdateVendorEquipment,
-} from "@/features/vendors/useVendorEquipments";
+  useEquipmentDetail,
+  useUpdateAdminEquipment,
+} from "@/features/vendors/useEquipmentDetail";
+import {
+  equipmentDicom,
+  equipmentStatus,
+} from "@/services/apiEquipment";
 import { useVendors } from "@/features/vendors/useVendors";
 
 const equipmentSchema = z.object({
@@ -106,37 +110,29 @@ export default function EditEquipmentPage() {
 
   const { vendors, isLoading: vendorsLoading } = useVendors();
 
-  // fetchVendorId is locked in once on load — never changes, so switching the
-  // dropdown doesn't trigger a re-fetch or reset the form.
-  const [fetchVendorId, setFetchVendorId] = useState<string>(vendorId);
   const [selectedVendorId, setSelectedVendorId] = useState<string>(vendorId);
 
-  // Sync both states only on initial load (when user entity resolves late)
-  useEffect(() => {
-    if (vendorId && !fetchVendorId) {
-      setFetchVendorId(vendorId);
-      setSelectedVendorId(vendorId);
-    }
-  }, [vendorId, fetchVendorId]);
-
+  // Admin read of the shared /equipment/{id} route — it needs no vendor id, and
+  // the vendor-portal route is gated to the vendor role.
   const {
-    data: equipment,
+    equipment,
     isLoading: equipmentLoading,
     error: equipmentError,
-  } = useVendorEquipment(fetchVendorId, params.id);
-  const updateEquipmentMutation = useUpdateVendorEquipment();
+  } = useEquipmentDetail(params.id);
+  const updateEquipmentMutation = useUpdateAdminEquipment();
+
+  // Own the equipment's actual vendor once it loads, rather than the signed-in
+  // user's entity — an admin has none.
+  useEffect(() => {
+    if (equipment?.vendor_id) {
+      setSelectedVendorId((current) => current || equipment.vendor_id!);
+    }
+  }, [equipment?.vendor_id]);
 
   const vendorOptions = vendors.map((v) => ({ value: v.id, label: v.name }));
 
-  // When vendor changes:
-  // - always update selectedVendorId (used at submit time)
-  // - update fetchVendorId only if equipment hasn't loaded yet, so we trigger
-  //   the fetch without resetting the form after equipment is already populated.
   const handleVendorChange = (newVendorId: string) => {
     setSelectedVendorId(newVendorId);
-    if (!equipment) {
-      setFetchVendorId(newVendorId);
-    }
   };
 
   // Specifications state
@@ -160,7 +156,7 @@ export default function EditEquipmentPage() {
     if (equipment) {
       reset({
         name: equipment.name,
-        category: equipment.category,
+        category: equipment.category || "",
         serial_number: equipment.serial_number || "",
         model: equipment.model || "",
         brand: equipment.brand || "",
@@ -168,11 +164,13 @@ export default function EditEquipmentPage() {
           ? equipment.manufacture_date.split("T")[0]
           : "",
         description: equipment.description || "",
-        status: equipment.status,
-        ae_title: equipment.dicom?.ae_title || "",
-        hl7_host: equipment.dicom?.hl7_host || "",
-        hl7_port: equipment.dicom?.hl7_port ?? undefined,
-        dicom_port: equipment.dicom?.dicom_port ?? undefined,
+        status: equipmentStatus(
+          equipment,
+        ) as EquipmentFormData["status"],
+        ae_title: equipmentDicom(equipment)?.ae_title || "",
+        hl7_host: equipmentDicom(equipment)?.hl7_host || "",
+        hl7_port: equipmentDicom(equipment)?.hl7_port ?? undefined,
+        dicom_port: equipmentDicom(equipment)?.dicom_port ?? undefined,
       });
       if (equipment.specifications) {
         const specObj: Record<string, string> = {};
@@ -204,7 +202,8 @@ export default function EditEquipmentPage() {
   };
 
   const onSubmit = (data: EquipmentFormData) => {
-    const effectiveVendorId = selectedVendorId || vendorId;
+    const effectiveVendorId =
+      selectedVendorId || equipment?.vendor_id || vendorId;
     if (!effectiveVendorId) return;
 
     updateEquipmentMutation.mutate(
