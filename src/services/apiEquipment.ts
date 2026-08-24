@@ -390,6 +390,75 @@ export const getAdminEquipments = async (
   };
 };
 
+export interface EquipmentModalityCount {
+  code: string;
+  label: string;
+  count: number;
+}
+
+export interface AdminEquipmentModalityBreakdown {
+  total: number;
+  counts: EquipmentModalityCount[];
+  /** True when the tally stopped at the page cap and is therefore partial. */
+  truncated: boolean;
+}
+
+/** Guard against an unbounded loop if the inventory ever grows very large. */
+const MODALITY_TALLY_MAX_PAGES = 20;
+const MODALITY_TALLY_PER_PAGE = 100;
+
+/**
+ * Modality breakdown for the equipment page's summary cards.
+ *
+ * `/admin/equipment` has no aggregate-count route, so this pages through the
+ * listing and tallies client-side. `available_filters.modalities` supplies the
+ * labels, and every known modality is returned — including the ones with no
+ * equipment — so the cards read as a complete legend rather than a partial one.
+ */
+export const getAdminEquipmentModalityCounts = async (
+  params: Pick<AdminEquipmentParams, "status" | "vendor_id" | "search"> = {},
+): Promise<AdminEquipmentModalityBreakdown> => {
+  const tally = new Map<string, number>();
+  const labels = new Map<string, string>();
+  let total = 0;
+  let page = 1;
+  let lastPage = 1;
+
+  do {
+    const response = await getAdminEquipments({
+      ...params,
+      page,
+      per_page: MODALITY_TALLY_PER_PAGE,
+    });
+
+    response.available_filters?.modalities?.forEach((modality) => {
+      labels.set(modality.code, modality.label);
+      if (!tally.has(modality.code)) tally.set(modality.code, 0);
+    });
+
+    response.data.forEach((equipment) => {
+      const code = equipment.modality || "unassigned";
+      tally.set(code, (tally.get(code) ?? 0) + 1);
+      total += 1;
+    });
+
+    lastPage = response.pagination.last_page;
+    page += 1;
+  } while (page <= lastPage && page <= MODALITY_TALLY_MAX_PAGES);
+
+  const counts = Array.from(tally.entries())
+    .map(([code, count]) => ({
+      code,
+      label: labels.get(code) ?? (code === "unassigned" ? "Unassigned" : code),
+      count,
+    }))
+    // Deployed modalities first, then the empty ones alphabetically, so the
+    // legend still names everything without burying the counts that matter.
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+
+  return { total, counts, truncated: lastPage > MODALITY_TALLY_MAX_PAGES };
+};
+
 /**
  * A single equipment item for the admin-facing detail page.
  *

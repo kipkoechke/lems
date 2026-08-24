@@ -13,6 +13,8 @@ import {
   FaEdit,
 } from "react-icons/fa";
 import { useAdminEquipments } from "@/features/vendors/useAdminEquipments";
+import { useAdminEquipmentCounts } from "@/features/vendors/useAdminEquipmentCounts";
+import StatCard from "@/components/common/StatCard";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import type { AdminEquipment } from "@/services/apiEquipment";
 import { Table } from "@/components/Table";
@@ -70,6 +72,19 @@ export default function EquipmentsPage() {
       modality: modalityFilter || undefined,
       search: search.term || undefined,
     });
+
+  // Inventory-wide breakdown for the summary cards. It follows the status
+  // filter (so "how many CT scanners are active?" is answerable) but not the
+  // modality filter, which the cards themselves drive.
+  const {
+    counts: modalityCounts,
+    total: modalityTotal,
+    truncated: countsTruncated,
+    isLoading: countsLoading,
+  } = useAdminEquipmentCounts({
+    status: statusFilter || undefined,
+    search: search.term || undefined,
+  });
 
   const modalityLabel = (code: string | null) => {
     if (!code) return "-";
@@ -141,6 +156,88 @@ export default function EquipmentsPage() {
               <FaPlus className="w-3 h-3" /> Add Equipment
             </button>
           </div>
+        </div>
+
+        {/* Modality breakdown */}
+        <div className="bg-white rounded-lg border border-slate-200 px-4 md:px-6 py-4">
+          <div className="flex items-baseline justify-between gap-3 mb-3">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">
+                Deployed by modality
+              </h2>
+              <p className="text-xs text-slate-500">
+                {statusFilter
+                  ? `${STATUS_FILTER_OPTIONS.find((o) => o.value === statusFilter)?.label} equipment only`
+                  : "All equipment, every status"}
+                {countsTruncated && " — partial count"}
+              </p>
+            </div>
+            {modalityFilter && (
+              <button
+                onClick={() => {
+                  setModalityFilter("");
+                  setPage(1);
+                }}
+                className="text-xs font-medium text-blue-600 hover:text-blue-700"
+              >
+                Clear modality filter
+              </button>
+            )}
+          </div>
+
+          {countsLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-20 bg-slate-100 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <StatCard
+                compact
+                title="All Equipment"
+                mainValue={modalityTotal}
+                subtitle="Every modality"
+                onClick={() => {
+                  setModalityFilter("");
+                  setPage(1);
+                }}
+                className={`border ${
+                  modalityFilter
+                    ? "border-slate-200"
+                    : "border-blue-500 ring-1 ring-blue-500"
+                }`}
+              />
+              {modalityCounts.map((modality) => (
+                <StatCard
+                  key={modality.code}
+                  compact
+                  title={modality.label}
+                  mainValue={modality.count}
+                  subtitle={modality.code}
+                  // "unassigned" is a client-side bucket, not a value the
+                  // listing's modality filter accepts.
+                  onClick={
+                    modality.code === "unassigned"
+                      ? undefined
+                      : () => {
+                          setModalityFilter(
+                            modalityFilter === modality.code
+                              ? ""
+                              : modality.code,
+                          );
+                          setPage(1);
+                        }
+                  }
+                  className={`border ${
+                    modalityFilter === modality.code
+                      ? "border-blue-500 ring-1 ring-blue-500"
+                      : "border-slate-200"
+                  } ${modality.count === 0 ? "opacity-60" : ""}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Table */}
