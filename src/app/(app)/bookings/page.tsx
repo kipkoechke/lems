@@ -18,12 +18,20 @@ import {
   X,
 } from "lucide-react";
 import { ActionMenu } from "@/components/common/ActionMenu";
+import { FacilityFilter } from "@/components/common/FacilityFilter";
 import React, { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 
 const BookingReport: React.FC = () => {
-  const { isLoading, bookings, error, refetchBookings } = useBookings();
+  // Facility filtering happens server-side — the list spans every facility, so
+  // narrowing it client-side would only filter the page you happen to have.
+  const [facilityId, setFacilityId] = useState<string>("");
+  const [facilityName, setFacilityName] = useState<string>("");
+
+  const { isLoading, bookings, error, refetchBookings } = useBookings(
+    facilityId ? { facility_id: facilityId } : {},
+  );
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<string>("all");
   const { approve, isApproving } = useApproveBooking();
@@ -261,14 +269,6 @@ const BookingReport: React.FC = () => {
 
   const SelectAllIcon = getSelectAllIcon();
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-md p-4">
@@ -285,20 +285,6 @@ const BookingReport: React.FC = () => {
     );
   }
 
-  if (!bookings || bookings.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <Calendar className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="mt-2 text-sm font-medium text-gray-900">
-          No bookings found
-        </h3>
-        <p className="mt-1 text-sm text-gray-500">
-          No bookings have been made yet.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-white">
       <div className="px-4 py-5 sm:p-6">
@@ -311,7 +297,33 @@ const BookingReport: React.FC = () => {
           </span>
         </div>
 
-        {/* Location Filters removed */}
+        {/* Facility filter */}
+        <div className="mb-5 flex flex-wrap items-end gap-3">
+          <div className="w-full sm:w-80">
+            <FacilityFilter
+              value={facilityId}
+              onChange={(id, facility) => {
+                setFacilityId(id);
+                setFacilityName(facility?.name ?? "");
+                setSelectedBookings(new Set());
+              }}
+            />
+          </div>
+          {facilityId && (
+            <button
+              onClick={() => {
+                setFacilityId("");
+                setFacilityName("");
+                setSelectedBookings(new Set());
+              }}
+              className="mb-0.5 inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+            >
+              <Building className="h-3 w-3" />
+              {facilityName || "Selected facility"}
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
 
         {/* Tabs */}
         <div className="border-b border-gray-200 mb-6">
@@ -426,16 +438,22 @@ const BookingReport: React.FC = () => {
           </div>
         )}
 
-        {filteredBookings.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : filteredBookings.length === 0 ? (
           <div className="text-center py-12">
             <Calendar className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">
               No {activeTab === "all" ? "" : activeTab} bookings found
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              {activeTab === "all"
-                ? "No bookings have been made yet."
-                : `No ${activeTab} bookings at the moment.`}
+              {facilityId
+                ? `No ${activeTab === "all" ? "" : activeTab} bookings for ${facilityName || "this facility"}.`
+                : activeTab === "all"
+                  ? "No bookings have been made yet."
+                  : `No ${activeTab} bookings at the moment.`}
             </p>
           </div>
         ) : (

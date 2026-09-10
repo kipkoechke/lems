@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   BookingFilters,
   getBookings,
@@ -23,5 +23,8 @@ export function useBookingsWithPagination(filters: BookingFilters = {}) {
   return useQuery({
     queryKey: ["bookings-paginated", filters],
     queryFn: () => getBookingsWithPagination(filters),
+    // Keep the current rows on screen while a changed filter loads, so picking
+    // a facility doesn't drop the page back to a full-screen skeleton.
+    placeholderData: keepPreviousData,
   });
 }

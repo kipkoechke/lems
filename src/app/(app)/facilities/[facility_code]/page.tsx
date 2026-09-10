@@ -12,16 +12,18 @@ import {
   FaTimes,
   FaFileContract,
   FaUsers,
+  FaCalendarAlt,
 } from "react-icons/fa";
+import FacilityBookings from "@/features/facilities/FacilityBookings";
 
 export default function FacilityDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const facilityCode = params.facility_code as string;
 
-  const [activeTab, setActiveTab] = useState<"contracts" | "patients">(
-    "contracts",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "bookings" | "contracts" | "patients"
+  >("bookings");
 
   const [editForm, setEditForm] = useState({
     name: "",
@@ -51,9 +53,7 @@ export default function FacilityDetailsPage() {
         operation_status: facility.operation_status || "",
         keph_level: facility.keph_level,
         is_active:
-          facility.is_active === true || facility.is_active === "1"
-            ? "1"
-            : "0",
+          facility.is_active === true || facility.is_active === "1" ? "1" : "0",
       });
     }
   };
@@ -108,12 +108,14 @@ export default function FacilityDetailsPage() {
     );
   }
 
-  const isActive =
-    facility.is_active === true || facility.is_active === "1";
+  const isActive = facility.is_active === true || facility.is_active === "1";
 
   const details: { label: string; value?: string | null }[] = [
     { label: "Facility Type", value: facility.facility_type },
-    { label: "Ownership", value: facility.facility_ownership || facility.owner },
+    {
+      label: "Ownership",
+      value: facility.facility_ownership || facility.owner,
+    },
     { label: "KEPH Level", value: facility.keph_level },
     { label: "FR Code", value: facility.fr_code },
     { label: "Phone", value: facility.phone_number },
@@ -128,7 +130,8 @@ export default function FacilityDetailsPage() {
   ];
 
   const formatDate = (d?: string) =>
-    d ? new Date(d).toLocaleDateString("en-GB", {
+    d
+      ? new Date(d).toLocaleDateString("en-GB", {
           day: "numeric",
           month: "short",
           year: "numeric",
@@ -283,6 +286,18 @@ export default function FacilityDetailsPage() {
         <div className="bg-white rounded-lg border border-slate-200">
           <div className="flex gap-6 border-b border-gray-100 px-4">
             <button
+              onClick={() => setActiveTab("bookings")}
+              className={`py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                activeTab === "bookings"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <FaCalendarAlt className="w-3.5 h-3.5" /> Bookings
+              </span>
+            </button>
+            <button
               onClick={() => setActiveTab("contracts")}
               className={`py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
                 activeTab === "contracts"
@@ -304,43 +319,47 @@ export default function FacilityDetailsPage() {
             </button>
           </div>
 
-          <div className="p-6 text-center">
-            {activeTab === "contracts" ? (
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center">
-                  <FaFileContract className="w-5 h-5 text-purple-500" />
+          {activeTab === "bookings" ? (
+            <FacilityBookings facilityId={facility.id} />
+          ) : (
+            <div className="p-6 text-center">
+              {activeTab === "contracts" ? (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center">
+                    <FaFileContract className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <p className="text-sm text-slate-500">
+                    View contracts linked to this facility
+                  </p>
+                  <button
+                    onClick={() =>
+                      router.push(`/contracts?facility_code=${facility.code}`)
+                    }
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <FaFileContract className="w-3.5 h-3.5" /> View Contracts
+                  </button>
                 </div>
-                <p className="text-sm text-slate-500">
-                  View contracts linked to this facility
-                </p>
-                <button
-                  onClick={() =>
-                    router.push(`/contracts?facility_code=${facility.code}`)
-                  }
-                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  <FaFileContract className="w-3.5 h-3.5" /> View Contracts
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
-                  <FaUsers className="w-5 h-5 text-emerald-500" />
+              ) : (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
+                    <FaUsers className="w-5 h-5 text-emerald-500" />
+                  </div>
+                  <p className="text-sm text-slate-500">
+                    View patients registered at this facility
+                  </p>
+                  <button
+                    onClick={() =>
+                      router.push(`/patients?facility_code=${facility.code}`)
+                    }
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <FaUsers className="w-3.5 h-3.5" /> View Patients
+                  </button>
                 </div>
-                <p className="text-sm text-slate-500">
-                  View patients registered at this facility
-                </p>
-                <button
-                  onClick={() =>
-                    router.push(`/patients?facility_code=${facility.code}`)
-                  }
-                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  <FaUsers className="w-3.5 h-3.5" /> View Patients
-                </button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

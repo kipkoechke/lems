@@ -11,6 +11,7 @@ import { ActionMenu } from "@/components/common/ActionMenu";
 import { SearchField } from "@/components/common/SearchField";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
+import { FacilityFilter } from "@/components/common/FacilityFilter";
 import {
   MdCalendarToday,
   MdCheckCircle,
@@ -41,6 +42,8 @@ export default function ServicesPage() {
   const facility = useCurrentFacility();
 
   const [page, setPage] = useState(1);
+  // Facility users are locked to their own facility; everyone else picks one.
+  const [facilityId, setFacilityId] = useState("");
   const [status, setStatus] = useState("");
   const [source, setSource] = useState("");
   const [from, setFrom] = useState("");
@@ -49,7 +52,7 @@ export default function ServicesPage() {
 
   const filters: BookingFilters = useMemo(
     () => ({
-      facility_id: facility?.id || undefined,
+      facility_id: facility?.id || facilityId || undefined,
       // Searching is unpaginated so results span all bookings rather than
       // being capped at one page of matches.
       ...(search.isSearching ? {} : { page, per_page: 15 }),
@@ -63,6 +66,7 @@ export default function ServicesPage() {
     }),
     [
       facility?.id,
+      facilityId,
       page,
       search.term,
       search.isSearching,
@@ -198,6 +202,20 @@ export default function ServicesPage() {
                   placeholder="Search booking number, patient, ID..."
                 />
               </div>
+              {/* Facility — hidden for facility-scoped users, who only ever
+                  see their own bookings anyway */}
+              {!facility?.id && (
+                <div className="min-w-[220px]">
+                  <FacilityFilter
+                    hideLabel
+                    value={facilityId}
+                    onChange={(id) => {
+                      setFacilityId(id);
+                      setPage(1);
+                    }}
+                  />
+                </div>
+              )}
               {/* Status */}
               <select
                 value={status}
