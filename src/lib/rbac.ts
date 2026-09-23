@@ -143,8 +143,6 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.REQUEST_MAINTENANCE,
     Permission.VIEW_SERVICES,
     Permission.VIEW_WORKLIST,
-    Permission.VIEW_FACILITY_PAYMENTS,
-    Permission.VIEW_PAYMENTS,
   ],
 
   [UserRole.F_PRACTITIONER]: [
