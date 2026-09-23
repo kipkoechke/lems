@@ -162,6 +162,12 @@ const NAV_ITEMS: NavItem[] = [
     description: "Manage patient records",
   },
   {
+    label: "Worklist",
+    href: "/practitioner/worklist",
+    permission: Permission.VIEW_WORKLIST,
+    description: "Services scheduled at your facility",
+  },
+  {
     label: "Booked Services",
     href: "/bookings/booked",
     permission: Permission.VIEW_BOOKED_SERVICES,

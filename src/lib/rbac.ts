@@ -130,20 +130,26 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ],
 
   [UserRole.F_ADMIN]: [
-    // Facility admin permissions
+    // Facility admin permissions.
+    //
+    // NOTE: deliberately NOT CREATE_FACILITY_USERS — the API returns 403 for
+    // facility accounts on /users, so the page can only ever render an error.
+    // The reference's role table lists it, but the deployed API disagrees and
+    // the API wins. Restore it here once /users accepts facility admins.
     Permission.VIEW_DASHBOARD,
-    Permission.CREATE_FACILITY_USERS,
     Permission.VIEW_REPORTS,
     Permission.VIEW_CONTRACTS,
     Permission.VIEW_EQUIPMENTS,
     Permission.REQUEST_MAINTENANCE,
     Permission.VIEW_SERVICES,
+    Permission.VIEW_WORKLIST,
     Permission.VIEW_FACILITY_PAYMENTS,
     Permission.VIEW_PAYMENTS,
   ],
 
   [UserRole.F_PRACTITIONER]: [
     // Facility Practitioner (Clinician/Practitioner) permissions
+    Permission.VIEW_WORKLIST,
     Permission.GET_PATIENT_FROM_REGISTRY,
     Permission.SELECT_SERVICES,
     Permission.PATIENT_BOOKING_CONSENT,
@@ -300,6 +306,7 @@ const API_PERMISSION_MAP: Record<string, Permission[]> = {
   select_services: [Permission.SELECT_SERVICES],
   patient_booking_consent: [Permission.PATIENT_BOOKING_CONSENT],
   send_patient_to_finance: [Permission.SEND_PATIENT_TO_FINANCE],
+  view_worklist: [Permission.VIEW_WORKLIST],
   view_booked_services: [Permission.VIEW_BOOKED_SERVICES],
   view_confirmed_bookings: [Permission.VIEW_CONFIRMED_BOOKINGS],
   // -- Finance permissions --

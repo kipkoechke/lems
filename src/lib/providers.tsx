@@ -18,6 +18,15 @@ export default function Providers({
           queries: {
             staleTime: 0,
             refetchOnWindowFocus: true,
+            // Never retry a 4xx. A 401/403/404 is a settled answer, and with
+            // refetchOnWindowFocus each retry multiplies: one forbidden call
+            // turns into a dozen identical requests in the network log.
+            retry: (failureCount, error) => {
+              const status = (error as { response?: { status?: number } })
+                ?.response?.status;
+              if (status && status >= 400 && status < 500) return false;
+              return failureCount < 2;
+            },
           },
         },
       })

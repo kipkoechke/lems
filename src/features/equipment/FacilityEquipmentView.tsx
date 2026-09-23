@@ -105,6 +105,28 @@ export default function FacilityEquipmentView() {
   }
 
   if (error) {
+    // §7 of the reference marks this route admin-only while the role tables
+    // grant it to facility accounts. If the deployment sides with §7, say so
+    // plainly instead of offering a retry that cannot succeed.
+    const status = (error as { response?: { status?: number } })?.response
+      ?.status;
+    if (status === 403) {
+      return (
+        <div className="min-h-screen p-4">
+          <div className="max-w-5xl mx-auto bg-white rounded-lg border border-slate-200 p-8 text-center">
+            <FaCog className="w-6 h-6 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-600">
+              Your account does not have access to the equipment register.
+            </p>
+            <p className="text-sm text-slate-500 mt-1">
+              Ask a system administrator to grant facility access to the
+              equipment endpoint.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <ErrorState
         title="Unable to Load Equipment"
