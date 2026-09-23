@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import {
@@ -11,6 +12,7 @@ import {
   setAuthData,
   User,
 } from "../services/apiAuth";
+import { getMyPermissions } from "../services/apiAuth";
 import { getDashboard } from "@/services/apiDashboard";
 import { getBookingsWithPagination } from "@/services/apiBooking";
 import { facilityDashboardFilters } from "@/features/facilities/facilityDashboardQuery";
@@ -135,4 +137,44 @@ export const useCurrentUserWithLoading = () => {
 export const useCurrentFacility = (): Facility | null => {
   const { data: auth } = useAuth();
   return auth?.facility ?? null;
+};
+
+/**
+ * Refreshes the signed-in user's permission grants from /auth/me/permissions.
+ *
+ * The login payload carries a `permissions` map, but it goes stale as soon as
+ * an admin changes a grant. This re-reads them once per session and patches
+ * the cached user, so every useHasPermission check sees the current set. A
+ * failure is ignored: role-based permissions still apply.
+ */
+export const useSyncPermissions = () => {
+  const queryClient = useQueryClient();
+  const { data: auth } = useAuth();
+  const isAuthenticated = !!auth?.isAuthenticated;
+
+  const { data: permissions } = useQuery({
+    queryKey: authKeys.profile,
+    queryFn: getMyPermissions,
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 10,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (!permissions || !auth?.user) return;
+
+    const current = auth.user.permissions ?? {};
+    const unchanged =
+      Object.keys(permissions).length === Object.keys(current).length &&
+      Object.entries(permissions).every(([code, granted]) => current[code] === granted);
+    if (unchanged) return;
+
+    const user = { ...auth.user, permissions };
+    queryClient.setQueryData(authKeys.auth, { ...auth, user });
+    try {
+      localStorage.setItem("user", JSON.stringify(user));
+    } catch {
+      // Storage unavailable (private mode) — the cache patch is enough.
+    }
+  }, [permissions, auth, queryClient]);
 };

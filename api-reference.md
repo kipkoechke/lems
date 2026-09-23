@@ -196,8 +196,8 @@ Manage facility, bookings, patients, contracts, and users.
 | `/bookings/session-status`                              | GET              | Poll session status              |
 | `/professionals`                                        | POST             | Register professional            |
 | `/practitioner/worklist`                                | GET              | Practitioner worklist            |
-| `/users`                                                | GET/POST         | List / Create facility users     |
-| `/users/{id}`                                           | GET/PUT/DELETE   | Facility user CRUD               |
+| `/users`                                                | GET/POST         | List / create users in own facility (view-only, practitioner, finance, equipment — never another admin) |
+| `/users/{id}`                                           | GET              | Get a user in own facility       |
 | `/equipment/facility/{facility}/operational`            | GET              | Facility operational equipment   |
 | `/admin/dashboard`                                      | GET              | Facility dashboard               |
 
@@ -258,6 +258,32 @@ Equipment operation only.
 | `/equipment/facility/{facility}/operational`            | GET    | Facility operational equipment |
 | `/dicom/equipment/{id}/test`                            | POST   | Test DICOM connection          |
 | `/dicom/equipment/{id}/status`                          | GET    | Equipment DICOM status         |
+
+### View Only (`f_view_only`)
+
+Read-only access to a facility. A view-only account is provisioned by the
+facility admin (HRIO) and is always scoped to that admin's facility — see
+[Users & Permissions (Admin)](#22-users--permissions-admin).
+
+| Endpoint                       | Method | Description                    |
+| ------------------------------ | ------ | ------------------------------ |
+| `/auth/login`                  | POST   | Authenticate                   |
+| `/auth/logout`                 | POST   | Logout                         |
+| `/auth/me`                     | GET    | Current user                   |
+| `/auth/me/permissions`         | GET    | Current user permissions       |
+| `/facilities`                  | GET    | List facilities                |
+| `/facilities/{id}`             | GET    | Get facility                   |
+| `/patients`                    | GET    | List patients                  |
+| `/patients/{id}`               | GET    | Get patient                    |
+| `/bookings`                    | GET    | List bookings                  |
+| `/bookings/{id}`               | GET    | Booking details                |
+| `/bookings/{booking}/services` | GET    | Booking services               |
+| `/contracts`                   | GET    | List contracts                 |
+| `/contracts/{id}`              | GET    | Contract detail                |
+| `/lots`                        | GET    | List lots                      |
+| `/procedures`                  | GET    | List SHA procedures            |
+| `/requests`                    | GET    | List medical requests          |
+| `/analytics/*`                 | GET    | Read-only analytics            |
 
 ### Provider Portal (`provider_portal`)
 
@@ -3844,6 +3870,9 @@ Admin user and permission management. **Auth required.**
 
 List users with pagination and filtering.
 
+A system-level admin sees every user. A facility admin (`f_admin`) sees only
+users belonging to their own facility; any `facility_id` they pass is ignored.
+
 | Param       | Type    | Notes             |
 | ----------- | ------- | ----------------- |
 | `is_active` | boolean |                   |
@@ -3884,24 +3913,38 @@ List users with pagination and filtering.
 
 Create a new user.
 
-| Field          | Type    | Required | Notes           |
-| -------------- | ------- | -------- | --------------- |
-| `username`     | string  | Yes      | 3–100 chars     |
-| `email`        | email   | Yes      | 3–255 chars     |
-| `password`     | string  | Yes      | 8–72 chars      |
-| `full_name`    | string  | No       | Max 255 chars   |
-| `is_active`    | boolean | No       | Default `true`  |
-| `is_superuser` | boolean | No       | Default `false` |
-| `is_facility`  | boolean | No       | Default `false` |
-| `is_vendor`    | boolean | No       | Default `false` |
-| `facility_id`  | string  | No       | Max 50 chars    |
-| `vendor_id`    | uuid    | No       |                 |
+| Field                   | Type    | Required | Notes                                    |
+| ----------------------- | ------- | -------- | ---------------------------------------- |
+| `name`                  | string  | Yes      | Max 255 chars                            |
+| `email`                 | email   | Yes*     | Unique                                   |
+| `phone`                 | string  | Yes*     | Max 20 chars, unique                     |
+| `role`                  | string  | Yes      | Any `UserRole` value (see scope below)   |
+| `is_active`             | boolean | No       | Default `true`                           |
+| `salutation`            | string  | No       | Max 20 chars                             |
+| `gender`                | string  | No       | `male`, `female`, `other`                |
+| `professional_id`       | string  | No       | Max 50 chars                             |
+| `registration_id`       | string  | No       | Max 50 chars                             |
+| `identification_type`   | string  | No       | Max 50 chars                             |
+| `identification_number` | string  | No       | Max 50 chars                             |
+| `postal_address`        | array   | No       |                                          |
+| `facility_id`           | uuid    | Cond.    | Required for facility roles (system admin) |
+| `vendor_id`             | uuid    | Cond.    | Required for vendor roles                |
+
+\* At least one of `email` or `phone` is required.
+
+**Role scope**
+
+| Caller                                      | Roles that may be created                                                                     | Facility                                     |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| System admin (`admin`, `nesp`, `moh`, `cog`) | Any role                                                                                       | Supplied `facility_id` / `vendor_id`         |
+| Facility admin (`f_admin`)                   | `f_view_only`, `f_practitioner`, `f_finance`, `f_equipment_user` — never `f_admin` or system/vendor roles | Forced from the caller's profile; `facility_id` and `vendor_id` are rejected |
 
 ---
 
 ### GET `/users/{user_id}`
 
-Get user by ID. Includes assigned permissions.
+Get user by ID. A facility admin may only fetch users belonging to their own
+facility — any other user returns `404`.
 
 **Response `200`**
 

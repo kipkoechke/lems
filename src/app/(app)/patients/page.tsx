@@ -23,11 +23,18 @@ import {
 } from "@/lib/maskUtils";
 import { formatDateOnlyNairobi } from "@/lib/dateUtils";
 import { ActionMenu } from "@/components/common/ActionMenu";
+import { useHasPermission } from "@/hooks/usePermissions";
+import { Permission } from "@/lib/rbac";
 
 function Patients() {
   const [currentPage, setCurrentPage] = useState(1);
   // Removed unused modal-related state
   const router = useRouter();
+  // Reading the register is not permission to change it — a view-only account
+  // has GET /patients and nothing else.
+  const canRegisterPatients = useHasPermission(
+    Permission.GET_PATIENT_FROM_REGISTRY,
+  );
 
   // Search applies on submit rather than per keystroke — no debounce needed.
   const search = useSearchControl(() => setCurrentPage(1));
@@ -137,13 +144,15 @@ function Patients() {
                 <FaFileExport className="w-4 h-4" />
                 <span className="font-medium">Export</span>
               </button>
-              <button
-                onClick={() => router.push("/patients/new")}
-                className="inline-flex items-center gap-2 px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                <FaUserPlus className="w-4 h-4" />
-                <span className="font-medium">Add Patient</span>
-              </button>
+              {canRegisterPatients && (
+                <button
+                  onClick={() => router.push("/patients/new")}
+                  className="inline-flex items-center gap-2 px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  <FaUserPlus className="w-4 h-4" />
+                  <span className="font-medium">Add Patient</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -412,25 +421,32 @@ function Patients() {
                                   <FiEye className="h-4 w-4" />
                                   View Details
                                 </ActionMenu.Item>
-                                <ActionMenu.Item
-                                  onClick={() => {
-                                    // Add edit functionality
-                                    console.log("Edit patient:", patient.id);
-                                  }}
-                                >
-                                  <FiEdit className="h-4 w-4" />
-                                  Edit Patient
-                                </ActionMenu.Item>
-                                <ActionMenu.Item
-                                  onClick={() => {
-                                    // Add delete functionality
-                                    console.log("Delete patient:", patient.id);
-                                  }}
-                                  className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center gap-3 transition-colors"
-                                >
-                                  <FiTrash className="h-4 w-4" />
-                                  Delete
-                                </ActionMenu.Item>
+                                {canRegisterPatients && (
+                                  <>
+                                    <ActionMenu.Item
+                                      onClick={() => {
+                                        // Add edit functionality
+                                        console.log("Edit patient:", patient.id);
+                                      }}
+                                    >
+                                      <FiEdit className="h-4 w-4" />
+                                      Edit Patient
+                                    </ActionMenu.Item>
+                                    <ActionMenu.Item
+                                      onClick={() => {
+                                        // Add delete functionality
+                                        console.log(
+                                          "Delete patient:",
+                                          patient.id,
+                                        );
+                                      }}
+                                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                                    >
+                                      <FiTrash className="h-4 w-4" />
+                                      Delete
+                                    </ActionMenu.Item>
+                                  </>
+                                )}
                               </ActionMenu.Content>
                             </ActionMenu>
                           </Table.Cell>
@@ -593,25 +609,29 @@ function Patients() {
                             <FiEye className="h-4 w-4" />
                             View Details
                           </ActionMenu.Item>
-                          <ActionMenu.Item
-                            onClick={() => {
-                              // Add edit functionality
-                              console.log("Edit patient:", patient.id);
-                            }}
-                          >
-                            <FiEdit className="h-4 w-4" />
-                            Edit Patient
-                          </ActionMenu.Item>
-                          <ActionMenu.Item
-                            onClick={() => {
-                              // Add delete functionality
-                              console.log("Delete patient:", patient.id);
-                            }}
-                            className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center gap-3 transition-colors"
-                          >
-                            <FiTrash className="h-4 w-4" />
-                            Delete
-                          </ActionMenu.Item>
+                          {canRegisterPatients && (
+                            <>
+                              <ActionMenu.Item
+                                onClick={() => {
+                                  // Add edit functionality
+                                  console.log("Edit patient:", patient.id);
+                                }}
+                              >
+                                <FiEdit className="h-4 w-4" />
+                                Edit Patient
+                              </ActionMenu.Item>
+                              <ActionMenu.Item
+                                onClick={() => {
+                                  // Add delete functionality
+                                  console.log("Delete patient:", patient.id);
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                              >
+                                <FiTrash className="h-4 w-4" />
+                                Delete
+                              </ActionMenu.Item>
+                            </>
+                          )}
                         </ActionMenu.Content>
                       </ActionMenu>
                     </div>

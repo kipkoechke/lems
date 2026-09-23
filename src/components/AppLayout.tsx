@@ -3,7 +3,7 @@ import Header from "./layout/Header";
 import Sidebar from "./layout/Sidebar";
 
 import { ReactNode, useState } from "react";
-import { useCurrentUser } from "@/hooks/useAuth";
+import { useCurrentUser, useSyncPermissions } from "@/hooks/useAuth";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -12,6 +12,10 @@ type AppLayoutProps = {
 const AppLayout = ({ children }: AppLayoutProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const user = useCurrentUser();
+
+  // Re-read the caller's grants once per session so permission changes made by
+  // an admin take effect without a re-login.
+  useSyncPermissions();
 
   // Trust the middleware to handle authentication
   // If this component renders, the user should be authenticated (middleware allows it)

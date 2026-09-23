@@ -160,6 +160,67 @@ export const logoutFetcher = async (): Promise<void> => {
   }
 };
 
+/**
+ * GET /auth/me/permissions — the caller's own permission grants.
+ *
+ * The reference lists the route without a body, and deployments differ on the
+ * envelope, so every plausible shape is normalised to the
+ * `{ code: granted }` map the RBAC layer already understands: an object map,
+ * an array of codes, or an array of permission records.
+ */
+export const getMyPermissions = async (): Promise<Record<string, boolean>> => {
+  const response = await axios.get("/auth/me/permissions");
+  const body = response.data;
+  const raw = body?.data ?? body?.permissions ?? body;
+
+  if (!raw) return {};
+
+  if (Array.isArray(raw)) {
+    const map: Record<string, boolean> = {};
+    for (const entry of raw) {
+      if (typeof entry === "string") {
+        map[entry] = true;
+        continue;
+      }
+      const code = entry?.code ?? entry?.permission ?? entry?.name;
+      if (code) map[code] = entry?.granted !== false;
+    }
+    return map;
+  }
+
+  if (typeof raw === "object") {
+    const nested = (raw as { permissions?: unknown }).permissions;
+    if (nested) {
+      return getPermissionMap(nested);
+    }
+    return getPermissionMap(raw);
+  }
+
+  return {};
+};
+
+/** Coerce an object of grants to booleans. */
+const getPermissionMap = (value: unknown): Record<string, boolean> => {
+  if (Array.isArray(value)) {
+    const map: Record<string, boolean> = {};
+    for (const entry of value) {
+      if (typeof entry === "string") map[entry] = true;
+      else if (entry?.code) map[entry.code] = entry?.granted !== false;
+    }
+    return map;
+  }
+  if (value && typeof value === "object") {
+    const map: Record<string, boolean> = {};
+    for (const [code, granted] of Object.entries(
+      value as Record<string, unknown>,
+    )) {
+      map[code] = granted !== false && granted !== 0 && granted !== null;
+    }
+    return map;
+  }
+  return {};
+};
+
 export const loginFetcher = async (
   credentials: LoginFormData,
 ): Promise<LoginResponse> => {

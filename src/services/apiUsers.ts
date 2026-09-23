@@ -118,16 +118,34 @@ export interface UserListResponse {
   };
 }
 
+/**
+ * POST /users.
+ *
+ * The API creates the account from a role plus a profile — there is no
+ * username or password field; credentials are issued out of band. At least one
+ * of `email` or `phone` is required.
+ *
+ * A facility admin may only create `f_view_only`, `f_practitioner`,
+ * `f_finance` and `f_equipment_user`, and must not send `facility_id` or
+ * `vendor_id`: the API forces the facility from the caller's own profile and
+ * rejects those fields.
+ */
 export interface UserCreateRequest {
-  username: string;
-  email: string;
-  password: string;
-  full_name?: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  role: string;
   is_active?: boolean;
-  is_superuser?: boolean;
-  is_facility?: boolean;
-  is_vendor?: boolean;
+  salutation?: string;
+  gender?: "male" | "female" | "other";
+  professional_id?: string;
+  registration_id?: string;
+  identification_type?: string;
+  identification_number?: string;
+  postal_address?: string[];
+  /** System admins only — required for facility roles. */
   facility_id?: string;
+  /** System admins only — required for vendor roles. */
   vendor_id?: string;
 }
 

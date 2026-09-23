@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
+import { useHasPermission } from "@/hooks/usePermissions";
 import { Permission } from "@/lib/rbac";
 import {
   useCancelMedicalRequest,
@@ -53,6 +54,8 @@ function RequestDetailContent() {
   const params = useParams();
   const router = useRouter();
   const requestId = params.id as string;
+  // Read access does not imply the write actions below.
+  const canManage = useHasPermission(Permission.MANAGE_MEDICAL_REQUESTS);
 
   const [tab, setTab] = useState<"details" | "callbacks">("details");
   const [showRetarget, setShowRetarget] = useState(false);
@@ -108,13 +111,19 @@ function RequestDetailContent() {
 
   const details = [
     { label: "Patient", value: patientName },
-    { label: "Patient ID", value: request.patient_id || request.patient?.identification_no },
+    {
+      label: "Patient ID",
+      value: request.patient_id || request.patient?.identification_no,
+    },
     { label: "MRN", value: request.patient_mrn },
     { label: "Sex", value: request.sex },
     { label: "Date of Birth", value: request.date_of_birth },
     { label: "Modality", value: request.modality },
     { label: "Facility", value: requestFacility(request) },
-    { label: "Equipment", value: request.equipment_code || request.equipment?.name || "-" },
+    {
+      label: "Equipment",
+      value: request.equipment_code || request.equipment?.name || "-",
+    },
     { label: "Accession Number", value: request.accession_number },
     { label: "Filler Order", value: request.filler_order_number },
     { label: "Study Description", value: requestProcedure(request) },
@@ -160,31 +169,37 @@ function RequestDetailContent() {
             {String(request.status).replace(/_/g, " ")}
           </span>
 
-          <button
-            onClick={() => regenerate(requestId)}
-            disabled={isRegenerating || isTerminal}
-            className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            <FaSync className={`w-3.5 h-3.5 ${isRegenerating ? "animate-spin" : ""}`} />
-            Regenerate MWL
-          </button>
-          <button
-            onClick={() => {
-              setTargetEquipment("");
-              setShowRetarget(true);
-            }}
-            disabled={isTerminal}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            <FaCrosshairs className="w-3.5 h-3.5" /> Retarget
-          </button>
-          <button
-            onClick={() => setConfirmCancel(true)}
-            disabled={isTerminal}
-            className="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 disabled:opacity-50 text-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            <FaBan className="w-3.5 h-3.5" /> Cancel
-          </button>
+          {canManage && (
+            <>
+              <button
+                onClick={() => regenerate(requestId)}
+                disabled={isRegenerating || isTerminal}
+                className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                <FaSync
+                  className={`w-3.5 h-3.5 ${isRegenerating ? "animate-spin" : ""}`}
+                />
+                Regenerate MWL
+              </button>
+              <button
+                onClick={() => {
+                  setTargetEquipment("");
+                  setShowRetarget(true);
+                }}
+                disabled={isTerminal}
+                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                <FaCrosshairs className="w-3.5 h-3.5" /> Retarget
+              </button>
+              <button
+                onClick={() => setConfirmCancel(true)}
+                disabled={isTerminal}
+                className="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 disabled:opacity-50 text-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                <FaBan className="w-3.5 h-3.5" /> Cancel
+              </button>
+            </>
+          )}
         </div>
 
         {request.status_message && (
@@ -233,7 +248,9 @@ function RequestDetailContent() {
 
               {/* Study / Procedures */}
               <div>
-                <p className="text-xs text-slate-500 mb-2">Study / Procedures</p>
+                <p className="text-xs text-slate-500 mb-2">
+                  Study / Procedures
+                </p>
                 <div className="space-y-2">
                   {request.study_description && (
                     <div className="text-sm text-slate-700 bg-blue-50 rounded-lg px-3 py-2">
@@ -321,7 +338,9 @@ function RequestDetailContent() {
 
               {/* Assigned equipment */}
               <div>
-                <p className="text-xs text-slate-500 mb-2">Assigned Equipment</p>
+                <p className="text-xs text-slate-500 mb-2">
+                  Assigned Equipment
+                </p>
                 {assignedEquipment.length === 0 ? (
                   <p className="text-sm text-slate-500">
                     No equipment assigned yet.
@@ -493,8 +512,8 @@ function RequestDetailContent() {
               Cancel Request
             </h3>
             <p className="text-gray-600 mb-6">
-              This stops the request from being processed further. This cannot be
-              undone.
+              This stops the request from being processed further. This cannot
+              be undone.
             </p>
             <div className="flex gap-3">
               <button

@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import { useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
-import { Permission } from "@/lib/rbac";
+import { Permission, isFacilityRole } from "@/lib/rbac";
 import { useDeleteUser, useUsers } from "@/features/users/useUsers";
+import { useCurrentUser } from "@/hooks/useAuth";
 import { userInstitution, userScopeLabel } from "@/services/apiUsers";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
@@ -35,7 +36,13 @@ function UsersContent() {
     is_active: activeFilter ? activeFilter === "true" : undefined,
   });
 
+  const currentUser = useCurrentUser();
   const { deleteUser, isDeleting } = useDeleteUser();
+
+  // A facility admin may list and read users in their facility, and create
+  // new ones — but /users/{id} is GET-only for them, so no edit, permissions
+  // or delete actions.
+  const canManageUsers = !isFacilityRole(currentUser?.role);
 
   if (isLoading) {
     return (
@@ -196,25 +203,30 @@ function UsersContent() {
                             >
                               <FaEye className="text-blue-500" /> View
                             </ActionMenu.Item>
-                            <ActionMenu.Item
-                              onClick={() =>
-                                router.push(`/users/${user.id}/edit`)
-                              }
-                            >
-                              <FaEdit className="text-amber-500" /> Edit
-                            </ActionMenu.Item>
-                            <ActionMenu.Item
-                              onClick={() =>
-                                router.push(`/users/${user.id}/permissions`)
-                              }
-                            >
-                              <FaKey className="text-purple-500" /> Permissions
-                            </ActionMenu.Item>
-                            <ActionMenu.Item
-                              onClick={() => setConfirmDelete(user.id)}
-                            >
-                              <FaTrash className="text-red-500" /> Delete
-                            </ActionMenu.Item>
+                            {canManageUsers && (
+                              <>
+                                <ActionMenu.Item
+                                  onClick={() =>
+                                    router.push(`/users/${user.id}/edit`)
+                                  }
+                                >
+                                  <FaEdit className="text-amber-500" /> Edit
+                                </ActionMenu.Item>
+                                <ActionMenu.Item
+                                  onClick={() =>
+                                    router.push(`/users/${user.id}/permissions`)
+                                  }
+                                >
+                                  <FaKey className="text-purple-500" />{" "}
+                                  Permissions
+                                </ActionMenu.Item>
+                                <ActionMenu.Item
+                                  onClick={() => setConfirmDelete(user.id)}
+                                >
+                                  <FaTrash className="text-red-500" /> Delete
+                                </ActionMenu.Item>
+                              </>
+                            )}
                           </ActionMenu.Content>
                         </ActionMenu>
                       </Table.Cell>

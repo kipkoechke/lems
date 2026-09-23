@@ -1,50 +1,130 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { PermissionGate } from "@/components/PermissionGate";
-import { Permission } from "@/lib/rbac";
+import {
+  Permission,
+  UserRole,
+  getRoleDisplayName,
+  isFacilityRole,
+} from "@/lib/rbac";
+import { useCurrentUser, useCurrentFacility } from "@/hooks/useAuth";
 import { useCreateUser } from "@/features/users/useUsers";
+import { useVendors } from "@/features/vendors/useVendors";
 import { UserCreateRequest } from "@/services/apiUsers";
 import BackButton from "@/components/common/BackButton";
 import { InputField } from "@/components/common/InputField";
+import { SelectField } from "@/components/common/SelectField";
+import { FacilityFilter } from "@/components/common/FacilityFilter";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { FaSave, FaTimes } from "react-icons/fa";
 
-type Scope = "standard" | "superuser" | "facility" | "vendor";
+/** Roles a facility admin may provision — never another admin. */
+const FACILITY_ADMIN_CREATABLE_ROLES: UserRole[] = [
+  UserRole.F_VIEW_ONLY,
+  UserRole.F_PRACTITIONER,
+  UserRole.F_FINANCE,
+  UserRole.F_EQUIPMENT_USER,
+];
 
-interface UserFormData extends UserCreateRequest {
-  scope: Scope;
-}
+/** Roles a system admin may provision. */
+const SYSTEM_ADMIN_CREATABLE_ROLES: UserRole[] = [
+  UserRole.ADMIN,
+  UserRole.F_ADMIN,
+  ...FACILITY_ADMIN_CREATABLE_ROLES,
+  UserRole.VENDOR,
+  UserRole.C_REC,
+  UserRole.B_APPROVER,
+  UserRole.PROVIDER_PORTAL,
+  UserRole.PAYER,
+];
+
+const GENDERS = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "other", label: "Other" },
+];
+
+const ID_TYPES = [
+  { value: "National ID", label: "National ID" },
+  { value: "Passport", label: "Passport" },
+  { value: "Alien ID", label: "Alien ID" },
+  { value: "Military ID", label: "Military ID" },
+];
+
+type UserFormData = Omit<UserCreateRequest, "postal_address">;
 
 function NewUserContent() {
   const router = useRouter();
+  const currentUser = useCurrentUser();
+  const currentFacility = useCurrentFacility();
   const { createUser, isCreating } = useCreateUser();
+
+  // A facility admin provisions only for their own facility: the API forces
+  // the facility from their profile and rejects facility_id / vendor_id.
+  const isFacilityAdmin = isFacilityRole(currentUser?.role);
+
+  const [facilityId, setFacilityId] = useState("");
+  const [vendorId, setVendorId] = useState("");
+  const { vendors, isLoading: vendorsLoading } = useVendors();
+
+  const roleOptions = useMemo(() => {
+    const roles = isFacilityAdmin
+      ? FACILITY_ADMIN_CREATABLE_ROLES
+      : SYSTEM_ADMIN_CREATABLE_ROLES;
+    return roles.map((role) => ({
+      value: role,
+      label: getRoleDisplayName(role),
+    }));
+  }, [isFacilityAdmin]);
 
   const {
     register,
     handleSubmit,
     watch,
+    setError,
     formState: { errors },
   } = useForm<UserFormData>({
-    defaultValues: { scope: "standard", is_active: true },
+    defaultValues: { role: roleOptions[0]?.value, is_active: true },
   });
 
-  const scope = watch("scope");
+  const role = watch("role");
+  const email = watch("email");
+  const phone = watch("phone");
+
+  const needsFacility = !isFacilityAdmin && isFacilityRole(role);
+  const needsVendor = !isFacilityAdmin && role === UserRole.VENDOR;
 
   const onSubmit = (data: UserFormData) => {
-    const { scope: selectedScope, facility_id, vendor_id, ...rest } = data;
+    // The API takes either, but needs at least one to reach the person.
+    if (!data.email && !data.phone) {
+      setError("email", {
+        message: "Provide an email address or a phone number",
+      });
+      return;
+    }
+
+    if (needsFacility && !facilityId) {
+      setError("role", { message: "Select the facility for this user" });
+      return;
+    }
+
+    if (needsVendor && !vendorId) {
+      setError("role", { message: "Select the vendor for this user" });
+      return;
+    }
 
     createUser(
       {
-        ...rest,
-        // New users are created active; scope drives the boolean flags so the
-        // caller never has to set four mutually-exclusive booleans by hand.
+        ...data,
+        email: data.email || undefined,
+        phone: data.phone || undefined,
         is_active: true,
-        is_superuser: selectedScope === "superuser",
-        is_facility: selectedScope === "facility",
-        is_vendor: selectedScope === "vendor",
-        facility_id: selectedScope === "facility" ? facility_id : undefined,
-        vendor_id: selectedScope === "vendor" ? vendor_id : undefined,
+        // Omitted entirely for a facility admin — the API rejects them.
+        facility_id: needsFacility ? facilityId : undefined,
+        vendor_id: needsVendor ? vendorId : undefined,
       },
       { onSuccess: () => router.push("/users") },
     );
@@ -58,101 +138,151 @@ function NewUserContent() {
           <BackButton onClick={() => router.back()} />
           <div>
             <h1 className="text-xl font-bold text-slate-900">Add New User</h1>
-            <p className="text-sm text-slate-500">Create a new system user</p>
+            <p className="text-sm text-slate-500">
+              {isFacilityAdmin
+                ? `New account at ${currentFacility?.name || "your facility"}`
+                : "Create a new system user"}
+            </p>
           </div>
         </div>
 
-        {/* Form */}
         <div className="bg-white rounded-lg border border-slate-200">
           <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6">
+            <h2 className="text-sm font-semibold text-slate-900 mb-4">
+              Account
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <InputField
-                label="Username"
+                label="Full Name"
                 type="text"
-                placeholder="Enter username"
-                register={register("username", {
-                  required: "Username is required",
-                  minLength: { value: 3, message: "Minimum 3 characters" },
-                })}
-                error={errors.username?.message}
+                placeholder="Enter full name"
+                register={register("name", { required: "Name is required" })}
+                error={errors.name?.message}
                 required
+                disabled={isCreating}
+              />
+
+              <SelectField
+                label="Role"
+                register={register("role", { required: "Role is required" })}
+                error={errors.role?.message}
+                required
+                placeholder="Select role"
+                options={roleOptions}
                 disabled={isCreating}
               />
 
               <InputField
                 label="Email"
                 type="email"
-                placeholder="Enter email address"
-                register={register("email", { required: "Email is required" })}
+                placeholder="name@facility.go.ke"
+                register={register("email")}
                 error={errors.email?.message}
-                required
                 disabled={isCreating}
               />
 
               <InputField
-                label="Full Name"
+                label="Phone"
                 type="text"
-                placeholder="Enter full name"
-                register={register("full_name")}
+                placeholder="+2547..."
+                register={register("phone")}
+                error={errors.phone?.message}
+                disabled={isCreating}
+              />
+            </div>
+
+            {(!email && !phone) && (
+              <p className="mt-2 text-xs text-slate-500">
+                Provide at least one of email or phone.
+              </p>
+            )}
+
+            {/* Institution — system admins only; a facility admin's users are
+                pinned to their own facility by the API. */}
+            {(needsFacility || needsVendor) && (
+              <>
+                <h2 className="text-sm font-semibold text-slate-900 mt-6 mb-4">
+                  Institution
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  {needsFacility && (
+                    <FacilityFilter
+                      label="Facility"
+                      placeholder="Select facility"
+                      value={facilityId}
+                      onChange={setFacilityId}
+                    />
+                  )}
+                  {needsVendor && (
+                    <SearchableSelect
+                      label="Vendor"
+                      required
+                      placeholder="Select vendor"
+                      options={vendors.map((vendor) => ({
+                        value: vendor.id,
+                        label: vendor.name,
+                      }))}
+                      value={vendorId}
+                      onChange={setVendorId}
+                      isLoading={vendorsLoading}
+                    />
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Profile */}
+            <h2 className="text-sm font-semibold text-slate-900 mt-6 mb-4">
+              Profile <span className="font-normal text-slate-400">(optional)</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              <InputField
+                label="Salutation"
+                type="text"
+                placeholder="Dr., Mr., Ms."
+                register={register("salutation")}
+                disabled={isCreating}
+              />
+
+              <SelectField
+                label="Gender"
+                register={register("gender")}
+                placeholder="Select gender"
+                options={GENDERS}
                 disabled={isCreating}
               />
 
               <InputField
-                label="Password"
-                type="password"
-                placeholder="Minimum 8 characters"
-                register={register("password", {
-                  required: "Password is required",
-                  minLength: { value: 8, message: "Minimum 8 characters" },
-                })}
-                error={errors.password?.message}
-                required
+                label="Professional ID"
+                type="text"
+                placeholder="e.g. R/12345"
+                register={register("professional_id")}
                 disabled={isCreating}
               />
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Scope <span className="text-red-500">*</span>
-                </label>
-                <select
-                  {...register("scope")}
-                  disabled={isCreating}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
-                >
-                  <option value="standard">Standard</option>
-                  <option value="superuser">Super Admin</option>
-                  <option value="facility">Facility User</option>
-                  <option value="vendor">Vendor User</option>
-                </select>
-              </div>
+              <InputField
+                label="Registration ID"
+                type="text"
+                placeholder="e.g. KMPDC/2020/00123"
+                register={register("registration_id")}
+                disabled={isCreating}
+              />
 
-              {scope === "facility" && (
-                <InputField
-                  label="Facility ID"
-                  type="text"
-                  placeholder="Enter facility identifier"
-                  register={register("facility_id", {
-                    required: "Facility ID is required for facility users",
-                  })}
-                  error={errors.facility_id?.message}
-                  required
-                  disabled={isCreating}
-                />
-              )}
+              <SelectField
+                label="Identification Type"
+                register={register("identification_type")}
+                placeholder="Select type"
+                options={ID_TYPES}
+                disabled={isCreating}
+              />
 
-              {scope === "vendor" && (
-                <InputField
-                  label="Vendor ID"
-                  type="text"
-                  placeholder="Enter vendor UUID"
-                  register={register("vendor_id", {
-                    required: "Vendor ID is required for vendor users",
-                  })}
-                  error={errors.vendor_id?.message}
-                  required
-                  disabled={isCreating}
-                />
-              )}
+              <InputField
+                label="Identification Number"
+                type="text"
+                placeholder="Enter ID number"
+                register={register("identification_number")}
+                disabled={isCreating}
+              />
             </div>
 
             <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-100">

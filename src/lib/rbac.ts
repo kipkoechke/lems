@@ -7,6 +7,7 @@ export enum UserRole {
   F_FINANCE = "f_finance", // Facility finance
   F_EQUIPMENT_USER = "f_equipment_user", // Facility equipment user (Lab)
   F_PRACTITIONER = "f_practitioner", // Facility practitioner (Clinician/Practitioner)
+  F_VIEW_ONLY = "f_view_only", // Facility view-only account (HRIO), read-only
   C_REC = "c_rec", // Claim records
   B_APPROVER = "b_approver", // Batch approver
   VENDOR = "vendor", // Vendor user
@@ -89,6 +90,10 @@ export enum Permission {
   MANAGE_REVENUE_DISTRIBUTIONS = "manage_revenue_distributions",
   MANAGE_DICOM = "manage_dicom",
   VIEW_MEDICAL_REQUESTS = "view_medical_requests",
+  // Write actions on a medical request (cancel, retarget, regenerate MWL).
+  // Read access alone must not expose these — a view-only facility account
+  // can list requests but cannot act on them.
+  MANAGE_MEDICAL_REQUESTS = "manage_medical_requests",
   VIEW_SHA_INTERVENTIONS = "view_sha_interventions",
 
   // Integration-role surfaces. These live under their own API prefixes
@@ -126,17 +131,18 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.MANAGE_REVENUE_DISTRIBUTIONS,
     Permission.MANAGE_DICOM,
     Permission.VIEW_MEDICAL_REQUESTS,
+    Permission.MANAGE_MEDICAL_REQUESTS,
     Permission.VIEW_SHA_INTERVENTIONS,
   ],
 
   [UserRole.F_ADMIN]: [
     // Facility admin permissions.
     //
-    // NOTE: deliberately NOT CREATE_FACILITY_USERS — the API returns 403 for
-    // facility accounts on /users, so the page can only ever render an error.
-    // The reference's role table lists it, but the deployed API disagrees and
-    // the API wins. Restore it here once /users accepts facility admins.
+    // CREATE_FACILITY_USERS is back: /users now scopes a facility admin to
+    // their own facility and lets them provision view-only, practitioner,
+    // finance and equipment accounts (never another admin).
     Permission.VIEW_DASHBOARD,
+    Permission.CREATE_FACILITY_USERS,
     Permission.VIEW_REPORTS,
     Permission.VIEW_CONTRACTS,
     Permission.VIEW_EQUIPMENTS,
@@ -157,6 +163,17 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_EQUIPMENTS,
     Permission.VIEW_BOOKED_SERVICES,
     Permission.VIEW_CONFIRMED_BOOKINGS,
+  ],
+
+  [UserRole.F_VIEW_ONLY]: [
+    // Read-only facility account (HRIO), provisioned by the facility admin.
+    // Limited to the GET surfaces in the API reference's View Only table:
+    // no equipment, no worklist, no user management, no write actions.
+    Permission.VIEW_DASHBOARD,
+    Permission.VIEW_PATIENTS,
+    Permission.VIEW_SERVICES,
+    Permission.VIEW_CONTRACTS,
+    Permission.VIEW_MEDICAL_REQUESTS,
   ],
 
   [UserRole.F_FINANCE]: [
@@ -242,6 +259,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
  */
 export const FACILITY_ROLES: string[] = [
   UserRole.F_ADMIN,
+  UserRole.F_VIEW_ONLY,
   UserRole.F_PRACTITIONER,
   UserRole.F_FINANCE,
   UserRole.F_EQUIPMENT_USER,
@@ -298,6 +316,7 @@ const API_PERMISSION_MAP: Record<string, Permission[]> = {
   manage_revenue_distributions: [Permission.MANAGE_REVENUE_DISTRIBUTIONS],
   manage_dicom: [Permission.MANAGE_DICOM],
   view_medical_requests: [Permission.VIEW_MEDICAL_REQUESTS],
+  manage_medical_requests: [Permission.MANAGE_MEDICAL_REQUESTS],
   view_sha_interventions: [Permission.VIEW_SHA_INTERVENTIONS],
   // -- Practitioner permissions --
   get_patient_from_registry: [Permission.GET_PATIENT_FROM_REGISTRY],
@@ -401,6 +420,7 @@ const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   [UserRole.ADMIN]: "System Admin",
   [UserRole.F_ADMIN]: "Facility Admin",
   [UserRole.F_PRACTITIONER]: "Clinician/Practitioner",
+  [UserRole.F_VIEW_ONLY]: "View Only (HRIO)",
   [UserRole.F_FINANCE]: "Facility Finance",
   [UserRole.F_EQUIPMENT_USER]: "Facility Equipment User (Lab)",
   [UserRole.C_REC]: "Claim Records",

@@ -16,6 +16,8 @@ import { DashboardSkeleton } from "@/components/common/Skeleton";
 import { useCurrentFacility } from "@/hooks/useAuth";
 import { useBookingsWithPagination } from "@/features/services/bookings/useBookings";
 import { useWorklist } from "@/features/worklist/useWorklist";
+import { useHasPermission } from "@/hooks/usePermissions";
+import { Permission } from "@/lib/rbac";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 import type { Booking } from "@/types/booking";
 import { facilityDashboardFilters } from "./facilityDashboardQuery";
@@ -59,7 +61,13 @@ export default function FacilityDashboard() {
     facilityDashboardFilters(facility?.id),
   );
 
-  const { data: worklist } = useWorklist({ per_page: 5 });
+  // A view-only account has no worklist endpoint, so the panel and its
+  // request are both conditional.
+  const canSeeWorklist = useHasPermission(Permission.VIEW_WORKLIST);
+  const { data: worklist } = useWorklist(
+    { per_page: 5 },
+    { enabled: canSeeWorklist },
+  );
 
   const summary = data?.summary;
   const bookings: Booking[] = useMemo(() => data?.data ?? [], [data]);
@@ -100,51 +108,51 @@ export default function FacilityDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-            <StatCard
-              compact
-              title="Total Bookings"
-              mainValue={(summary?.total_bookings ?? 0).toLocaleString()}
-              subtitle="All time"
-              className="border border-slate-200"
-            >
-              <FaCalendarAlt className="w-4 h-4 text-blue-500" />
-            </StatCard>
-            <StatCard
-              compact
-              title="Active"
-              mainValue={(summary?.by_status?.active ?? 0).toLocaleString()}
-              subtitle="In progress"
-              className="border border-slate-200"
-            >
-              <FaClipboardList className="w-4 h-4 text-amber-500" />
-            </StatCard>
-            <StatCard
-              compact
-              title="Completed"
-              mainValue={(summary?.by_status?.completed ?? 0).toLocaleString()}
-              subtitle="Services done"
-              className="border border-slate-200"
-            >
-              <FaCheckCircle className="w-4 h-4 text-emerald-500" />
-            </StatCard>
-            <StatCard
-              compact
-              title="Patients"
-              mainValue={(summary?.unique_patients ?? 0).toLocaleString()}
-              subtitle="Unique"
-              className="border border-slate-200"
-            >
-              <FaUserInjured className="w-4 h-4 text-purple-500" />
-            </StatCard>
-            <StatCard
-              compact
-              title="Tariff Value"
-              mainValue={money(summary?.revenue?.tariff)}
-              subtitle={`SHA ${money(summary?.revenue?.sha)}`}
-              className="border border-slate-200"
-            >
-              <FaMoneyBillWave className="w-4 h-4 text-green-500" />
-            </StatCard>
+          <StatCard
+            compact
+            title="Total Bookings"
+            mainValue={(summary?.total_bookings ?? 0).toLocaleString()}
+            subtitle="All time"
+            className="border border-slate-200"
+          >
+            <FaCalendarAlt className="w-4 h-4 text-blue-500" />
+          </StatCard>
+          <StatCard
+            compact
+            title="Active"
+            mainValue={(summary?.by_status?.active ?? 0).toLocaleString()}
+            subtitle="In progress"
+            className="border border-slate-200"
+          >
+            <FaClipboardList className="w-4 h-4 text-amber-500" />
+          </StatCard>
+          <StatCard
+            compact
+            title="Completed"
+            mainValue={(summary?.by_status?.completed ?? 0).toLocaleString()}
+            subtitle="Services done"
+            className="border border-slate-200"
+          >
+            <FaCheckCircle className="w-4 h-4 text-emerald-500" />
+          </StatCard>
+          <StatCard
+            compact
+            title="Patients"
+            mainValue={(summary?.unique_patients ?? 0).toLocaleString()}
+            subtitle="Unique"
+            className="border border-slate-200"
+          >
+            <FaUserInjured className="w-4 h-4 text-purple-500" />
+          </StatCard>
+          <StatCard
+            compact
+            title="Tariff Value"
+            mainValue={money(summary?.revenue?.tariff)}
+            subtitle={`SHA ${money(summary?.revenue?.sha)}`}
+            className="border border-slate-200"
+          >
+            <FaMoneyBillWave className="w-4 h-4 text-green-500" />
+          </StatCard>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
@@ -219,37 +227,41 @@ export default function FacilityDashboard() {
           </div>
 
           {/* Worklist preview */}
-          <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-              <h2 className="text-sm font-semibold text-slate-900">Worklist</h2>
-              <button
-                onClick={() => router.push("/practitioner/worklist")}
-                className="text-xs font-medium text-blue-600 hover:text-blue-700"
-              >
-                Open
-              </button>
+          {canSeeWorklist && (
+            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Worklist
+                </h2>
+                <button
+                  onClick={() => router.push("/practitioner/worklist")}
+                  className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                >
+                  Open
+                </button>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {pending.length === 0 ? (
+                  <p className="px-4 py-6 text-sm text-slate-500 text-center">
+                    Nothing on the worklist
+                  </p>
+                ) : (
+                  pending.slice(0, 5).map((item) => (
+                    <div key={item.id} className="px-4 py-3">
+                      <p className="text-sm font-medium text-slate-900">
+                        {item.patient?.name || "-"}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {item.booking_number} ·{" "}
+                        {item.services?.length ?? item.services_count ?? 0}{" "}
+                        service(s)
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-            <div className="divide-y divide-slate-100">
-              {pending.length === 0 ? (
-                <p className="px-4 py-6 text-sm text-slate-500 text-center">
-                  Nothing on the worklist
-                </p>
-              ) : (
-                pending.slice(0, 5).map((item) => (
-                  <div key={item.id} className="px-4 py-3">
-                    <p className="text-sm font-medium text-slate-900">
-                      {item.patient?.name || "-"}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {item.booking_number} ·{" "}
-                      {item.services?.length ?? item.services_count ?? 0}{" "}
-                      service(s)
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
