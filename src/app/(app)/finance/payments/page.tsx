@@ -2,104 +2,358 @@
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useCurrentUser } from "@/hooks/useAuth";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   FaMoneyBillWave,
-  FaCheckCircle,
-  FaClock,
-  FaExclamationTriangle,
+  FaLayerGroup,
+  FaCalendarAlt,
+  FaHandHoldingUsd,
 } from "react-icons/fa";
 import { SearchField } from "@/components/common/SearchField";
+import Pagination from "@/components/common/Pagination";
+import { ErrorState } from "@/components/common/ErrorState";
+import { Table } from "@/components/Table";
+import { useFacilityPayments } from "@/features/services/bookings/useFacilityPayments";
+import { useVendorDashboard } from "@/features/vendors/useVendorDashboard";
+import { useVendorBookingsPaginated } from "@/features/vendors/useVendorBookings";
+import { useMyVendor } from "@/features/vendors/useMyVendor";
+import type { FacilityPayment } from "@/services/apiSyncBooking";
+import type { VendorBookingItem } from "@/types/booking";
 
-// Mock payment data - replace with actual API integration
-const mockPayments = [
-  {
-    id: "1",
-    invoiceNumber: "INV-2024-001",
-    amount: 150000,
-    status: "paid",
-    date: "2024-01-10",
-    description: "Equipment maintenance - January",
-  },
-  {
-    id: "2",
-    invoiceNumber: "INV-2024-002",
-    amount: 75000,
-    status: "pending",
-    date: "2024-01-15",
-    description: "Service fees - CT Scan",
-  },
-  {
-    id: "3",
-    invoiceNumber: "INV-2024-003",
-    amount: 200000,
-    status: "overdue",
-    date: "2024-01-05",
-    description: "Equipment lease - MRI Machine",
-  },
-];
+const formatCurrency = (amount: string | number | null | undefined) =>
+  new Intl.NumberFormat("en-KE", {
+    style: "currency",
+    currency: "KES",
+    maximumFractionDigits: 0,
+  }).format(Number(amount ?? 0));
+
+const formatDate = (value?: string | null) =>
+  value
+    ? new Date(value).toLocaleDateString("en-KE", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "-";
+
+interface SummaryTileProps {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  tone: "green" | "blue" | "purple";
+}
+
+const TONES = {
+  green: "bg-green-50 border-green-200 text-green-700",
+  blue: "bg-blue-50 border-blue-200 text-blue-700",
+  purple: "bg-purple-50 border-purple-200 text-purple-700",
+};
+
+function SummaryTile({ label, value, icon, tone }: SummaryTileProps) {
+  return (
+    <div className={`rounded-lg p-4 border ${TONES[tone]}`}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium opacity-80">{label}</p>
+          <p className="text-2xl font-bold truncate">{value}</p>
+        </div>
+        <div className="opacity-40 shrink-0">{icon}</div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Vendor view — earnings per booked service from /vendor/bookings, with the
+ * totals from /vendor/dashboard. There is no vendor invoice endpoint, so no
+ * invoice/arrears figures are shown.
+ */
+function VendorPayments() {
+  const { vendorId } = useMyVendor();
+  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [submittedTerm, setSubmittedTerm] = useState("");
+
+  const { data: dashboard } = useVendorDashboard(vendorId);
+  const { bookings, summary, pagination, isLoading, error } =
+    useVendorBookingsPaginated({
+      page,
+      per_page: 15,
+      search: submittedTerm || undefined,
+    });
+
+  const items: VendorBookingItem[] = bookings;
+  const revenue = dashboard?.revenue;
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Unable to Load Payments"
+        error={error}
+        action={{ label: "Try Again", onClick: () => window.location.reload() }}
+      />
+    );
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <SummaryTile
+          tone="green"
+          label="Your Share"
+          value={formatCurrency(revenue?.vendor_share)}
+          icon={<FaHandHoldingUsd className="w-10 h-10" />}
+        />
+        <SummaryTile
+          tone="blue"
+          label="Total Tariff Billed"
+          value={formatCurrency(revenue?.total_tariff)}
+          icon={<FaMoneyBillWave className="w-10 h-10" />}
+        />
+        <SummaryTile
+          tone="purple"
+          label="Services Delivered"
+          value={(summary?.total ?? 0).toLocaleString()}
+          icon={<FaLayerGroup className="w-10 h-10" />}
+        />
+      </div>
+
+      <div className="mb-6">
+        <SearchField
+          value={searchTerm}
+          onChange={setSearchTerm}
+          onSearch={() => {
+            setSubmittedTerm(searchTerm);
+            setPage(1);
+          }}
+          onClear={() => {
+            setSearchTerm("");
+            setSubmittedTerm("");
+            setPage(1);
+          }}
+          placeholder="Search by booking number or patient..."
+        />
+      </div>
+
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table className="w-full">
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell>Booking #</Table.HeaderCell>
+                <Table.HeaderCell>Service</Table.HeaderCell>
+                <Table.HeaderCell>Facility</Table.HeaderCell>
+                <Table.HeaderCell>Tariff</Table.HeaderCell>
+                <Table.HeaderCell>Your Share</Table.HeaderCell>
+                <Table.HeaderCell>Date</Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {isLoading ? (
+                <Table.Loading colSpan={6} rows={5} />
+              ) : items.length === 0 ? (
+                <Table.Empty colSpan={6}>
+                  <div className="flex flex-col items-center gap-2">
+                    <FaMoneyBillWave className="w-8 h-8 text-slate-200" />
+                    <span className="text-sm text-slate-500">
+                      No earnings recorded yet
+                    </span>
+                  </div>
+                </Table.Empty>
+              ) : (
+                items.map((item) => (
+                  <Table.Row key={item.id}>
+                    <Table.Cell>
+                      <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
+                        {item.booking?.booking_number || "-"}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="font-medium text-slate-900">
+                        {item.service?.name || "-"}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {item.patient?.name || "-"}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>{item.facility?.name || "-"}</Table.Cell>
+                    <Table.Cell>{formatCurrency(item.tariff_amount)}</Table.Cell>
+                    <Table.Cell>
+                      <span className="font-semibold text-slate-900">
+                        {formatCurrency(item.vendor_share)}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      {formatDate(item.booking?.created_at)}
+                    </Table.Cell>
+                  </Table.Row>
+                ))
+              )}
+            </Table.Body>
+          </Table>
+        </div>
+
+        {pagination && pagination.total_pages > 1 && (
+          <Pagination
+            currentPage={pagination.current_page}
+            lastPage={pagination.total_pages}
+            total={pagination.total}
+            perPage={pagination.per_page}
+            onPageChange={setPage}
+          />
+        )}
+      </div>
+    </>
+  );
+}
+
+/**
+ * Facility view — payment batches from /facility/payments. The endpoint
+ * reports disbursed batches only, so there are no pending/arrears figures to
+ * show and none are invented.
+ */
+function FacilityPayments() {
+  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const { data, isLoading, error } = useFacilityPayments(page);
+
+  const payments: FacilityPayment[] = useMemo(() => data?.data ?? [], [data]);
+
+  const filtered = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return payments;
+    return payments.filter((payment) =>
+      [payment.batch_no, payment.facility?.name, payment.amount]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(term)),
+    );
+  }, [payments, searchTerm]);
+
+  const pageTotal = useMemo(
+    () => payments.reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0),
+    [payments],
+  );
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Unable to Load Payments"
+        error={error}
+        action={{ label: "Try Again", onClick: () => window.location.reload() }}
+      />
+    );
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <SummaryTile
+          tone="green"
+          label="This Page"
+          value={formatCurrency(pageTotal)}
+          icon={<FaMoneyBillWave className="w-10 h-10" />}
+        />
+        <SummaryTile
+          tone="blue"
+          label="Payment Batches"
+          value={(data?.total ?? 0).toLocaleString()}
+          icon={<FaLayerGroup className="w-10 h-10" />}
+        />
+        <SummaryTile
+          tone="purple"
+          label="Latest Batch"
+          value={formatDate(payments[0]?.created_at)}
+          icon={<FaCalendarAlt className="w-10 h-10" />}
+        />
+      </div>
+
+      <div className="mb-6">
+        <SearchField
+          value={searchTerm}
+          onChange={setSearchTerm}
+          onClear={() => setSearchTerm("")}
+          showSearchButton={false}
+          placeholder="Filter this page by batch number or facility..."
+        />
+      </div>
+
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table className="w-full">
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell>Batch No.</Table.HeaderCell>
+                <Table.HeaderCell>Facility</Table.HeaderCell>
+                <Table.HeaderCell>Period</Table.HeaderCell>
+                <Table.HeaderCell>Amount</Table.HeaderCell>
+                <Table.HeaderCell>Paid On</Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {isLoading ? (
+                <Table.Loading colSpan={5} rows={5} />
+              ) : filtered.length === 0 ? (
+                <Table.Empty colSpan={5}>
+                  <div className="flex flex-col items-center gap-2">
+                    <FaMoneyBillWave className="w-8 h-8 text-slate-200" />
+                    <span className="text-sm text-slate-500">
+                      {searchTerm
+                        ? "No payments match your filter"
+                        : "No payments recorded yet"}
+                    </span>
+                  </div>
+                </Table.Empty>
+              ) : (
+                filtered.map((payment) => (
+                  <Table.Row key={payment.id}>
+                    <Table.Cell>
+                      <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
+                        {payment.batch_no}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>{payment.facility?.name || "-"}</Table.Cell>
+                    <Table.Cell>
+                      {formatDate(payment.start_date)} —{" "}
+                      {formatDate(payment.end_date)}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="font-semibold text-slate-900">
+                        {formatCurrency(payment.amount)}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>{formatDate(payment.created_at)}</Table.Cell>
+                  </Table.Row>
+                ))
+              )}
+            </Table.Body>
+          </Table>
+        </div>
+
+        {data && data.last_page > 1 && (
+          <Pagination
+            currentPage={data.current_page}
+            lastPage={data.last_page}
+            total={data.total}
+            perPage={data.per_page}
+            from={data.from}
+            to={data.to}
+            onPageChange={setPage}
+          />
+        )}
+      </div>
+    </>
+  );
+}
 
 export default function PaymentsPage() {
   const user = useCurrentUser();
-  const [searchTerm, setSearchTerm] = useState("");
-
   const isVendor = user?.role === "vendor";
-
-  // Filter payments based on search
-  const filteredPayments = mockPayments.filter(
-    (payment) =>
-      payment.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Calculate totals
-  const totalPaid = mockPayments
-    .filter((p) => p.status === "paid")
-    .reduce((acc, p) => acc + p.amount, 0);
-  const totalPending = mockPayments
-    .filter((p) => p.status === "pending")
-    .reduce((acc, p) => acc + p.amount, 0);
-  const totalOverdue = mockPayments
-    .filter((p) => p.status === "overdue")
-    .reduce((acc, p) => acc + p.amount, 0);
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "paid":
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <FaCheckCircle className="mr-1" /> Paid
-          </span>
-        );
-      case "pending":
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            <FaClock className="mr-1" /> Pending
-          </span>
-        );
-      case "overdue":
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <FaExclamationTriangle className="mr-1" /> Overdue
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-KE", {
-      style: "currency",
-      currency: "KES",
-    }).format(amount);
-  };
 
   return (
     <PermissionGate permission={Permission.VIEW_PAYMENTS}>
       <div className="min-h-screen p-3 md:p-6">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <div className="bg-white rounded-xl md:rounded-2xl shadow-xl mb-4 md:mb-6">
             <div className="bg-gradient-to-r from-green-600 to-blue-600 px-4 md:px-8 py-4 md:py-6 rounded-t-xl md:rounded-t-2xl">
               <div className="flex items-center gap-3 md:gap-4">
@@ -112,122 +366,15 @@ export default function PaymentsPage() {
                   </h1>
                   <p className="text-sm md:text-base text-green-100">
                     {isVendor
-                      ? "Track your revenue, payments and pending amounts"
-                      : "View facility payment status and arrears"}
+                      ? "Your share of every service delivered on your equipment"
+                      : "Payment batches disbursed to your facility"}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Stats */}
             <div className="p-4 md:p-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-green-600 font-medium">
-                        {isVendor ? "Total Received" : "Total Paid"}
-                      </p>
-                      <p className="text-2xl font-bold text-green-700">
-                        {formatCurrency(totalPaid)}
-                      </p>
-                    </div>
-                    <FaCheckCircle className="w-10 h-10 text-green-400 opacity-50" />
-                  </div>
-                </div>
-
-                <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-yellow-600 font-medium">
-                        Pending
-                      </p>
-                      <p className="text-2xl font-bold text-yellow-700">
-                        {formatCurrency(totalPending)}
-                      </p>
-                    </div>
-                    <FaClock className="w-10 h-10 text-yellow-400 opacity-50" />
-                  </div>
-                </div>
-
-                <div className="bg-red-50 rounded-lg p-4 border border-red-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-red-600 font-medium">
-                        {isVendor ? "Outstanding" : "Arrears"}
-                      </p>
-                      <p className="text-2xl font-bold text-red-700">
-                        {formatCurrency(totalOverdue)}
-                      </p>
-                    </div>
-                    <FaExclamationTriangle className="w-10 h-10 text-red-400 opacity-50" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Search */}
-              <div className="mb-6">
-                <SearchField
-                  value={searchTerm}
-                  onChange={setSearchTerm}
-                  placeholder="Search by invoice number or description..."
-                />
-              </div>
-
-              {/* Payments Table */}
-              <div className="bg-white rounded-lg border overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Invoice
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Description
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Amount
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredPayments.map((payment) => (
-                        <tr key={payment.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {payment.invoiceNumber}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {payment.description}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                            {formatCurrency(payment.amount)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {new Date(payment.date).toLocaleDateString("en-KE")}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {getStatusBadge(payment.status)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {filteredPayments.length === 0 && (
-                  <div className="text-center py-12">
-                    <FaMoneyBillWave className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">No payments found</p>
-                  </div>
-                )}
-              </div>
+              {isVendor ? <VendorPayments /> : <FacilityPayments />}
             </div>
           </div>
         </div>
