@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { FacilityFilter } from "@/components/common/FacilityFilter";
+import { useCurrentFacility } from "@/hooks/useAuth";
+import { approvalStatus, serviceStatus } from "@/lib/bookingStatus";
 import React, { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { maskPhoneNumber } from "@/lib/maskUtils";
@@ -29,8 +31,14 @@ const BookingReport: React.FC = () => {
   const [facilityId, setFacilityId] = useState<string>("");
   const [facilityName, setFacilityName] = useState<string>("");
 
+  // A facility account is pinned to its own facility: the API does not scope
+  // this list by the caller, so without it they see every other facility's
+  // bookings. Admins keep the free picker.
+  const facility = useCurrentFacility();
+  const effectiveFacilityId = facility?.id || facilityId;
+
   const { isLoading, bookings, error, refetchBookings } = useBookings(
-    facilityId ? { facility_id: facilityId } : {},
+    effectiveFacilityId ? { facility_id: effectiveFacilityId } : {},
   );
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -48,13 +56,13 @@ const BookingReport: React.FC = () => {
   const filteredBookings = useMemo(() => {
     if (!bookings) return [];
     if (activeTab === "all") return bookings;
-    return bookings.filter((booking) => booking.approval_status === activeTab);
+    return bookings.filter((booking) => approvalStatus(booking) === activeTab);
   }, [bookings, activeTab]);
 
   // Get pending bookings from filtered bookings for selection
   const pendingBookings = useMemo(() => {
     return filteredBookings.filter(
-      (booking) => booking.approval_status === "pending",
+      (booking) => approvalStatus(booking) === "pending",
     );
   }, [filteredBookings]);
 
@@ -64,8 +72,8 @@ const BookingReport: React.FC = () => {
 
     const counts = bookings.reduce(
       (acc, booking) => {
-        const approvalStatus = booking.approval_status || "pending";
-        acc[approvalStatus as keyof typeof acc]++;
+        const status = approvalStatus(booking);
+        acc[status as keyof typeof acc]++;
         acc.all++;
         return acc;
       },
@@ -298,7 +306,11 @@ const BookingReport: React.FC = () => {
         </div>
 
         {/* Facility filter */}
-        <div className="mb-5 flex flex-wrap items-end gap-3">
+        <div
+          className={`mb-5 flex flex-wrap items-end gap-3 ${
+            facility?.id ? "hidden" : ""
+          }`}
+        >
           <div className="w-full sm:w-80">
             <FacilityFilter
               value={facilityId}
@@ -494,7 +506,7 @@ const BookingReport: React.FC = () => {
                     <tr className="hover:bg-gray-50">
                       {pendingBookings.length > 0 && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {booking.approval_status === "pending" ? (
+                          {approvalStatus(booking) === "pending" ? (
                             <button
                               onClick={() => handleSelectBooking(booking.id)}
                               className="text-blue-600 hover:text-blue-800"
@@ -556,7 +568,9 @@ const BookingReport: React.FC = () => {
                                     {booking.facility?.name || "N/A"}
                                   </div>
                                   <div className="text-xs text-blue-600 mt-1">
-                                    Status: {service.service_status || service.status?.replace(/_/g, " ") || "-"}
+                                    Status:{" "}
+                                    {serviceStatus(service).replace(/_/g, " ") ||
+                                      "-"}
                                   </div>
                                   {booking.services.length > 1 &&
                                     index < booking.services.length - 1 && (
@@ -676,7 +690,7 @@ const BookingReport: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(booking.approval_status || "pending")}
+                        {getStatusBadge(approvalStatus(booking))}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <ActionMenu menuId={`booking-${booking.id}`}>
@@ -691,7 +705,7 @@ const BookingReport: React.FC = () => {
                                 : "View Details"}
                             </ActionMenu.Item>
 
-                            {booking.approval_status === "pending" && (
+                            {approvalStatus(booking) === "pending" && (
                               <>
                                 <ActionMenu.Item
                                   onClick={() => handleApproval(booking.id)}
@@ -924,13 +938,13 @@ const BookingReport: React.FC = () => {
                                                 </span>
                                                 <span
                                                   className={`ml-1 px-2 py-1 rounded-full text-xs ${
-                                                    service.service_status ===
+                                                    serviceStatus(service) ===
                                                     "completed"
                                                       ? "bg-green-100 text-green-800"
                                                       : "bg-yellow-100 text-yellow-800"
                                                   }`}
                                                 >
-                                                  {service.service_status}
+                                                  {serviceStatus(service)}
                                                 </span>
                                               </p>
                                             </div>

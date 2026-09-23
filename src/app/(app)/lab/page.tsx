@@ -15,25 +15,29 @@ import {
   FaFlask,
 } from "react-icons/fa";
 import { maskPhoneNumber } from "@/lib/maskUtils";
+import { useCurrentFacility } from "@/hooks/useAuth";
+import { hasPendingServices, serviceStatus } from "@/lib/bookingStatus";
 
 export default function LabServicesPage() {
   const router = useRouter();
+  const facility = useCurrentFacility();
   const search = useSearchControl();
   const [selectedBooking, setSelectedBooking] = useState<Bookings | null>(null);
 
-  // Fetch bookings with booking_status=confirmed
-  // Note: facility filter handled on backend based on user's facility
+  // The list is NOT scoped to the caller's facility by the API — a facility
+  // account otherwise sees every facility's bookings — so scope it here.
+  // `booking_status`/`approval_status` are legacy params the API ignores;
+  // `status` and `facility_id` are the documented ones.
   const { bookings: allBookings, isLoading } = useBookings({
-    booking_status: "confirmed",
-    approval_status: "pending",
+    facility_id: facility?.id || undefined,
+    status: "active",
   });
 
-  // Filter bookings to show only those with at least one service having service_status="not_started"
-  const bookings = allBookings?.filter((booking: Bookings) => {
-    return booking.services?.some(
-      (service) => service.service_status === "not_started"
-    );
-  });
+  // Bookings with work still outstanding. The payload reports this as the
+  // service's `status` plus a `pending_count`, never as `service_status`.
+  const bookings = allBookings?.filter((booking: Bookings) =>
+    hasPendingServices(booking),
+  );
 
   const filteredBookings = bookings?.filter((booking: Bookings) => {
     const term = search.term.toLowerCase();
@@ -308,14 +312,15 @@ export default function LabServicesPage() {
                       </div>
                       <span
                         className={`px-2 py-0.5 rounded text-xs font-medium ${
-                          service.service_status === "completed"
+                          serviceStatus(service) === "completed"
                             ? "bg-green-100 text-green-800"
                             : "bg-yellow-100 text-yellow-800"
                         }`}
                       >
-                        {service.service_status === "completed"
+                        {serviceStatus(service) === "completed"
                           ? "Completed"
-                          : "Not Started"}
+                          : serviceStatus(service).replace(/_/g, " ") ||
+                            "Not Started"}
                       </span>
                     </div>
                   </div>

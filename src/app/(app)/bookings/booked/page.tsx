@@ -12,10 +12,16 @@ import {
 import React, { useState } from "react";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 import { Bookings } from "@/services/apiBooking";
+import { useCurrentFacility } from "@/hooks/useAuth";
 
 const BookedServicesPage: React.FC = () => {
+  const facility = useCurrentFacility();
+  // `booking_status` is a legacy param the API ignores; `finance_approved` and
+  // `facility_id` are documented. Without the facility param a facility
+  // account sees every other facility's bookings.
   const { isLoading, bookings, error } = useBookings({
-    booking_status: "pending",
+    facility_id: facility?.id || undefined,
+    finance_approved: false,
   });
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 

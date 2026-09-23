@@ -12,11 +12,16 @@ import {
 import React, { useState } from "react";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 import { Bookings } from "@/services/apiBooking";
+import { useCurrentFacility } from "@/hooks/useAuth";
+import { serviceStatus } from "@/lib/bookingStatus";
 
 const ApprovedServicesPage: React.FC = () => {
+  const facility = useCurrentFacility();
+  // The API reports finance approval as a boolean and ignores the legacy
+  // booking_status/approval_status params.
   const { isLoading, bookings, error } = useBookings({
-    booking_status: "confirmed",
-    approval_status: "approved",
+    facility_id: facility?.id || undefined,
+    finance_approved: true,
   });
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
@@ -175,13 +180,13 @@ const ApprovedServicesPage: React.FC = () => {
                                   <span
                                     className={`px-2 py-0.5 rounded-full ${
                                       service.status === "completed" ||
-                                      service.service_status === "completed"
+                                      serviceStatus(service) === "completed"
                                         ? "bg-green-100 text-green-800"
                                         : "bg-yellow-100 text-yellow-800"
                                     }`}
                                   >
                                     {service.status === "completed" ||
-                                    service.service_status === "completed"
+                                    serviceStatus(service) === "completed"
                                       ? "Completed"
                                       : "Pending"}
                                   </span>
@@ -456,16 +461,13 @@ const ApprovedServicesPage: React.FC = () => {
                                         </h5>
                                         <span
                                           className={`px-2 py-1 rounded-full text-xs ${
-                                            service.status === "completed" ||
-                                            service.service_status ===
-                                              "completed"
+                                            serviceStatus(service) ===
+                                            "completed"
                                               ? "bg-green-100 text-green-800"
                                               : "bg-yellow-100 text-yellow-800"
                                           }`}
                                         >
-                                          {service.status ||
-                                            service.service_status ||
-                                            "pending"}
+                                          {serviceStatus(service) || "pending"}
                                         </span>
                                       </div>
                                     </div>

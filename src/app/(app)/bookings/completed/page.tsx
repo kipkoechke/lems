@@ -12,21 +12,22 @@ import {
 import React, { useMemo, useState } from "react";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 import { Bookings } from "@/services/apiBooking";
+import { useCurrentFacility } from "@/hooks/useAuth";
+import { isFullyCompleted } from "@/lib/bookingStatus";
 
 const CompletedServicesPage: React.FC = () => {
+  const facility = useCurrentFacility();
   const { isLoading, bookings, error } = useBookings({
-    booking_status: "confirmed",
+    facility_id: facility?.id || undefined,
   });
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
-  // Filter to show only bookings where all services are completed
-  const completedBookings = useMemo(() => {
-    return bookings?.filter((booking: Bookings) => {
-      return booking.services?.every(
-        (service) => service.service_status === "completed",
-      );
-    });
-  }, [bookings]);
+  // Bookings whose every service is done. The payload reports this on each
+  // service's `status`, not `service_status`.
+  const completedBookings = useMemo(
+    () => bookings?.filter((booking: Bookings) => isFullyCompleted(booking)),
+    [bookings],
+  );
 
   const toggleExpandRow = (bookingId: string) => {
     setExpandedRows((prev) => {

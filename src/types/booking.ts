@@ -198,7 +198,10 @@ export interface Booking {
   other_insurance?: string;
   eligibility_verified?: boolean | string | null;
   eligibility_response?: string | null;
+  /** The list API reports finance approval as a boolean, not a status string. */
+  finance_approved?: boolean;
   finance_approved_at?: string | null;
+  visit_id?: string | null;
   notes?: string | null;
   // SHA claim status
   sha_status?: "pending" | "submitted" | "approved" | "Payment-completed" | "rejected" | "clinical-review" | null;

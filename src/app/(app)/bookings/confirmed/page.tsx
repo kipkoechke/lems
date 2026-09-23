@@ -14,14 +14,15 @@ import React, { useState } from "react";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 import { Bookings } from "@/services/apiBooking";
 import { useCurrentFacility } from "@/hooks/useAuth";
+import { approvalStatus, serviceStatus } from "@/lib/bookingStatus";
 
 const ConfirmedBookingsPage: React.FC = () => {
   const facility = useCurrentFacility();
-  const code = facility?.code || "";
-
+  // `booking_status`/`code` are legacy params the API ignores; `status` and
+  // `facility_id` are the documented ones.
   const { isLoading, bookings, error } = useBookings({
-    booking_status: "confirmed",
-    code: code,
+    facility_id: facility?.id || undefined,
+    status: "active",
   });
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
@@ -221,7 +222,7 @@ const ConfirmedBookingsPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getApprovalStatusBadge(
-                        booking.approval_status || "pending",
+                        approvalStatus(booking),
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -265,17 +266,17 @@ const ConfirmedBookingsPage: React.FC = () => {
                                   </div>
                                   <span
                                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                      service.service_status === "completed"
+                                      serviceStatus(service) === "completed"
                                         ? "bg-green-100 text-green-800"
                                         : "bg-yellow-100 text-yellow-800"
                                     }`}
                                   >
-                                    {service.service_status === "completed" ? (
+                                    {serviceStatus(service) === "completed" ? (
                                       <Check className="w-3 h-3 mr-1" />
                                     ) : (
                                       <Clock className="w-3 h-3 mr-1" />
                                     )}
-                                    {service.service_status === "completed"
+                                    {serviceStatus(service) === "completed"
                                       ? "Completed"
                                       : "Pending"}
                                   </span>
