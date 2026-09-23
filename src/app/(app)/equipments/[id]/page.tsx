@@ -40,6 +40,10 @@ import {
 } from "@/services/apiEquipment";
 import { InputField } from "@/components/common/InputField";
 import { ErrorState } from "@/components/common/ErrorState";
+import FacilityEquipmentDetail from "@/features/equipment/FacilityEquipmentDetail";
+import { DashboardSkeleton } from "@/components/common/Skeleton";
+import { isFacilityRole } from "@/lib/rbac";
+import { useCurrentUserWithLoading } from "@/hooks/useAuth";
 
 // Status badge colors
 const getStatusBadge = (status: string) => {
@@ -74,7 +78,8 @@ const getStatusIcon = (status: string) => {
   }
 };
 
-export default function EquipmentDetailsPage() {
+/** Admin / oversight equipment detail — reads `/equipment/{id}`. */
+function AdminEquipmentDetails() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
 
@@ -614,4 +619,21 @@ export default function EquipmentDetailsPage() {
       )}
     </div>
   );
+}
+
+export default function EquipmentDetailsPage() {
+  const params = useParams<{ id: string }>();
+  const { user, isLoading } = useCurrentUserWithLoading();
+
+  if (isLoading) {
+    return <DashboardSkeleton stats={4} panels={2} />;
+  }
+
+  // Facility roles read /facility/equipments/{id}; /equipment/{id} is
+  // admin/nesp/moh/cog only.
+  if (isFacilityRole(user?.role)) {
+    return <FacilityEquipmentDetail id={params.id} />;
+  }
+
+  return <AdminEquipmentDetails />;
 }

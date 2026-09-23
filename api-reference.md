@@ -198,7 +198,8 @@ Manage facility, bookings, patients, contracts, and users.
 | `/practitioner/worklist`                                | GET              | Practitioner worklist            |
 | `/users`                                                | GET/POST         | List / create users in own facility (view-only, practitioner, finance, equipment — never another admin) |
 | `/users/{id}`                                           | GET              | Get a user in own facility       |
-| `/equipment/facility/{facility}/operational`            | GET              | Facility operational equipment   |
+| `/facility/equipments`                                  | GET/POST         | List own + vendor-mapped equipment / add own equipment |
+| `/facility/equipments/{id}`                             | GET              | Facility equipment detail        |
 | `/admin/dashboard`                                      | GET              | Facility dashboard               |
 
 ### Finance Manager (`f_finance`)
@@ -281,6 +282,8 @@ facility admin (HRIO) and is always scoped to that admin's facility — see
 | `/contracts`                   | GET    | List contracts                 |
 | `/contracts/{id}`              | GET    | Contract detail                |
 | `/lots`                        | GET    | List lots                      |
+| `/facility/equipments`         | GET    | Own facility equipment         |
+| `/facility/equipments/{id}`    | GET    | Own facility equipment detail  |
 | `/procedures`                  | GET    | List SHA procedures            |
 | `/requests`                    | GET    | List medical requests          |
 | `/analytics/*`                 | GET    | Read-only analytics            |
@@ -1546,6 +1549,209 @@ Approve a pending machine ping request. **Auth required** (admin/nesp/moh/cog).
 #### POST `/equipment/ping-requests/{id}/reject`
 
 Reject a pending machine ping request. Same body as approve. **Auth required** (admin/nesp/moh/cog).
+
+---
+
+### Facility Portal — Equipment
+
+Facility users see two kinds of equipment, both resolved from the authenticated
+user's profile — no facility identifier is accepted, and equipment belonging to
+other facilities is never returned:
+
+- **`facility`** — units the facility owns (`equipment.facility_id`).
+- **`vendor`** — units a vendor has mapped to the facility through a contract
+  service on one of the facility's active, current contracts.
+
+Listing and detail are available to `f_admin`, `f_finance`, `f_practitioner`,
+`f_equipment_user` and `f_view_only`. Adding equipment is **`f_admin` only**.
+
+#### GET `/facility/equipments`
+
+List the caller's facility equipment with filters, a status summary, and the
+filter options for dropdowns.
+
+| Param          | Type    | Notes                                                                       |
+| -------------- | ------- | --------------------------------------------------------------------------- |
+| `search`       | string  | Matches name, code, AE title, serial number, model, brand                     |
+| `modality`     | string  | DICOM modality code (e.g. `DX`), or `non_imaging`                            |
+| `category`     | string  | `EquipmentCategory` value                                                    |
+| `status`       | string  | `EquipmentStatus` value                                                      |
+| `is_connected` | boolean |                                                                              |
+| `ownership_type` | string | `facility` or `vendor` — omit to get both                                    |
+| `sort_by`      | string  | `name`\|`code`\|`category`\|`status`\|`created_at`\|`last_seen_at` (default `name`) |
+| `sort_order`   | string  | `asc`\|`desc` (default `asc`)                                                 |
+| `per_page`     | integer | 1–100, default 20                                                            |
+| `page`         | integer | Default 1                                                                    |
+
+**Response `200`**
+
+```json
+{
+  "summary": { "active": 2, "maintenance": 1, "total": 3 },
+  "data": [
+    {
+      "id": "uuid",
+      "ownership_type": "facility",
+      "code": "FID224094115 DX",
+      "name": "Digital X-Ray Unit",
+      "serial_number": "SN-0001",
+      "model": "Model-AX01",
+      "brand": "Siemens",
+      "category": "xray_digital",
+      "category_label": "Digital X-Ray",
+      "modality": "DX",
+      "status": "active",
+      "status_label": "Active",
+      "status_color": "green",
+      "is_operational": true,
+      "ae_title": "XRD01",
+      "is_connected": true,
+      "linked": true,
+      "last_seen_at": "2025-01-01T09:00:00+03:00",
+      "vendor": { "id": "uuid", "code": "VEN-01", "name": "Acme Medical" },
+      "mapped_services_count": 2,
+      "mapped_services": [
+        {
+          "contract_service_id": "uuid",
+          "contract_id": "uuid",
+          "lot_service_id": "uuid",
+          "code": "SHA-09-074",
+          "name": "Chest X-Ray (PA)",
+          "tariff": "1500.00",
+          "is_active": true,
+          "lot": { "id": "uuid", "number": "1", "name": "Diagnostics Imaging X-ray" }
+        }
+      ]
+    }
+  ],
+  "pagination": { "current_page": 1, "per_page": 20, "total": 3, "total_pages": 1 },
+  "available_filters": {
+    "status": [{ "value": "active", "label": "Active" }],
+    "category": [{ "value": "xray_digital", "label": "Digital X-Ray" }],
+    "modality": [{ "code": "DX", "label": "DX" }],
+    "sort_by": [{ "value": "name", "label": "Name" }],
+    "sort_order": [{ "value": "asc", "label": "Ascending" }]
+  }
+}
+```
+
+**Response `403`** — Caller is not linked to a facility.
+
+#### GET `/facility/equipments/{equipment_id}`
+
+Equipment detail page payload — identity, technical specifications, operational
+status, downtime, DICOM/connectivity block, owning facility and vendor, and the
+ten most recent status changes.
+
+**Response `200`**
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "ownership_type": "facility",
+    "code": "FID224094115 DX",
+    "name": "Digital X-Ray Unit",
+    "serial_number": "SN-0001",
+    "model": "Model-AX01",
+    "brand": "Siemens",
+    "description": "General radiography room.",
+    "specifications": { "generator": "50 kW" },
+    "category": "xray_digital",
+    "category_label": "Digital X-Ray",
+    "modality": "DX",
+    "status": "maintenance",
+    "status_label": "Under Maintenance",
+    "status_color": "yellow",
+    "is_operational": false,
+    "is_currently_down": true,
+    "active_downtime": {
+      "id": "uuid",
+      "started_at": "2025-01-01T06:00:00+03:00",
+      "reason": "Detector fault",
+      "notes": "Awaiting vendor part"
+    },
+    "total_downtime_minutes": 180,
+    "ae_title": "XRD01",
+    "dicom": {
+      "ae_title": "XRD01",
+      "calling_ae_title": "VEMS",
+      "host": "10.0.0.12",
+      "dicom_port": 11112,
+      "hl7_port": 2575,
+      "is_connected": true,
+      "linked": true,
+      "last_seen_at": "2025-01-01T09:00:00+03:00",
+      "connected_at": "2024-11-02T08:00:00+03:00"
+    },
+    "facility": {
+      "id": "uuid",
+      "name": "Kenyatta National Hospital",
+      "code": "KNH",
+      "fr_code": "FID-22-109411-5"
+    },
+    "vendor": { "id": "uuid", "code": "VEN-01", "name": "Acme Medical" },
+    "manufacture_date": "2023-05-01",
+    "mapped_services_count": 1,
+    "mapped_services": [
+      {
+        "contract_service_id": "uuid",
+        "contract_id": "uuid",
+        "lot_service_id": "uuid",
+        "code": "SHA-09-074",
+        "name": "Chest X-Ray (PA)",
+        "tariff": "1500.00",
+        "is_active": true,
+        "lot": { "id": "uuid", "number": "1", "name": "Diagnostics Imaging X-ray" }
+      }
+    ],
+    "status_history": [
+      {
+        "id": "uuid",
+        "status": "down",
+        "started_at": "2025-01-01T06:00:00+03:00",
+        "ended_at": null,
+        "downtime_minutes": null,
+        "formatted_downtime": "3 hours",
+        "reason": "Detector fault",
+        "notes": "Awaiting vendor part"
+      }
+    ],
+    "created_at": "2025-01-01T00:00:00+03:00",
+    "updated_at": "2025-01-01T00:00:00+03:00"
+  }
+}
+```
+
+**Response `403`** — Caller is not linked to a facility.
+**Response `404`** — Equipment not found, or not visible to the facility.
+
+#### POST `/facility/equipments`
+
+Register a facility-owned unit by copying equipment already mapped to the
+facility. Supply the `contract_service_id` of any service the existing unit
+provides; everything else (name, model, brand, category, specifications) is
+copied from it, the services that unit offers **in the same lot** are mapped to
+the new unit automatically, and the vendor's own mapping is left untouched.
+
+**`f_admin` only.**
+
+| Field                 | Type   | Required | Notes                                                        |
+| --------------------- | ------ | -------- | ------------------------------------------------------------ |
+| `contract_service_id` | uuid   | Yes      | A service on one of the facility's active, current contracts  |
+| `ae_title`            | string | Yes      | Max 64 chars; stored upper-cased                              |
+| `name`                | string | No       | Defaults to the source unit's name                            |
+| `serial_number`       | string | No       | Must be unique; left `null` when omitted                      |
+
+The new unit gets a facility-style code (`FR-code` + modality) from the source
+category, suffixed when the facility already has a unit of that modality.
+
+**Response `201`** — the new equipment, in the same shape as the detail
+endpoint, with `mapped_services` listing what was mapped to it.
+
+**Response `403`** — Caller is not linked to a facility.
+**Response `404`** — Service not found on an active contract for the facility.
+**Response `422`** — Validation failed, or the service has no equipment to copy.
 
 ---
 

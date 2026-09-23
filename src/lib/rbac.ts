@@ -79,6 +79,10 @@ export enum Permission {
 
   // Facility Admin-specific permissions
   REQUEST_MAINTENANCE = "request_maintenance",
+  // Register facility-owned equipment via POST /facility/equipments, which
+  // the API restricts to f_admin. Viewing the facility's equipment is open to
+  // every facility role and uses VIEW_EQUIPMENTS.
+  MANAGE_FACILITY_EQUIPMENT = "manage_facility_equipment",
   VIEW_FACILITY_PAYMENTS = "view_facility_payments",
 
   // System-admin-only surfaces. These map to endpoints the API restricts to
@@ -146,6 +150,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_REPORTS,
     Permission.VIEW_CONTRACTS,
     Permission.VIEW_EQUIPMENTS,
+    Permission.MANAGE_FACILITY_EQUIPMENT,
     Permission.REQUEST_MAINTENANCE,
     Permission.VIEW_SERVICES,
     Permission.VIEW_WORKLIST,
@@ -173,6 +178,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_PATIENTS,
     Permission.VIEW_SERVICES,
     Permission.VIEW_CONTRACTS,
+    Permission.VIEW_EQUIPMENTS,
     Permission.VIEW_MEDICAL_REQUESTS,
   ],
 
@@ -187,6 +193,8 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.SYNC_TO_SHA,
     Permission.FINANCE_APPROVAL,
     Permission.VIEW_APPROVED_SERVICES,
+    // /facility/equipments is open to every facility role.
+    Permission.VIEW_EQUIPMENTS,
   ],
 
   [UserRole.F_EQUIPMENT_USER]: [
@@ -309,6 +317,7 @@ const API_PERMISSION_MAP: Record<string, Permission[]> = {
   view_vendor_profile: [Permission.VIEW_VENDOR_PROFILE],
   // -- Facility-scoped permissions --
   request_maintenance: [Permission.REQUEST_MAINTENANCE],
+  manage_facility_equipment: [Permission.MANAGE_FACILITY_EQUIPMENT],
   view_facility_payments: [Permission.VIEW_FACILITY_PAYMENTS],
   // -- Admin-scoped permissions --
   manage_permissions: [Permission.MANAGE_PERMISSIONS],

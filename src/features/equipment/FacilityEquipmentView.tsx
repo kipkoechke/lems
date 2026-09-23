@@ -1,41 +1,38 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FaCog, FaCheckCircle, FaWrench, FaTimesCircle } from "react-icons/fa";
+import { useRouter } from "next/navigation";
+import {
+  FaCog,
+  FaPlus,
+  FaBuilding,
+  FaTruck,
+  FaCircle,
+  FaCheckCircle,
+  FaWrench,
+} from "react-icons/fa";
 import { Table } from "@/components/Table";
 import { SearchField } from "@/components/common/SearchField";
+import { ColumnFilter } from "@/components/common/ColumnFilter";
+import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
+import { useSearchControl } from "@/hooks/useSearchControl";
 import { useCurrentFacility } from "@/hooks/useAuth";
-import { useFacilityEquipment } from "./useFacilityEquipment";
+import { useHasPermission } from "@/hooks/usePermissions";
+import { Permission } from "@/lib/rbac";
+import { useFacilityEquipments } from "./useFacilityEquipments";
+import AddFacilityEquipmentModal from "./AddFacilityEquipmentModal";
 import {
-  facilityEquipmentId,
-  facilityEquipmentStatus,
-  type FacilityOperationalEquipment,
-} from "@/services/apiEquipment";
+  facilityEquipmentStatusClasses,
+  type FacilityEquipmentListItem,
+  type FacilityEquipmentOwnership,
+} from "@/services/apiFacilityEquipment";
 
-const STATUS_BADGE: Record<string, string> = {
-  active: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  operational: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  maintenance: "bg-amber-50 text-amber-700 border-amber-200",
-  inactive: "bg-slate-50 text-slate-700 border-slate-200",
-  decommissioned: "bg-red-50 text-red-700 border-red-200",
-  pending_installation: "bg-blue-50 text-blue-700 border-blue-200",
-};
-
-const statusIcon = (status: string) => {
-  switch (status) {
-    case "active":
-    case "operational":
-      return <FaCheckCircle className="w-3 h-3" />;
-    case "maintenance":
-      return <FaWrench className="w-3 h-3" />;
-    case "decommissioned":
-      return <FaTimesCircle className="w-3 h-3" />;
-    default:
-      return null;
-  }
-};
+const OWNERSHIP_OPTIONS = [
+  { value: "facility", label: "Owned by facility" },
+  { value: "vendor", label: "Vendor supplied" },
+];
 
 const label = (value?: string | null) =>
   value ? value.replace(/_/g, " ") : "-";
@@ -43,84 +40,77 @@ const label = (value?: string | null) =>
 /**
  * Equipment page for facility roles.
  *
- * Reads `/equipment/facility/{facility}/operational`, the only equipment
- * listing the API reference grants to `f_admin`, `f_practitioner` and
- * `f_equipment_user`. The admin listing and the `/equipment/{id}` detail route
- * are admin/nesp/moh/cog only, so no row links out to the detail page.
+ * Reads `/facility/equipments`, which resolves the facility from the auth
+ * token and returns both owned and vendor-mapped units. The admin listing
+ * (`/admin/equipment`) and `/equipment/{id}` are admin/nesp/moh/cog only.
  */
 export default function FacilityEquipmentView() {
+  const router = useRouter();
   const facility = useCurrentFacility();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [submittedTerm, setSubmittedTerm] = useState("");
-
-  const { equipments, isLoading, error, refetch } = useFacilityEquipment(
-    facility?.id,
+  const canAddEquipment = useHasPermission(
+    Permission.MANAGE_FACILITY_EQUIPMENT,
   );
 
-  // The endpoint takes no query params, so filtering is local to the list it
-  // returns — which is the facility's whole inventory, not a page of it.
-  const filtered = useMemo(() => {
-    const term = submittedTerm.trim().toLowerCase();
-    if (!term) return equipments;
-    return equipments.filter((equipment) =>
-      [
-        equipment.name,
-        equipment.asset_id,
-        equipment.code,
-        equipment.serial_number,
-        equipment.model,
-        equipment.brand ?? equipment.manufacturer,
-      ]
-        .filter(Boolean)
-        .some((field) => String(field).toLowerCase().includes(term)),
-    );
-  }, [equipments, submittedTerm]);
+  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState("");
+  const [modality, setModality] = useState("");
+  const [category, setCategory] = useState("");
+  const [ownership, setOwnership] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const search = useSearchControl(() => setPage(1));
 
-  const modalityCounts = useMemo(() => {
-    const tally = new Map<string, number>();
-    equipments.forEach((equipment) => {
-      const key =
-        equipment.modality ||
-        equipment.category_label ||
-        equipment.category ||
-        "Unassigned";
-      tally.set(key, (tally.get(key) ?? 0) + 1);
-    });
-    return Array.from(tally.entries())
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-  }, [equipments]);
+  const {
+    equipments,
+    summary,
+    pagination,
+    availableFilters,
+    isLoading,
+    error,
+    refetch,
+  } = useFacilityEquipments({
+    page,
+    per_page: 20,
+    search: search.term || undefined,
+    status: status || undefined,
+    modality: modality || undefined,
+    category: category || undefined,
+    ownership_type: (ownership || undefined) as
+      | FacilityEquipmentOwnership
+      | undefined,
+  });
 
-  if (!facility?.id) {
-    return (
-      <div className="min-h-screen p-4">
-        <div className="max-w-5xl mx-auto bg-white rounded-lg border border-slate-200 p-8 text-center">
-          <p className="text-slate-600">
-            Your account is not linked to a facility, so no equipment can be
-            listed.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // The summary is a status map plus a total; render the statuses the API
+  // actually reports rather than a fixed list.
+  const statusTiles = useMemo(() => {
+    if (!summary) return [];
+    return Object.entries(summary)
+      .filter(([key]) => key !== "total")
+      .map(([key, value]) => ({ key, value: Number(value) }))
+      .sort((a, b) => b.value - a.value);
+  }, [summary]);
+
+  const statusOptions =
+    availableFilters?.status?.length
+      ? availableFilters.status
+      : statusTiles.map((tile) => ({ value: tile.key, label: label(tile.key) }));
+
+  const modalityOptions =
+    availableFilters?.modality?.map((m) => ({
+      value: m.code,
+      label: m.label,
+    })) ?? [];
 
   if (error) {
-    // §7 of the reference marks this route admin-only while the role tables
-    // grant it to facility accounts. If the deployment sides with §7, say so
-    // plainly instead of offering a retry that cannot succeed.
-    const status = (error as { response?: { status?: number } })?.response
+    const httpStatus = (error as { response?: { status?: number } })?.response
       ?.status;
-    if (status === 403) {
+    if (httpStatus === 403) {
       return (
         <div className="min-h-screen p-4">
           <div className="max-w-5xl mx-auto bg-white rounded-lg border border-slate-200 p-8 text-center">
             <FaCog className="w-6 h-6 text-slate-300 mx-auto mb-3" />
             <p className="text-slate-600">
-              Your account does not have access to the equipment register.
-            </p>
-            <p className="text-sm text-slate-500 mt-1">
-              Ask a system administrator to grant facility access to the
-              equipment endpoint.
+              Your account is not linked to a facility, so no equipment can be
+              listed.
             </p>
           </div>
         </div>
@@ -150,52 +140,67 @@ export default function FacilityEquipmentView() {
               <div>
                 <h1 className="text-xl font-bold text-slate-900">Equipment</h1>
                 <p className="text-sm text-slate-500">
-                  {equipments.length} operational item
-                  {equipments.length === 1 ? "" : "s"} at{" "}
-                  {facility.name || "your facility"}
+                  {summary?.total ?? equipments.length} unit
+                  {(summary?.total ?? equipments.length) === 1 ? "" : "s"} at{" "}
+                  {facility?.name || "your facility"}
                 </p>
               </div>
             </div>
 
             <div className="flex-1 max-w-xl w-full mx-auto">
               <SearchField
-                value={searchTerm}
-                onChange={setSearchTerm}
-                onSearch={() => setSubmittedTerm(searchTerm)}
-                onClear={() => {
-                  setSearchTerm("");
-                  setSubmittedTerm("");
-                }}
-                placeholder="Search by name, asset ID, serial number..."
+                value={search.input}
+                onChange={search.onInputChange}
+                onSearch={search.submit}
+                onClear={search.clear}
+                placeholder="Search by name, code, AE title, serial number..."
               />
             </div>
+
+            {canAddEquipment && (
+              <button
+                onClick={() => setShowAdd(true)}
+                className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+              >
+                <FaPlus className="w-3 h-3" /> Add Equipment
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Breakdown */}
-        {!isLoading && modalityCounts.length > 0 && (
-          <div className="bg-white rounded-lg border border-slate-200 px-4 md:px-6 py-4">
-            <h2 className="text-sm font-semibold text-slate-900 mb-3">
-              Deployed by modality
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {/* Status summary */}
+        {statusTiles.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <StatCard
+              compact
+              title="All Equipment"
+              mainValue={summary?.total ?? 0}
+              subtitle="Owned + vendor"
+              className={`border ${
+                status ? "border-slate-200" : "border-blue-500 ring-1 ring-blue-500"
+              }`}
+              onClick={() => {
+                setStatus("");
+                setPage(1);
+              }}
+            />
+            {statusTiles.map((tile) => (
               <StatCard
+                key={tile.key}
                 compact
-                title="All Equipment"
-                mainValue={equipments.length}
-                subtitle="Operational"
-                className="border border-slate-200"
+                title={label(tile.key)}
+                mainValue={tile.value}
+                className={`border capitalize ${
+                  status === tile.key
+                    ? "border-blue-500 ring-1 ring-blue-500"
+                    : "border-slate-200"
+                }`}
+                onClick={() => {
+                  setStatus(status === tile.key ? "" : tile.key);
+                  setPage(1);
+                }}
               />
-              {modalityCounts.map((modality) => (
-                <StatCard
-                  key={modality.name}
-                  compact
-                  title={label(modality.name)}
-                  mainValue={modality.count}
-                  className="border border-slate-200"
-                />
-              ))}
-            </div>
+            ))}
           </div>
         )}
 
@@ -205,79 +210,179 @@ export default function FacilityEquipmentView() {
             <Table className="w-full">
               <Table.Header>
                 <Table.Row>
-                  <Table.HeaderCell>Asset ID</Table.HeaderCell>
+                  <Table.HeaderCell>Code</Table.HeaderCell>
                   <Table.HeaderCell>Name</Table.HeaderCell>
-                  <Table.HeaderCell>Modality / Category</Table.HeaderCell>
-                  <Table.HeaderCell>Procedures</Table.HeaderCell>
-                  <Table.HeaderCell>Status</Table.HeaderCell>
+                  <Table.HeaderCell>
+                    <ColumnFilter
+                      label="Modality"
+                      options={modalityOptions}
+                      value={modality}
+                      onChange={(v) => {
+                        setModality(v);
+                        setPage(1);
+                      }}
+                      allLabel="All Modalities"
+                      searchPlaceholder="Search modality..."
+                    />
+                  </Table.HeaderCell>
+                  <Table.HeaderCell>
+                    <ColumnFilter
+                      label="Ownership"
+                      options={OWNERSHIP_OPTIONS}
+                      value={ownership}
+                      onChange={(v) => {
+                        setOwnership(v);
+                        setPage(1);
+                      }}
+                      allLabel="All Equipment"
+                      searchable={false}
+                    />
+                  </Table.HeaderCell>
+                  <Table.HeaderCell>
+                    <ColumnFilter
+                      label="Category"
+                      options={availableFilters?.category ?? []}
+                      value={category}
+                      onChange={(v) => {
+                        setCategory(v);
+                        setPage(1);
+                      }}
+                      allLabel="All Categories"
+                      searchPlaceholder="Search category..."
+                    />
+                  </Table.HeaderCell>
+                  <Table.HeaderCell>Services</Table.HeaderCell>
+                  <Table.HeaderCell>Connection</Table.HeaderCell>
+                  <Table.HeaderCell>
+                    <ColumnFilter
+                      label="Status"
+                      options={statusOptions}
+                      value={status}
+                      onChange={(v) => {
+                        setStatus(v);
+                        setPage(1);
+                      }}
+                      allLabel="All Status"
+                      searchable={false}
+                    />
+                  </Table.HeaderCell>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
                 {isLoading ? (
-                  <Table.Loading colSpan={5} rows={5} />
-                ) : filtered.length === 0 ? (
-                  <Table.Empty colSpan={5}>
-                    {submittedTerm
-                      ? "No equipment matches your search."
-                      : "No operational equipment at this facility."}
+                  <Table.Loading colSpan={8} rows={6} />
+                ) : equipments.length === 0 ? (
+                  <Table.Empty colSpan={8}>
+                    {search.term || status || modality || ownership || category
+                      ? "No equipment matches these filters."
+                      : "No equipment at this facility yet."}
                   </Table.Empty>
                 ) : (
-                  filtered.map((equipment: FacilityOperationalEquipment) => {
-                    const status = facilityEquipmentStatus(equipment);
-                    return (
-                      <Table.Row key={facilityEquipmentId(equipment)}>
-                        <Table.Cell>
-                          <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
-                            {equipment.asset_id || equipment.code || "-"}
-                          </span>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="font-medium text-slate-900">
-                            {equipment.name}
-                          </div>
-                          {(equipment.model ||
-                            equipment.brand ||
-                            equipment.manufacturer) && (
-                            <div className="text-xs text-slate-500">
-                              {[
-                                equipment.brand ?? equipment.manufacturer,
-                                equipment.model,
-                              ]
-                                .filter(Boolean)
-                                .join(" ")}
+                  equipments.map((equipment: FacilityEquipmentListItem) => (
+                    <Table.Row
+                      key={equipment.id}
+                      onClick={() =>
+                        router.push(`/equipments/${equipment.id}`)
+                      }
+                    >
+                      <Table.Cell>
+                        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
+                          {equipment.code}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="font-medium text-slate-900">
+                          {equipment.name}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {[equipment.brand, equipment.model]
+                            .filter(Boolean)
+                            .join(" ") ||
+                            equipment.category_label ||
+                            label(equipment.category)}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>{equipment.modality || "-"}</Table.Cell>
+                      <Table.Cell>
+                        {equipment.ownership_type === "vendor" ? (
+                          <div>
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border bg-violet-50 text-violet-700 border-violet-200">
+                              <FaTruck className="w-3 h-3" /> Vendor
+                            </span>
+                            <div className="text-xs text-slate-500 mt-1">
+                              {equipment.vendor?.name || "-"}
                             </div>
-                          )}
-                        </Table.Cell>
-                        <Table.Cell>
-                          {label(
-                            equipment.modality ||
-                              equipment.category_label ||
-                              equipment.category,
-                          )}
-                        </Table.Cell>
-                        <Table.Cell>
-                          {equipment.capable_procedures?.length ?? "-"}
-                        </Table.Cell>
-                        <Table.Cell>
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border capitalize ${
-                              STATUS_BADGE[status] ||
-                              "bg-slate-50 text-slate-700 border-slate-200"
-                            }`}
-                          >
-                            {statusIcon(status)}
-                            {equipment.status_label || label(status)}
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border bg-sky-50 text-sky-700 border-sky-200">
+                            <FaBuilding className="w-3 h-3" /> Facility
                           </span>
-                        </Table.Cell>
-                      </Table.Row>
-                    );
-                  })
+                        )}
+                      </Table.Cell>
+                        <Table.Cell>
+                        {equipment.category_label || label(equipment.category)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        {equipment.mapped_services_count ??
+                          equipment.mapped_services?.length ??
+                          0}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+                            equipment.is_connected
+                              ? "text-emerald-700"
+                              : "text-slate-500"
+                          }`}
+                        >
+                          <FaCircle
+                            className={`w-2 h-2 ${
+                              equipment.is_connected
+                                ? "text-emerald-500"
+                                : "text-slate-300"
+                            }`}
+                          />
+                          {equipment.is_connected ? "Online" : "Offline"}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border capitalize ${facilityEquipmentStatusClasses(
+                            equipment,
+                          )}`}
+                        >
+                          {equipment.status === "active" ? (
+                            <FaCheckCircle className="w-3 h-3" />
+                          ) : equipment.status === "maintenance" ? (
+                            <FaWrench className="w-3 h-3" />
+                          ) : null}
+                          {equipment.status_label || label(equipment.status)}
+                        </span>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
                 )}
               </Table.Body>
             </Table>
           </div>
+
+          {pagination && pagination.last_page > 1 && (
+            <Pagination
+              currentPage={pagination.current_page}
+              lastPage={pagination.last_page}
+              total={pagination.total}
+              perPage={pagination.per_page}
+              from={pagination.from}
+              to={pagination.to}
+              onPageChange={setPage}
+            />
+          )}
         </div>
       </div>
+
+      {showAdd && (
+        <AddFacilityEquipmentModal onClose={() => setShowAdd(false)} />
+      )}
     </div>
   );
 }

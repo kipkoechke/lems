@@ -814,11 +814,12 @@ export const removeEquipmentProcedure = async (
 };
 
 /**
- * Operational equipment at one facility.
+ * Operational equipment at one facility, by facility id.
  *
- * This is the equipment surface the API reference grants to the facility roles
- * (`f_admin`, `f_practitioner`, `f_equipment_user`). They cannot call
- * `/admin/equipment` or `/equipment/{id}`, which are admin/nesp/moh/cog only.
+ * Superseded for facility accounts by the Facility Portal
+ * (`/facility/equipments`, see apiFacilityEquipment.ts), which resolves the
+ * facility from the token and returns vendor-mapped units too. This route
+ * remains for admin/nesp/moh/cog, who query a facility they do not belong to.
  *
  * Deployments differ on how much of the equipment record they return here, so
  * the fields below are all optional and read through the accessors above where
