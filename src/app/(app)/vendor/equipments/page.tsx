@@ -81,6 +81,13 @@ function VendorEquipmentsContent() {
   const equipments: VendorEquipment[] = data?.data ?? [];
   const pagination = data?.pagination;
 
+  // The endpoint publishes the valid filter values it accepts; fall back to the
+  // local list only when a deployment doesn't send them.
+  const statusOptions =
+    data?.available_filters?.status?.length
+      ? data.available_filters.status
+      : STATUS_OPTIONS;
+
   // The vendor equipment endpoint has no modality filter param, so the options
   // come from what this vendor actually owns and filtering happens client-side.
   const modalityOptions = Array.from(
@@ -182,7 +189,7 @@ function VendorEquipmentsContent() {
                 <Table.HeaderCell>
                   <ColumnFilter
                     label="Status"
-                    options={STATUS_OPTIONS}
+                    options={statusOptions}
                     value={status}
                     onChange={(v) => {
                       setStatus(v);

@@ -20,6 +20,7 @@ import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
 import BackButton from "@/components/common/BackButton";
 import { ErrorState } from "@/components/common/ErrorState";
+import toast from "react-hot-toast";
 
 const equipmentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -108,6 +109,12 @@ function EditMyEquipmentContent({ equipmentId }: { equipmentId: string }) {
   };
 
   const onSubmit = (data: EquipmentFormData) => {
+    // /vendors/{vendor}/equipments/{id} needs the resolved vendor id.
+    if (!vendorId) {
+      toast.error("Your vendor profile is still loading — try again.");
+      return;
+    }
+
     updateMutation.mutate(
       {
         vendorId,

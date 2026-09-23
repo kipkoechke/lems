@@ -76,7 +76,7 @@ export const useTestVendorEquipmentConnection = (equipmentId: string) => {
 // POST /vendor/worklist-test
 export const useVendorWorklistTest = () => {
   const { mutate, isPending } = useMutation({
-    mutationFn: (equipmentId?: string) => runVendorWorklistTest(equipmentId),
+    mutationFn: (equipmentId: string) => runVendorWorklistTest(equipmentId),
     onSuccess: (result) => {
       if (result?.success === false) {
         toast.error(result?.message || "Worklist test failed");

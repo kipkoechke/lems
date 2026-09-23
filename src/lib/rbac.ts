@@ -229,6 +229,23 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ],
 };
 
+/**
+ * Roles whose API surface is scoped to a single facility.
+ *
+ * Per the API reference role tables, these roles cannot call the admin
+ * oversight endpoints (`/admin/equipment`, `/equipment/{id}`, `/analytics/*`);
+ * their equipment view is `/equipment/facility/{facility}/operational`.
+ */
+export const FACILITY_ROLES: string[] = [
+  UserRole.F_ADMIN,
+  UserRole.F_PRACTITIONER,
+  UserRole.F_FINANCE,
+  UserRole.F_EQUIPMENT_USER,
+];
+
+export const isFacilityRole = (role?: string | null): boolean =>
+  !!role && FACILITY_ROLES.includes(role);
+
 // Helper functions
 export const getUserPermissions = (role: UserRole): Permission[] => {
   return ROLE_PERMISSIONS[role] || [];

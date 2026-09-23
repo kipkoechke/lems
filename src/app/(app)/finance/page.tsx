@@ -6,9 +6,9 @@ import { SearchField } from "@/components/common/SearchField";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import { useFinanceApproval } from "@/features/bookings/useFinanceApproval";
 import { useEligibilityCheck } from "@/features/patients/useEligibilityCheck";
-import { useWorklist } from "@/features/worklist/useWorklist";
+import { useBookingsWithPagination } from "@/features/services/bookings/useBookings";
 import { maskPhoneNumber } from "@/lib/maskUtils";
-import type { WorklistBooking } from "@/types/worklist";
+import type { Booking } from "@/types/booking";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import {
@@ -23,7 +23,10 @@ export default function FinanceApprovalPage() {
   const [page, setPage] = useState(1);
   const search = useSearchControl(() => setPage(1));
 
-  const { data, isLoading } = useWorklist({
+  // Finance reads the booking list (`GET /bookings`), the endpoint the API
+  // reference grants to `f_finance`. The practitioner worklist is scoped to a
+  // practitioner's own assigned services and is not a finance surface.
+  const { data, isLoading } = useBookingsWithPagination({
     // Searching is unpaginated so results span the whole queue rather than
     // being capped at one page of matches.
     ...(search.isSearching ? {} : { page, per_page: 20 }),
@@ -96,7 +99,8 @@ export default function FinanceApprovalPage() {
               <div>
                 <p className="text-sm text-gray-600">Total Amount</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  KES {parseFloat(summary.total_tariff).toLocaleString()}
+                  KES{" "}
+                  {parseFloat(summary.revenue?.tariff || "0").toLocaleString()}
                 </p>
               </div>
               <FaCheckCircle className="w-10 h-10 text-purple-600 opacity-20" />
@@ -152,7 +156,7 @@ export default function FinanceApprovalPage() {
                   </td>
                 </tr>
               ) : (
-                bookings.map((booking: WorklistBooking) => (
+                bookings.map((booking: Booking) => (
                   <tr key={booking.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -171,14 +175,16 @@ export default function FinanceApprovalPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
-                        {booking.services_count} service(s)
+                        {booking.services_count ?? booking.services?.length ?? 0}{" "}
+                        service(s)
                       </div>
                       <div className="text-xs text-gray-500">
-                        {booking.services
+                        {(booking.services || [])
                           .slice(0, 2)
-                          .map((s) => s.service.name)
+                          .map((s) => s.service?.name || s.name)
+                          .filter(Boolean)
                           .join(", ")}
-                        {booking.services_count > 2 && "..."}
+                        {(booking.services_count ?? 0) > 2 && "..."}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -224,7 +230,7 @@ export default function FinanceApprovalPage() {
 
 // Booking Actions Cell Component
 interface BookingActionsCellProps {
-  booking: WorklistBooking;
+  booking: Booking;
 }
 
 function BookingActionsCell({ booking }: BookingActionsCellProps) {
@@ -305,7 +311,7 @@ function BookingActionsCell({ booking }: BookingActionsCellProps) {
 
 // Eligibility Check Modal Component
 interface EligibilityCheckModalProps {
-  booking: WorklistBooking;
+  booking: Booking;
   onCheck: (params: {
     identificationType: string;
     identificationNumber: string;
@@ -478,7 +484,7 @@ function EligibilityCheckModal({
 
 // Approval Modal Component with Payment Breakdown
 interface ApprovalModalProps {
-  booking: WorklistBooking;
+  booking: Booking;
   onConfirm: (
     services: Array<{
       booked_service_id: string;
@@ -500,8 +506,8 @@ function ApprovalModal({
 }: ApprovalModalProps) {
   // Initialize payment breakdown based on service tariffs (default to SHA)
   const [servicePayments, setServicePayments] = useState(
-    booking.services.map((service) => ({
-      booked_service_id: service.id,
+    (booking.services || []).map((service) => ({
+      booked_service_id: service.id ?? "",
       sha: parseFloat(service.tariff),
       cash: 0,
       other_insurance: 0,
@@ -564,7 +570,10 @@ function ApprovalModal({
           <div>
             <span className="text-gray-600">Total Tariff:</span>
             <p className="font-medium text-gray-900">
-              KES {parseFloat(booking.payment.tariff).toLocaleString()}
+              KES{" "}
+              {parseFloat(
+                booking.payment?.tariff || booking.tariff || "0",
+              ).toLocaleString()}
             </p>
           </div>
         </div>
@@ -575,7 +584,7 @@ function ApprovalModal({
         <h4 className="text-sm font-medium text-gray-900">
           Payment Breakdown by Service
         </h4>
-        {booking.services.map((service, index) => {
+        {(booking.services || []).map((service, index) => {
           const payment = servicePayments[index];
           const total = payment.sha + payment.cash + payment.other_insurance;
           const tariff = parseFloat(service.tariff);
@@ -583,7 +592,7 @@ function ApprovalModal({
 
           return (
             <div
-              key={service.id}
+              key={service.id ?? index}
               className={`border rounded-lg p-3 ${
                 !isValid
                   ? "border-red-300 bg-red-50"
@@ -592,10 +601,11 @@ function ApprovalModal({
             >
               <div className="mb-2">
                 <p className="text-sm font-medium text-gray-900">
-                  {service.service.name}
+                  {service.service?.name || service.name}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {service.service.code} • LOT {service.lot.number}
+                  {service.service?.code || service.code}
+                  {service.lot?.number ? ` • LOT ${service.lot.number}` : ""}
                 </p>
                 <p className="text-xs font-medium text-gray-700 mt-1">
                   Tariff: KES {parseFloat(service.tariff).toLocaleString()}
@@ -617,7 +627,11 @@ function ApprovalModal({
                     min="0"
                     value={payment.sha}
                     onChange={(e) =>
-                      handlePaymentChange(service.id, "sha", e.target.value)
+                      handlePaymentChange(
+                        service.id ?? "",
+                        "sha",
+                        e.target.value,
+                      )
                     }
                     disabled={isProcessing}
                     className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
@@ -633,7 +647,11 @@ function ApprovalModal({
                     min="0"
                     value={payment.cash}
                     onChange={(e) =>
-                      handlePaymentChange(service.id, "cash", e.target.value)
+                      handlePaymentChange(
+                        service.id ?? "",
+                        "cash",
+                        e.target.value,
+                      )
                     }
                     disabled={isProcessing}
                     className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
@@ -650,7 +668,7 @@ function ApprovalModal({
                     value={payment.other_insurance}
                     onChange={(e) =>
                       handlePaymentChange(
-                        service.id,
+                        service.id ?? "",
                         "other_insurance",
                         e.target.value,
                       )
@@ -680,7 +698,7 @@ function ApprovalModal({
             isProcessing ||
             servicePayments.some((sp, i) => {
               const total = sp.sha + sp.cash + sp.other_insurance;
-              const tariff = parseFloat(booking.services[i].tariff);
+              const tariff = parseFloat(booking.services?.[i]?.tariff || "0");
               return Math.abs(total - tariff) >= 0.01;
             })
           }

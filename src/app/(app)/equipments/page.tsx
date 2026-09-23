@@ -23,6 +23,9 @@ import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
+import { useCurrentUserWithLoading } from "@/hooks/useAuth";
+import { isFacilityRole } from "@/lib/rbac";
+import FacilityEquipmentView from "@/features/equipment/FacilityEquipmentView";
 
 const STATUS_FILTER_OPTIONS = [
   { value: "active", label: "Active" },
@@ -55,7 +58,8 @@ const getStatusIcon = (status: string) => {
   }
 };
 
-export default function EquipmentsPage() {
+/** Admin / oversight equipment listing — reads `/admin/equipment`. */
+function AdminEquipmentsView() {
   const router = useRouter();
 
   const [page, setPage] = useState(1);
@@ -427,4 +431,35 @@ export default function EquipmentsPage() {
       </div>
     </div>
   );
+}
+
+export default function EquipmentsPage() {
+  const { user, isLoading } = useCurrentUserWithLoading();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white rounded-lg border border-slate-200 p-8 animate-pulse space-y-4">
+            <div className="h-8 bg-slate-200 rounded w-1/4" />
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-16 bg-slate-100 rounded" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Facility roles cannot call /admin/equipment (403) — they get the
+  // facility-scoped operational listing instead. See the API reference role
+  // tables: their equipment surface is
+  // /equipment/facility/{facility}/operational.
+  if (isFacilityRole(user?.role)) {
+    return <FacilityEquipmentView />;
+  }
+
+  return <AdminEquipmentsView />;
 }

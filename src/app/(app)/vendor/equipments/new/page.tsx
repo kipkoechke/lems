@@ -13,6 +13,7 @@ import { EQUIPMENT_CATEGORIES } from "@/features/vendors/equipmentOptions";
 import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
 import BackButton from "@/components/common/BackButton";
+import toast from "react-hot-toast";
 
 const equipmentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -73,6 +74,13 @@ function NewMyEquipmentContent() {
   };
 
   const onSubmit = (data: EquipmentFormData) => {
+    // The write goes to /vendors/{vendor}/equipments, so it needs the id the
+    // profile resolved — without it the request would hit an empty path.
+    if (!vendorId) {
+      toast.error("Your vendor profile is still loading — try again.");
+      return;
+    }
+
     createEquipmentMutation.mutate(
       {
         vendorId,
