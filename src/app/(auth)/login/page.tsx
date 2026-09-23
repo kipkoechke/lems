@@ -1,6 +1,5 @@
 import { LoginForm } from "@/components/login/LoginForm";
 import Image from "next/image";
-import { Suspense } from "react";
 
 export default function LoginPage() {
   return (
@@ -26,13 +25,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <Suspense
-            fallback={
-              <div className="animate-pulse bg-gray-200 h-64 rounded-lg"></div>
-            }
-          >
-            <LoginForm />
-          </Suspense>
+          <LoginForm />
         </div>
       </div>
     </div>

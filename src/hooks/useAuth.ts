@@ -57,6 +57,25 @@ const prefetchDashboard = (
   prefetch(["admin-dashboard"], () => getDashboard());
 };
 
+
+/**
+ * Loads the dashboard bundle this user will land on.
+ *
+ * The import is fire-and-forget: it populates the module cache so the render
+ * after navigation is instant. A failure here is harmless — the page imports
+ * it again itself.
+ */
+const warmDashboardChunk = (user: User) => {
+  const load =
+    user.role === "vendor"
+      ? () => import("@/components/VendorDashboard")
+      : isFacilityRole(user.role)
+        ? () => import("@/features/facilities/FacilityDashboard")
+        : () => import("@/features/trends/BookingTrends");
+
+  load().catch(() => {});
+};
+
 // Custom hook for login mutation
 export const useLogin = () => {
   const queryClient = useQueryClient();
@@ -77,6 +96,11 @@ export const useLogin = () => {
       // navigating. Without this the dashboard only begins fetching once it
       // mounts, so the user waits out the whole round trip on a blank page.
       prefetchDashboard(queryClient, user, facility);
+
+      // Pull the role's dashboard chunk in parallel with that request. The
+      // three dashboards are split, so without this the download only starts
+      // once the page renders and picks a branch.
+      warmDashboardChunk(user);
     },
     onError: (error: Error) => {
       toast.error(error.message || "Login failed. Please try again.");

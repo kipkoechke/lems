@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { InputField } from "../common/InputField";
 import Button from "../common/Button";
 import { loginSchema, LoginFormData } from "../../lib/validations";
@@ -11,24 +11,33 @@ import { useLogin } from "../../hooks/useAuth";
 import Link from "next/link";
 
 export const LoginForm = () => {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  // Land on the dashboard directly. "/" is a server component that redirects
-  // to /dashboard, so routing through it costs a server round trip before the
-  // first paint — visible as a stall after the login call has already
-  // returned.
-  const requestedRedirect = searchParams?.get("redirect");
-  const redirectUrl =
-    !requestedRedirect || requestedRedirect === "/"
-      ? "/dashboard"
-      : requestedRedirect;
   const loginMutation = useLogin();
 
-  // Warm the destination's JS chunk while the user is still typing, so the
-  // navigation after login is a render rather than a download.
+  /**
+   * Where to land after signing in.
+   *
+   * Read from the URL directly rather than through useSearchParams: that hook
+   * opts the whole form into a Suspense bailout, so the page painted a grey
+   * placeholder before the email and password fields appeared — a loading
+   * state for a form that loads nothing.
+   *
+   * "/" is a server component that only redirects to /dashboard, so going
+   * through it costs a round trip before the first paint.
+   */
+  const getRedirectUrl = useCallback(() => {
+    if (typeof window === "undefined") return "/dashboard";
+    const requested = new URLSearchParams(window.location.search).get(
+      "redirect",
+    );
+    return !requested || requested === "/" ? "/dashboard" : requested;
+  }, []);
+
+  // Warm the destination while the user is still typing, so the navigation
+  // after login is a render rather than a download.
   useEffect(() => {
-    router.prefetch(redirectUrl);
-  }, [router, redirectUrl]);
+    router.prefetch(getRedirectUrl());
+  }, [router, getRedirectUrl]);
 
   const {
     register,
@@ -44,7 +53,7 @@ export const LoginForm = () => {
     loginMutation.mutate(data, {
       onSuccess: () => {
         reset();
-        router.push(redirectUrl);
+        router.push(getRedirectUrl());
       },
     });
   };

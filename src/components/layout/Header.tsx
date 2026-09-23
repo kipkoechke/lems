@@ -24,6 +24,14 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const user = useCurrentUser();
   const facility = useCurrentFacility();
+
+  // The institution this account belongs to. System admins span every
+  // facility, so they get no name — and an account whose institution has not
+  // resolved shows nothing rather than a placeholder that reads as real.
+  const isSystemAdmin = user?.role === "admin" || user?.role === "s_admin";
+  const institutionName = isSystemAdmin
+    ? null
+    : facility?.name || user?.entity?.name || null;
   const logoutMutation = useLogout();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -119,9 +127,9 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
 
       {/* Center - Facility Name (hidden for admin users) */}
       <div className="flex-1 max-w-md mx-4">
-        {user?.role !== "admin" && user?.role !== "s_admin" && (
+        {institutionName && (
           <h1 className="text-base md:text-lg font-semibold text-gray-900 text-center">
-            {facility?.name || "Demo Facility Name"}
+            {institutionName}
           </h1>
         )}
       </div>
