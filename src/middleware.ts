@@ -34,8 +34,22 @@ export function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
 
+  // Next prefetches routes in the background. Answering a prefetch with a
+  // redirect makes the client cache that redirect for the real navigation
+  // later — so a route prefetched while signed out stays "redirect to login"
+  // even after the cookie is set, and the user is stuck until a hard reload.
+  // Answer prefetches with an empty 204 instead: nothing is cached, and the
+  // real navigation is resolved against the cookie it actually carries.
+  const isPrefetch =
+    request.headers.get("next-router-prefetch") === "1" ||
+    request.headers.get("x-middleware-prefetch") === "1" ||
+    request.headers.get("purpose") === "prefetch";
+
   // If no token and trying to access protected route, redirect to login
   if (!token && !isPublicRoute) {
+    if (isPrefetch) {
+      return new NextResponse(null, { status: 204 });
+    }
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
@@ -45,6 +59,9 @@ export function middleware(request: NextRequest) {
   // to the dashboard itself — "/" only redirects there again, costing a second
   // round trip.
   if (token && isPublicRoute) {
+    if (isPrefetch) {
+      return new NextResponse(null, { status: 204 });
+    }
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

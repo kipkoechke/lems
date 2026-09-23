@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -33,11 +33,23 @@ export const LoginForm = () => {
     return !requested || requested === "/" ? "/dashboard" : requested;
   }, []);
 
-  // Warm the destination while the user is still typing, so the navigation
-  // after login is a render rather than a download.
-  useEffect(() => {
-    router.prefetch(getRedirectUrl());
-  }, [router, getRedirectUrl]);
+  // The destination is deliberately NOT prefetched here. Prefetching a
+  // protected route while signed out asks the middleware to resolve it with no
+  // cookie, and the redirect that comes back is what the router then replays
+  // on the real navigation — leaving the user on the login page after a
+  // successful sign-in until they reload. The dashboard's JS chunk is warmed
+  // from the login success handler instead, where the session exists.
+
+  const fallbackNavigation = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (fallbackNavigation.current) {
+        clearTimeout(fallbackNavigation.current);
+      }
+    },
+    [],
+  );
 
   const {
     register,
@@ -53,7 +65,25 @@ export const LoginForm = () => {
     loginMutation.mutate(data, {
       onSuccess: () => {
         reset();
-        router.push(getRedirectUrl());
+        const target = getRedirectUrl();
+
+        // Drop any route entries cached while signed out — an earlier bounce
+        // to /login may still be sitting in the client router cache — then
+        // navigate, so the middleware re-resolves the destination against the
+        // cookie that now exists.
+        router.refresh();
+        router.push(target);
+
+        // Safety net for a browser that cached that bounce before this fix
+        // shipped: if the router has not left the login page shortly after a
+        // successful sign-in, fall back to a full navigation, which always
+        // resolves against the current cookie. A successful push unmounts
+        // this form and clears the timer.
+        fallbackNavigation.current = window.setTimeout(() => {
+          if (window.location.pathname.startsWith("/login")) {
+            window.location.assign(target);
+          }
+        }, 700);
       },
     });
   };
