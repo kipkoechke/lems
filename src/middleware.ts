@@ -41,9 +41,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If user has token and trying to access public route (like login), redirect to dashboard
+  // If user has token and trying to access public route (like login), redirect
+  // to the dashboard itself — "/" only redirects there again, costing a second
+  // round trip.
   if (token && isPublicRoute) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Allow the request to continue

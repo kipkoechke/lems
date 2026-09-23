@@ -12,11 +12,13 @@ import {
 import StatCard from "@/components/common/StatCard";
 import { Table } from "@/components/Table";
 import { ErrorState } from "@/components/common/ErrorState";
+import { DashboardSkeleton } from "@/components/common/Skeleton";
 import { useCurrentFacility } from "@/hooks/useAuth";
 import { useBookingsWithPagination } from "@/features/services/bookings/useBookings";
 import { useWorklist } from "@/features/worklist/useWorklist";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 import type { Booking } from "@/types/booking";
+import { facilityDashboardFilters } from "./facilityDashboardQuery";
 
 const STATUS_BADGE: Record<string, string> = {
   active: "bg-blue-50 text-blue-700 border-blue-200",
@@ -53,19 +55,21 @@ export default function FacilityDashboard() {
   const router = useRouter();
   const facility = useCurrentFacility();
 
-  const { data, isLoading, error } = useBookingsWithPagination({
-    facility_id: facility?.id || undefined,
-    page: 1,
-    per_page: 8,
-    sort_by: "created_at",
-    sort_order: "desc",
-  });
+  const { data, isLoading, error } = useBookingsWithPagination(
+    facilityDashboardFilters(facility?.id),
+  );
 
   const { data: worklist } = useWorklist({ per_page: 5 });
 
   const summary = data?.summary;
   const bookings: Booking[] = useMemo(() => data?.data ?? [], [data]);
   const pending = worklist?.data ?? [];
+
+  // One skeleton for the whole page: piecemeal placeholders made the header
+  // and panels pop in at different moments.
+  if (isLoading) {
+    return <DashboardSkeleton stats={5} withTable />;
+  }
 
   if (error) {
     return (
@@ -95,14 +99,7 @@ export default function FacilityDashboard() {
         </div>
 
         {/* Stats */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-24 bg-slate-100 rounded-lg animate-pulse" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             <StatCard
               compact
               title="Total Bookings"
@@ -148,8 +145,7 @@ export default function FacilityDashboard() {
             >
               <FaMoneyBillWave className="w-4 h-4 text-green-500" />
             </StatCard>
-          </div>
-        )}
+        </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {/* Recent bookings */}
@@ -176,9 +172,7 @@ export default function FacilityDashboard() {
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                  {isLoading ? (
-                    <Table.Loading colSpan={4} rows={4} />
-                  ) : bookings.length === 0 ? (
+                  {bookings.length === 0 ? (
                     <Table.Empty colSpan={4}>No bookings yet</Table.Empty>
                   ) : (
                     bookings.map((booking) => (

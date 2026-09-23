@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -12,8 +13,22 @@ import Link from "next/link";
 export const LoginForm = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const redirectUrl = searchParams?.get("redirect") || "/";
+  // Land on the dashboard directly. "/" is a server component that redirects
+  // to /dashboard, so routing through it costs a server round trip before the
+  // first paint — visible as a stall after the login call has already
+  // returned.
+  const requestedRedirect = searchParams?.get("redirect");
+  const redirectUrl =
+    !requestedRedirect || requestedRedirect === "/"
+      ? "/dashboard"
+      : requestedRedirect;
   const loginMutation = useLogin();
+
+  // Warm the destination's JS chunk while the user is still typing, so the
+  // navigation after login is a render rather than a download.
+  useEffect(() => {
+    router.prefetch(redirectUrl);
+  }, [router, redirectUrl]);
 
   const {
     register,

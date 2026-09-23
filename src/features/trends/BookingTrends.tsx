@@ -26,6 +26,7 @@ import {
 } from "recharts";
 import { useDashboard } from "./useDashboard";
 import { useRouter } from "next/navigation";
+import { DashboardSkeleton } from "@/components/common/Skeleton";
 
 const formatCurrency = (value: number) =>
   `KES ${value.toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -272,29 +273,7 @@ export default function BookingTrends() {
   }, [modalities]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen p-4">
-        <div className="max-w-7xl mx-auto space-y-4 animate-pulse">
-          <div className="h-9 bg-slate-200 rounded w-48" />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="h-16 bg-white rounded-lg border border-slate-200"
-              />
-            ))}
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="h-48 bg-white rounded-lg border border-slate-200"
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton stats={5} panels={3} />;
   }
 
   if (error || !dashboardData) {
