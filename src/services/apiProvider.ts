@@ -62,28 +62,34 @@ export const getProviderBookings = async (): Promise<ProviderBooking[]> => {
   return Array.isArray(data) ? data : [];
 };
 
-// GET /provider/bookings/{visitId}
+// GET /provider/bookings/show?visit_id= — the booking is selected by query
+// param, not by path segment.
 export const getProviderBooking = async (
   visitId: string,
 ): Promise<ProviderBooking> => {
-  const response = await axios.get(`/provider/bookings/${visitId}`);
+  const response = await axios.get(`/provider/bookings/show`, {
+    params: { visit_id: visitId },
+  });
   return unwrap<ProviderBooking>(response.data);
 };
 
-// GET /provider/bookings/{visitId}/costs
+// GET /provider/bookings/costs?visit_id=
 export const getProviderBookingCosts = async (
   visitId: string,
 ): Promise<ProviderBookingCosts> => {
-  const response = await axios.get(`/provider/bookings/${visitId}/costs`);
+  const response = await axios.get(`/provider/bookings/costs`, {
+    params: { visit_id: visitId },
+  });
   return unwrap<ProviderBookingCosts>(response.data);
 };
 
-// POST /provider/bookings/{visitId}/claim
+// POST /provider/bookings/claim — the booking is identified in the body.
 export const assignProviderClaim = async (
   visitId: string,
   claimId: string,
 ): Promise<ProviderBooking> => {
-  const response = await axios.post(`/provider/bookings/${visitId}/claim`, {
+  const response = await axios.post(`/provider/bookings/claim`, {
+    visit_id: visitId,
     claim_id: claimId,
   });
   return unwrap<ProviderBooking>(response.data);

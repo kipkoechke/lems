@@ -14,16 +14,18 @@ import toast from "react-hot-toast";
 import { Bookings } from "@/services/apiBooking";
 import { useServiceCompletionOtp } from "@/features/services/bookings/useServiceCompletionOtp";
 import { useValidateServiceCompletionOtp } from "@/features/services/bookings/useValidateServiceCompletionOtp";
+import { useResendServiceCompletionOtp } from "@/features/services/bookings/useResendServiceCompletionOtp";
 
 export default function ServiceCompletionPage() {
   const router = useRouter();
   const { requestOtp, isRequesting } = useServiceCompletionOtp();
   const { validateOtp, isValidating } = useValidateServiceCompletionOtp();
+  const { resendOtp, isResending } = useResendServiceCompletionOtp();
 
   const [bookingInfo, setBookingInfo] = useState<Bookings | null>(null);
   const [currentServiceIndex, setCurrentServiceIndex] = useState(0);
   const [completedServices, setCompletedServices] = useState<string[]>([]);
-  const [otp, setOtp] = useState(["", "", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [allServicesCompleted, setAllServicesCompleted] = useState(false);
 
@@ -112,7 +114,7 @@ export default function ServiceCompletionPage() {
     setOtp(newOtp);
 
     // Auto-focus next input
-    if (value && index < 4) {
+    if (value && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
       nextInput?.focus();
     }
@@ -131,7 +133,7 @@ export default function ServiceCompletionPage() {
   const handleVerifyOtp = () => {
     const otpCode = otp.join("");
 
-    if (otpCode.length !== 5) {
+    if (otpCode.length !== 6) {
       toast.error("Please enter complete OTP");
       return;
     }
@@ -145,6 +147,8 @@ export default function ServiceCompletionPage() {
     const sessionId = sessionStorage.getItem("serviceCompletionSession");
 
     const requestPayload = {
+      booking_id: bookingInfo.id,
+      service_id: currentService.id || "",
       session_id: sessionId || bookingInfo.id,
       otp: otpCode,
     };
@@ -158,7 +162,7 @@ export default function ServiceCompletionPage() {
         setCompletedServices(newCompletedServices);
 
         // Clear OTP inputs and session
-        setOtp(["", "", "", "", ""]);
+        setOtp(["", "", "", "", "", ""]);
         sessionStorage.removeItem("serviceCompletionSession");
 
         // Check if all services are completed
@@ -179,28 +183,74 @@ export default function ServiceCompletionPage() {
             `Service ${currentServiceIndex + 1}/${totalServices} completed!`,
           );
 
-          // Auto-request OTP for next service
+          // Auto-request OTP for the next service. This must use the booking
+          // id and that service's id — `currentService` is still the one we
+          // just completed at this point.
           setTimeout(() => {
-            handleRequestOtp(bookingInfo.booking_number);
+            handleRequestOtp(
+              bookingInfo.id,
+              bookingInfo.services?.[nextIndex]?.id,
+            );
           }, 1000);
         }
       },
       onError: () => {
         toast.error("Invalid OTP. Please try again.");
-        setOtp(["", "", "", "", ""]);
+        setOtp(["", "", "", "", "", ""]);
         document.getElementById("otp-0")?.focus();
       },
     });
   };
 
   const handleResendOtp = () => {
-    if (!bookingInfo?.booking_number) {
+    if (!bookingInfo?.id || !currentService?.id) {
       toast.error("Booking information missing");
       return;
     }
 
-    setOtp(["", "", "", "", ""]);
-    handleRequestOtp(bookingInfo.booking_number);
+    setOtp(["", "", "", "", "", ""]);
+
+    const sessionId = sessionStorage.getItem("serviceCompletionSession");
+    if (!sessionId) {
+      // Nothing to resend against — start a fresh OTP session.
+      handleRequestOtp(bookingInfo.id, currentService.id);
+      return;
+    }
+
+    resendOtp(
+      {
+        booking_id: bookingInfo.id,
+        service_id: currentService.id,
+        session_id: sessionId,
+      },
+      {
+        onSuccess: (response) => {
+          toast.success(response.message || "OTP resent to patient");
+          if (response.data?.session_id) {
+            sessionStorage.setItem(
+              "serviceCompletionSession",
+              response.data.session_id,
+            );
+          }
+          if (response.data?.expires_at) {
+            const remaining = Math.max(
+              0,
+              Math.floor(
+                (new Date(response.data.expires_at).getTime() - Date.now()) /
+                  1000,
+              ),
+            );
+            setTimeRemaining(remaining);
+          }
+        },
+        onError: (error: unknown) => {
+          const message = (
+            error as { response?: { data?: { message?: string } } }
+          )?.response?.data?.message;
+          toast.error(message || "Failed to resend OTP");
+        },
+      },
+    );
   };
 
   const handleCancel = () => {
@@ -390,7 +440,10 @@ export default function ServiceCompletionPage() {
               <button
                 onClick={handleVerifyOtp}
                 disabled={
-                  otp.join("").length !== 5 || isValidating || isRequesting
+                  otp.join("").length !== 6 ||
+                  isValidating ||
+                  isRequesting ||
+                  isResending
                 }
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >

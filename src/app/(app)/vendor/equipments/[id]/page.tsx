@@ -12,7 +12,10 @@ import {
   useVendorEquipmentDicomStatus,
   useVendorWorklistTest,
 } from "@/features/vendors/useVendorEquipmentDicom";
-import { VendorDicomConfigureRequest } from "@/services/apiEquipment";
+import {
+  vendorEquipmentDicom,
+  VendorDicomConfigureRequest,
+} from "@/services/apiEquipment";
 import { InputField } from "@/components/common/InputField";
 import { ErrorState } from "@/components/common/ErrorState";
 import {
@@ -115,7 +118,10 @@ function VendorEquipmentDetailContent() {
     );
   }
 
-  const isConnected = dicom?.is_connected ?? equipment.dicom?.is_connected;
+  // The portal returns the connection fields flat on the equipment record;
+  // the accessor reads either that or the older nested `dicom` block.
+  const equipmentDicomBlock = vendorEquipmentDicom(equipment);
+  const isConnected = dicom?.is_connected ?? equipmentDicomBlock?.is_connected;
   const mwl = dicom?.mwl_server ?? dicom?.vendor_config ?? equipment.vendor_config;
   const registered = dicom?.registered_in_orthanc ?? dicom?.orthanc_registered ?? dicom?.registered;
   const guide = dicom?.configuration_guide;
@@ -130,14 +136,14 @@ function VendorEquipmentDetailContent() {
   ];
 
   const dicomFields = [
-    { label: "AE Title", value: dicom?.ae_title ?? equipment.dicom?.ae_title },
+    { label: "AE Title", value: dicom?.ae_title ?? equipmentDicomBlock?.ae_title },
     {
       label: "Device IP / Host",
-      value: dicom?.ip ?? dicom?.hl7_host ?? equipment.dicom?.hl7_host,
+      value: dicom?.ip ?? dicom?.hl7_host ?? equipmentDicomBlock?.hl7_host,
     },
     {
       label: "DICOM Port",
-      value: (dicom?.port ?? dicom?.dicom_port ?? equipment.dicom?.dicom_port)
+      value: (dicom?.port ?? dicom?.dicom_port ?? equipmentDicomBlock?.dicom_port)
         ?.toString(),
     },
     {
@@ -153,8 +159,8 @@ function VendorEquipmentDetailContent() {
     { label: "Connection", value: isConnected ? "Live" : "Offline", color: isConnected ? "text-emerald-700" : "text-slate-500" },
     { label: "Category", value: equipment.category_label },
     { label: "Modality", value: equipment.modality },
-    { label: "AE Title", value: dicom?.ae_title ?? equipment.dicom?.ae_title ?? "Not configured" },
-    { label: "DICOM Port", value: (dicom?.port ?? dicom?.dicom_port ?? equipment.dicom?.dicom_port)?.toString() ?? "-" },
+    { label: "AE Title", value: dicom?.ae_title ?? equipmentDicomBlock?.ae_title ?? "Not configured" },
+    { label: "DICOM Port", value: (dicom?.port ?? dicom?.dicom_port ?? equipmentDicomBlock?.dicom_port)?.toString() ?? "-" },
     { label: "Orthanc", value: registered === undefined ? "-" : registered ? "Registered" : "Not Registered" },
   ];
 

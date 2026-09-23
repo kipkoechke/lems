@@ -6,6 +6,7 @@ import {
   Facility,
   getAuthData,
   loginFetcher,
+  logoutFetcher,
   LoginResponse,
   setAuthData,
   User,
@@ -45,11 +46,7 @@ export const useLogout = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
-      // logout endpoint, call it here
-      // await axios.post("/logout");
-      return Promise.resolve();
-    },
+    mutationFn: logoutFetcher,
     onSuccess: () => {
       // Clear auth data (including cookies)
       clearAuthData();

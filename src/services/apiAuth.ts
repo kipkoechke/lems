@@ -146,6 +146,20 @@ const extractFacility = (apiUser: ApiUser): Facility => {
 };
 
 // Login fetcher function for React Query
+/**
+ * POST /auth/logout — invalidates the current token server-side.
+ *
+ * Swallows failures: an expired token or a network blip must not trap the user
+ * in a signed-in shell, and the caller clears local auth either way.
+ */
+export const logoutFetcher = async (): Promise<void> => {
+  try {
+    await axios.post("/auth/logout");
+  } catch {
+    // Already invalid server-side, or unreachable — local teardown is enough.
+  }
+};
+
 export const loginFetcher = async (
   credentials: LoginFormData,
 ): Promise<LoginResponse> => {
@@ -239,6 +253,6 @@ export const clearAuthData = (): void => {
 
 // User profile fetcher (for future use)
 export const fetchUserProfile = async (): Promise<User> => {
-  const response = await axios.get("/profile");
+  const response = await axios.get("/auth/me");
   return response.data;
 };

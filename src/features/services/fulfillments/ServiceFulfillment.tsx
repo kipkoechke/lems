@@ -162,6 +162,9 @@ const ServiceFulfillment: React.FC = () => {
     validateOtpMutation(
       {
         data: {
+          // The verify route addresses the booking and service in its path.
+          booking_id: booking?.id || bookingNumber,
+          service_id: serviceId,
           session_id: sessionId,
           otp: otp,
         },

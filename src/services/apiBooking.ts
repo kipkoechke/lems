@@ -86,6 +86,11 @@ export const getBookingsWithPagination = async (
 };
 
 // ===== Service Completion =====
+//
+// The documented flow addresses the booking and service in the path:
+//   POST /bookings/{booking}/services/{service}/request-completion
+//   POST /bookings/{booking}/services/{service}/verify-completion
+//   POST /bookings/{booking}/services/{service}/resend-completion
 
 export interface ServiceCompletionPayload {
   booking_id: string;
@@ -96,34 +101,61 @@ interface ServiceCompletionOtpResponse {
   message: string;
   data: {
     session_id: string;
-    phone: string;
+    service_id?: string;
+    booking_id?: string;
     expires_at: string;
+    expires_in_minutes?: number;
+    phone_masked?: string;
+    resends_remaining?: number;
   };
 }
 
-// Request OTP for service completion
-export const requestServiceCompletionOtp = async (
-  data: ServiceCompletionPayload,
-): Promise<ServiceCompletionOtpResponse> => {
+// POST /bookings/{booking}/services/{service}/request-completion — no body
+export const requestServiceCompletionOtp = async ({
+  booking_id,
+  service_id,
+}: ServiceCompletionPayload): Promise<ServiceCompletionOtpResponse> => {
   const response = await axios.post<ServiceCompletionOtpResponse>(
-    "/bookings/service/request-otp",
-    data,
+    `/bookings/${booking_id}/services/${service_id}/request-completion`,
   );
   return response.data;
 };
 
-export interface VerifyServiceCompletionPayload {
+export interface VerifyServiceCompletionPayload
+  extends ServiceCompletionPayload {
   session_id: string;
+  /** Exactly 6 characters. */
   otp: string;
 }
 
-// Verify OTP for service completion
-export const verifyServiceCompletionOtp = async (
-  data: VerifyServiceCompletionPayload,
-): Promise<VerifyOtpResponse> => {
+// POST /bookings/{booking}/services/{service}/verify-completion
+export const verifyServiceCompletionOtp = async ({
+  booking_id,
+  service_id,
+  session_id,
+  otp,
+}: VerifyServiceCompletionPayload): Promise<VerifyOtpResponse> => {
   const response = await axios.post<VerifyOtpResponse>(
-    "/bookings/service/verify-otp",
-    data,
+    `/bookings/${booking_id}/services/${service_id}/verify-completion`,
+    { session_id, otp },
+  );
+  return response.data;
+};
+
+export interface ResendServiceCompletionPayload
+  extends ServiceCompletionPayload {
+  session_id: string;
+}
+
+// POST /bookings/{booking}/services/{service}/resend-completion
+export const resendServiceCompletionOtp = async ({
+  booking_id,
+  service_id,
+  session_id,
+}: ResendServiceCompletionPayload): Promise<ServiceCompletionOtpResponse> => {
+  const response = await axios.post<ServiceCompletionOtpResponse>(
+    `/bookings/${booking_id}/services/${service_id}/resend-completion`,
+    { session_id },
   );
   return response.data;
 };
