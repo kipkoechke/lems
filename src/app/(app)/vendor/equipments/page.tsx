@@ -7,7 +7,11 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useMyVendor } from "@/features/vendors/useMyVendor";
 import { useVendorEquipments } from "@/features/vendors/useVendorEquipments";
-import type { VendorEquipment } from "@/services/apiEquipment";
+import {
+  equipmentDeviceName,
+  equipmentOwnerName,
+  type VendorEquipment,
+} from "@/services/apiEquipment";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { SearchField } from "@/components/common/SearchField";
@@ -174,7 +178,9 @@ function VendorEquipmentsContent() {
           <Table className="w-full table-fixed">
             <Table.Header>
               <Table.Row>
-                <Table.HeaderCell>Equipment</Table.HeaderCell>
+                <Table.HeaderCell className="w-[24rem]">
+                  Equipment
+                </Table.HeaderCell>
                 <Table.HeaderCell>
                   <ColumnFilter
                     label="Status"
@@ -200,9 +206,6 @@ function VendorEquipmentsContent() {
                     allLabel="All Modalities"
                     searchPlaceholder="Search modality..."
                   />
-                  <span className="block text-[11px] font-normal text-slate-400 normal-case">
-                    and category
-                  </span>
                 </Table.HeaderCell>
                 <Table.HeaderCell className="w-24" align="center">
                   Actions
@@ -223,15 +226,20 @@ function VendorEquipmentsContent() {
                         a cell rather than costing two columns. */}
                     <Table.Cell>
                       <div
-                        className="font-medium text-slate-900 truncate"
+                        className="font-medium text-slate-900 truncate max-w-[22rem]"
                         title={eq.name}
                       >
-                        {eq.name}
+                        {equipmentDeviceName(eq.name)}
                       </div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className="flex items-center gap-1.5 mt-0.5 max-w-[22rem]">
                         <span className="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
                           {eq.code}
                         </span>
+                        {equipmentOwnerName(eq.name) && (
+                          <span className="text-[11px] text-slate-500 truncate">
+                            {equipmentOwnerName(eq.name)}
+                          </span>
+                        )}
                         {eq.serial_number && (
                           <span className="text-[11px] text-slate-400 font-mono truncate">
                             S/N {eq.serial_number}

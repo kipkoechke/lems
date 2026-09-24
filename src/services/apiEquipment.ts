@@ -146,6 +146,25 @@ export interface VendorEquipment {
   worklist_tests?: WorklistTests | null;
 }
 
+/**
+ * Generated equipment names carry the owning facility after an em dash, e.g.
+ * "Digital X-Ray System — EMBU COUNTY REFERRAL HOSPITAL". Listings split them
+ * so the device name stays narrow and the facility drops to a sub-line rather
+ * than stretching the column across the table. Names without the separator are
+ * returned unchanged, with no owner.
+ */
+const NAME_SEPARATOR = " — ";
+
+export const equipmentDeviceName = (name?: string | null): string =>
+  (name ?? "").split(NAME_SEPARATOR)[0];
+
+export const equipmentOwnerName = (name?: string | null): string => {
+  const value = name ?? "";
+  return value.includes(NAME_SEPARATOR)
+    ? value.slice(value.indexOf(NAME_SEPARATOR) + NAME_SEPARATOR.length)
+    : "";
+};
+
 /** Connection block for a vendor equipment row, flat or nested. */
 export const vendorEquipmentDicom = (
   equipment: VendorEquipment,

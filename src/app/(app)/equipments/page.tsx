@@ -16,7 +16,11 @@ import { useAdminEquipments } from "@/features/vendors/useAdminEquipments";
 import { useAdminEquipmentCounts } from "@/features/vendors/useAdminEquipmentCounts";
 import StatCard from "@/components/common/StatCard";
 import { useSearchControl } from "@/hooks/useSearchControl";
-import type { AdminEquipment } from "@/services/apiEquipment";
+import {
+  equipmentDeviceName,
+  equipmentOwnerName,
+  type AdminEquipment,
+} from "@/services/apiEquipment";
 import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { SearchField } from "@/components/common/SearchField";
@@ -279,7 +283,9 @@ function AdminEquipmentsView() {
           <Table className="w-full">
             <Table.Header>
               <Table.Row>
-                <Table.HeaderCell>Equipment</Table.HeaderCell>
+                <Table.HeaderCell className="w-[26rem]">
+                  Equipment
+                </Table.HeaderCell>
                 <Table.HeaderCell>
                   <ColumnFilter
                     label="Status"
@@ -323,9 +329,6 @@ function AdminEquipmentsView() {
                     allLabel="All Modalities"
                     searchPlaceholder="Search modality..."
                   />
-                  <span className="block text-[11px] font-normal text-slate-400 normal-case">
-                    and category
-                  </span>
                 </Table.HeaderCell>
                 <Table.HeaderCell>Vendor</Table.HeaderCell>
                 <Table.HeaderCell align="center">Actions</Table.HeaderCell>
@@ -340,11 +343,24 @@ function AdminEquipmentsView() {
                     {/* Code, name and serial are one identity, so they share
                         a cell rather than costing three columns. */}
                     <Table.Cell>
-                      <div className="font-medium text-slate-900">{eq.name}</div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
+                      {/* Names run long — they carry the facility after an
+                          em dash — so the cell is capped and the tail moves
+                          to the sub-line rather than stretching the table. */}
+                      <div
+                        className="font-medium text-slate-900 truncate max-w-[24rem]"
+                        title={eq.name}
+                      >
+                        {equipmentDeviceName(eq.name)}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5 max-w-[24rem]">
                         <span className="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
                           {eq.code}
                         </span>
+                        {equipmentOwnerName(eq.name) && (
+                          <span className="text-[11px] text-slate-500 truncate">
+                            {equipmentOwnerName(eq.name)}
+                          </span>
+                        )}
                         {eq.serial_number && (
                           <span className="text-[11px] text-slate-400 font-mono truncate">
                             S/N {eq.serial_number}

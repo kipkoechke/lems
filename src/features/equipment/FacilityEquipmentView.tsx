@@ -24,6 +24,10 @@ import { Permission } from "@/lib/rbac";
 import { useFacilityEquipments } from "./useFacilityEquipments";
 import AddFacilityEquipmentModal from "./AddFacilityEquipmentModal";
 import {
+  equipmentDeviceName,
+  equipmentOwnerName,
+} from "@/services/apiEquipment";
+import {
   facilityEquipmentStatusClasses,
   type FacilityEquipmentListItem,
   type FacilityEquipmentOwnership,
@@ -223,7 +227,9 @@ export default function FacilityEquipmentView() {
             <Table className="w-full">
               <Table.Header>
                 <Table.Row>
-                  <Table.HeaderCell>Equipment</Table.HeaderCell>
+                  <Table.HeaderCell className="w-[24rem]">
+                    Equipment
+                  </Table.HeaderCell>
                   <Table.HeaderCell>
                     <ColumnFilter
                       label="Status"
@@ -319,17 +325,25 @@ export default function FacilityEquipmentView() {
                       {/* Code, name and make are one identity, so they share
                           a cell rather than costing two columns. */}
                       <Table.Cell>
-                        <div className="font-medium text-slate-900">
-                          {equipment.name}
+                        <div
+                          className="font-medium text-slate-900 truncate max-w-[22rem]"
+                          title={equipment.name}
+                        >
+                          {equipmentDeviceName(equipment.name)}
                         </div>
-                        <div className="flex items-center gap-1.5 mt-0.5">
+                        <div className="flex items-center gap-1.5 mt-0.5 max-w-[22rem]">
                           <span className="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
                             {equipment.code}
                           </span>
                           <span className="text-[11px] text-slate-400 truncate">
-                            {[equipment.brand, equipment.model]
+                            {[
+                              equipmentOwnerName(equipment.name),
+                              [equipment.brand, equipment.model]
+                                .filter(Boolean)
+                                .join(" "),
+                            ]
                               .filter(Boolean)
-                              .join(" ")}
+                              .join(" · ")}
                           </span>
                         </div>
                       </Table.Cell>
