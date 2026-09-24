@@ -1786,6 +1786,11 @@ ten most recent status changes.
 **Response `403`** — Caller is not linked to a facility.
 **Response `404`** — Equipment not found, or not visible to the facility.
 
+> Every equipment detail payload — this one, `GET /vendor/equipments/{equipment}`,
+> `GET /vendors/{vendor}/equipments/{equipment}` and
+> `GET /admin/equipment/{equipment}` — carries the same `worklist_tests`
+> component. See [Equipment testing component](#equipment-testing-component).
+
 #### POST `/facility/equipments`
 
 Register a facility-owned unit by copying equipment already mapped to the
@@ -3908,6 +3913,84 @@ Get request statistics.
 ---
 
 ## 19. DICOM Events & Callbacks
+
+### The worklist round trip
+
+A worklist leaves VEMS and its study comes back under the same accession
+number, so the whole chain can be driven and verified end to end:
+
+1. An order raises the worklist (`scheduled`) and it is pushed to Orthanc, which
+   flips it to `sent`.
+2. The modality C-FINDs it. `on-cfind-discovery.lua` posts to
+   `POST /dicom/discovered`, which stores the device's real IP/port and logs a
+   `worklist_pull` activity.
+3. The modality runs the procedure step — `POST /dicom/events/mpps` with
+   `IN PROGRESS`, then `COMPLETED`.
+4. The study arrives — `POST /dicom/events/c-store` stores a `preliminary` result.
+5. Orthanc reports the finished study — `POST /dicom/callback/result`, which
+   stores the `final` result, the study metadata, and credits the machine that
+   performed it.
+
+`internal_request_id` on the MPPS/C-STORE endpoints accepts **either** the
+worklist UUID **or** its accession number (`ACC202609240001`).
+
+### Test worklists
+
+`POST /vendor/worklist-test` creates a probe worklist on Orthanc *and* a
+matching row in VEMS flagged `is_test`, so the study the modality sends back is
+attached to it exactly like a real one — the loop closes instead of the result
+callback answering `404`.
+
+- Test worklists are excluded from `active_worklists` on the dashboard, so
+  running one never moves an operational figure.
+- They carry no booked service (`booked_service_id` is null) and are never
+  pushed to Orthanc by the model — the endpoint pushes its own probe tags, so a
+  double push would create a duplicate entry.
+- The accession is rejected with `422` if it belongs to another worklist.
+
+### Equipment testing component
+
+Every probe a device has ever run is attached to its **equipment detail payload**
+as `worklist_tests`, so the same history table renders in the vendor, facility
+and admin portals with no second call. Newest test first.
+
+```json
+"worklist_tests": {
+  "total": 3,
+  "succeeded": 2,
+  "awaiting_result": 1,
+  "last_tested_at": "2026-09-24T08:30:00+03:00",
+  "results": [
+    {
+      "id": "uuid",
+      "accession_number": "MWL_TEST_20260924083000_XRD01",
+      "worklist_status": "completed",
+      "result_status": "final",
+      "succeeded": true,
+      "awaiting_result": false,
+      "result_received_at": "2026-09-24T08:31:12+03:00",
+      "study_instance_uid": "1.2.826.0.1.3680043.8.498.10",
+      "study_date": "2026-09-24",
+      "performed_by_ae_title": "XRD01",
+      "performed_by": { "id": "uuid", "code": "XRD01", "name": "…", "ae_title": "XRD01" },
+      "created_at": "2026-09-24T08:30:00+03:00",
+      "sent_at": "2026-09-24T08:30:01+03:00",
+      "completed_at": "2026-09-24T08:31:12+03:00"
+    }
+  ]
+}
+```
+
+- **`succeeded`** is the one to badge on: it is `true` exactly when the study
+  came back (`result_received_at` is set). VEMS only learns of a study through
+  the result callback, so a result on the row is proof that the whole
+  C-FIND → acquisition → C-STORE → callback chain worked.
+- **`awaiting_result`** is a probe still out — the equipment may be unreachable,
+  or the study has not been sent back yet.
+- `total`, `succeeded` and `awaiting_result` count **all** tests; `results` is
+  the newest 20.
+- Returns an empty `results` array with zeroed counts on equipment that has
+  never been tested.
 
 ### POST `/dicom/events/mpps`
 

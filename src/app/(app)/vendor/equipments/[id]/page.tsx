@@ -18,6 +18,7 @@ import {
 } from "@/services/apiEquipment";
 import { InputField } from "@/components/common/InputField";
 import { ErrorState } from "@/components/common/ErrorState";
+import EquipmentWorklistTests from "@/features/equipment/EquipmentWorklistTests";
 import {
   FaArrowLeft,
   FaCog,
@@ -291,6 +292,10 @@ function VendorEquipmentDetailContent() {
             )}
           </div>
         </div>
+
+        {/* Testing history — the detail payload carries it, so the table
+            renders without a second request. */}
+        <EquipmentWorklistTests tests={equipment.worklist_tests} />
 
         </div> {/* End left column (75%) */}
 

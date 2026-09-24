@@ -22,6 +22,7 @@ import { ActionMenu } from "@/components/common/ActionMenu";
 import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { FacilityFilter } from "@/components/common/FacilityFilter";
+import { ConnectivityBadges } from "@/components/common/ConnectivityBadges";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import { useCurrentUserWithLoading } from "@/hooks/useAuth";
@@ -380,20 +381,12 @@ function AdminEquipmentsView() {
                       </span>
                     </Table.Cell>
                     <Table.Cell>
-                      {eq.linked === true ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200">
-                          Linked
-                        </span>
-                      ) : eq.linked === false ? (
-                        <span
-                          className="text-xs text-slate-400"
-                          title="This device has never been seen on the network"
-                        >
-                          Never seen
-                        </span>
-                      ) : (
-                        <span className="text-xs text-slate-400">—</span>
-                      )}
+                      <ConnectivityBadges
+                        isConnected={eq.dicom?.is_connected}
+                        linked={eq.linked}
+                        lastSeenAt={eq.dicom?.last_seen_at}
+                        stacked
+                      />
                     </Table.Cell>
                     <Table.Cell align="center">
                       <ActionMenu menuId={`equipment-${eq.id}`}>
@@ -460,7 +453,17 @@ function AdminEquipmentsView() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Vendor</span>
-                  <span className="text-slate-900">{eq.vendor?.name || "-"}</span>
+                  <span className="text-slate-900">
+                    {eq.vendor?.name || "Unassigned"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500">Connection</span>
+                  <ConnectivityBadges
+                    isConnected={eq.dicom?.is_connected}
+                    linked={eq.linked}
+                    lastSeenAt={eq.dicom?.last_seen_at}
+                  />
                 </div>
                 {eq.serial_number && (
                   <div className="flex justify-between">

@@ -5,9 +5,10 @@ Frontend-facing changes in this development cycle (commits `4e90369` → `3e02a1
 Everything is under `/api/v1` and requires a Sanctum bearer token unless stated
 otherwise. Full request/response detail lives in `docs/api-reference.md`.
 
-**Deploy prerequisites:** two migrations must run —
-`add_study_metadata_to_equipment_work_lists_table` and
-`create_device_activity_logs_table`.
+**Deploy prerequisites:** three migrations must run —
+`add_study_metadata_to_equipment_work_lists_table`,
+`create_device_activity_logs_table`, and
+`make_booked_service_nullable_and_add_is_test_to_equipment_work_lists_table`.
 
 ---
 
@@ -25,6 +26,10 @@ otherwise. Full request/response detail lives in `docs/api-reference.md`.
 | 8 | New filters on bookings, contracts, requests, admin equipment | Added |
 | 9 | Discovered equipment no longer parked under an "UNCAT" vendor | Changed |
 | 10 | `linked` vs `is_connected` semantics | Clarified |
+| 11 | Test worklists now capture their study result | Fixed |
+| 12 | MPPS / C-STORE rejected every accession-number lookup | Fixed |
+| 13 | Worklists may have no booked service; `is_test` flag added | Changed |
+| 14 | `worklist_tests` component on every equipment detail | New |
 
 ---
 
@@ -209,6 +214,87 @@ and `status = pending_installation`; surface them through
 - `hl7_host` is the **device's** address, learned from the device's own traffic.
   Newly provisioned units legitimately have `hl7_host: null` until the device
   first checks in — render "awaiting first contact", not an error.
+
+---
+
+## 11. Fixed — a test worklist now captures its study result
+
+`POST /vendor/worklist-test` used to create the probe worklist **only on
+Orthanc**. When the modality acquired the study and sent it back, the result
+callback matched the accession against nothing and answered
+`404 Worklist not found for accession number` — the loop never closed.
+
+The endpoint now also registers the probe in VEMS with `is_test: true`, so the
+returning study attaches exactly as a real one does. The response gains
+`data.worklist_id`, and an accession that already belongs to another worklist is
+refused with `422` rather than being hijacked.
+
+## 12. Fixed — MPPS / C-STORE rejected every accession-number lookup
+
+`POST /dicom/events/mpps` and `POST /dicom/events/c-store` resolve their
+worklist from `internal_request_id`, which may be the worklist UUID **or** the
+accession number. The lookup compared both values against the uuid `id` column,
+so passing an accession such as `ACC202609240001` produced
+`SQLSTATE[22P02] invalid input syntax for type uuid` — a hard failure, not a
+miss. The id is now only compared when the value is actually a UUID.
+
+## 13. Changed — worklists without a booked service
+
+`equipment_work_lists.booked_service_id` is now nullable and a new `is_test`
+boolean defaults to `false`.
+
+- Test worklists are excluded from `counts.active_worklists` on the dashboard.
+- `is_test` worklists are not pushed to Orthanc by the model; the endpoint that
+  creates them pushes its own probe tags.
+- The presentation layer already tolerated a missing booked service — `booking`
+  and `service` simply come back as `null` on the HMIS worklist copy.
+
+## 14. New — equipment testing history on every equipment detail
+
+Each equipment detail response now carries a `worklist_tests` component: every
+probe run against that machine, **newest first**, so one table renders in the
+vendor, facility and admin portals without a second request.
+
+| Endpoint |
+| -------- |
+| `GET /vendor/equipments/{equipment}` |
+| `GET /facility/equipments/{equipment}` |
+| `GET /vendors/{vendor}/equipments/{equipment}` |
+| `GET /admin/equipment/{equipment}` |
+
+```json
+"worklist_tests": {
+  "total": 3,
+  "succeeded": 2,
+  "awaiting_result": 1,
+  "last_tested_at": "2026-09-24T08:30:00+03:00",
+  "results": [
+    {
+      "id": "uuid",
+      "accession_number": "MWL_TEST_20260924083000_XRD01",
+      "worklist_status": "completed",
+      "result_status": "final",
+      "succeeded": true,
+      "awaiting_result": false,
+      "result_received_at": "2026-09-24T08:31:12+03:00",
+      "study_instance_uid": "1.2.826.0.1.3680043.8.498.10",
+      "study_date": "2026-09-24",
+      "performed_by_ae_title": "XRD01",
+      "performed_by": null,
+      "created_at": "2026-09-24T08:30:00+03:00",
+      "sent_at": "2026-09-24T08:30:01+03:00",
+      "completed_at": "2026-09-24T08:31:12+03:00"
+    }
+  ]
+}
+```
+
+- **`succeeded`** — badge this one. It is `true` exactly when the study came
+  back, which is the only proof the whole C-FIND → acquisition → C-STORE →
+  callback chain worked.
+- **`awaiting_result`** — the probe is out and nothing has come back yet.
+- `results` holds the newest 20; the three counters cover **all** tests.
+- Equipment that has never been tested returns `results: []` with zero counters.
 
 ---
 

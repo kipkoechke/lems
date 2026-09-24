@@ -32,6 +32,7 @@ import {
   useTestEquipmentDicom,
   useWorklistTest,
 } from "@/features/dicom/useDicom";
+import EquipmentWorklistTests from "@/features/equipment/EquipmentWorklistTests";
 import { dicomStatusHost } from "@/services/apiDicom";
 import type { DicomConfigureRequest } from "@/services/apiDicom";
 import {
@@ -513,6 +514,9 @@ function AdminEquipmentDetails() {
             </div>
           )}
         </div>
+
+        {/* Testing history — carried by the detail payload itself. */}
+        <EquipmentWorklistTests tests={equipment.worklist_tests} />
       </div>
 
       {/* Configure DICOM modal */}

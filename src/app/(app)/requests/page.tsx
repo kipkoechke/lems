@@ -195,11 +195,20 @@ function RequestsContent() {
                       <div className="font-mono text-sm text-slate-900">
                         {requestLabel(r)}
                       </div>
-                      {r.modality && (
-                        <div className="text-xs text-slate-500">
-                          {r.modality}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        {r.modality && (
+                          <span className="text-xs text-slate-500">
+                            {r.modality}
+                          </span>
+                        )}
+                        {/* A probe worklist from an MWL test, not a real
+                            order — it carries no booked service. */}
+                        {r.is_test && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                            Test
+                          </span>
+                        )}
+                      </div>
                     </Table.Cell>
                     <Table.Cell>
                       <div className="text-sm text-slate-900">

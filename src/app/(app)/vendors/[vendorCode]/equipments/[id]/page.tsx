@@ -26,6 +26,7 @@ import {
   equipmentStatusLabel,
 } from "@/services/apiEquipment";
 import BackButton from "@/components/common/BackButton";
+import EquipmentWorklistTests from "@/features/equipment/EquipmentWorklistTests";
 
 // Status badge colors
 const getStatusBadge = (status: string) => {
@@ -382,6 +383,12 @@ export default function VendorEquipmentDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Testing history — carried by the detail payload itself. */}
+      <EquipmentWorklistTests
+        tests={equipment.worklist_tests}
+        className="mt-4"
+      />
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (

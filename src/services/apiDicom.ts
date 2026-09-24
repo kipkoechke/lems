@@ -145,6 +145,9 @@ export interface DicomTestResult {
 export interface WorklistTestResult {
   success?: boolean;
   message?: string;
+  /** The probe worklist now created in VEMS, not only in Orthanc. */
+  worklist_id?: string;
+  accession_number?: string;
   [key: string]: unknown;
 }
 

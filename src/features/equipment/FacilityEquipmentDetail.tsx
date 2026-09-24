@@ -13,6 +13,8 @@ import { ErrorState } from "@/components/common/ErrorState";
 import { DashboardSkeleton } from "@/components/common/Skeleton";
 import { useFacilityEquipment } from "./useFacilityEquipments";
 import { facilityEquipmentStatusClasses } from "@/services/apiFacilityEquipment";
+import EquipmentWorklistTests from "./EquipmentWorklistTests";
+import { ConnectivityBadges } from "@/components/common/ConnectivityBadges";
 
 const label = (value?: string | null) =>
   value ? String(value).replace(/_/g, " ") : "-";
@@ -91,7 +93,8 @@ export default function FacilityEquipmentDetail({ id }: { id: string }) {
   const connection: { label: string; value?: string | null }[] = [
     { label: "AE Title", value: dicom?.ae_title ?? equipment.ae_title },
     { label: "Calling AE Title", value: dicom?.calling_ae_title },
-    { label: "Host", value: dicom?.host },
+    // Learned from the device's own traffic, so a new unit has none yet.
+    { label: "Host", value: dicom?.host || "Awaiting first contact" },
     { label: "DICOM Port", value: dicom?.dicom_port?.toString() },
     { label: "HL7 Port", value: dicom?.hl7_port?.toString() },
     { label: "Last Seen", value: formatDateTime(dicom?.last_seen_at) },
@@ -129,6 +132,11 @@ export default function FacilityEquipmentDetail({ id }: { id: string }) {
             >
               {equipment.status_label || label(equipment.status)}
             </span>
+            <ConnectivityBadges
+              isConnected={dicom?.is_connected ?? equipment.is_connected}
+              linked={dicom?.linked ?? equipment.linked}
+              lastSeenAt={dicom?.last_seen_at ?? equipment.last_seen_at}
+            />
           </div>
         </div>
 
@@ -354,6 +362,9 @@ export default function FacilityEquipmentDetail({ id }: { id: string }) {
             </div>
           </div>
         )}
+
+        {/* Testing history — carried by the detail payload itself. */}
+        <EquipmentWorklistTests tests={equipment.worklist_tests} />
 
         <button
           onClick={() => refetch()}

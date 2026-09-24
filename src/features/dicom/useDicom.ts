@@ -110,14 +110,26 @@ export const useTestEquipmentDicom = () => {
 };
 
 export const useWorklistTest = () => {
+  const queryClient = useQueryClient();
+
   const { mutate, isPending } = useMutation({
     mutationFn: (equipmentId: string) => runWorklistTest(equipmentId),
-    onSuccess: (result) => {
+    onSuccess: (result, equipmentId) => {
       if (result?.success === false) {
         toast.error(result?.message || "Worklist test failed");
       } else {
-        toast.success(result?.message || "Test worklist created in Orthanc");
+        // The probe is out; the study comes back separately, so the row lands
+        // in the testing history as "awaiting result" until it does.
+        toast.success(
+          result?.message ||
+            "Test worklist sent — waiting for the device to return the study",
+        );
       }
+      // The testing history rides on the equipment detail payload.
+      queryClient.invalidateQueries({
+        queryKey: ["equipment-detail", equipmentId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["facility-equipment"] });
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
       toast.error(error?.response?.data?.message || "Worklist test failed"),

@@ -38,6 +38,48 @@ export interface EquipmentStatus {
   label: string;
 }
 
+/**
+ * Equipment testing history — the `worklist_tests` component carried by every
+ * equipment detail payload (vendor, facility, vendor-scoped admin and admin).
+ *
+ * A probe worklist is pushed to the device and the study it sends back is
+ * attached to the same accession. `succeeded` is therefore the figure that
+ * matters: it is true exactly when the study came back, which is the only
+ * proof the whole C-FIND → acquisition → C-STORE → callback chain works.
+ * `results` holds the newest 20; the counters cover every test.
+ */
+export interface WorklistTestPerformer {
+  id: string;
+  code?: string;
+  name?: string;
+  ae_title?: string;
+}
+
+export interface WorklistTestResultRow {
+  id: string;
+  accession_number: string;
+  worklist_status?: string | null;
+  result_status?: string | null;
+  succeeded: boolean;
+  awaiting_result: boolean;
+  result_received_at?: string | null;
+  study_instance_uid?: string | null;
+  study_date?: string | null;
+  performed_by_ae_title?: string | null;
+  performed_by?: WorklistTestPerformer | null;
+  created_at?: string | null;
+  sent_at?: string | null;
+  completed_at?: string | null;
+}
+
+export interface WorklistTests {
+  total: number;
+  succeeded: number;
+  awaiting_result: number;
+  last_tested_at?: string | null;
+  results: WorklistTestResultRow[];
+}
+
 export interface VendorEquipmentSpecifications {
   [key: string]: string | number | undefined;
 }
@@ -94,10 +136,14 @@ export interface VendorEquipment {
   ae_title?: string | null;
   host?: string | null;
   dicom_port?: number | null;
+  /** Connected right now. */
   is_connected?: boolean;
+  /** Ever seen on the network — a different question from `is_connected`. */
+  linked?: boolean;
   last_seen_at?: string | null;
   connected_at?: string | null;
   facility?: VendorEquipmentFacility | null;
+  worklist_tests?: WorklistTests | null;
 }
 
 /** Connection block for a vendor equipment row, flat or nested. */
@@ -333,6 +379,12 @@ export interface VendorDicomTestResponse {
 export interface VendorWorklistTestResponse {
   success?: boolean;
   message?: string;
+  /**
+   * The probe is now registered in VEMS as well as Orthanc, so the study the
+   * modality sends back attaches to this worklist instead of being rejected.
+   */
+  worklist_id?: string;
+  accession_number?: string;
   [key: string]: unknown;
 }
 
@@ -566,6 +618,7 @@ export interface EquipmentDetail extends Partial<AdminEquipment> {
   dicom_aet?: string | null;
   dicom_host?: string | null;
   dicom_port?: number | null;
+  worklist_tests?: WorklistTests | null;
 
   // Flat-shape fields: `/equipment/{id}` returns the connection details on the
   // equipment itself (`ae_title`, `host`, `dicom_port`), not under `dicom`.

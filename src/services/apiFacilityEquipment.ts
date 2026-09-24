@@ -1,5 +1,6 @@
 import axios from "../lib/axios";
 import { normalisePagination, NormalisedPagination } from "./pagination";
+import type { WorklistTests } from "./apiEquipment";
 
 /**
  * Facility Portal — Equipment (`/facility/equipments`).
@@ -112,6 +113,8 @@ export interface FacilityEquipmentDetail extends FacilityEquipmentListItem {
   facility?: FacilityEquipmentFacility | null;
   manufacture_date?: string | null;
   status_history?: FacilityEquipmentStatusHistoryEntry[];
+  /** Testing history, in the same shape every portal's detail payload uses. */
+  worklist_tests?: WorklistTests | null;
   created_at?: string;
   updated_at?: string;
 }

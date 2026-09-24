@@ -12,6 +12,7 @@ import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
+import { ConnectivityBadges } from "@/components/common/ConnectivityBadges";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import {
@@ -186,6 +187,9 @@ function VendorEquipmentsContent() {
                     searchPlaceholder="Search modality..."
                   />
                 </Table.HeaderCell>
+                <Table.HeaderCell className="w-36">
+                  Connection
+                </Table.HeaderCell>
                 <Table.HeaderCell>
                   <ColumnFilter
                     label="Status"
@@ -206,7 +210,7 @@ function VendorEquipmentsContent() {
             </Table.Header>
             <Table.Body>
               {filtered.length === 0 ? (
-                <Table.Empty colSpan={6}>
+                <Table.Empty colSpan={7}>
                   {search.isSearching || status || modality
                     ? "No equipment matches your criteria"
                     : "No equipment yet. Add your first item to get started."}
@@ -241,6 +245,18 @@ function VendorEquipmentsContent() {
                       <span className="text-sm text-slate-700">
                         {eq.modality || "-"}
                       </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      {/* Live is now, linked is ever — the pair is what tells
+                          a vendor whether a machine is actually reachable. */}
+                      <ConnectivityBadges
+                        isConnected={
+                          eq.is_connected ?? eq.dicom?.is_connected
+                        }
+                        linked={eq.linked}
+                        lastSeenAt={eq.last_seen_at ?? eq.dicom?.last_seen_at}
+                        stacked
+                      />
                     </Table.Cell>
                     <Table.Cell>
                       <span

@@ -86,7 +86,13 @@ export interface MedicalRequest {
   specimen_type?: string | null;
   specimen_received_at?: string | null;
   equipment_id?: string;
-  booked_service_id?: string;
+  /**
+   * Nullable: a probe worklist has no booked service, and the presentation
+   * layer sends `booking` and `service` as null for it.
+   */
+  booked_service_id?: string | null;
+  /** A probe worklist raised by an MWL test rather than a real order. */
+  is_test?: boolean;
   orthanc_worklist_id?: string | null;
   referring_physician?: string | null;
   performing_technologist?: string | null;

@@ -7,7 +7,6 @@ import {
   FaPlus,
   FaBuilding,
   FaTruck,
-  FaCircle,
   FaCheckCircle,
   FaWrench,
 } from "react-icons/fa";
@@ -17,6 +16,7 @@ import { ColumnFilter } from "@/components/common/ColumnFilter";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
+import { ConnectivityBadges } from "@/components/common/ConnectivityBadges";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import { useCurrentFacility } from "@/hooks/useAuth";
 import { useHasPermission } from "@/hooks/usePermissions";
@@ -358,29 +358,12 @@ export default function FacilityEquipmentView() {
                           0}
                       </Table.Cell>
                       <Table.Cell>
-                        <span
-                          className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                            equipment.is_connected
-                              ? "text-emerald-700"
-                              : "text-slate-500"
-                          }`}
-                        >
-                          <FaCircle
-                            className={`w-2 h-2 ${
-                              equipment.is_connected
-                                ? "text-emerald-500"
-                                : "text-slate-300"
-                            }`}
-                          />
-                          {equipment.is_connected ? "Online" : "Offline"}
-                        </span>
-                        {/* Never seen at all is a different problem from
-                            being offline right now — say which. */}
-                        {equipment.linked === false && (
-                          <div className="text-xs text-slate-400">
-                            Awaiting first contact
-                          </div>
-                        )}
+                        <ConnectivityBadges
+                          isConnected={equipment.is_connected}
+                          linked={equipment.linked}
+                          lastSeenAt={equipment.last_seen_at}
+                          stacked
+                        />
                       </Table.Cell>
                       <Table.Cell>
                         <span
