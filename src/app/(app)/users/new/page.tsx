@@ -166,9 +166,15 @@ function NewUserContent() {
 
         <div className="bg-white rounded-lg border border-slate-200">
           <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6">
-            <h2 className="text-sm font-semibold text-slate-900 mb-4">
+            <h2 className="text-sm font-semibold text-slate-900 mb-2">
               Account
             </h2>
+            {/* There is no password field by design: the API issues a random
+                one nobody is told and emails a single-use link. */}
+            <p className="text-xs text-slate-500 mb-4">
+              No password is set here. VEMS emails them a single-use link to
+              choose their own, valid for 24 hours.
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <InputField
                 label="Full Name"

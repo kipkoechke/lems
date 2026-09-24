@@ -5,7 +5,11 @@ import { useSearchControl } from "@/hooks/useSearchControl";
 import { useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission, isFacilityRole } from "@/lib/rbac";
-import { useDeleteUser, useUsers } from "@/features/users/useUsers";
+import {
+  useDeleteUser,
+  useSendPasswordResetLink,
+  useUsers,
+} from "@/features/users/useUsers";
 import { useCurrentUser } from "@/hooks/useAuth";
 import { userInstitution, userScopeLabel } from "@/services/apiUsers";
 import { Table } from "@/components/Table";
@@ -14,7 +18,15 @@ import Pagination from "@/components/common/Pagination";
 import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { ErrorState } from "@/components/common/ErrorState";
-import { FaEdit, FaEye, FaPlus, FaTrash, FaUsers, FaKey } from "react-icons/fa";
+import {
+  FaEdit,
+  FaEye,
+  FaPlus,
+  FaTrash,
+  FaUsers,
+  FaKey,
+  FaEnvelope,
+} from "react-icons/fa";
 
 const ACTIVE_OPTIONS = [
   { value: "true", label: "Active" },
@@ -38,6 +50,7 @@ function UsersContent() {
 
   const currentUser = useCurrentUser();
   const { deleteUser, isDeleting } = useDeleteUser();
+  const { sendResetLink, isSendingResetLink } = useSendPasswordResetLink();
 
   // A facility admin may list and read users in their facility, and create
   // new ones — but /users/{id} is GET-only for them, so no edit, permissions
@@ -202,6 +215,18 @@ function UsersContent() {
                               onClick={() => router.push(`/users/${user.id}`)}
                             >
                               <FaEye className="text-blue-500" /> View
+                            </ActionMenu.Item>
+                            {/* Accounts are handed over by email, so this is
+                                the way to unstick someone whose welcome mail
+                                never arrived. A facility admin may do it for
+                                their own staff, which is why it sits outside
+                                the system-admin block. */}
+                            <ActionMenu.Item
+                              onClick={() => sendResetLink(user.id)}
+                              disabled={isSendingResetLink}
+                            >
+                              <FaEnvelope className="text-emerald-500" /> Send
+                              password reset link
                             </ActionMenu.Item>
                             {canManageUsers && (
                               <>

@@ -49,8 +49,12 @@ Full system access — all endpoints.
 | `/auth/login`                            | POST           | Authenticate                   |
 | `/auth/logout`                           | POST           | Logout                         |
 | `/auth/me`                               | GET            | Current user                   |
+| `/auth/forgot-password`                  | POST           | Email a password reset link    |
+| `/auth/reset-password`                   | POST           | Set a new password from a link |
 | `/users`                                 | GET/POST       | List / Create users            |
 | `/users/{id}`                            | GET/PUT/DELETE | User CRUD                      |
+| `/users/roles`                           | GET            | Roles this caller may assign   |
+| `/users/{id}/password-reset-link`        | POST           | Email a colleague a reset link |
 | `/admin/dashboard`                       | GET            | Dashboard overview             |
 | `/admin/equipment`                       | GET            | Equipment listing              |
 | `/admin/permissions`                     | GET/POST       | List / Create permissions      |
@@ -325,6 +329,54 @@ All routes require `role:payer` under the `/payer` prefix.
 ---
 
 ## 1. Authentication
+
+### Passwords
+
+Accounts are handed over by email, never with a password. A newly created user
+is issued a **random password nobody is told** — not even the person who created
+the account — and the welcome mail carries a single-use link to set their own.
+The same link mechanism, and the same token, serves anyone who has forgotten
+their password later.
+
+Links are built against `FRONTEND_URL` and point at
+`{FRONTEND_URL}/reset-password?token=...&email=...`. They are valid for
+`PASSWORD_RESET_EXPIRE_MINUTES` (1440 — 24 hours — by default, deliberately
+longer than Laravel's 60, or an invitation sent on a Friday would expire), and
+each can be used once.
+
+Every one of these mails is **queued**, so no request waits on a mail server.
+The queue worker must be running (it is, under `[program:queue-worker]`).
+
+#### POST `/auth/forgot-password`
+
+Email a reset link to an account. **Public.**
+
+Answers identically whether or not the address is registered, so it cannot be
+used to discover who has an account here. Throttled to three requests per
+address per minute.
+
+| Field   | Type  | Required |
+| ------- | ----- | -------- |
+| `email` | email | Yes      |
+
+```json
+{ "data": null, "message": "If that email address has an account, a reset link is on its way." }
+```
+
+#### POST `/auth/reset-password`
+
+Set a new password from a link. **Public.**
+
+| Field                   | Type   | Required | Notes                          |
+| ----------------------- | ------ | -------- | ------------------------------ |
+| `email`                 | email  | Yes      |                                |
+| `token`                 | string | Yes      | From the link                  |
+| `password`              | string | Yes      | Minimum 8 characters, confirmed |
+| `password_confirmation` | string | Yes      |                                |
+
+**`200`** — `{ "message": "Your password has been reset. You can now sign in." }`
+**`422`** — the link is invalid, expired, or already used. An expired link is
+ordinary: request a new one.
 
 ### POST `/auth/login`
 
@@ -2239,10 +2291,61 @@ through the same whitelist above — tag *values* only, never pixel data. A valu
 supplied by the callback wins over the one read back. A study with no image
 instances (an SR or KOS, say) simply has no descriptors.
 
+**The machine's own description of itself.** Every study a device sends carries
+its manufacturer, model, serial number, station name and software version —
+better evidence than whatever was typed in at registration, so the equipment
+record is kept true from it:
+
+| Column | DICOM tag |
+| ------ | --------- |
+| `brand` | `Manufacturer` |
+| `model` | `ManufacturerModelName` |
+| `serial_number` | `DeviceSerialNumber` |
+| `station_name` | `StationName` |
+| `software_version` | `SoftwareVersions` |
+
+The first three are corrected when they differ, except a serial number another
+machine already holds — that is reported, not written. `station_name` and
+`software_version` are kept current. Every change is logged with its previous
+value. Only machines resolved from the reporting AE title are touched.
+
+`station_name` and `software_version` are returned on the equipment detail
+payloads alongside `brand`, `model` and `serial_number`.
+
 **An accession is optional.** A callback with no `accession_number` is filed as
 a [non-SHA study](#non-sha-studies) under its `study_instance_uid`. One with
 neither identifier is refused with `422`, because there would be nothing to file
 it under and every repeat would create another row.
+
+**Nothing is retained in Orthanc.** The callback strips the study's pixel data
+as it arrives, and `vems:prune-orthanc-studies` (daily, 03:30) deletes the
+metadata-only record once VEMS holds it — see
+[retention](#retention--nothing-is-kept-in-orthanc).
+
+### Retention — nothing is kept in Orthanc
+
+VEMS never stores images. A study leaves nothing behind in Orthanc either:
+
+| Step | What is on disk |
+| ---- | --------------- |
+| Study arrives | The DICOM file, for seconds |
+| Result callback runs | **Pixel data stripped** — metadata only |
+| `vems:prune-orthanc-studies` (daily) | **Study deleted** — nothing |
+| VEMS | The metadata, permanently |
+
+Every field VEMS keeps — identity, timing, provenance, image descriptors — is
+read from the study while it is present, at capture time. The one field that
+needs the instances to still be there is `series_count` / `instance_count`,
+because a study's extent is not knowable from a single instance; that is why
+the delete is a separate, later step rather than happening on arrival.
+
+```bash
+php artisan vems:prune-orthanc-studies --hours=48   # grace period (default)
+php artisan vems:prune-orthanc-studies --dry-run    # list what would go
+```
+
+A study is removed only when VEMS already holds it, its `study_instance_uid` is
+known, it is past the grace period, and it has not already been pruned.
 
 `accession_number`, `patient_id` and `study_date`/`study_time` keep the
 behaviour they had; the rest is described above.
@@ -4593,7 +4696,6 @@ Admin user and permission management. **Auth required.**
 The roles the caller is allowed to assign, for the role picker on the user form.
 A facility admin (`f_admin`) gets only their four assignable roles; a
 system-level admin gets every role.
-
 **Response `200`**
 
 ```json
@@ -4685,6 +4787,58 @@ Create a new user.
 | ------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | System admin (`admin`, `nesp`, `moh`, `cog`) | Any role                                                                                       | Supplied `facility_id` / `vendor_id`         |
 | Facility admin (`f_admin`)                   | `f_view_only`, `f_practitioner`, `f_finance`, `f_equipment_user` — never `f_admin` or system/vendor roles | Forced from the caller's profile; `facility_id` and `vendor_id` are rejected |
+
+**The account is handed over by email.** No password is accepted or returned —
+the user is created with a random one nobody is told, and a welcome mail carrying
+a single-use link is queued so they set their own. The response reports whether
+it went:
+
+```json
+{ "data": { "id": "uuid", "email": "jane@hospital.co.ke", "welcome_email_sent": true, "...": "..." } }
+```
+
+`welcome_email_sent` is `false` only when there is no email on file. Through this
+endpoint that cannot happen — `email` is required — but imported rows can lack
+one, and the field makes the outcome visible rather than assumed.
+
+### POST `/users/{user_id}/password-reset-link`
+
+Send an existing account a fresh reset link. For when someone cannot get far
+enough to request one themselves — a new starter whose welcome mail bounced, or
+a colleague who is locked out.
+
+The same rules as role scope above apply, decided by **rank**: the caller must
+outrank the target, and a facility admin must share its facility. A peer is out
+of reach, so an HRIO cannot reset another HRIO's password, and nobody can reset
+theirs above their own level.
+
+```json
+{ "data": { "email": "jane@hospital.co.ke" }, "message": "A password reset link has been sent to jane@hospital.co.ke." }
+```
+
+**`403`** — target out of reach. **`404`** — no such user.
+**`422`** — the account has no email address, so there is nowhere to send it.
+
+#### Role rank
+
+`manage users under their level` is decided by a single rank per role, so a new
+role slots in by being given a rank rather than by editing each controller.
+
+| Rank | Roles |
+| ---- | ----- |
+| 100 | `admin` |
+| 90 | `nesp`, `moh`, `cog` |
+| 80 | `payer`, `provider_portal`, `hmis` |
+| 50 | `vendor` |
+| 40 | `f_admin` (HRIO) |
+| 30 | `f_finance`, `f_practitioner` |
+| 20 | `f_equipment_user` |
+| 10 | `f_view_only` |
+
+A role may manage anything ranked **strictly below** it, so peers cannot manage
+each other. The exception is the system-admin tier, which keeps the run of the
+estate — including its own peers — exactly as before. `GET /users/roles` returns
+the resulting list for whoever is asking, so the frontend never hardcodes it.
 
 ---
 

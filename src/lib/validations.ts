@@ -13,6 +13,24 @@ export const loginSchema = z.object({
   remember: z.boolean().optional(),
 });
 
+/**
+ * Setting a new password from an emailed link. The API requires at least 8
+ * characters and its own confirmation, so both are checked here first rather
+ * than spending a round trip and a single-use token on a typo.
+ */
+export const resetPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(1, "Password is required")
+      .min(8, "Password must be at least 8 characters"),
+    password_confirmation: z.string().min(1, "Confirm your new password"),
+  })
+  .refine((data) => data.password === data.password_confirmation, {
+    message: "The passwords do not match",
+    path: ["password_confirmation"],
+  });
+
 export const forgotPasswordSchema = z.object({
   email: z
     .string()
@@ -103,6 +121,7 @@ export const serviceSchema = z.object({
 // Type exports
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 export type FacilityFormData = z.infer<typeof facilitySchema>;
 export type VendorFormData = z.infer<typeof vendorSchema>;
 export type ReportFormData = z.infer<typeof reportFormSchema>;

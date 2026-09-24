@@ -33,6 +33,11 @@ export interface UserInstitution {
 
 export interface AdminUser {
   id: string;
+  /**
+   * Whether the welcome mail carrying the set-your-password link was queued.
+   * False only when the account has no email address on file.
+   */
+  welcome_email_sent?: boolean;
   name?: string;
   email: string;
   phone?: string;
@@ -255,6 +260,22 @@ export const createUser = async (
 ): Promise<AdminUser> => {
   const response = await axios.post<{ data: AdminUser }>("/users", data);
   return response.data.data ?? (response.data as unknown as AdminUser);
+};
+
+/**
+ * POST /users/{id}/password-reset-link.
+ *
+ * Sends an existing account a fresh link, for someone who cannot get far
+ * enough to ask for one themselves — a new starter whose welcome mail bounced,
+ * or a colleague locked out. Reach is decided by role rank: the caller must
+ * outrank the target, so peers are out of reach and an HRIO cannot reset
+ * another HRIO.
+ */
+export const sendPasswordResetLink = async (
+  userId: string,
+): Promise<{ message?: string; data?: { email?: string } }> => {
+  const response = await axios.post(`/users/${userId}/password-reset-link`);
+  return response.data ?? {};
 };
 
 // PUT /users/{id}

@@ -115,6 +115,12 @@ export interface FacilityEquipmentDetail extends FacilityEquipmentListItem {
   status_history?: FacilityEquipmentStatusHistoryEntry[];
   /** Testing history, in the same shape every portal's detail payload uses. */
   worklist_tests?: WorklistTests | null;
+  /**
+   * Learned from the studies the device sends rather than from registration.
+   * StationName is how an engineer recognises a machine on site.
+   */
+  station_name?: string | null;
+  software_version?: string | null;
   created_at?: string;
   updated_at?: string;
 }

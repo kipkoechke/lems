@@ -302,6 +302,31 @@ function AdminEquipmentDetails() {
             <p className="text-slate-700 font-mono">
               {equipment.serial_number || "Not specified"}
             </p>
+            {/* Reported by the device on every study it sends, so these stay
+                true even when nothing useful was typed in at registration. */}
+            {(equipment.station_name || equipment.software_version) && (
+              <div className="flex flex-wrap gap-x-6 gap-y-1 mt-3 pt-3 border-t border-slate-100">
+                {equipment.station_name && (
+                  <div>
+                    <p className="text-xs text-slate-500">Station Name</p>
+                    <p className="text-sm text-slate-700 font-mono">
+                      {equipment.station_name}
+                    </p>
+                  </div>
+                )}
+                {equipment.software_version && (
+                  <div>
+                    <p className="text-xs text-slate-500">Software Version</p>
+                    <p className="text-sm text-slate-700 font-mono">
+                      {equipment.software_version}
+                    </p>
+                  </div>
+                )}
+                <p className="text-[11px] text-slate-400 self-end">
+                  Reported by the device
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Description Section */}

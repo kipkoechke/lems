@@ -186,10 +186,8 @@ export default function UnmatchedStudiesPage() {
             <Table className="w-full">
               <Table.Header>
                 <Table.Row>
-                  <Table.HeaderCell>Received</Table.HeaderCell>
-                  <Table.HeaderCell>Accession / Study</Table.HeaderCell>
-                  <Table.HeaderCell>Patient</Table.HeaderCell>
-                  <Table.HeaderCell>Referring Physician</Table.HeaderCell>
+                  <Table.HeaderCell>Patient / Accession</Table.HeaderCell>
+                  <Table.HeaderCell>Study</Table.HeaderCell>
                   <Table.HeaderCell>
                     <ColumnFilter
                       label="Modality"
@@ -203,9 +201,10 @@ export default function UnmatchedStudiesPage() {
                       searchable={false}
                     />
                   </Table.HeaderCell>
+                  <Table.HeaderCell>Body Part</Table.HeaderCell>
                   <Table.HeaderCell>
                     <ColumnFilter
-                      label="Reported By"
+                      label="Equipment"
                       options={ATTRIBUTION_OPTIONS}
                       value={attributed}
                       onChange={(value) => {
@@ -216,6 +215,7 @@ export default function UnmatchedStudiesPage() {
                       searchable={false}
                     />
                   </Table.HeaderCell>
+                  <Table.HeaderCell align="right">Received</Table.HeaderCell>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -230,21 +230,17 @@ export default function UnmatchedStudiesPage() {
                 ) : (
                   studies.map((study: UnmatchedStudy) => (
                     <Table.Row key={study.id}>
+                      {/* Patient and accession are what a study is looked up
+                          by, so they lead. The study UID identifies nothing to
+                          a human and is on the title instead. */}
                       <Table.Cell>
-                        <span className="text-xs text-slate-600">
-                          {formatDateTime(study.received_at)}
-                        </span>
-                        {study.performed_at && (
-                          <div
-                            className="text-[11px] text-slate-400"
-                            title="When the study was acquired, which need not be the day it arrived"
-                          >
-                            acquired {formatDateTime(study.performed_at)}
-                          </div>
-                        )}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <div className="font-mono text-xs text-slate-800">
+                        <div className="font-mono text-sm text-slate-800">
+                          {study.patient_id || "Unknown patient"}
+                        </div>
+                        <div
+                          className="font-mono text-[11px] text-slate-500"
+                          title={study.study_instance_uid || undefined}
+                        >
                           {study.accession_number || (
                             <span
                               className="text-slate-400"
@@ -254,45 +250,31 @@ export default function UnmatchedStudiesPage() {
                             </span>
                           )}
                         </div>
-                        {study.study_description && (
-                          <div className="text-xs text-slate-500">
-                            {study.study_description}
-                            {study.body_part ? ` · ${study.body_part}` : ""}
-                          </div>
-                        )}
-                        {study.study_instance_uid && (
-                          <div
-                            className="text-[11px] text-slate-400 font-mono truncate max-w-[18rem]"
-                            title={study.study_instance_uid}
-                          >
-                            {study.study_instance_uid}
-                          </div>
-                        )}
-                        {(study.series_count != null ||
-                          study.instance_count != null) && (
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="text-sm text-slate-700">
+                          {study.study_description || "-"}
+                        </div>
+                        {study.institution_name && (
                           <div className="text-[11px] text-slate-400">
-                            {study.series_count ?? "-"} series ·{" "}
-                            {study.instance_count ?? "-"} images
+                            {study.institution_name}
                           </div>
                         )}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="font-mono text-xs text-slate-700">
-                          {study.patient_id || "-"}
-                        </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-sm text-slate-700">
-                          {study.referring_physician || "-"}
-                        </span>
                       </Table.Cell>
                       <Table.Cell>
                         <span className="text-sm text-slate-700">
                           {study.modality || "-"}
                         </span>
-                        {study.institution_name && (
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm text-slate-700">
+                          {study.body_part || "-"}
+                        </span>
+                        {(study.series_count != null ||
+                          study.instance_count != null) && (
                           <div className="text-[11px] text-slate-400">
-                            {study.institution_name}
+                            {study.series_count ?? "-"} series ·{" "}
+                            {study.instance_count ?? "-"} images
                           </div>
                         )}
                       </Table.Cell>
@@ -303,17 +285,16 @@ export default function UnmatchedStudiesPage() {
                               {study.equipment.name || study.equipment.code}
                             </span>
                             <div className="text-[11px] text-slate-400">
-                              {[study.vendor?.name, study.facility?.name]
+                              {[
+                                station(study),
+                                study.vendor?.name,
+                                study.facility?.name,
+                              ]
                                 .filter(Boolean)
                                 .join(" · ") ||
                                 study.equipment.ae_title ||
                                 ""}
                             </div>
-                            {station(study) && (
-                              <div className="text-[11px] text-slate-400">
-                                {station(study)}
-                              </div>
-                            )}
                           </div>
                         ) : (
                           <div>
@@ -324,16 +305,31 @@ export default function UnmatchedStudiesPage() {
                               <FaExclamationTriangle className="w-3 h-3" />
                               Unattributed
                             </span>
-                            {study.source_ae_title && (
-                              <div className="text-[11px] text-slate-400 font-mono mt-1">
-                                sent as {study.source_ae_title}
-                              </div>
-                            )}
-                            {station(study) && (
-                              <div className="text-[11px] text-slate-400">
-                                {station(study)}
-                              </div>
-                            )}
+                            <div className="text-[11px] text-slate-400 mt-1">
+                              {[
+                                study.source_ae_title
+                                  ? `sent as ${study.source_ae_title}`
+                                  : null,
+                                station(study),
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </div>
+                          </div>
+                        )}
+                      </Table.Cell>
+                      {/* Timings are reference, not what the row is scanned
+                          for, so they sit last and right-aligned. */}
+                      <Table.Cell align="right">
+                        <div className="text-xs text-slate-600">
+                          {formatDateTime(study.received_at)}
+                        </div>
+                        {study.performed_at && (
+                          <div
+                            className="text-[11px] text-slate-400"
+                            title="When the study was acquired, which need not be the day it arrived"
+                          >
+                            acquired {formatDateTime(study.performed_at)}
                           </div>
                         )}
                       </Table.Cell>

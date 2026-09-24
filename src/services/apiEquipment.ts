@@ -141,6 +141,13 @@ export interface VendorEquipment {
   /** Ever seen on the network — a different question from `is_connected`. */
   linked?: boolean;
   last_seen_at?: string | null;
+  /**
+   * Learned from the studies the device sends, not from registration: the
+   * DICOM StationName is how an engineer recognises a machine on site, which
+   * matters when AE titles are generic or cryptic.
+   */
+  station_name?: string | null;
+  software_version?: string | null;
   connected_at?: string | null;
   facility?: VendorEquipmentFacility | null;
   worklist_tests?: WorklistTests | null;
@@ -666,6 +673,9 @@ export interface EquipmentDetail extends Partial<AdminEquipment> {
   dicom_host?: string | null;
   dicom_port?: number | null;
   worklist_tests?: WorklistTests | null;
+  /** Corrected from the studies the device sends — see VendorEquipment. */
+  station_name?: string | null;
+  software_version?: string | null;
 
   // Flat-shape fields: `/equipment/{id}` returns the connection details on the
   // equipment itself (`ae_title`, `host`, `dicom_port`), not under `dicom`.

@@ -4,6 +4,7 @@ import {
   createUser,
   deleteUser,
   getAssignableRoles,
+  sendPasswordResetLink,
   getUser,
   getUsers,
   updateUser,
@@ -46,6 +47,41 @@ export const useAssignableRoles = () => {
   return { roles: data?.data ?? [], scope: data?.scope, isLoading, error };
 };
 
+/**
+ * Email an account a fresh password reset link.
+ *
+ * Reach is decided server-side by role rank — the caller must outrank the
+ * target, and a facility admin must share its facility — so a 403 here means
+ * "not yours to reset" rather than a bug, and is reported as such.
+ */
+export const useSendPasswordResetLink = () => {
+  const { mutate, isPending } = useMutation({
+    mutationFn: (userId: string) => sendPasswordResetLink(userId),
+    onSuccess: (result) => {
+      toast.success(
+        result?.message ||
+          `A reset link is on its way to ${result?.data?.email ?? "them"}.`,
+      );
+    },
+    onError: (error: {
+      response?: { status?: number; data?: { message?: string } };
+    }) => {
+      const status = error?.response?.status;
+      if (status === 403) {
+        toast.error("You cannot reset the password of someone at your level or above.");
+        return;
+      }
+      if (status === 422) {
+        toast.error("That account has no email address, so there is nowhere to send it.");
+        return;
+      }
+      toast.error(error?.response?.data?.message || "Could not send the link");
+    },
+  });
+
+  return { sendResetLink: mutate, isSendingResetLink: isPending };
+};
+
 export const useUser = (userId: string) => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["user", userId],
@@ -61,8 +97,24 @@ export const useCreateUser = () => {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: UserCreateRequest) => createUser(data),
-    onSuccess: () => {
-      toast.success("User created successfully");
+    onSuccess: (user) => {
+      // No password is set or returned: the account is handed over by a
+      // welcome mail carrying a single-use link. Whether that mail went is
+      // the only thing worth reporting, because nobody can sign in until it
+      // arrives.
+      if (user?.welcome_email_sent === false) {
+        toast.error(
+          "Account created, but no welcome email could be sent — it has no email address. Send a reset link once one is on file.",
+          { duration: 8000 },
+        );
+      } else {
+        toast.success(
+          `Account created. A link to set their password has been emailed${
+            user?.email ? ` to ${user.email}` : ""
+          }.`,
+          { duration: 6000 },
+        );
+      }
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>

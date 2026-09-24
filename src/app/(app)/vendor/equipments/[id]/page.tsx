@@ -136,6 +136,10 @@ function VendorEquipmentDetailContent() {
     { label: "Serial Number", value: equipment.serial_number },
     { label: "Model", value: equipment.model },
     { label: "Brand", value: equipment.brand },
+    // Reported by the device itself on every study, so these stay true even
+    // when nothing useful was typed in at registration.
+    { label: "Station Name", value: equipment.station_name },
+    { label: "Software Version", value: equipment.software_version },
   ];
 
   const dicomFields = [

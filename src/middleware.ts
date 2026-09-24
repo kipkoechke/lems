@@ -2,7 +2,14 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Define public routes that don't require authentication
-const publicRoutes = ["/login", "/register", "/forgot-password"];
+// /reset-password is where the emailed link lands, and whoever follows it is
+// by definition signed out.
+const publicRoutes = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+];
 
 // Define API routes that should be excluded from middleware
 const apiRoutes = ["/api"];

@@ -88,6 +88,10 @@ export default function FacilityEquipmentDetail({ id }: { id: string }) {
     { label: "Category", value: equipment.category_label || equipment.category },
     { label: "Modality", value: equipment.modality },
     { label: "Manufacture Date", value: formatDate(equipment.manufacture_date) },
+    // Reported by the device itself on every study, so these stay true even
+    // when nothing useful was typed in at registration.
+    { label: "Station Name", value: equipment.station_name },
+    { label: "Software Version", value: equipment.software_version },
   ];
 
   const connection: { label: string; value?: string | null }[] = [

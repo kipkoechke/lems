@@ -317,3 +317,51 @@ export const fetchUserProfile = async (): Promise<User> => {
   const response = await axios.get("/auth/me");
   return response.data;
 };
+
+// ============================================================
+// Passwords
+// ============================================================
+//
+// Accounts are handed over by email, never with a password: a new user is
+// issued a random one nobody is told, and the welcome mail carries a
+// single-use link to set their own. The same mechanism serves anyone who has
+// forgotten theirs later. Links point at /reset-password?token=…&email=… and
+// last 24 hours.
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  email: string;
+  token: string;
+  password: string;
+  password_confirmation: string;
+}
+
+/**
+ * POST /auth/forgot-password — public.
+ *
+ * Answers identically whether or not the address is registered, so the UI must
+ * not claim the account exists either. Throttled to three per address per
+ * minute, which surfaces as a 429.
+ */
+export const requestPasswordReset = async (
+  data: ForgotPasswordPayload,
+): Promise<{ message?: string }> => {
+  const response = await axios.post("/auth/forgot-password", data);
+  return response.data ?? {};
+};
+
+/**
+ * POST /auth/reset-password — public.
+ *
+ * A 422 here is ordinary rather than exceptional: the link has expired, has
+ * already been used, or was truncated by a mail client.
+ */
+export const resetPassword = async (
+  data: ResetPasswordPayload,
+): Promise<{ message?: string }> => {
+  const response = await axios.post("/auth/reset-password", data);
+  return response.data ?? {};
+};

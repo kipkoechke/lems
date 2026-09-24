@@ -39,6 +39,14 @@ otherwise. Full request/response detail lives in `docs/api-reference.md`.
 | 21 | Result callback now sends the reporting AE title | Fixed |
 | 22 | Pixel descriptors resolved from Orthanc | New |
 | 23 | Studies with no accession number are no longer discarded | Fixed |
+| 24 | Retention: studies pruned from Orthanc once captured | New |
+| 25 | Accounts handed over by email; no shared default password | New |
+| 26 | Password reset, self-service and admin-sent | New |
+| 27 | Role rank drives who can manage whom | New |
+| 25 | Accounts handed over by email; no shared default password | New |
+| 26 | Password reset, self-service and admin-sent | New |
+| 27 | Role rank drives who can manage whom | New |
+| 28 | Equipment records learn what they are from the devices themselves | New |
 
 ---
 
@@ -533,6 +541,142 @@ duplicates), and one with neither identifier is refused with `422`.
 > Pixel data is stripped, so each is small, but this is unbounded growth rather
 > than the previous delete-on-arrival. Worth pointing Orthanc's own housekeeping
 > at old studies if the volume warrants it.
+
+## 24. New — retention: studies are pruned from Orthanc once captured
+
+VEMS never stores images. What a study leaves behind in Orthanc after the result
+callback is a **metadata-only** record — the pixel data is stripped on arrival.
+That record still lingered indefinitely, so the delete half of
+*store → extract → delete* was missing.
+
+```bash
+# Remove studies captured more than 48 hours ago (the default)
+php artisan vems:prune-orthanc-studies
+
+# Move the grace period, bound a run, or see what would go
+php artisan vems:prune-orthanc-studies --hours=6
+php artisan vems:prune-orthanc-studies --limit=100
+php artisan vems:prune-orthanc-studies --dry-run
+```
+
+A study is only removed when **all** of the following hold:
+
+- VEMS already holds it — an ordered worklist with a result, or an unmatched
+  (non-SHA) study;
+- `study_instance_uid` is known, so there is something to delete by;
+- it is older than the grace period;
+- it has not already been pruned.
+
+Each row is marked with `orthanc_pruned_at`, so a run is idempotent and never
+re-scans the same studies. A study Orthanc no longer has is marked too — it is
+already in the state we want.
+
+Scheduled daily at 03:30.
+
+**The full lifecycle, end to end:**
+
+1. The modality sends a study; Orthanc writes it to disk (seconds).
+2. `on-stable-study.lua` notifies VEMS, and the result callback **strips the
+   pixel data immediately** — no images survive.
+3. Daily, `vems:prune-orthanc-studies` **deletes the metadata-only study** from
+   Orthanc.
+4. VEMS keeps the metadata forever; Orthanc holds nothing.
+
+The only field that needs the instances to still be present at capture time is
+`series_count` / `instance_count` — a study's extent is not knowable from a
+single instance — which is why the delete is a separate, later step rather than
+happening on arrival.
+
+## 25. New — accounts are handed over by email
+
+`POST /users` used to create every account with the **same literal password**,
+`password123!`. Nobody was told, nobody changed it, and it was in the source.
+
+Now the account is issued a random 32-character password that nobody knows — not
+even the caller — and a **welcome email** is queued with a single-use link to set
+their own. The response reports `welcome_email_sent`.
+
+Both mails are queued; no request waits on a mail server. The queue worker must
+be running (it is, under supervisor).
+
+## 26. New — password reset
+
+| Endpoint | Who |
+| -------- | --- |
+| `POST /auth/forgot-password` | public — anyone who has forgotten theirs |
+| `POST /auth/reset-password` | public — the other end of the link |
+| `POST /users/{user}/password-reset-link` | an admin or HRIO, for someone else |
+
+`forgot-password` answers **identically whether or not the address is
+registered**, so it cannot be used to discover who has an account, and is
+throttled to three per address per minute.
+
+Links point at `{FRONTEND_URL}/reset-password?token=...&email=...` — a new
+`FRONTEND_URL` env var, falling back to `APP_URL`. They are valid for
+`PASSWORD_RESET_EXPIRE_MINUTES`, **1440 (24 hours) by default** rather than
+Laravel's 60, because an invitation that arrives on a Friday would otherwise be
+dead by Monday. Each link works once.
+
+**Emails.** Two queued mailables, each with an HTML and a plain-text part, on a
+single shared layout: dark masthead, a clear single call to action, the link
+repeated as copyable text, how long it lasts, and what to do if the mail was not
+expected. Plain-text parts deliberately do **not** escape the URL — `&` would
+arrive as `&amp;` and a copied link would break.
+
+## 27. New — role rank decides who can manage whom
+
+"Manage users under their level" is now a single ordering on `UserRole`, not a
+hand-written list in a controller.
+
+| Rank | Roles |
+| ---- | ----- |
+| 100 | `admin` |
+| 90 | `nesp`, `moh`, `cog` |
+| 80 | `payer`, `provider_portal`, `hmis` |
+| 50 | `vendor` |
+| 40 | `f_admin` (HRIO) |
+| 30 | `f_finance`, `f_practitioner` |
+| 20 | `f_equipment_user` |
+| 10 | `f_view_only` |
+
+A role may manage anything strictly below it, so peers cannot manage each other
+— an HRIO cannot appoint or reset another HRIO. The system-admin tier keeps the
+run of the estate exactly as before.
+
+**No behaviour change today:** the facility-admin set is identical to what the
+hand-written list produced, and the system-admin path is untouched. When an
+equipment-admin tier is wanted, it needs a rank and nothing else.
+
+## 28. New — equipment records learn what they are from the devices themselves
+
+A DICOM instance states who built the device, its model, its serial number, the
+name it answers to and the software it runs. That is better evidence than
+whatever was typed in when the machine was registered — often nothing — so every
+study now corrects the record it came from.
+
+| Equipment column | Source | Rule |
+| ---------------- | ------ | ---- |
+| `brand` | `Manufacturer` | Corrected when it differs |
+| `model` | `ManufacturerModelName` | Corrected when it differs |
+| `serial_number` | `DeviceSerialNumber` | Corrected, unless another machine already holds it |
+| `station_name` | `StationName` | Kept current |
+| `software_version` | `SoftwareVersions` | Kept current |
+
+`station_name` and `software_version` are **new columns**. The DICOM StationName
+is how an engineer recognises a machine on site and is stable per device, which
+matters when AE titles are generic (`KNH`) or cryptic.
+
+Every change is logged with its previous value, so a surprising correction can be
+traced. A serial number another machine already answers to is **reported, not
+written** — that is either a duplicate registration or a typo, and both need a
+human.
+
+Only a machine VEMS resolved from the reporting AE title is touched: a study we
+cannot attribute teaches us nothing about our estate.
+
+> Requires the `on-stable-study.lua` redeploy — it now also sends `model`,
+> `serial_number` and `software_version`. Until then, `brand` and `station_name`
+> still fill in from tags that were already being sent.
 
 ---
 
