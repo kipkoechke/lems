@@ -27,6 +27,7 @@ import type { Booking } from "@/types/booking";
 import { facilityDashboardFilters } from "./facilityDashboardQuery";
 import { ConnectivityCard } from "@/components/common/ConnectivityCard";
 import { getFacilityDashboard } from "@/services/apiFacilityDashboard";
+import { unmatchedStudyCount } from "@/services/apiDashboard";
 
 const STATUS_BADGE: Record<string, string> = {
   active: "bg-blue-50 text-blue-700 border-blue-200",
@@ -236,7 +237,7 @@ export default function FacilityDashboard() {
         </div>
 
         {/* Studies that arrived with no order behind them */}
-        {!!dashboard?.unmatched_studies && (
+        {unmatchedStudyCount(dashboard?.unmatched_studies) > 0 && (
           <button
             onClick={() => router.push("/studies/unmatched")}
             className="w-full flex items-center gap-3 bg-white rounded-lg border border-amber-200 px-4 py-3 text-left hover:bg-amber-50 transition-colors"
@@ -244,8 +245,13 @@ export default function FacilityDashboard() {
             <FaXRay className="w-4 h-4 text-amber-600 shrink-0" />
             <div>
               <p className="text-sm font-medium text-slate-900">
-                {dashboard.unmatched_studies.toLocaleString()} non-SHA stud
-                {dashboard.unmatched_studies === 1 ? "y" : "ies"}
+                {unmatchedStudyCount(
+                  dashboard?.unmatched_studies,
+                ).toLocaleString()}{" "}
+                non-SHA stud
+                {unmatchedStudyCount(dashboard?.unmatched_studies) === 1
+                  ? "y"
+                  : "ies"}
               </p>
               <p className="text-xs text-slate-500">
                 Reached your machines with no VEMS order behind them

@@ -19,8 +19,15 @@ export interface DashboardCounts {
   equipment_by_owner: EquipmentByOwner;
   equipment_by_linkage?: EquipmentByLinkage;
   equipment_connectivity?: EquipmentConnectivity;
-  /** Studies that arrived with no VEMS order behind them. */
-  unmatched_studies?: number;
+  /**
+   * Studies that arrived with no VEMS order behind them.
+   *
+   * The changelog describes a bare count, but the deployed API answers with
+   * the listing's summary block. Read it through `unmatchedStudyCount()`
+   * rather than rendering it directly — an object lands on the page as
+   * "[object Object]".
+   */
+  unmatched_studies?: number | UnmatchedStudiesCount;
   total_facilities: number;
   completed_studies: number;
   active_worklists: number;
@@ -80,6 +87,22 @@ export interface BookingTrend {
   total: number;
   points: BookingTrendPoint[];
 }
+
+/** The summary block some deployments send in place of a bare count. */
+export interface UnmatchedStudiesCount {
+  total?: number;
+  this_month?: number;
+  unattributed?: number;
+  latest_received_at?: string | null;
+}
+
+/** The headline figure, whichever shape the API sent. */
+export const unmatchedStudyCount = (
+  value?: number | UnmatchedStudiesCount | null,
+): number => {
+  if (typeof value === "number") return value;
+  return value?.total ?? 0;
+};
 
 export interface DashboardFilterOption {
   value: string;

@@ -30,6 +30,7 @@ import { useDashboard } from "./useDashboard";
 import { DashboardSkeleton } from "@/components/common/Skeleton";
 import { ConnectivityCard } from "@/components/common/ConnectivityCard";
 import { useRouter } from "next/navigation";
+import { unmatchedStudyCount } from "@/services/apiDashboard";
 import type {
   DashboardAvailableFilters,
   DashboardParams,
@@ -623,7 +624,7 @@ export default function BookingTrends() {
             className="lg:col-span-2"
           />
 
-          {!!counts.unmatched_studies && (
+          {unmatchedStudyCount(counts.unmatched_studies) > 0 && (
             <button
               onClick={() => router.push("/studies/unmatched")}
               className="bg-white rounded-lg border border-amber-200 p-4 text-left hover:bg-amber-50 transition-colors"
@@ -632,7 +633,7 @@ export default function BookingTrends() {
                 Non-SHA Studies
               </p>
               <p className="text-2xl font-bold text-amber-600">
-                {counts.unmatched_studies.toLocaleString()}
+                {unmatchedStudyCount(counts.unmatched_studies).toLocaleString()}
               </p>
               <p className="text-xs text-slate-500 mt-1">
                 Studies that arrived with no VEMS order behind them

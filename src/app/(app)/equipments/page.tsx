@@ -279,9 +279,7 @@ function AdminEquipmentsView() {
           <Table className="w-full">
             <Table.Header>
               <Table.Row>
-                <Table.HeaderCell>Code</Table.HeaderCell>
-                <Table.HeaderCell>Name</Table.HeaderCell>
-                <Table.HeaderCell>Category</Table.HeaderCell>
+                <Table.HeaderCell>Equipment</Table.HeaderCell>
                 <Table.HeaderCell>
                   <ColumnFilter
                     label="Status"
@@ -325,6 +323,9 @@ function AdminEquipmentsView() {
                     allLabel="All Modalities"
                     searchPlaceholder="Search modality..."
                   />
+                  <span className="block text-[11px] font-normal text-slate-400 normal-case">
+                    and category
+                  </span>
                 </Table.HeaderCell>
                 <Table.HeaderCell>Vendor</Table.HeaderCell>
                 <Table.HeaderCell align="center">Actions</Table.HeaderCell>
@@ -332,25 +333,24 @@ function AdminEquipmentsView() {
             </Table.Header>
             <Table.Body>
               {equipments.length === 0 ? (
-                <Table.Empty colSpan={8}>No equipment found</Table.Empty>
+                <Table.Empty colSpan={6}>No equipment found</Table.Empty>
               ) : (
                 equipments.map((eq: AdminEquipment) => (
                   <Table.Row key={eq.id}>
-                    <Table.Cell>
-                      <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
-                        {eq.code}
-                      </span>
-                    </Table.Cell>
+                    {/* Code, name and serial are one identity, so they share
+                        a cell rather than costing three columns. */}
                     <Table.Cell>
                       <div className="font-medium text-slate-900">{eq.name}</div>
-                      {eq.serial_number && (
-                        <div className="text-xs text-slate-500 font-mono">
-                          S/N: {eq.serial_number}
-                        </div>
-                      )}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">{eq.category_label}</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
+                          {eq.code}
+                        </span>
+                        {eq.serial_number && (
+                          <span className="text-[11px] text-slate-400 font-mono truncate">
+                            S/N {eq.serial_number}
+                          </span>
+                        )}
+                      </div>
                     </Table.Cell>
                     <Table.Cell>
                       <span
@@ -374,6 +374,11 @@ function AdminEquipmentsView() {
                       <span className="text-sm text-slate-700">
                         {modalityLabel(eq.modality)}
                       </span>
+                      {eq.category_label && (
+                        <div className="text-[11px] text-slate-400">
+                          {eq.category_label}
+                        </div>
+                      )}
                     </Table.Cell>
                     <Table.Cell>
                       {eq.vendor?.name ? (

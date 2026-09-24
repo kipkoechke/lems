@@ -32,6 +32,7 @@ import { useVendorDashboard } from "@/features/vendors/useVendorDashboard";
 import { VendorDashboardFilters } from "@/services/apiVendorDashboard";
 import StatCard from "@/components/common/StatCard";
 import { ConnectivityCard } from "@/components/common/ConnectivityCard";
+import { unmatchedStudyCount } from "@/services/apiDashboard";
 import { useRouter } from "next/navigation";
 import { ErrorState } from "@/components/common/ErrorState";
 
@@ -523,7 +524,7 @@ const VendorDashboard: React.FC = () => {
           className="lg:col-span-2"
         />
 
-        {!!dashboard?.unmatched_studies && (
+        {unmatchedStudyCount(dashboard?.unmatched_studies) > 0 && (
           <button
             onClick={() => router.push("/studies/unmatched")}
             className="bg-white rounded-lg border border-amber-200 p-4 text-left hover:bg-amber-50 transition-colors"
@@ -532,7 +533,7 @@ const VendorDashboard: React.FC = () => {
               Non-SHA Studies
             </p>
             <p className="text-2xl font-bold text-amber-600">
-              {dashboard.unmatched_studies.toLocaleString()}
+              {unmatchedStudyCount(dashboard?.unmatched_studies).toLocaleString()}
             </p>
             <p className="text-xs text-slate-500 mt-1">
               Arrived on your machines with no VEMS order behind them

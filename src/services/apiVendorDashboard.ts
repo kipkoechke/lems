@@ -1,5 +1,6 @@
 import axios from "../lib/axios";
 import type { EquipmentConnectivity } from "./apiConnectivity";
+import type { UnmatchedStudiesCount } from "./apiDashboard";
 
 // =============================================
 // Vendor Dashboard API Types — matched to live API response
@@ -75,8 +76,12 @@ export interface VendorDashboardResponse {
   patients?: { unique_count: number };
   services?: { count: number; list: { id: string; code: string; name: string }[] };
   trendline?: VendorDashboardTrendlineStats;
-  /** Studies that arrived on this vendor's machines with no VEMS order. */
-  unmatched_studies?: number;
+  /**
+   * Studies that arrived on this vendor's machines with no VEMS order.
+   * May be a bare count or the listing's summary block — read it through
+   * `unmatchedStudyCount()`.
+   */
+  unmatched_studies?: number | UnmatchedStudiesCount;
 }
 
 // Filter params for vendor dashboard

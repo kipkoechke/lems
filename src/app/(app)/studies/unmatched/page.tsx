@@ -26,6 +26,10 @@ const ATTRIBUTION_OPTIONS = [
   { value: "false", label: "Unattributed" },
 ];
 
+/** Manufacturer and station, as one line when either is present. */
+const station = (study: UnmatchedStudy) =>
+  [study.manufacturer, study.station_name].filter(Boolean).join(" ");
+
 const formatDateTime = (value?: string | null) =>
   value
     ? new Date(value).toLocaleString("en-GB", {
@@ -212,14 +216,13 @@ export default function UnmatchedStudiesPage() {
                       searchable={false}
                     />
                   </Table.HeaderCell>
-                  <Table.HeaderCell>Extent</Table.HeaderCell>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
                 {isLoading ? (
-                  <Table.Loading colSpan={7} rows={8} />
+                  <Table.Loading colSpan={6} rows={8} />
                 ) : studies.length === 0 ? (
-                  <Table.Empty colSpan={7}>
+                  <Table.Empty colSpan={6}>
                     {search.term || period || modality || attributed
                       ? "No studies match these filters."
                       : "No studies have arrived without an order."}
@@ -265,6 +268,13 @@ export default function UnmatchedStudiesPage() {
                             {study.study_instance_uid}
                           </div>
                         )}
+                        {(study.series_count != null ||
+                          study.instance_count != null) && (
+                          <div className="text-[11px] text-slate-400">
+                            {study.series_count ?? "-"} series ·{" "}
+                            {study.instance_count ?? "-"} images
+                          </div>
+                        )}
                       </Table.Cell>
                       <Table.Cell>
                         <span className="font-mono text-xs text-slate-700">
@@ -293,15 +303,17 @@ export default function UnmatchedStudiesPage() {
                               {study.equipment.name || study.equipment.code}
                             </span>
                             <div className="text-[11px] text-slate-400">
-                              {[
-                                study.vendor?.name,
-                                study.facility?.name,
-                              ]
+                              {[study.vendor?.name, study.facility?.name]
                                 .filter(Boolean)
                                 .join(" · ") ||
                                 study.equipment.ae_title ||
                                 ""}
                             </div>
+                            {station(study) && (
+                              <div className="text-[11px] text-slate-400">
+                                {station(study)}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div>
@@ -317,19 +329,11 @@ export default function UnmatchedStudiesPage() {
                                 sent as {study.source_ae_title}
                               </div>
                             )}
-                          </div>
-                        )}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-xs text-slate-600">
-                          {study.series_count ?? "-"} series ·{" "}
-                          {study.instance_count ?? "-"} images
-                        </span>
-                        {study.station_name && (
-                          <div className="text-[11px] text-slate-400">
-                            {[study.manufacturer, study.station_name]
-                              .filter(Boolean)
-                              .join(" ")}
+                            {station(study) && (
+                              <div className="text-[11px] text-slate-400">
+                                {station(study)}
+                              </div>
+                            )}
                           </div>
                         )}
                       </Table.Cell>

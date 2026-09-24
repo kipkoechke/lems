@@ -1,5 +1,6 @@
 import axios from "../lib/axios";
 import type { EquipmentConnectivity } from "./apiConnectivity";
+import type { UnmatchedStudiesCount } from "./apiDashboard";
 
 /**
  * Facility Portal — dashboard (`GET /facility/dashboard`).
@@ -71,8 +72,12 @@ export interface FacilityDashboardResponse {
   services: FacilityDashboardServices;
   revenue: FacilityDashboardRevenue;
   bookings: FacilityDashboardBookings;
-  /** Studies that arrived on this facility's machines with no order. */
-  unmatched_studies?: number;
+  /**
+   * Studies that arrived on this facility's machines with no order. May be a
+   * bare count or the listing's summary block — read it through
+   * `unmatchedStudyCount()`.
+   */
+  unmatched_studies?: number | UnmatchedStudiesCount;
 }
 
 // GET /facility/dashboard

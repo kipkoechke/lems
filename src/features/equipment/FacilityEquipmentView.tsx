@@ -223,8 +223,7 @@ export default function FacilityEquipmentView() {
             <Table className="w-full">
               <Table.Header>
                 <Table.Row>
-                  <Table.HeaderCell>Code</Table.HeaderCell>
-                  <Table.HeaderCell>Name</Table.HeaderCell>
+                  <Table.HeaderCell>Equipment</Table.HeaderCell>
                   <Table.HeaderCell>
                     <ColumnFilter
                       label="Status"
@@ -239,19 +238,20 @@ export default function FacilityEquipmentView() {
                     />
                   </Table.HeaderCell>
                   <Table.HeaderCell>
-                  <ColumnFilter
-                    label="Connection"
-                    options={availableFilters?.linked ?? LINKED_OPTIONS}
-                    value={linked}
-                    onChange={(v) => {
-                      setLinked(v);
-                      setPage(1);
-                    }}
-                    allLabel="All Devices"
-                    searchable={false}
-                  />
-                </Table.HeaderCell>
+                    <ColumnFilter
+                      label="Connection"
+                      options={availableFilters?.linked ?? LINKED_OPTIONS}
+                      value={linked}
+                      onChange={(v) => {
+                        setLinked(v);
+                        setPage(1);
+                      }}
+                      allLabel="All Devices"
+                      searchable={false}
+                    />
+                  </Table.HeaderCell>
                   <Table.HeaderCell>
+                    <div className="flex flex-col items-start gap-1">
                     <ColumnFilter
                       label="Modality"
                       options={modalityOptions}
@@ -263,6 +263,18 @@ export default function FacilityEquipmentView() {
                       allLabel="All Modalities"
                       searchPlaceholder="Search modality..."
                     />
+                    <ColumnFilter
+                      label="Category"
+                      options={availableFilters?.category ?? []}
+                      value={category}
+                      onChange={(v) => {
+                        setCategory(v);
+                        setPage(1);
+                      }}
+                      allLabel="All Categories"
+                      searchPlaceholder="Search category..."
+                    />
+                    </div>
                   </Table.HeaderCell>
                   <Table.HeaderCell>
                     <ColumnFilter
@@ -276,28 +288,17 @@ export default function FacilityEquipmentView() {
                       allLabel="All Equipment"
                       searchable={false}
                     />
+                    <span className="block text-[11px] font-normal text-slate-400 normal-case">
+                      and services
+                    </span>
                   </Table.HeaderCell>
-                  <Table.HeaderCell>
-                    <ColumnFilter
-                      label="Category"
-                      options={availableFilters?.category ?? []}
-                      value={category}
-                      onChange={(v) => {
-                        setCategory(v);
-                        setPage(1);
-                      }}
-                      allLabel="All Categories"
-                      searchPlaceholder="Search category..."
-                    />
-                  </Table.HeaderCell>
-                  <Table.HeaderCell>Services</Table.HeaderCell>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
                 {isLoading ? (
-                  <Table.Loading colSpan={8} rows={6} />
+                  <Table.Loading colSpan={5} rows={6} />
                 ) : equipments.length === 0 ? (
-                  <Table.Empty colSpan={8}>
+                  <Table.Empty colSpan={5}>
                     {search.term ||
                     status ||
                     modality ||
@@ -315,21 +316,21 @@ export default function FacilityEquipmentView() {
                         router.push(`/equipments/${equipment.id}`)
                       }
                     >
-                      <Table.Cell>
-                        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
-                          {equipment.code}
-                        </span>
-                      </Table.Cell>
+                      {/* Code, name and make are one identity, so they share
+                          a cell rather than costing two columns. */}
                       <Table.Cell>
                         <div className="font-medium text-slate-900">
                           {equipment.name}
                         </div>
-                        <div className="text-xs text-slate-500">
-                          {[equipment.brand, equipment.model]
-                            .filter(Boolean)
-                            .join(" ") ||
-                            equipment.category_label ||
-                            label(equipment.category)}
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
+                            {equipment.code}
+                          </span>
+                          <span className="text-[11px] text-slate-400 truncate">
+                            {[equipment.brand, equipment.model]
+                              .filter(Boolean)
+                              .join(" ")}
+                          </span>
                         </div>
                       </Table.Cell>
                       <Table.Cell>
@@ -354,7 +355,14 @@ export default function FacilityEquipmentView() {
                           stacked
                         />
                       </Table.Cell>
-                      <Table.Cell>{equipment.modality || "-"}</Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm text-slate-700">
+                          {equipment.modality || "-"}
+                        </span>
+                        <div className="text-[11px] text-slate-400">
+                          {equipment.category_label || label(equipment.category)}
+                        </div>
+                      </Table.Cell>
                       <Table.Cell>
                         {equipment.ownership_type === "vendor" ? (
                           <div>
@@ -370,14 +378,12 @@ export default function FacilityEquipmentView() {
                             <FaBuilding className="w-3 h-3" /> Facility
                           </span>
                         )}
-                      </Table.Cell>
-                      <Table.Cell>
-                        {equipment.category_label || label(equipment.category)}
-                      </Table.Cell>
-                      <Table.Cell>
-                        {equipment.mapped_services_count ??
-                          equipment.mapped_services?.length ??
-                          0}
+                        <div className="text-[11px] text-slate-400 mt-1">
+                          {equipment.mapped_services_count ??
+                            equipment.mapped_services?.length ??
+                            0}{" "}
+                          service(s)
+                        </div>
                       </Table.Cell>
                     </Table.Row>
                   ))

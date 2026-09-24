@@ -174,8 +174,7 @@ function VendorEquipmentsContent() {
           <Table className="w-full table-fixed">
             <Table.Header>
               <Table.Row>
-                <Table.HeaderCell className="w-40">Code</Table.HeaderCell>
-                <Table.HeaderCell>Name</Table.HeaderCell>
+                <Table.HeaderCell>Equipment</Table.HeaderCell>
                 <Table.HeaderCell>
                   <ColumnFilter
                     label="Status"
@@ -192,7 +191,6 @@ function VendorEquipmentsContent() {
                 <Table.HeaderCell className="w-36">
                   Connection
                 </Table.HeaderCell>
-                <Table.HeaderCell className="w-48">Category</Table.HeaderCell>
                 <Table.HeaderCell className="w-32">
                   <ColumnFilter
                     label="Modality"
@@ -202,6 +200,9 @@ function VendorEquipmentsContent() {
                     allLabel="All Modalities"
                     searchPlaceholder="Search modality..."
                   />
+                  <span className="block text-[11px] font-normal text-slate-400 normal-case">
+                    and category
+                  </span>
                 </Table.HeaderCell>
                 <Table.HeaderCell className="w-24" align="center">
                   Actions
@@ -210,7 +211,7 @@ function VendorEquipmentsContent() {
             </Table.Header>
             <Table.Body>
               {filtered.length === 0 ? (
-                <Table.Empty colSpan={7}>
+                <Table.Empty colSpan={5}>
                   {search.isSearching || status || modality
                     ? "No equipment matches your criteria"
                     : "No equipment yet. Add your first item to get started."}
@@ -218,11 +219,8 @@ function VendorEquipmentsContent() {
               ) : (
                 filtered.map((eq) => (
                   <Table.Row key={eq.id}>
-                    <Table.Cell>
-                      <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
-                        {eq.code}
-                      </span>
-                    </Table.Cell>
+                    {/* Code, name and serial are one identity, so they share
+                        a cell rather than costing two columns. */}
                     <Table.Cell>
                       <div
                         className="font-medium text-slate-900 truncate"
@@ -230,11 +228,16 @@ function VendorEquipmentsContent() {
                       >
                         {eq.name}
                       </div>
-                      {eq.serial_number && (
-                        <div className="text-xs text-slate-500 font-mono truncate">
-                          S/N: {eq.serial_number}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
+                          {eq.code}
+                        </span>
+                        {eq.serial_number && (
+                          <span className="text-[11px] text-slate-400 font-mono truncate">
+                            S/N {eq.serial_number}
+                          </span>
+                        )}
+                      </div>
                     </Table.Cell>
                     <Table.Cell>
                       <span
@@ -260,14 +263,14 @@ function VendorEquipmentsContent() {
                       />
                     </Table.Cell>
                     <Table.Cell>
-                      <span className="text-sm text-slate-700 block truncate">
-                        {eq.category_label}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
                       <span className="text-sm text-slate-700">
                         {eq.modality || "-"}
                       </span>
+                      {eq.category_label && (
+                        <div className="text-[11px] text-slate-400 truncate">
+                          {eq.category_label}
+                        </div>
+                      )}
                     </Table.Cell>
                     <Table.Cell align="center">
                       <ActionMenu menuId={`my-equipment-${eq.id}`}>
