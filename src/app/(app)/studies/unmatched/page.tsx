@@ -185,6 +185,7 @@ export default function UnmatchedStudiesPage() {
                   <Table.HeaderCell>Received</Table.HeaderCell>
                   <Table.HeaderCell>Accession / Study</Table.HeaderCell>
                   <Table.HeaderCell>Patient</Table.HeaderCell>
+                  <Table.HeaderCell>Referring Physician</Table.HeaderCell>
                   <Table.HeaderCell>
                     <ColumnFilter
                       label="Modality"
@@ -216,9 +217,9 @@ export default function UnmatchedStudiesPage() {
               </Table.Header>
               <Table.Body>
                 {isLoading ? (
-                  <Table.Loading colSpan={6} rows={8} />
+                  <Table.Loading colSpan={7} rows={8} />
                 ) : studies.length === 0 ? (
-                  <Table.Empty colSpan={6}>
+                  <Table.Empty colSpan={7}>
                     {search.term || period || modality || attributed
                       ? "No studies match these filters."
                       : "No studies have arrived without an order."}
@@ -269,11 +270,11 @@ export default function UnmatchedStudiesPage() {
                         <span className="font-mono text-xs text-slate-700">
                           {study.patient_id || "-"}
                         </span>
-                        {study.referring_physician && (
-                          <div className="text-[11px] text-slate-400">
-                            ref. {study.referring_physician}
-                          </div>
-                        )}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm text-slate-700">
+                          {study.referring_physician || "-"}
+                        </span>
                       </Table.Cell>
                       <Table.Cell>
                         <span className="text-sm text-slate-700">

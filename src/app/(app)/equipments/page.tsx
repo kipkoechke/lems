@@ -284,25 +284,6 @@ function AdminEquipmentsView() {
                 <Table.HeaderCell>Category</Table.HeaderCell>
                 <Table.HeaderCell>
                   <ColumnFilter
-                    label="Modality"
-                    options={
-                      availableFilters?.modalities?.map((m) => ({
-                        value: m.code,
-                        label: m.label,
-                      })) ?? []
-                    }
-                    value={modalityFilter}
-                    onChange={(v) => {
-                      setModalityFilter(v);
-                      setPage(1);
-                    }}
-                    allLabel="All Modalities"
-                    searchPlaceholder="Search modality..."
-                  />
-                </Table.HeaderCell>
-                <Table.HeaderCell>Vendor</Table.HeaderCell>
-                <Table.HeaderCell>
-                  <ColumnFilter
                     label="Status"
                     options={STATUS_FILTER_OPTIONS}
                     value={statusFilter}
@@ -327,6 +308,25 @@ function AdminEquipmentsView() {
                     searchable={false}
                   />
                 </Table.HeaderCell>
+                <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Modality"
+                    options={
+                      availableFilters?.modalities?.map((m) => ({
+                        value: m.code,
+                        label: m.label,
+                      })) ?? []
+                    }
+                    value={modalityFilter}
+                    onChange={(v) => {
+                      setModalityFilter(v);
+                      setPage(1);
+                    }}
+                    allLabel="All Modalities"
+                    searchPlaceholder="Search modality..."
+                  />
+                </Table.HeaderCell>
+                <Table.HeaderCell>Vendor</Table.HeaderCell>
                 <Table.HeaderCell align="center">Actions</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
@@ -353,24 +353,6 @@ function AdminEquipmentsView() {
                       <span className="text-sm text-slate-700">{eq.category_label}</span>
                     </Table.Cell>
                     <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {modalityLabel(eq.modality)}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      {eq.vendor?.name ? (
-                        <span className="text-sm text-slate-700">
-                          {eq.vendor.name}
-                        </span>
-                      ) : (
-                        // Discovered devices arrive unowned rather than under
-                        // a placeholder vendor.
-                        <span className="text-xs text-slate-400">
-                          Unassigned
-                        </span>
-                      )}
-                    </Table.Cell>
-                    <Table.Cell>
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
                           STATUS_BADGE[eq.status] ?? "bg-slate-50 text-slate-700 border-slate-200"
@@ -387,6 +369,24 @@ function AdminEquipmentsView() {
                         lastSeenAt={eq.dicom?.last_seen_at}
                         stacked
                       />
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-sm text-slate-700">
+                        {modalityLabel(eq.modality)}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      {eq.vendor?.name ? (
+                        <span className="text-sm text-slate-700">
+                          {eq.vendor.name}
+                        </span>
+                      ) : (
+                        // Discovered devices arrive unowned rather than under
+                        // a placeholder vendor.
+                        <span className="text-xs text-slate-400">
+                          Unassigned
+                        </span>
+                      )}
                     </Table.Cell>
                     <Table.Cell align="center">
                       <ActionMenu menuId={`equipment-${eq.id}`}>

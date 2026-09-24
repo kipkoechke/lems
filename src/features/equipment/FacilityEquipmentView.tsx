@@ -227,6 +227,32 @@ export default function FacilityEquipmentView() {
                   <Table.HeaderCell>Name</Table.HeaderCell>
                   <Table.HeaderCell>
                     <ColumnFilter
+                      label="Status"
+                      options={statusOptions}
+                      value={status}
+                      onChange={(v) => {
+                        setStatus(v);
+                        setPage(1);
+                      }}
+                      allLabel="All Status"
+                      searchable={false}
+                    />
+                  </Table.HeaderCell>
+                  <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Connection"
+                    options={availableFilters?.linked ?? LINKED_OPTIONS}
+                    value={linked}
+                    onChange={(v) => {
+                      setLinked(v);
+                      setPage(1);
+                    }}
+                    allLabel="All Devices"
+                    searchable={false}
+                  />
+                </Table.HeaderCell>
+                  <Table.HeaderCell>
+                    <ColumnFilter
                       label="Modality"
                       options={modalityOptions}
                       value={modality}
@@ -265,32 +291,6 @@ export default function FacilityEquipmentView() {
                     />
                   </Table.HeaderCell>
                   <Table.HeaderCell>Services</Table.HeaderCell>
-                  <Table.HeaderCell>
-                  <ColumnFilter
-                    label="Connection"
-                    options={availableFilters?.linked ?? LINKED_OPTIONS}
-                    value={linked}
-                    onChange={(v) => {
-                      setLinked(v);
-                      setPage(1);
-                    }}
-                    allLabel="All Devices"
-                    searchable={false}
-                  />
-                </Table.HeaderCell>
-                  <Table.HeaderCell>
-                    <ColumnFilter
-                      label="Status"
-                      options={statusOptions}
-                      value={status}
-                      onChange={(v) => {
-                        setStatus(v);
-                        setPage(1);
-                      }}
-                      allLabel="All Status"
-                      searchable={false}
-                    />
-                  </Table.HeaderCell>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -332,6 +332,28 @@ export default function FacilityEquipmentView() {
                             label(equipment.category)}
                         </div>
                       </Table.Cell>
+                      <Table.Cell>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border capitalize ${facilityEquipmentStatusClasses(
+                            equipment,
+                          )}`}
+                        >
+                          {equipment.status === "active" ? (
+                            <FaCheckCircle className="w-3 h-3" />
+                          ) : equipment.status === "maintenance" ? (
+                            <FaWrench className="w-3 h-3" />
+                          ) : null}
+                          {equipment.status_label || label(equipment.status)}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <ConnectivityBadges
+                          isConnected={equipment.is_connected}
+                          linked={equipment.linked}
+                          lastSeenAt={equipment.last_seen_at}
+                          stacked
+                        />
+                      </Table.Cell>
                       <Table.Cell>{equipment.modality || "-"}</Table.Cell>
                       <Table.Cell>
                         {equipment.ownership_type === "vendor" ? (
@@ -349,35 +371,13 @@ export default function FacilityEquipmentView() {
                           </span>
                         )}
                       </Table.Cell>
-                        <Table.Cell>
+                      <Table.Cell>
                         {equipment.category_label || label(equipment.category)}
                       </Table.Cell>
                       <Table.Cell>
                         {equipment.mapped_services_count ??
                           equipment.mapped_services?.length ??
                           0}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <ConnectivityBadges
-                          isConnected={equipment.is_connected}
-                          linked={equipment.linked}
-                          lastSeenAt={equipment.last_seen_at}
-                          stacked
-                        />
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border capitalize ${facilityEquipmentStatusClasses(
-                            equipment,
-                          )}`}
-                        >
-                          {equipment.status === "active" ? (
-                            <FaCheckCircle className="w-3 h-3" />
-                          ) : equipment.status === "maintenance" ? (
-                            <FaWrench className="w-3 h-3" />
-                          ) : null}
-                          {equipment.status_label || label(equipment.status)}
-                        </span>
                       </Table.Cell>
                     </Table.Row>
                   ))

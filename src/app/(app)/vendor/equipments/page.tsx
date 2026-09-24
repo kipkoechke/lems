@@ -176,20 +176,6 @@ function VendorEquipmentsContent() {
               <Table.Row>
                 <Table.HeaderCell className="w-40">Code</Table.HeaderCell>
                 <Table.HeaderCell>Name</Table.HeaderCell>
-                <Table.HeaderCell className="w-48">Category</Table.HeaderCell>
-                <Table.HeaderCell className="w-32">
-                  <ColumnFilter
-                    label="Modality"
-                    options={modalityOptions}
-                    value={modality}
-                    onChange={setModality}
-                    allLabel="All Modalities"
-                    searchPlaceholder="Search modality..."
-                  />
-                </Table.HeaderCell>
-                <Table.HeaderCell className="w-36">
-                  Connection
-                </Table.HeaderCell>
                 <Table.HeaderCell>
                   <ColumnFilter
                     label="Status"
@@ -201,6 +187,20 @@ function VendorEquipmentsContent() {
                     }}
                     allLabel="All Status"
                     searchable={false}
+                  />
+                </Table.HeaderCell>
+                <Table.HeaderCell className="w-36">
+                  Connection
+                </Table.HeaderCell>
+                <Table.HeaderCell className="w-48">Category</Table.HeaderCell>
+                <Table.HeaderCell className="w-32">
+                  <ColumnFilter
+                    label="Modality"
+                    options={modalityOptions}
+                    value={modality}
+                    onChange={setModality}
+                    allLabel="All Modalities"
+                    searchPlaceholder="Search modality..."
                   />
                 </Table.HeaderCell>
                 <Table.HeaderCell className="w-24" align="center">
@@ -237,13 +237,14 @@ function VendorEquipmentsContent() {
                       )}
                     </Table.Cell>
                     <Table.Cell>
-                      <span className="text-sm text-slate-700 block truncate">
-                        {eq.category_label}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {eq.modality || "-"}
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+                          STATUS_BADGE[eq.status] ??
+                          "bg-slate-50 text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        {getStatusIcon(eq.status)}
+                        {eq.status_label}
                       </span>
                     </Table.Cell>
                     <Table.Cell>
@@ -259,14 +260,13 @@ function VendorEquipmentsContent() {
                       />
                     </Table.Cell>
                     <Table.Cell>
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                          STATUS_BADGE[eq.status] ??
-                          "bg-slate-50 text-slate-700 border-slate-200"
-                        }`}
-                      >
-                        {getStatusIcon(eq.status)}
-                        {eq.status_label}
+                      <span className="text-sm text-slate-700 block truncate">
+                        {eq.category_label}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-sm text-slate-700">
+                        {eq.modality || "-"}
                       </span>
                     </Table.Cell>
                     <Table.Cell align="center">
