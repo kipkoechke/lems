@@ -100,6 +100,26 @@ export interface MedicalRequest {
   has_critical_values?: boolean;
   status_reason?: string | null;
 
+  // Study metadata captured from the DICOM result callback. `performed_at`
+  // is the acquisition time from PerformedProcedureStepStart, which is not
+  // always the same day as `study_date`. The counts and pixel descriptors are
+  // read back from Orthanc when the callback cannot supply them, so they may
+  // be absent rather than zero.
+  study_instance_uid?: string | null;
+  series_instance_uid?: string | null;
+  study_date?: string | null;
+  study_time?: string | null;
+  performed_at?: string | null;
+  series_count?: number | null;
+  instance_count?: number | null;
+  manufacturer?: string | null;
+  station_name?: string | null;
+  body_part?: string | null;
+  pixel_metadata?: Record<string, unknown> | null;
+  /** The machine credited with performing the study. */
+  performed_by_ae_title?: string | null;
+  performed_by_equipment_id?: string | null;
+
   // HL7 raw data
   hl7_message_control_id?: string | null;
   hl7_raw_request?: string | null;

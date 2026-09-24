@@ -19,6 +19,7 @@ import {
 import { InputField } from "@/components/common/InputField";
 import { ErrorState } from "@/components/common/ErrorState";
 import EquipmentWorklistTests from "@/features/equipment/EquipmentWorklistTests";
+import WorklistTestModal from "@/features/equipment/WorklistTestModal";
 import {
   FaArrowLeft,
   FaCog,
@@ -53,6 +54,7 @@ function VendorEquipmentDetailContent() {
   const equipmentId = params.id as string;
 
   const [showConfigure, setShowConfigure] = useState(false);
+  const [showWorklistTest, setShowWorklistTest] = useState(false);
 
   // 1. Equipment metadata — the /vendor/* routes infer the vendor from the
   //    auth token, so no vendor id is needed here.
@@ -261,7 +263,7 @@ function VendorEquipmentDetailContent() {
                 {isTesting ? "Testing..." : "Test Connection"}
               </button>
               <button
-                onClick={() => runWorklistTest(equipmentId)}
+                onClick={() => setShowWorklistTest(true)}
                 disabled={isRunningTest}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 text-slate-600 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200 transition-colors disabled:opacity-50"
               >
@@ -298,6 +300,20 @@ function VendorEquipmentDetailContent() {
         <EquipmentWorklistTests tests={equipment.worklist_tests} />
 
         </div> {/* End left column (75%) */}
+
+      {showWorklistTest && (
+        <WorklistTestModal
+          equipmentName={equipment.name}
+          isRunning={isRunningTest}
+          onRun={(options) =>
+            runWorklistTest(
+              { equipmentId, options },
+              { onSuccess: () => setShowWorklistTest(false) },
+            )
+          }
+          onClose={() => setShowWorklistTest(false)}
+        />
+      )}
 
       {/* Configure modal */}
       {showConfigure && (

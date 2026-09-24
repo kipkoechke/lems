@@ -28,6 +28,8 @@ import {
 } from "recharts";
 import { useDashboard } from "./useDashboard";
 import { DashboardSkeleton } from "@/components/common/Skeleton";
+import { ConnectivityCard } from "@/components/common/ConnectivityCard";
+import { useRouter } from "next/navigation";
 import type {
   DashboardAvailableFilters,
   DashboardParams,
@@ -275,6 +277,7 @@ const MODALITY_BAR_COLORS = [
 ];
 
 export default function BookingTrends() {
+  const router = useRouter();
   const [filters, setFilters] = useState<DashboardParams>({});
   const { dashboardData, isLoading, isFetching, error } = useDashboard(filters);
 
@@ -610,6 +613,33 @@ export default function BookingTrends() {
             </ResponsiveContainer>
           </div>
         )}
+
+        {/* Connectivity — live sits inside linked, so one card reports all
+            three rather than a donut that implies a partition. */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <ConnectivityCard
+            connectivity={counts.equipment_connectivity}
+            equipmentHref="/equipments"
+            className="lg:col-span-2"
+          />
+
+          {!!counts.unmatched_studies && (
+            <button
+              onClick={() => router.push("/studies/unmatched")}
+              className="bg-white rounded-lg border border-amber-200 p-4 text-left hover:bg-amber-50 transition-colors"
+            >
+              <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                Non-SHA Studies
+              </p>
+              <p className="text-2xl font-bold text-amber-600">
+                {counts.unmatched_studies.toLocaleString()}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Studies that arrived with no VEMS order behind them
+              </p>
+            </button>
+          )}
+        </div>
 
         {/* Booking trend — Full width */}
         <div className="bg-white rounded-lg border border-slate-200 p-4">

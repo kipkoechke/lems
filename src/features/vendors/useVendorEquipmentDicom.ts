@@ -4,6 +4,7 @@ import {
   configureVendorEquipmentDicom,
   getVendorEquipmentDicomStatus,
   runVendorWorklistTest,
+  VendorWorklistTestOptions,
   testVendorEquipmentConnection,
   VendorDicomConfigureRequest,
 } from "@/services/apiEquipment";
@@ -78,16 +79,33 @@ export const useVendorWorklistTest = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (equipmentId: string) => runVendorWorklistTest(equipmentId),
-    onSuccess: (result, equipmentId) => {
+    mutationFn: ({
+      equipmentId,
+      options,
+    }: {
+      equipmentId: string;
+      options?: VendorWorklistTestOptions;
+    }) => runVendorWorklistTest(equipmentId, options),
+    onSuccess: (result, { equipmentId }) => {
       if (result?.success === false) {
         toast.error(result?.message || "Worklist test failed");
       } else {
         // The probe is out; the study comes back separately, so the row lands
-        // in the testing history as "awaiting result" until it does.
+        // in the testing history as "awaiting result" until it does. Naming
+        // the patient sent makes the entry findable on the modality.
+        const patientName =
+          result?.patient?.name ||
+          result?.dicom_patient?.PatientName?.replace("^", " ");
         toast.success(
-          result?.message ||
-            "Test worklist sent — waiting for the device to return the study",
+          [
+            result?.message || "Test worklist sent",
+            patientName ? `Look for ${patientName}` : null,
+            result?.accession_number
+              ? `(${result.accession_number})`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" · "),
         );
       }
       // The testing history rides on the equipment detail payload.

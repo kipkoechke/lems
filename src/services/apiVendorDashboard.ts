@@ -1,4 +1,5 @@
 import axios from "../lib/axios";
+import type { EquipmentConnectivity } from "./apiConnectivity";
 
 // =============================================
 // Vendor Dashboard API Types — matched to live API response
@@ -20,6 +21,8 @@ export interface VendorDashboardEquipmentStats {
   total: number;
   by_status: Record<string, number>;
   by_linkage?: VendorDashboardEquipmentLinkage;
+  /** The shared connectivity card — live, linked and never-connected. */
+  by_connectivity?: EquipmentConnectivity;
 }
 
 export interface VendorDashboardBookingStats {
@@ -72,6 +75,8 @@ export interface VendorDashboardResponse {
   patients?: { unique_count: number };
   services?: { count: number; list: { id: string; code: string; name: string }[] };
   trendline?: VendorDashboardTrendlineStats;
+  /** Studies that arrived on this vendor's machines with no VEMS order. */
+  unmatched_studies?: number;
 }
 
 // Filter params for vendor dashboard

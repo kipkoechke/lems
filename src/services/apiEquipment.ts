@@ -376,6 +376,15 @@ export interface VendorDicomTestResponse {
   message?: string;
 }
 
+/** The exact DICOM patient tags the probe carried. */
+export interface WorklistTestDicomPatient {
+  PatientID?: string;
+  PatientName?: string;
+  PatientSex?: string;
+  PatientBirthDate?: string;
+  [key: string]: unknown;
+}
+
 export interface VendorWorklistTestResponse {
   success?: boolean;
   message?: string;
@@ -385,7 +394,24 @@ export interface VendorWorklistTestResponse {
    */
   worklist_id?: string;
   accession_number?: string;
+  /** The real patient, when one was named. Null for a demo probe. */
+  patient?: { id: string; name?: string } | null;
+  dicom_patient?: WorklistTestDicomPatient;
   [key: string]: unknown;
+}
+
+/**
+ * Options for a probe worklist.
+ *
+ * With no `patient_id` the probe carries a freshly generated demo patient —
+ * realistic enough for the modality to render something representative, and
+ * unmistakably synthetic. There is deliberately no real-patient fallback: a
+ * stranger's record must not reach a modality because somebody pressed a
+ * button. Naming a patient is opt-in.
+ */
+export interface VendorWorklistTestOptions {
+  patient_id?: string;
+  accession_number?: string;
 }
 
 // GET /vendor/equipments/{id}/dicom-status
@@ -426,9 +452,11 @@ export const testVendorEquipmentConnection = async (
 // server-side.
 export const runVendorWorklistTest = async (
   equipmentId: string,
+  options: VendorWorklistTestOptions = {},
 ): Promise<VendorWorklistTestResponse> => {
   const response = await axios.post("/vendor/worklist-test", {
     equipment_id: equipmentId,
+    ...options,
   });
   return response.data?.data ?? response.data;
 };

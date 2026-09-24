@@ -99,6 +99,10 @@ export enum Permission {
   // can list requests but cannot act on them.
   MANAGE_MEDICAL_REQUESTS = "manage_medical_requests",
   VIEW_SHA_INTERVENTIONS = "view_sha_interventions",
+  // Studies that arrived with no VEMS order behind them. The same listing is
+  // served at three role-scoped paths, so admins, vendors and facility
+  // accounts all hold this and each sees only their own population.
+  VIEW_UNMATCHED_STUDIES = "view_unmatched_studies",
 
   // Integration-role surfaces. These live under their own API prefixes
   // (/provider, /payer) and are restricted to the matching system role.
@@ -137,6 +141,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_MEDICAL_REQUESTS,
     Permission.MANAGE_MEDICAL_REQUESTS,
     Permission.VIEW_SHA_INTERVENTIONS,
+    Permission.VIEW_UNMATCHED_STUDIES,
   ],
 
   [UserRole.F_ADMIN]: [
@@ -154,6 +159,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.REQUEST_MAINTENANCE,
     Permission.VIEW_SERVICES,
     Permission.VIEW_WORKLIST,
+    Permission.VIEW_UNMATCHED_STUDIES,
   ],
 
   [UserRole.F_PRACTITIONER]: [
@@ -180,6 +186,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_CONTRACTS,
     Permission.VIEW_EQUIPMENTS,
     Permission.VIEW_MEDICAL_REQUESTS,
+    Permission.VIEW_UNMATCHED_STUDIES,
   ],
 
   [UserRole.F_FINANCE]: [
@@ -239,6 +246,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_VENDOR_REVENUE,
     Permission.VIEW_VENDOR_PAYMENTS,
     Permission.VIEW_PAYMENTS,
+    Permission.VIEW_UNMATCHED_STUDIES,
   ],
 
   [UserRole.USER]: [
@@ -314,6 +322,7 @@ const API_PERMISSION_MAP: Record<string, Permission[]> = {
   manage_equipment: [Permission.VIEW_VENDOR_EQUIPMENTS],
   view_contracts: [Permission.VIEW_VENDOR_CONTRACTS, Permission.VIEW_CONTRACTS],
   view_bookings: [Permission.VIEW_VENDOR_BOOKINGS, Permission.VIEW_BOOKINGS],
+  view_unmatched_studies: [Permission.VIEW_UNMATCHED_STUDIES],
   view_reports: [Permission.VIEW_REPORTS],
   view_dashboard: [Permission.VIEW_DASHBOARD],
   view_patients: [Permission.VIEW_PATIENTS],

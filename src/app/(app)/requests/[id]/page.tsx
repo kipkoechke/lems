@@ -289,6 +289,102 @@ function RequestDetailContent() {
                 </div>
               </div>
 
+              {/* Captured study — what the modality actually sent back. Only
+                  worth a panel once a study has arrived. */}
+              {(request.study_instance_uid ||
+                request.performed_at ||
+                request.station_name ||
+                request.instance_count != null) && (
+                <div>
+                  <p className="text-xs text-slate-500 mb-2">Captured Study</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3 bg-slate-50 rounded-lg px-3 py-3">
+                    {[
+                      {
+                        label: "Study UID",
+                        value: request.study_instance_uid,
+                        mono: true,
+                      },
+                      {
+                        label: "Series UID",
+                        value: request.series_instance_uid,
+                        mono: true,
+                      },
+                      {
+                        label: "Acquired",
+                        value: request.performed_at
+                          ? formatDateTime(request.performed_at)
+                          : null,
+                      },
+                      { label: "Body Part", value: request.body_part },
+                      {
+                        label: "Extent",
+                        value:
+                          request.series_count != null ||
+                          request.instance_count != null
+                            ? `${request.series_count ?? "-"} series · ${
+                                request.instance_count ?? "-"
+                              } images`
+                            : null,
+                      },
+                      {
+                        label: "Performed By",
+                        value: request.performed_by_ae_title,
+                        mono: true,
+                      },
+                      {
+                        label: "Station",
+                        value: [request.manufacturer, request.station_name]
+                          .filter(Boolean)
+                          .join(" "),
+                      },
+                      {
+                        label: "Institution",
+                        value: request.institution_name,
+                      },
+                      {
+                        label: "Technologist",
+                        value: request.performing_technologist,
+                      },
+                    ]
+                      .filter((field) => field.value)
+                      .map((field) => (
+                        <div key={field.label}>
+                          <p className="text-xs text-slate-400">
+                            {field.label}
+                          </p>
+                          <p
+                            className={`text-sm text-slate-700 break-all ${
+                              field.mono ? "font-mono text-xs" : ""
+                            }`}
+                          >
+                            {field.value}
+                          </p>
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* Descriptors about the image — never the image itself. */}
+                  {request.pixel_metadata &&
+                    Object.keys(request.pixel_metadata).length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {Object.entries(request.pixel_metadata).map(
+                          ([key, value]) => (
+                            <span
+                              key={key}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-white border border-slate-200 text-slate-600"
+                            >
+                              <span className="text-slate-400">
+                                {key.replace(/_/g, " ")}
+                              </span>
+                              {String(value)}
+                            </span>
+                          ),
+                        )}
+                      </div>
+                    )}
+                </div>
+              )}
+
               {/* Timestamps */}
               <div>
                 <p className="text-xs text-slate-500 mb-2">Timeline</p>

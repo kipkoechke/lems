@@ -67,7 +67,7 @@ Full system access — all endpoints.
 | `/dicom/equipment/{id}/status`           | GET            | Equipment DICOM status         |
 | `/dicom/events/ping-events`              | GET            | Device activity log            |
 | `/dicom/dead-letters`                    | GET            | Failed DICOM events            |
-| `/dicom/callback/result`                 | POST           | DICOM result callback          |
+| `/dicom/callback/result`                 | POST           | DICOM result callback, including non-SHA studies |
 | `/dicom/callback/status`                 | POST           | DICOM status callback          |
 | `/equipment/ping-requests/*`             | *              | Equipment ping requests        |
 | `/equipment/ping-requests/activity`      | GET            | Device activity log            |
@@ -202,6 +202,7 @@ Manage facility, bookings, patients, contracts, and users.
 | `/users/{id}`                                           | GET              | Get a user in own facility       |
 | `/facility/equipments`                                  | GET/POST         | List own + vendor-mapped equipment / add own equipment |
 | `/facility/equipments/{id}`                             | GET              | Facility equipment detail        |
+| `/facility/dashboard`                                   | GET              | Facility dashboard + connectivity card |
 | `/admin/dashboard`                                      | GET              | Facility dashboard               |
 
 ### Finance Manager (`f_finance`)
@@ -286,6 +287,7 @@ facility admin (HRIO) and is always scoped to that admin's facility — see
 | `/lots`                        | GET    | List lots                      |
 | `/facility/equipments`         | GET    | Own facility equipment         |
 | `/facility/equipments/{id}`    | GET    | Own facility equipment detail  |
+| `/facility/dashboard`          | GET    | Facility dashboard             |
 | `/procedures`                  | GET    | List SHA procedures            |
 | `/requests`                    | GET    | List medical requests          |
 | `/analytics/*`                 | GET    | Read-only analytics            |
@@ -1624,6 +1626,75 @@ other facilities is never returned:
 Listing and detail are available to `f_admin`, `f_finance`, `f_practitioner`,
 `f_equipment_user` and `f_view_only`. Adding equipment is **`f_admin` only**.
 
+#### GET `/facility/dashboard`
+
+The facility dashboard: equipment, studies, services, revenue and bookings, all
+scoped to the facility resolved from the caller's profile.
+
+Counts the same equipment population as the facility equipment listings — the
+units the facility owns **plus** the vendor units mapped to it through an active
+contract service.
+
+**Response `200`**
+
+```json
+{
+  "data": {
+    "facility": { "id": "uuid", "name": "Kenyatta National Hospital", "fr_code": "FID-22-109411-5" },
+    "equipment": {
+      "total": 24,
+      "by_status": { "active": 20, "maintenance": 2, "down": 1, "pending_installation": 1 },
+      "by_connectivity": { "live": 3, "linked": 12, "never_connected": 12, "total": 24 }
+    },
+    "studies": {
+      "total": 180,
+      "active": 4,
+      "completed": 172,
+      "cancelled": 4,
+      "with_result": 169,
+      "awaiting_result": 3,
+      "average_turnaround_minutes": 12.4
+    },
+    "services": {
+      "total": 190,
+      "completed": 175,
+      "not_started": 10,
+      "cancelled": 5,
+      "completion_rate": 94.6
+    },
+    "revenue": {
+      "tariff": "285000.00",
+      "facility_share": "57000.00",
+      "vendor_share": "228000.00"
+    },
+    "bookings": {
+      "total": 96,
+      "this_month": 14,
+      "by_status": { "pending_otp": 2, "active": 4, "completed": 86, "cancelled": 4 },
+      "patients": 61
+    }
+  }
+}
+```
+
+| Card | Notes |
+| ---- | ----- |
+| `equipment` | `by_status` always carries every status, including the ones nothing is sitting in |
+| `studies` | Worklists raised for this facility. `active` = `pending`/`sent`/`in_progress`; `with_result` = the report came back; `awaiting_result` = still outstanding |
+| `studies.average_turnaround_minutes` | Minutes from the worklist being published (`sent_at`) to the result arriving. `null` until at least one study has completed the round trip |
+| `services` | Booked services on this facility's contracts. `completion_rate` = completed ÷ (total − cancelled), so abandoned bookings do not drag it down |
+| `revenue` | Summed over all of the facility's booked services, decimal strings |
+| `bookings` | Bookings raised at the facility, with `patients` as the distinct patient count |
+
+Vendor smoke-test worklists (`is_test`) are excluded from `studies`, so running
+a probe never moves an operational figure.
+
+`by_connectivity` is the shared connectivity card — see
+[the admin dashboard](#21-admin-dashboard--analytics) for the field meanings.
+`live` is a subset of `linked`; `linked + never_connected` is the total.
+
+**Response `403`** — Caller is not linked to a facility.
+
 #### GET `/facility/equipments`
 
 List the caller's facility equipment with filters, a status summary, and the
@@ -2141,9 +2212,12 @@ image was without any patient images being retained.
 | ---------------------------------------------------- | ------------------------------------------------- |
 | `study_instance_uid`, `series_instance_uid`          | DICOM UIDs                                        |
 | `study_date`, `study_time`                           | Study start date and time (`study_start_date` / `study_start_time` also accepted) |
-| `series_count`, `instance_count`                     | Study extent                                      |
+| `performed_date`, `performed_time`                   | `PerformedProcedureStepStartDate`/`Time` → `performed_at`. When the study was actually acquired, which is not always the same day as `StudyDate` |
+| `series_count`, `instance_count`                     | Study extent. A single instance cannot know these, so when they are absent or `0` the counts are read back from Orthanc |
 | `institution_name`                                   | Where the study was performed                     |
+| `manufacturer`, `station_name`                       | Who made the machine, and the station that reported it |
 | `body_part`                                          | `body_part_examined` also accepted                |
+| `technologist`, `referring_physician`                | Stored as `performing_technologist` and `interpreting_physician` |
 | `pixel_metadata.rows` / `.columns`                   | Image dimensions                                  |
 | `pixel_metadata.bits_allocated` / `.bits_stored`      | Bit depth                                         |
 | `pixel_metadata.window_center` / `.window_width`      | Windowing                                         |
@@ -2153,7 +2227,124 @@ Pixel descriptors may be nested under `pixel_metadata` / `image_metadata`, or
 sent flat at the top level. Any key outside the list above is ignored, so a
 payload carrying `PixelData` stores no pixels.
 
+`series_count` / `instance_count` are resolved from Orthanc when the callback
+cannot supply them, because a DICOM instance carries no series or instance count
+of its own. An unreachable Orthanc leaves them unset rather than recording a
+zero.
+
+**Pixel descriptors are filled in from Orthanc too.** The Lua callback does not
+send `pixel_metadata`, so VEMS reads the descriptors of the study's first
+instance back from Orthanc (`/instances/{id}/tags?simplify`) and filters them
+through the same whitelist above — tag *values* only, never pixel data. A value
+supplied by the callback wins over the one read back. A study with no image
+instances (an SR or KOS, say) simply has no descriptors.
+
+**An accession is optional.** A callback with no `accession_number` is filed as
+a [non-SHA study](#non-sha-studies) under its `study_instance_uid`. One with
+neither identifier is refused with `422`, because there would be nothing to file
+it under and every repeat would create another row.
+
+`accession_number`, `patient_id` and `study_date`/`study_time` keep the
+behaviour they had; the rest is described above.
+
 The callback is also recorded in the device activity log as a `study_send`.
+
+**An accession with no worklist is no longer rejected.** It is recorded as a
+[non-SHA study](#non-sha-studies) and answered `200` — see below.
+
+**Response `200`**
+
+```json
+{ "message": "Result stored successfully.", "worklist_id": "uuid", "result_status": "final" }
+```
+
+...or, when no order matches the accession:
+
+```json
+{
+  "message": "Study recorded with no matching order.",
+  "unmatched_study_id": "uuid",
+  "accession_number": "WALKIN-0001",
+  "equipment_id": "uuid",
+  "vendor_id": "uuid",
+  "facility_id": null
+}
+```
+
+#### Non-SHA studies
+
+A study that reaches Orthanc with no VEMS order behind it — a walk-in, a private
+patient, a machine used outside the SHA workflow, or a machine that sends no
+accession at all — is stored as an `unmatched_study` instead of being dropped.
+Everything the callback carried is kept, including the raw payload, and the study
+is attributed to the machine that reported it: **equipment → vendor → facility**.
+A study whose AE title matches no equipment is kept too, and stays visible to
+admins only.
+
+> **Attribution depends on `station_ae_title`.** That is the only field that can
+> be matched against `equipment.ae_title` — `station_name` is a DICOM display
+> name and is not unique. `on-stable-study.lua` sends it (from `RemoteAet`),
+> alongside `remote_ip`. If a study arrives with no `station_ae_title`, or with
+> one that matches no equipment, it is filed as unattributed.
+
+As with ordered studies, no pixel data is retained — the study is stripped in
+Orthanc the same way.
+
+Reported newest first, filterable by `modality`, `equipment_id`, `vendor_id`,
+`facility_id`, `search` (accession, study UID, patient id, station name, AE
+title, description), `attributed` (`true`/`false`), `period` / `from` / `to`, and
+`page_size`.
+
+| Endpoint | Sees |
+| -------- | ---- |
+| `GET /admin/studies/unmatched` | Every non-SHA study, including unattributed ones |
+| `GET /vendor/studies/unmatched` | Studies on this vendor's machines |
+| `GET /facility/studies/unmatched` | Studies on machines the facility owns or that vendors mapped to it |
+
+```json
+{
+  "summary": {
+    "total": 12,
+    "this_month": 3,
+    "unattributed": 1,
+    "latest_received_at": "2026-09-24T09:30:00+03:00"
+  },
+  "data": [
+    {
+      "id": "uuid",
+      "received_at": "2026-09-24T09:30:00+03:00",
+      "accession_number": "WALKIN-0001",
+      "study_instance_uid": "1.2.826.0.1.3680043.8.498.10",
+      "series_instance_uid": null,
+      "patient_id": "WALKIN001",
+      "modality": "DX",
+      "study_description": "Chest X-Ray (PA)",
+      "body_part": "CHEST",
+      "institution_name": "Some Clinic",
+      "manufacturer": "GE",
+      "station_name": "ROOM-3",
+      "referring_physician": "Dr^Walker",
+      "study_date": "2026-09-24",
+      "study_time": "093000",
+      "performed_at": "2026-09-24T09:25:00+03:00",
+      "series_count": 2,
+      "instance_count": 5,
+      "pixel_metadata": { "rows": 2048, "columns": 2048 },
+      "source_ae_title": "XRD01",
+      "remote_ip": "10.44.55.66",
+      "attributed": true,
+      "equipment": { "id": "uuid", "code": "XRD01", "name": "…", "ae_title": "XRD01" },
+      "vendor": { "id": "uuid", "name": "Melco Kenya Ltd", "code": "VEN001" },
+      "facility": null
+    }
+  ],
+  "pagination": { "current_page": 1, "per_page": 25, "total": 12, "total_pages": 1 }
+}
+```
+
+Every dashboard carries the same counter as `unmatched_studies`
+(`counts.unmatched_studies` on the admin dashboard, `data.unmatched_studies` on
+the vendor and facility ones), scoped to whatever that caller can see.
 
 #### POST `/dicom/callback/status`
 
@@ -3941,6 +4132,55 @@ matching row in VEMS flagged `is_test`, so the study the modality sends back is
 attached to it exactly like a real one — the loop closes instead of the result
 callback answering `404`.
 
+| Field | Required | Notes |
+| ----- | -------- | ----- |
+| `equipment_id` | Yes | Must belong to the calling vendor, and have an AE title |
+| `patient_id` | No | UUID of a real patient to depict |
+| `accession_number` | No | Defaults to a real accession from the live sequence |
+
+**The probe carries a demo patient, not a real one.** The DICOM tags are built
+by the same code that builds an ordered worklist, so the modality renders
+something representative — but the person on it is synthetic, because a test
+order does not belong to any patient:
+
+| Tag | Value |
+| --- | ----- |
+| `PatientID` | A fresh `VT` number, e.g. `VT762` — no hyphens, never a real identifier |
+| `PatientName` | A demo name, as `GIVEN^FAMILY` |
+| `PatientSex` | Randomly `M` or `F` |
+| `PatientBirthDate` | A random date of birth, `Ymd` |
+| `AccessionNumber` | A real accession, e.g. `ACC202609240007` |
+| `InstitutionName` | The facility the machine belongs to |
+
+Every probe generates a **new** demo patient, so consecutive tests are
+distinguishable on the worklist.
+
+Pass `patient_id` (a real patient UUID) to put that record on the probe instead
+— useful when a site wants to check a real patient end to end. Leave it out and
+no real patient is ever exposed to a modality: the most recent order's patient
+is deliberately *not* used as a fallback.
+
+The response echoes the `patient` record when one was supplied, and always
+echoes the exact DICOM block sent:
+
+```json
+{
+  "data": {
+    "worklist_id": "uuid",
+    "accession_number": "ACC202609240007",
+    "patient": null,
+    "dicom_patient": {
+      "PatientID": "VT762", "PatientName": "John^Dore",
+      "PatientSex": "F", "PatientBirthDate": "19740902"
+    }
+  }
+}
+```
+
+> A probe names the machine it is testing in `ScheduledStationAETitle`, unlike a
+> real order, which may leave the scheduled station open so any eligible machine
+> at the facility can pick the study up.
+
 - Test worklists are excluded from `active_worklists` on the dashboard, so
   running one never moves an operational figure.
 - They carry no booked service (`booked_service_id` is null) and are never
@@ -3963,7 +4203,7 @@ and admin portals with no second call. Newest test first.
   "results": [
     {
       "id": "uuid",
-      "accession_number": "MWL_TEST_20260924083000_XRD01",
+      "accession_number": "ACC202609240007",
       "worklist_status": "completed",
       "result_status": "final",
       "succeeded": true,
@@ -4253,6 +4493,8 @@ High-level counts, modality breakdown, SHA claim stats, a booking trend, and eff
     "total_vendors": 5,
     "total_equipment": 42,
     "equipment_by_owner": { "vendor_owned": 30, "facility_owned": 12 },
+    "equipment_by_linkage": { "linked": 27, "not_linked": 15 },
+    "equipment_connectivity": { "live": 9, "linked": 27, "never_connected": 15, "total": 42 },
     "total_facilities": 18,
     "completed_studies": 156,
     "active_worklists": 12
@@ -4285,6 +4527,19 @@ High-level counts, modality breakdown, SHA claim stats, a booking trend, and eff
   }
 }
 ```
+
+`counts.equipment_connectivity` is the connectivity card. The three numbers are
+not mutually exclusive — **`live` is a subset of `linked`**:
+
+| Field | Meaning |
+| ----- | ------- |
+| `live` | Connected right now (`is_connected`) |
+| `linked` | Has reported at least once (`last_seen_at` is set) — keeps the same meaning as `?linked=true` on the equipment listings |
+| `never_connected` | Never heard from; these are the un-pingable units |
+| `total` | `linked + never_connected` |
+
+The same card appears as `equipment.by_connectivity` on
+`GET /vendor/dashboard` and `GET /facility/dashboard`.
 
 ---
 

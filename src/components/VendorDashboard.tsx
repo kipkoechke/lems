@@ -31,6 +31,8 @@ import { useMyVendor } from "@/features/vendors/useMyVendor";
 import { useVendorDashboard } from "@/features/vendors/useVendorDashboard";
 import { VendorDashboardFilters } from "@/services/apiVendorDashboard";
 import StatCard from "@/components/common/StatCard";
+import { ConnectivityCard } from "@/components/common/ConnectivityCard";
+import { useRouter } from "next/navigation";
 import { ErrorState } from "@/components/common/ErrorState";
 
 // Top filter dropdown component
@@ -209,6 +211,7 @@ const BOOKING_STATUS_COLORS: Record<string, string> = {
 };
 
 const VendorDashboard: React.FC = () => {
+  const router = useRouter();
   const { vendorId, isLoading: vendorLoading } = useMyVendor();
 
   // Filter states
@@ -509,6 +512,33 @@ const VendorDashboard: React.FC = () => {
         >
           <FaChartLine className="w-4 h-4 text-amber-500" />
         </StatCard>
+      </div>
+
+      {/* Connectivity — live is a subset of linked, so the card says so
+          rather than presenting three slices of one whole. */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <ConnectivityCard
+          connectivity={dashboard?.equipment?.by_connectivity}
+          equipmentHref="/vendor/equipments"
+          className="lg:col-span-2"
+        />
+
+        {!!dashboard?.unmatched_studies && (
+          <button
+            onClick={() => router.push("/studies/unmatched")}
+            className="bg-white rounded-lg border border-amber-200 p-4 text-left hover:bg-amber-50 transition-colors"
+          >
+            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+              Non-SHA Studies
+            </p>
+            <p className="text-2xl font-bold text-amber-600">
+              {dashboard.unmatched_studies.toLocaleString()}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Arrived on your machines with no VEMS order behind them
+            </p>
+          </button>
+        )}
       </div>
 
       {/* Revenue & Services Charts - First after stat cards */}

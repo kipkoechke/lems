@@ -2,12 +2,16 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
   FaCalendarAlt,
   FaCheckCircle,
   FaClipboardList,
   FaMoneyBillWave,
   FaUserInjured,
+  FaCog,
+  FaStopwatch,
+  FaXRay,
 } from "react-icons/fa";
 import StatCard from "@/components/common/StatCard";
 import { Table } from "@/components/Table";
@@ -21,6 +25,8 @@ import { Permission } from "@/lib/rbac";
 import { maskPhoneNumber } from "@/lib/maskUtils";
 import type { Booking } from "@/types/booking";
 import { facilityDashboardFilters } from "./facilityDashboardQuery";
+import { ConnectivityCard } from "@/components/common/ConnectivityCard";
+import { getFacilityDashboard } from "@/services/apiFacilityDashboard";
 
 const STATUS_BADGE: Record<string, string> = {
   active: "bg-blue-50 text-blue-700 border-blue-200",
@@ -48,14 +54,27 @@ const formatDate = (value?: string | null) =>
 /**
  * Dashboard for facility roles.
  *
- * It deliberately avoids `/admin/dashboard`: the API returns 403 for facility
- * accounts despite the reference listing it as their "Facility dashboard".
- * Everything here is built from endpoints a facility account can actually call
- * — the booking list's own summary block, and the worklist.
+ * `/facility/dashboard` is the source of the headline figures: it is scoped to
+ * the caller's facility and to the same equipment population as the facility
+ * equipment listing. It replaces the numbers this page used to derive from the
+ * booking list's summary block, which was all a facility account could call
+ * before the endpoint existed. `/admin/dashboard` still 403s for them.
+ *
+ * The booking list is still read, but only for the recent-bookings panel.
  */
 export default function FacilityDashboard() {
   const router = useRouter();
   const facility = useCurrentFacility();
+
+  const {
+    data: dashboard,
+    isLoading: dashboardLoading,
+    error: dashboardError,
+  } = useQuery({
+    queryKey: ["facility-dashboard"],
+    queryFn: getFacilityDashboard,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const { data, isLoading, error } = useBookingsWithPagination(
     facilityDashboardFilters(facility?.id),
@@ -69,17 +88,18 @@ export default function FacilityDashboard() {
     { enabled: canSeeWorklist },
   );
 
-  const summary = data?.summary;
   const bookings: Booking[] = useMemo(() => data?.data ?? [], [data]);
   const pending = worklist?.data ?? [];
 
   // One skeleton for the whole page: piecemeal placeholders made the header
   // and panels pop in at different moments.
-  if (isLoading) {
+  if (isLoading || dashboardLoading) {
     return <DashboardSkeleton stats={5} withTable />;
   }
 
-  if (error) {
+  // Only a failure of both leaves nothing to show; either one alone still
+  // renders the half it covers.
+  if (error && dashboardError) {
     return (
       <ErrorState
         title="Unable to Load Dashboard"
@@ -107,30 +127,30 @@ export default function FacilityDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
           <StatCard
             compact
-            title="Total Bookings"
-            mainValue={(summary?.total_bookings ?? 0).toLocaleString()}
-            subtitle="All time"
+            title="Bookings"
+            mainValue={(dashboard?.bookings.total ?? 0).toLocaleString()}
+            subtitle={`${dashboard?.bookings.this_month ?? 0} this month`}
             className="border border-slate-200"
           >
             <FaCalendarAlt className="w-4 h-4 text-blue-500" />
           </StatCard>
           <StatCard
             compact
-            title="Active"
-            mainValue={(summary?.by_status?.active ?? 0).toLocaleString()}
-            subtitle="In progress"
+            title="Studies"
+            mainValue={(dashboard?.studies.total ?? 0).toLocaleString()}
+            subtitle={`${dashboard?.studies.awaiting_result ?? 0} awaiting result`}
             className="border border-slate-200"
           >
             <FaClipboardList className="w-4 h-4 text-amber-500" />
           </StatCard>
           <StatCard
             compact
-            title="Completed"
-            mainValue={(summary?.by_status?.completed ?? 0).toLocaleString()}
-            subtitle="Services done"
+            title="Services Done"
+            mainValue={(dashboard?.services.completed ?? 0).toLocaleString()}
+            subtitle={`${dashboard?.services.completion_rate ?? 0}% completion`}
             className="border border-slate-200"
           >
             <FaCheckCircle className="w-4 h-4 text-emerald-500" />
@@ -138,7 +158,7 @@ export default function FacilityDashboard() {
           <StatCard
             compact
             title="Patients"
-            mainValue={(summary?.unique_patients ?? 0).toLocaleString()}
+            mainValue={(dashboard?.bookings.patients ?? 0).toLocaleString()}
             subtitle="Unique"
             className="border border-slate-200"
           >
@@ -147,13 +167,95 @@ export default function FacilityDashboard() {
           <StatCard
             compact
             title="Tariff Value"
-            mainValue={money(summary?.revenue?.tariff)}
-            subtitle={`SHA ${money(summary?.revenue?.sha)}`}
+            mainValue={money(dashboard?.revenue.tariff)}
+            subtitle={`Facility ${money(dashboard?.revenue.facility_share)}`}
             className="border border-slate-200"
           >
             <FaMoneyBillWave className="w-4 h-4 text-green-500" />
           </StatCard>
+          <StatCard
+            compact
+            title="Turnaround"
+            mainValue={
+              // Null until a study has made the full round trip; that is not
+              // the same as zero minutes.
+              dashboard?.studies.average_turnaround_minutes == null
+                ? "-"
+                : `${dashboard.studies.average_turnaround_minutes} min`
+            }
+            subtitle="Worklist to result"
+            className="border border-slate-200"
+          >
+            <FaStopwatch className="w-4 h-4 text-sky-500" />
+          </StatCard>
         </div>
+
+        {/* Equipment */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <ConnectivityCard
+            connectivity={dashboard?.equipment.by_connectivity}
+            equipmentHref="/equipments"
+            className="lg:col-span-2"
+          />
+
+          <div className="bg-white rounded-lg border border-slate-200 p-4">
+            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100">
+              <FaCog className="w-3.5 h-3.5 text-slate-400" />
+              <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                Equipment
+              </p>
+              <button
+                onClick={() => router.push("/equipments")}
+                className="ml-auto text-xs font-medium text-blue-600 hover:text-blue-700"
+              >
+                View all
+              </button>
+            </div>
+            <p className="text-2xl font-bold text-slate-900">
+              {(dashboard?.equipment.total ?? 0).toLocaleString()}
+            </p>
+            <p className="text-xs text-slate-500 mb-3">
+              Owned plus vendor-mapped units
+            </p>
+            <div className="space-y-1.5">
+              {Object.entries(dashboard?.equipment.by_status ?? {})
+                .filter(([, count]) => count > 0)
+                .map(([status, count]) => (
+                  <div
+                    key={status}
+                    className="flex items-center justify-between text-xs"
+                  >
+                    <span className="text-slate-500 capitalize">
+                      {status.replace(/_/g, " ")}
+                    </span>
+                    <span className="font-medium text-slate-700">{count}</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Studies that arrived with no order behind them */}
+        {!!dashboard?.unmatched_studies && (
+          <button
+            onClick={() => router.push("/studies/unmatched")}
+            className="w-full flex items-center gap-3 bg-white rounded-lg border border-amber-200 px-4 py-3 text-left hover:bg-amber-50 transition-colors"
+          >
+            <FaXRay className="w-4 h-4 text-amber-600 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-slate-900">
+                {dashboard.unmatched_studies.toLocaleString()} non-SHA stud
+                {dashboard.unmatched_studies === 1 ? "y" : "ies"}
+              </p>
+              <p className="text-xs text-slate-500">
+                Reached your machines with no VEMS order behind them
+              </p>
+            </div>
+            <span className="ml-auto text-xs font-medium text-blue-600">
+              Review
+            </span>
+          </button>
+        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {/* Recent bookings */}

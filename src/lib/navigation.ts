@@ -108,6 +108,12 @@ const NAV_ITEMS: NavItem[] = [
       "Approvals, the device activity log and devices awaiting installation",
   },
   {
+    label: "Non-SHA Studies",
+    href: "/studies/unmatched",
+    permission: Permission.VIEW_UNMATCHED_STUDIES,
+    description: "Studies that arrived with no VEMS order behind them",
+  },
+  {
     label: "SHA Interventions",
     href: "/sha/interventions",
     permission: Permission.VIEW_SHA_INTERVENTIONS,

@@ -1,4 +1,5 @@
 import axios from "../lib/axios";
+import type { EquipmentConnectivity } from "./apiConnectivity";
 
 // ===== Dashboard Types =====
 
@@ -17,6 +18,9 @@ export interface DashboardCounts {
   total_equipment: number;
   equipment_by_owner: EquipmentByOwner;
   equipment_by_linkage?: EquipmentByLinkage;
+  equipment_connectivity?: EquipmentConnectivity;
+  /** Studies that arrived with no VEMS order behind them. */
+  unmatched_studies?: number;
   total_facilities: number;
   completed_studies: number;
   active_worklists: number;

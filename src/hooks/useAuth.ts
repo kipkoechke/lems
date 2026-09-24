@@ -14,6 +14,7 @@ import {
 } from "../services/apiAuth";
 import { getMyPermissions } from "../services/apiAuth";
 import { getDashboard } from "@/services/apiDashboard";
+import { getFacilityDashboard } from "@/services/apiFacilityDashboard";
 import { getBookingsWithPagination } from "@/services/apiBooking";
 import { facilityDashboardFilters } from "@/features/facilities/facilityDashboardQuery";
 import { isFacilityRole } from "@/lib/rbac";
@@ -47,6 +48,7 @@ const prefetchDashboard = (
   if (user.role === "vendor") return;
 
   if (isFacilityRole(user.role)) {
+    prefetch(["facility-dashboard"], () => getFacilityDashboard());
     const filters = facilityDashboardFilters(facility?.id);
     prefetch(["bookings-paginated", filters], () =>
       getBookingsWithPagination(filters),
