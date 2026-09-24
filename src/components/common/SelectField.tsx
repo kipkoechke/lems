@@ -36,6 +36,10 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useOutsideClick(() => setIsOpen(false));
   const searchInputRef = useRef<HTMLInputElement>(null);
+  // The hidden native select is the field react-hook-form actually registers,
+  // so a selection has to be written to it — see handleChange.
+  const selectRef = useRef<HTMLSelectElement | null>(null);
+  const [registeredValue, setRegisteredValue] = useState("");
 
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
@@ -43,14 +47,36 @@ export const SelectField: React.FC<SelectFieldProps> = ({
     }
   }, [isOpen]);
 
-  // Resolve current value from either register (RHF) or controlled props
-  const currentValue = controlledValue ?? (register ? undefined : "");
+  // A form that prefills itself — an edit page calling reset() — writes to the
+  // registered select without firing a change event, so the mirror is
+  // re-synced after every render. It only sets state on a difference, so this
+  // settles immediately rather than looping.
+  useEffect(() => {
+    if (!register) return;
+    const domValue = selectRef.current?.value ?? "";
+    if (domValue !== registeredValue) setRegisteredValue(domValue);
+  }, [register, registeredValue, options]);
+
+  // Resolve current value from either register (RHF) or controlled props.
+  // In register mode the value lives on the hidden select, which this mirrors
+  // so the button can show what was picked.
+  const currentValue = controlledValue ?? registeredValue;
   const selectedOption = options.find((o) => o.value === currentValue);
 
   const handleChange = (val: string) => {
-    // Support both React Hook Form register and controlled mode
     if (register) {
-      register.onChange({ target: { value: val, name: register.name } });
+      // Write to the registered element before notifying react-hook-form: it
+      // reads the value back off the DOM node it holds a ref to, so a
+      // synthetic event alone leaves the field empty and the form looks like
+      // it refused the selection.
+      setRegisteredValue(val);
+      if (selectRef.current) {
+        selectRef.current.value = val;
+        register.onChange({
+          target: selectRef.current,
+          type: "change",
+        });
+      }
     }
     controlledOnChange?.(val);
     setIsOpen(false);
@@ -76,7 +102,22 @@ export const SelectField: React.FC<SelectFieldProps> = ({
 
       {/* Hidden native select for react-hook-form register */}
       {register && (
-        <select {...register} className="hidden" disabled={disabled}>
+        <select
+          {...register}
+          ref={(element) => {
+            selectRef.current = element;
+            register.ref(element);
+          }}
+          onChange={(event) => {
+            // Reached when the form resets or a browser autofills.
+            setRegisteredValue(event.target.value);
+            register.onChange(event);
+          }}
+          className="hidden"
+          disabled={disabled}
+          aria-hidden="true"
+          tabIndex={-1}
+        >
           <option value="">{placeholder}</option>
           {options.map((o) => (
             <option key={o.value} value={o.value}>
