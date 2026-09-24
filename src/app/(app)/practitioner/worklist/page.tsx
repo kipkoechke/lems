@@ -3,6 +3,7 @@
 import BackButton from "@/components/common/BackButton";
 import Pagination from "@/components/common/Pagination";
 import { SearchField } from "@/components/common/SearchField";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import { useWorklist } from "@/features/worklist/useWorklist";
 import { maskPhoneNumber } from "@/lib/maskUtils";
@@ -199,17 +200,20 @@ export default function PractitionerWorklistPage() {
           {/* Status Filter */}
           <div className="flex items-center gap-2">
             <MdFilterList className="w-5 h-5 text-slate-400" />
-            <select
+            <SearchableSelect
+              label=""
+              compact
+              className="min-w-[150px]"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="completed">Completed</option>
-              <option value="pending_otp">Pending OTP</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+              onChange={setStatusFilter}
+              placeholder="All Status"
+              options={[
+                { value: "active", label: "Active" },
+                { value: "completed", label: "Completed" },
+                { value: "pending_otp", label: "Pending OTP" },
+                { value: "cancelled", label: "Cancelled" },
+              ]}
+            />
           </div>
         </div>
       </div>

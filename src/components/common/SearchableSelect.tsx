@@ -22,6 +22,9 @@ interface SearchableSelectProps {
   required?: boolean;
   onSearchChange?: (search: string) => void;
   isLoading?: boolean;
+  /** Tighter sizing for filter rows, where the control sits beside others. */
+  compact?: boolean;
+  className?: string;
 }
 
 export const SearchableSelect: React.FC<SearchableSelectProps> = ({
@@ -36,6 +39,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   required = false,
   onSearchChange,
   isLoading = false,
+  compact = false,
+  className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -88,10 +93,13 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   };
 
   return (
-    <div className="relative" ref={containerRef}>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
+    <div className={`relative ${className}`} ref={containerRef}>
+      {/* Filter rows pass no label; rendering an empty one leaves a gap. */}
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
 
       {/* Select Button */}
       <button
@@ -99,7 +107,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={`
-          w-full px-3 py-2 border rounded-lg shadow-sm text-left
+          w-full border rounded-lg shadow-sm text-left
+          ${compact ? "px-2.5 py-1.5 text-sm" : "px-3 py-2"}
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
           disabled:bg-gray-100 disabled:cursor-not-allowed
           ${error ? "border-red-500" : "border-gray-300"}

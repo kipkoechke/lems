@@ -4,6 +4,7 @@ import { Service } from "@/services/apiLots";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   FaArrowLeft,
@@ -225,19 +226,21 @@ const ServiceManagement: React.FC = () => {
                 placeholder="Search services..."
                 className="flex-1"
               />
-              <select
+              <SearchableSelect
+                label=""
+                compact
+                className="w-40"
                 value={statusFilter}
-                onChange={(e) =>
-                  setStatusFilter(
-                    e.target.value as "all" | "active" | "inactive",
-                  )
+                onChange={(value) =>
+                  setStatusFilter((value || "all") as "all" | "active" | "inactive")
                 }
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
+                placeholder="All Status"
+                options={[
+                  { value: "all", label: "All Status" },
+                  { value: "active", label: "Active" },
+                  { value: "inactive", label: "Inactive" },
+                ]}
+              />
             </div>
 
             <button

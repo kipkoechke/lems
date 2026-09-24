@@ -300,19 +300,15 @@ function PingRequestsContent() {
                       <label className="block text-sm font-medium text-slate-700 mb-1">
                         AE Title Source
                       </label>
-                      <select
+                      <SearchableSelect
+                        label=""
                         value={aeSource}
-                        onChange={(e) =>
-                          setAeSource(e.target.value as AeTitleSource)
+                        onChange={(value) =>
+                          setAeSource(value as AeTitleSource)
                         }
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
-                      >
-                        {AE_TITLE_SOURCES.map((s) => (
-                          <option key={s.value} value={s.value}>
-                            {s.label}
-                          </option>
-                        ))}
-                      </select>
+                        placeholder="Select AE title source"
+                        options={AE_TITLE_SOURCES}
+                      />
                     </div>
 
                     {aeSource === "custom" && (

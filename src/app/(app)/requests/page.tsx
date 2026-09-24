@@ -20,6 +20,7 @@ import Pagination from "@/components/common/Pagination";
 import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { ErrorState } from "@/components/common/ErrorState";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { FaFileMedical } from "react-icons/fa";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -131,21 +132,18 @@ function RequestsContent() {
               />
             </div>
 
-            <select
+            <SearchableSelect
+              label=""
+              compact
+              className="shrink-0 w-full lg:w-44"
               value={period}
-              onChange={(event) => {
-                setPeriod(event.target.value);
+              onChange={(value) => {
+                setPeriod(value);
                 setPage(1);
               }}
-              className="shrink-0 text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All time</option>
-              {PERIOD_PRESETS.map((preset) => (
-                <option key={preset.value} value={preset.value}>
-                  {preset.label}
-                </option>
-              ))}
-            </select>
+              placeholder="All time"
+              options={PERIOD_PRESETS}
+            />
           </div>
         </div>
 

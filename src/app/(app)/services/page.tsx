@@ -12,6 +12,7 @@ import { SearchField } from "@/components/common/SearchField";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import { FacilityFilter } from "@/components/common/FacilityFilter";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import {
   MdCalendarToday,
   MdCheckCircle,
@@ -217,34 +218,40 @@ export default function ServicesPage() {
                 </div>
               )}
               {/* Status */}
-              <select
+              <SearchableSelect
+                label=""
+                compact
+                className="min-w-[150px]"
                 value={status}
-                onChange={(e) => {
-                  setStatus(e.target.value);
+                onChange={(value) => {
+                  setStatus(value);
                   setPage(1);
                 }}
-                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[140px] bg-white"
-              >
-                <option value="">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="pending_otp">Pending OTP</option>
-              </select>
+                placeholder="All Statuses"
+                options={[
+                  { value: "active", label: "Active" },
+                  { value: "completed", label: "Completed" },
+                  { value: "cancelled", label: "Cancelled" },
+                  { value: "pending_otp", label: "Pending OTP" },
+                ]}
+              />
               {/* Source */}
-              <select
+              <SearchableSelect
+                label=""
+                compact
+                className="min-w-[150px]"
                 value={source}
-                onChange={(e) => {
-                  setSource(e.target.value);
+                onChange={(value) => {
+                  setSource(value);
                   setPage(1);
                 }}
-                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[140px] bg-white"
-              >
-                <option value="">All Sources</option>
-                <option value="standalone">Standalone</option>
-                <option value="hmis">HMIS</option>
-                <option value="provider_portal">Provider Portal</option>
-              </select>
+                placeholder="All Sources"
+                options={[
+                  { value: "standalone", label: "Standalone" },
+                  { value: "hmis", label: "HMIS" },
+                  { value: "provider_portal", label: "Provider Portal" },
+                ]}
+              />
               {/* Date range */}
               <input
                 type="date"

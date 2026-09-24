@@ -25,6 +25,8 @@ import { usePatients } from "./usePatients";
 import { useRegisterPatient } from "./useRegisterPatient";
 import { useEligibilityCheck } from "./useEligibilityCheck";
 import { maskPhoneNumber } from "@/lib/maskUtils";
+import { SelectField } from "@/components/common/SelectField";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 
 interface PatientRegistrationProps {
   onStepOneComplete?: (
@@ -36,6 +38,16 @@ interface PatientRegistrationProps {
 }
 
 // Enhanced payment modes with better UI
+/** Identification types the patient registry accepts. */
+const PATIENT_ID_TYPE_OPTIONS = [
+  "CR ID",
+  "National ID",
+  "Birth Certificate",
+  "Temporary ID",
+  "Alien ID",
+  "Passport",
+].map((value) => ({ value, label: value }));
+
 const PAYMENT_MODES = [
   {
     paymentModeId: "sha",
@@ -805,24 +817,18 @@ const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                 </div>
 
                 <div className="relative">
-                  <select
+                  <SearchableSelect
+                    label=""
+                    compact
                     value={selectedPaymentModeId}
-                    onChange={(e) => setSelectedPaymentModeId(e.target.value)}
-                    className="w-full px-2 py-1 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs md:text-sm appearance-none cursor-pointer"
-                  >
-                    <option value="" disabled>
-                      Choose payment method
-                    </option>
-                    {PAYMENT_MODES.map((paymentMode) => (
-                      <option
-                        key={paymentMode.paymentModeId}
-                        value={paymentMode.paymentModeId}
-                      >
-                        {paymentMode.paymentModeName} -{" "}
-                        {paymentMode.description}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setSelectedPaymentModeId}
+                    placeholder="Choose payment method"
+                    searchPlaceholder="Search payment methods..."
+                    options={PAYMENT_MODES.map((paymentMode) => ({
+                      value: paymentMode.paymentModeId,
+                      label: paymentMode.paymentModeName,
+                    }))}
+                  />
                   <FaChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 pointer-events-none" />
                 </div>
 
@@ -985,20 +991,14 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
             <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
               Identification Type *
             </label>
-            <select
-              {...register("identificationType", {
+            <SelectField
+              label=""
+              register={register("identificationType", {
                 required: "Identification type is required",
               })}
-              className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all border border-gray-200 text-sm"
-            >
-              <option value="">Select identification type</option>
-              <option value="CR ID">CR ID</option>
-              <option value="National ID">National ID</option>
-              <option value="Birth Certificate">Birth Certificate</option>
-              <option value="Temporary ID">Temporary ID</option>
-              <option value="Alien ID">Alien ID</option>
-              <option value="Passport">Passport</option>
-            </select>
+              placeholder="Select identification type"
+              options={PATIENT_ID_TYPE_OPTIONS}
+            />
             {errors.identificationType && (
               <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
                 <span>⚠️</span> {errors.identificationType.message}

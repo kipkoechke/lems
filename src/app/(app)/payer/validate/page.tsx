@@ -12,6 +12,7 @@ import {
 } from "@/services/apiPayer";
 import { Table } from "@/components/Table";
 import { ErrorState } from "@/components/common/ErrorState";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { FaClipboardCheck, FaSearch } from "react-icons/fa";
 
 const formatCurrency = (value?: number | null) =>
@@ -79,19 +80,15 @@ function PayerValidateContent() {
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Reference Type <span className="text-red-500">*</span>
               </label>
-              <select
+              <SearchableSelect
+                label=""
                 value={referenceType}
-                onChange={(e) =>
-                  setReferenceType(e.target.value as PayerReferenceType)
+                onChange={(value) =>
+                  setReferenceType(value as PayerReferenceType)
                 }
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
-              >
-                {PAYER_REFERENCE_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
+                placeholder="Select reference type"
+                options={PAYER_REFERENCE_TYPES}
+              />
             </div>
 
             <div className="flex-1">

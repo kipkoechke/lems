@@ -6,6 +6,7 @@ import { FaCalendarAlt, FaEye } from "react-icons/fa";
 import { Table } from "@/components/Table";
 import Pagination from "@/components/common/Pagination";
 import { SearchField } from "@/components/common/SearchField";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import { useBookingsWithPagination } from "@/features/services/bookings/useBookings";
 import { maskPhoneNumber } from "@/lib/maskUtils";
@@ -110,20 +111,23 @@ export default function FacilityBookings({
               placeholder="Search booking number, patient, ID..."
             />
           </div>
-          <select
+          <SearchableSelect
+            label=""
+            compact
+            className="min-w-[150px]"
             value={status}
-            onChange={(e) => {
-              setStatus(e.target.value);
+            onChange={(value) => {
+              setStatus(value);
               setPage(1);
             }}
-            className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-w-[140px] bg-white"
-          >
-            <option value="">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="pending_otp">Pending OTP</option>
-          </select>
+            placeholder="All Statuses"
+            options={[
+              { value: "active", label: "Active" },
+              { value: "completed", label: "Completed" },
+              { value: "cancelled", label: "Cancelled" },
+              { value: "pending_otp", label: "Pending OTP" },
+            ]}
+          />
         </div>
       </div>
 

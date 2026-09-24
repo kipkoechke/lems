@@ -780,17 +780,16 @@ function RegistrationForm({
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Identification Type
         </label>
-        <select
+        <SearchableSelect
+          label=""
           value={identificationType}
-          onChange={(e) => setIdentificationType(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {IDENTIFICATION_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
+          onChange={setIdentificationType}
+          placeholder="Select identification type"
+          options={IDENTIFICATION_TYPES.map((type) => ({
+            value: type,
+            label: type,
+          }))}
+        />
       </div>
 
       <div>

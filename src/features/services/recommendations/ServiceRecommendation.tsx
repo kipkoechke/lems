@@ -1,6 +1,7 @@
 "use client";
 
 import BackButton from "@/components/common/BackButton";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import {
   goToNextStep,
   goToPreviousStep,
@@ -432,29 +433,30 @@ const ServiceRecommendation: React.FC = () => {
                     </div>
                   </div>
 
-                  <select
+                  <SearchableSelect
+                    label=""
                     value={selectedContractId}
-                    onChange={(e) => handleContractChange(e.target.value)}
-                    className="w-full p-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all border-2 border-gray-200 hover:border-gray-300 text-sm"
+                    onChange={handleContractChange}
                     required
                     disabled={bookingCreated || isServicesLoading}
-                  >
-                    <option value="">
-                      {isServicesLoading
+                    isLoading={isServicesLoading}
+                    placeholder={
+                      isServicesLoading
                         ? "Loading diagnostic services..."
                         : contracts.length === 0
                           ? "No diagnostic services available"
-                          : "Select a diagnostic service"}
-                    </option>
-                    {contracts?.map((contract) => (
-                      <option key={contract.id} value={contract.id}>
-                        LOT {contract.lot_number} - {contract.lot_name} (
-                        {contract.services?.filter((s) => s.is_active === true)
-                          .length || 0}{" "}
-                        services)
-                      </option>
-                    ))}
-                  </select>
+                          : "Select a diagnostic service"
+                    }
+                    searchPlaceholder="Search by lot or service..."
+                    options={(contracts ?? []).map((contract) => ({
+                      value: contract.id,
+                      label: `LOT ${contract.lot_number} - ${contract.lot_name}`,
+                      description: `${
+                        contract.services?.filter((s) => s.is_active === true)
+                          .length || 0
+                      } services`,
+                    }))}
+                  />
 
                   {selectedContract && (
                     <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3">

@@ -9,6 +9,7 @@ import { Permission } from "@/lib/rbac";
 import { useFacilityByCode } from "@/features/facilities/useFacilityByCode";
 import { useUpdateFacility } from "@/features/facilities/useUpdateFacility";
 import type { EditFacilityForm } from "@/services/apiFacility";
+import { SelectField } from "@/components/common/SelectField";
 
 const KEPH_LEVELS = [
   { value: "1", label: "Level 1" },
@@ -36,6 +37,19 @@ const OPERATION_STATUSES = [
   "Under Construction",
   "Under Renovation",
 ];
+
+const OWNERSHIPS = [
+  "Public",
+  "Private",
+  "Faith Based",
+  "NGO",
+  "Parastatal",
+  "Military",
+];
+
+/** These lists are plain strings; the select wants {value,label} pairs. */
+const asOptions = (values: string[]) =>
+  values.map((value) => ({ value, label: value }));
 
 const REGULATORY_STATUSES = [
   "Licensed",
@@ -211,116 +225,75 @@ export default function EditFacilityPage() {
             {/* Classification */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  KEPH Level *
-                </label>
-                <select
-                  {...register("keph_level", {
+                <SelectField
+                  label="KEPH Level"
+                  register={register("keph_level", {
                     required: "KEPH level is required",
                   })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select KEPH Level</option>
-                  {KEPH_LEVELS.map((l) => (
-                    <option key={l.value} value={l.value}>{l.label}</option>
-                  ))}
-                </select>
-                {errors.keph_level && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors.keph_level.message}
-                  </p>
-                )}
+                  error={errors.keph_level?.message}
+                  required
+                  placeholder="Select KEPH Level"
+                  options={KEPH_LEVELS}
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Facility Type *
-                </label>
-                <select
-                  {...register("facility_type", {
+                <SelectField
+                  label="Facility Type"
+                  register={register("facility_type", {
                     required: "Facility type is required",
                   })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Facility Type</option>
-                  {FACILITY_TYPES.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-                {errors.facility_type && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors.facility_type.message}
-                  </p>
-                )}
+                  error={errors.facility_type?.message}
+                  required
+                  placeholder="Select Facility Type"
+                  options={asOptions(FACILITY_TYPES)}
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ownership *
-                </label>
-                <select
-                  {...register("owner", {
+                <SelectField
+                  label="Ownership"
+                  register={register("owner", {
                     required: "Ownership is required",
                   })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Ownership</option>
-                  <option value="Public">Public</option>
-                  <option value="Private">Private</option>
-                  <option value="Faith Based">Faith Based</option>
-                  <option value="NGO">NGO</option>
-                  <option value="Parastatal">Parastatal</option>
-                  <option value="Military">Military</option>
-                </select>
-                {errors.owner && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors.owner.message}
-                  </p>
-                )}
+                  error={errors.owner?.message}
+                  required
+                  placeholder="Select Ownership"
+                  options={asOptions(OWNERSHIPS)}
+                />
               </div>
             </div>
 
             {/* Status Fields */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Operation Status
-                </label>
-                <select
-                  {...register("operation_status")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {OPERATION_STATUSES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
+                <SelectField
+                  label="Operation Status"
+                  register={register("operation_status")}
+                  placeholder="Select Operation Status"
+                  options={asOptions(OPERATION_STATUSES)}
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Regulatory Status
-                </label>
-                <select
-                  {...register("regulatory_status")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {REGULATORY_STATUSES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
+                <SelectField
+                  label="Regulatory Status"
+                  register={register("regulatory_status")}
+                  placeholder="Select Regulatory Status"
+                  options={asOptions(REGULATORY_STATUSES)}
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Active Status
-                </label>
-                <select
-                  {...register("is_active")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="true">Active</option>
-                  <option value="false">Inactive</option>
-                </select>
+                <SelectField
+                  label="Active Status"
+                  register={register("is_active")}
+                  placeholder="Select Status"
+                  options={[
+                    { value: "true", label: "Active" },
+                    { value: "false", label: "Inactive" },
+                  ]}
+                />
               </div>
             </div>
 

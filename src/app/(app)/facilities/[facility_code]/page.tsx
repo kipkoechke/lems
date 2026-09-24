@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useFacilityByCode } from "@/features/facilities/useFacilityByCode";
 import { useUpdateFacility } from "@/features/facilities/useUpdateFacility";
 import Modal from "@/components/common/Modal";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import {
   FaArrowLeft,
   FaEdit,
@@ -222,16 +223,18 @@ export default function FacilityDetailsPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Status
                     </label>
-                    <select
-                      value={editForm.is_active}
-                      onChange={(e) =>
-                        handleInputChange("is_active", e.target.value)
+                    <SearchableSelect
+                      label=""
+                      value={String(editForm.is_active)}
+                      onChange={(value) =>
+                        handleInputChange("is_active", value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="1">Active</option>
-                      <option value="0">Inactive</option>
-                    </select>
+                      placeholder="Select status"
+                      options={[
+                        { value: "1", label: "Active" },
+                        { value: "0", label: "Inactive" },
+                      ]}
+                    />
                   </div>
                   <div className="flex justify-end gap-2 pt-4">
                     <button

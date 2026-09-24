@@ -29,6 +29,7 @@ import {
 import { useDashboard } from "./useDashboard";
 import { DashboardSkeleton } from "@/components/common/Skeleton";
 import { ConnectivityCard } from "@/components/common/ConnectivityCard";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { useRouter } from "next/navigation";
 import { unmatchedStudyCount } from "@/services/apiDashboard";
 import type {
@@ -238,19 +239,17 @@ function DashboardFilterBar({
   return (
     <div className="flex flex-wrap items-center gap-2">
       {fields.map((field) => (
-        <select
+        <SearchableSelect
           key={field.key}
+          label=""
+          compact
+          className="w-44"
           value={(filters[field.key] as string) ?? ""}
-          onChange={(event) => onChange(field.key, event.target.value)}
-          className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 max-w-[12rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">{field.label}</option>
-          {field.options!.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          onChange={(value) => onChange(field.key, value)}
+          placeholder={field.label}
+          searchPlaceholder="Search..."
+          options={field.options!}
+        />
       ))}
       {hasFilters && (
         <button

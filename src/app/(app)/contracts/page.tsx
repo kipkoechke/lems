@@ -13,6 +13,7 @@ import { ActionMenu } from "@/components/common/ActionMenu";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { useLots } from "@/features/lots/useLots";
 
 const CONTRACT_STATUS_OPTIONS = [
@@ -137,21 +138,22 @@ export default function ContractsPage() {
               />
             </div>
 
-            <select
+            <SearchableSelect
+              label=""
+              compact
+              className="shrink-0 w-full lg:w-56"
               value={lotFilter}
-              onChange={(event) => {
-                setLotFilter(event.target.value);
+              onChange={(value) => {
+                setLotFilter(value);
                 setPage(1);
               }}
-              className="shrink-0 w-full lg:w-56 text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All lots</option>
-              {lots.map((lot) => (
-                <option key={lot.id} value={lot.id}>
-                  LOT {lot.number} — {lot.name}
-                </option>
-              ))}
-            </select>
+              placeholder="All lots"
+              searchPlaceholder="Search lots..."
+              options={lots.map((lot) => ({
+                value: lot.id,
+                label: `LOT ${lot.number} — ${lot.name}`,
+              }))}
+            />
 
             <PermissionGate permission={Permission.CREATE_CONTRACTS}>
               <button

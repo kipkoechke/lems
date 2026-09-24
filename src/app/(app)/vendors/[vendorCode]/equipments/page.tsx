@@ -24,6 +24,7 @@ import { ActionMenu } from "@/components/common/ActionMenu";
 import Pagination from "@/components/common/Pagination";
 import BackButton from "@/components/common/BackButton";
 import { ErrorState } from "@/components/common/ErrorState";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 
 // Status badge colors
 const getStatusBadge = (status: string) => {
@@ -196,38 +197,39 @@ export default function VendorEquipmentsPage() {
           </div>
 
           {/* Status Filter */}
-          <select
+          <SearchableSelect
+            label=""
+            compact
+            className="min-w-[160px]"
             value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
+            onChange={(value) => {
+              setStatusFilter(value);
               setPage(1);
             }}
-            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="maintenance">Under Maintenance</option>
-            <option value="inactive">Inactive</option>
-            <option value="decommissioned">Decommissioned</option>
-            <option value="pending_installation">Pending Installation</option>
-          </select>
+            placeholder="All Status"
+            options={[
+              { value: "active", label: "Active" },
+              { value: "maintenance", label: "Under Maintenance" },
+              { value: "inactive", label: "Inactive" },
+              { value: "decommissioned", label: "Decommissioned" },
+              { value: "pending_installation", label: "Pending Installation" },
+            ]}
+          />
 
           {/* Category Filter */}
-          <select
+          <SearchableSelect
+            label=""
+            compact
+            className="min-w-[160px]"
             value={categoryFilter}
-            onChange={(e) => {
-              setCategoryFilter(e.target.value);
+            onChange={(value) => {
+              setCategoryFilter(value);
               setPage(1);
             }}
-            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat.value} value={cat.value}>
-                {cat.label}
-              </option>
-            ))}
-          </select>
+            placeholder="All Categories"
+            searchPlaceholder="Search categories..."
+            options={categories}
+          />
         </div>
       </div>
 

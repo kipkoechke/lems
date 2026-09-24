@@ -23,6 +23,13 @@ import {
 } from "@/services/apiEligibility";
 import toast from "react-hot-toast";
 import { IDENTIFICATION_TYPES as PATIENT_ID_TYPES } from "@/services/apiPatient";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
+
+/** The registry's list is plain strings; the select wants value/label pairs. */
+const PATIENT_ID_TYPE_OPTIONS = PATIENT_ID_TYPES.map((value) => ({
+  value,
+  label: value,
+}));
 
 export default function PatientEligibilityPage() {
   const params = useParams<{ id: string }>();
@@ -219,23 +226,19 @@ export default function PatientEligibilityPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Identification Type
                     </label>
-                    <select
+                    <SearchableSelect
+                      label=""
                       value={contributorData.identificationType}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setContributorData({
                           ...contributorData,
-                          identificationType: e.target.value,
+                          identificationType: value,
                         })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
-                    >
-                      {PATIENT_ID_TYPES.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Select identification type"
+                      options={PATIENT_ID_TYPE_OPTIONS}
+                    />
                   </div>
 
                   <div>
@@ -294,23 +297,19 @@ export default function PatientEligibilityPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Dependant Identification Type
                     </label>
-                    <select
+                    <SearchableSelect
+                      label=""
                       value={dependantData.identificationType}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setDependantData({
                           ...dependantData,
-                          identificationType: e.target.value,
+                          identificationType: value,
                         })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
-                    >
-                      {PATIENT_ID_TYPES.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Select identification type"
+                      options={PATIENT_ID_TYPE_OPTIONS}
+                    />
                   </div>
 
                   <div>
@@ -343,23 +342,19 @@ export default function PatientEligibilityPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Parent Identification Type
                         </label>
-                        <select
+                        <SearchableSelect
+                          label=""
                           value={dependantData.parentIdentificationType}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setDependantData({
                               ...dependantData,
-                              parentIdentificationType: e.target.value,
+                              parentIdentificationType: value,
                             })
                           }
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           required
-                        >
-                          {PATIENT_ID_TYPES.map((type) => (
-                            <option key={type} value={type}>
-                              {type}
-                            </option>
-                          ))}
-                        </select>
+                          placeholder="Select identification type"
+                          options={PATIENT_ID_TYPE_OPTIONS}
+                        />
                       </div>
 
                       <div>

@@ -15,6 +15,7 @@ import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { SearchField } from "@/components/common/SearchField";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import { useDeviceActivity } from "./useDeviceActivity";
 import {
@@ -137,21 +138,18 @@ export default function DeviceActivityView() {
             />
           </div>
 
-          <select
+          <SearchableSelect
+            label=""
+            compact
+            className="shrink-0 w-full lg:w-44"
             value={period}
-            onChange={(event) => {
-              setPeriod(event.target.value);
+            onChange={(value) => {
+              setPeriod(value);
               setPage(1);
             }}
-            className="shrink-0 text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All time</option>
-            {(availableFilters?.period ?? PERIOD_PRESETS).map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            placeholder="All time"
+            options={availableFilters?.period ?? PERIOD_PRESETS}
+          />
         </div>
       </div>
 

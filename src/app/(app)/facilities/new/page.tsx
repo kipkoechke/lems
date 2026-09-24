@@ -20,6 +20,13 @@ import {
 import { facilitySchema, FacilityFormData } from "@/lib/validations";
 import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
+import {
+  FACILITY_OWNER_OPTIONS,
+  FACILITY_TYPE_OPTIONS,
+  KEPH_LEVEL_OPTIONS,
+  OPERATION_STATUS_OPTIONS,
+  REGULATORY_STATUS_OPTIONS,
+} from "@/lib/selectOptions";
 
 export default function NewFacilityPage() {
   const router = useRouter();
@@ -249,53 +256,33 @@ export default function NewFacilityPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sub County *
-                  </label>
-                  <select
-                    {...register("sub_county_id", {
-                      required: "Sub county is required",
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  <SelectField
+                    label="Sub County"
+                    register={register("sub_county_id", { required: "Sub County is required" })}
+                    error={errors.sub_county_id?.message}
+                    required
                     disabled={loadingLocations || !selectedCounty}
-                  >
-                    <option value="">Select Sub County</option>
-                    {subCounties.map((subCounty) => (
-                      <option key={subCounty.id} value={subCounty.id}>
-                        {subCounty.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.sub_county_id && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {errors.sub_county_id.message}
-                    </p>
-                  )}
+                    placeholder="Select Sub County"
+                    options={subCounties.map((subCounty) => ({
+                      value: subCounty.id,
+                      label: subCounty.name,
+                    }))}
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ward *
-                  </label>
-                  <select
-                    {...register("ward_code", {
-                      required: "Ward is required",
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  <SelectField
+                    label="Ward"
+                    register={register("ward_code", { required: "Ward is required" })}
+                    error={errors.ward_code?.message}
+                    required
                     disabled={loadingLocations || !selectedSubCounty}
-                  >
-                    <option value="">Select Ward</option>
-                    {wards.map((ward) => (
-                      <option key={ward.id} value={ward.id}>
-                        {ward.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.ward_code && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {errors.ward_code.message}
-                    </p>
-                  )}
+                    placeholder="Select Ward"
+                    options={wards.map((ward) => ({
+                      value: ward.id,
+                      label: ward.name,
+                    }))}
+                  />
                 </div>
               </div>
             </div>
@@ -307,91 +294,48 @@ export default function NewFacilityPage() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Facility Type
-                  </label>
-                  <select
-                    {...register("facility_type")}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select Facility Type</option>
-                    <option value="Dispensary">Dispensary</option>
-                    <option value="Health Center">Health Center</option>
-                    <option value="Hospital">Hospital</option>
-                    <option value="Clinic">Clinic</option>
-                    <option value="Medical Center">Medical Center</option>
-                  </select>
+                  <SelectField
+                    label="Facility Type"
+                    register={register("facility_type")}
+                    placeholder="Select Facility Type"
+                    options={FACILITY_TYPE_OPTIONS}
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    KEPH Level
-                  </label>
-                  <select
-                    {...register("keph_level")}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select KEPH Level</option>
-                    <option value="1">Level 1</option>
-                    <option value="2">Level 2</option>
-                    <option value="3">Level 3</option>
-                    <option value="4">Level 4</option>
-                    <option value="5">Level 5</option>
-                    <option value="6">Level 6</option>
-                  </select>
+                  <SelectField
+                    label="KEPH Level"
+                    register={register("keph_level")}
+                    placeholder="Select KEPH Level"
+                    options={KEPH_LEVEL_OPTIONS}
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Owner
-                  </label>
-                  <select
-                    {...register("owner")}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select Owner</option>
-                    <option value="Ministry of Health">
-                      Ministry of Health
-                    </option>
-                    <option value="Private">Private</option>
-                    <option value="Faith Based">Faith Based</option>
-                    <option value="NGO">NGO</option>
-                  </select>
+                  <SelectField
+                    label="Owner"
+                    register={register("owner")}
+                    placeholder="Select Owner"
+                    options={FACILITY_OWNER_OPTIONS}
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Regulatory Status
-                  </label>
-                  <select
-                    {...register("regulatory_status")}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select Regulatory Status</option>
-                    <option value="Pending Registration">
-                      Pending Registration
-                    </option>
-                    <option value="Licensed">Licensed</option>
-                    <option value="Suspended">Suspended</option>
-                    <option value="Revoked">Revoked</option>
-                  </select>
+                  <SelectField
+                    label="Regulatory Status"
+                    register={register("regulatory_status")}
+                    placeholder="Select Regulatory Status"
+                    options={REGULATORY_STATUS_OPTIONS}
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Operation Status
-                  </label>
-                  <select
-                    {...register("operation_status")}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select Operation Status</option>
-                    <option value="Operational">Operational</option>
-                    <option value="Non-Operational">Non-Operational</option>
-                    <option value="Temporarily Closed">
-                      Temporarily Closed
-                    </option>
-                  </select>
+                  <SelectField
+                    label="Operation Status"
+                    register={register("operation_status")}
+                    placeholder="Select Operation Status"
+                    options={OPERATION_STATUS_OPTIONS}
+                  />
                 </div>
               </div>
             </div>
