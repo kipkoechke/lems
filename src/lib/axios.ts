@@ -1,9 +1,24 @@
 import axios from "axios";
 import { clearAuthData } from "@/services/apiAuth";
 
+/**
+ * API base URL, by environment.
+ *
+ * `next dev` talks to UAT, which carries production-derived data to work
+ * against. Production builds keep the live API. Either can be overridden with
+ * NEXT_PUBLIC_API_URL, which is baked into the bundle at build time — set it
+ * in `.env.local` for a one-off (a local API, say), or in the server's `.env`
+ * for a deployment.
+ */
+const UAT_API_URL = "https://uat.vems.co.ke/api/v1";
+const PRODUCTION_API_URL = "https://api.vems.co.ke/api/v1";
+
+const baseURL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === "development" ? UAT_API_URL : PRODUCTION_API_URL);
+
 const instance = axios.create({
-  baseURL: "https://api.vems.co.ke/api/v1",
-  // baseURL: "https://api.lems.mcomps.africa/api/v1",
+  baseURL,
   //   withCredentials: true,
   // timeout: 10000,
 });

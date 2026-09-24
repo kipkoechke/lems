@@ -16,6 +16,24 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## API environments
+
+The dev server talks to **UAT** (`https://uat.vems.co.ke/api/v1`), which holds
+production-derived data. Production builds use the live API
+(`https://api.vems.co.ke/api/v1`).
+
+Override either with `NEXT_PUBLIC_API_URL`. It is read at **build time**, not
+at runtime, so set it before `next build`:
+
+```bash
+# .env.local — point the dev server somewhere else
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+```
+
+Sign-in state (token, user, facility) is per-origin in `localStorage`, so
+switching environments means signing in again — and a UAT token will not work
+against production.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
