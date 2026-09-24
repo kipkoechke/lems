@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  dicomConfigureSchema,
+  DicomConfigureFormData,
+} from "@/lib/validations";
 import { FaBoxOpen, FaSave, FaTimes, FaInfoCircle } from "react-icons/fa";
 import { Table } from "@/components/Table";
 import Pagination from "@/components/common/Pagination";
@@ -26,12 +31,6 @@ const formatDateTime = (value?: string | null) =>
         minute: "2-digit",
       })
     : "-";
-
-interface ClaimForm {
-  ae_title: string;
-  ip: string;
-  port: number;
-}
 
 /**
  * Claim a discovered device.
@@ -60,7 +59,9 @@ function ClaimDeviceModal({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<ClaimForm>();
+  } = useForm<DicomConfigureFormData>({
+    resolver: zodResolver(dicomConfigureSchema),
+  });
 
   useEffect(() => {
     reset({
@@ -73,7 +74,7 @@ function ClaimDeviceModal({
     });
   }, [equipment, reset]);
 
-  const onSubmit = (values: ClaimForm) => {
+  const onSubmit = (values: DicomConfigureFormData) => {
     configureDicom(
       {
         equipmentId: equipment.id,
@@ -145,10 +146,7 @@ function ClaimDeviceModal({
               label="AE Title"
               type="text"
               placeholder="e.g. XRD01"
-              register={register("ae_title", {
-                required: "AE title is required",
-                maxLength: { value: 16, message: "Maximum 16 characters" },
-              })}
+              register={register("ae_title")}
               error={errors.ae_title?.message}
               required
               disabled={isConfiguring}
@@ -158,7 +156,7 @@ function ClaimDeviceModal({
               label="Device Host / IP"
               type="text"
               placeholder="e.g. 10.0.0.9"
-              register={register("ip", { required: "Host is required" })}
+              register={register("ip")}
               error={errors.ip?.message}
               required
               disabled={isConfiguring}
@@ -168,11 +166,7 @@ function ClaimDeviceModal({
               label="DICOM Port"
               type="number"
               placeholder={String(PLACEHOLDER_PORT)}
-              register={register("port", {
-                required: "Port is required",
-                min: { value: 1, message: "1–65535" },
-                max: { value: 65535, message: "1–65535" },
-              })}
+              register={register("port")}
               error={errors.port?.message}
               required
               disabled={isConfiguring}

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { procedureSchema, ProcedureFormData } from "@/lib/validations";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
@@ -69,7 +71,7 @@ function ProceduresContent() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<ProcedureCreateRequest>();
+  } = useForm<ProcedureFormData>({ resolver: zodResolver(procedureSchema) });
 
   const openCreate = () => {
     setEditing(null);

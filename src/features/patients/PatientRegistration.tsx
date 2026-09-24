@@ -8,6 +8,11 @@ import { Patient } from "@/services/apiPatient";
 import { useCounties } from "@/features/counties/useCounties";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  patientLookupSchema,
+  PatientLookupFormData,
+} from "@/lib/validations";
 import toast from "react-hot-toast";
 import {
   FaArrowRight,
@@ -943,10 +948,9 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<{
-    identificationType: string;
-    identificationNumber: string;
-  }>();
+  } = useForm<PatientLookupFormData>({
+    resolver: zodResolver(patientLookupSchema),
+  });
 
   const handleAddPatient = (data: {
     identificationType: string;

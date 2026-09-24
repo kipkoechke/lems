@@ -2,6 +2,11 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  pingDecisionSchema,
+  PingDecisionFormData,
+} from "@/lib/validations";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import {
@@ -55,13 +60,6 @@ const formatDateTime = (value?: string | null) =>
       })
     : "-";
 
-interface DecisionForm {
-  approval_reason?: string;
-  equipment_id?: string;
-  ae_title_source?: AeTitleSource;
-  selected_ae_title?: string;
-}
-
 function PingRequestsContent() {
   const { pingRequests, isLoading, error, refetch } = usePendingPingRequests();
   const { linkedIds } = useLinkedEquipmentIds();
@@ -75,7 +73,15 @@ function PingRequestsContent() {
   const [equipmentId, setEquipmentId] = useState("");
   const [aeSource, setAeSource] = useState<AeTitleSource>("machine_ping");
 
-  const { register, handleSubmit, reset } = useForm<DecisionForm>();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<PingDecisionFormData>({
+    resolver: zodResolver(pingDecisionSchema),
+  });
 
   const equipmentOptions = (equipments ?? []).map((eq) => ({
     value: eq.id,
@@ -87,10 +93,14 @@ function PingRequestsContent() {
     setMode(decision);
     setEquipmentId(request.equipment_id ?? "");
     setAeSource("machine_ping");
-    reset({ approval_reason: "", selected_ae_title: "" });
+    reset({
+      approval_reason: "",
+      selected_ae_title: "",
+      ae_title_source: "machine_ping",
+    });
   };
 
-  const onSubmit = (data: DecisionForm) => {
+  const onSubmit = (data: PingDecisionFormData) => {
     if (!active) return;
 
     const payload: PingRequestDecision = {
@@ -303,9 +313,12 @@ function PingRequestsContent() {
                       <SearchableSelect
                         label=""
                         value={aeSource}
-                        onChange={(value) =>
-                          setAeSource(value as AeTitleSource)
-                        }
+                        onChange={(value) => {
+                          setAeSource(value as AeTitleSource);
+                          // The schema only demands a custom AE title when
+                          // "custom" is the source, so it has to know.
+                          setValue("ae_title_source", value);
+                        }}
                         placeholder="Select AE title source"
                         options={AE_TITLE_SOURCES}
                       />
@@ -317,6 +330,8 @@ function PingRequestsContent() {
                         type="text"
                         placeholder="Max 16 characters"
                         register={register("selected_ae_title")}
+                        error={errors.selected_ae_title?.message}
+                        required
                       />
                     )}
                   </>
@@ -327,6 +342,7 @@ function PingRequestsContent() {
                   type="text"
                   placeholder="Optional note for the audit trail"
                   register={register("approval_reason")}
+                  error={errors.approval_reason?.message}
                 />
 
                 <div className="flex gap-3 pt-2">

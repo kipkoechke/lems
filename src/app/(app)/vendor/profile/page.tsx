@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  vendorProfileSchema,
+  VendorProfileFormData,
+} from "@/lib/validations";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useMyVendor } from "@/features/vendors/useMyVendor";
@@ -31,7 +36,14 @@ function VendorProfileContent() {
   const { updateProfile, isUpdating } = useUpdateMyVendorProfile(vendorId);
   const [isEditing, setIsEditing] = useState(false);
 
-  const { register, handleSubmit, reset } = useForm<ProfileFormData>();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<VendorProfileFormData>({
+    resolver: zodResolver(vendorProfileSchema),
+  });
 
   useEffect(() => {
     if (vendor) {
@@ -150,7 +162,8 @@ function VendorProfileContent() {
                   label="Vendor Name"
                   type="text"
                   placeholder="Enter vendor name"
-                  register={register("name", { required: true })}
+                  register={register("name")}
+                  error={errors.name?.message}
                   required
                   disabled={isUpdating}
                 />
@@ -159,6 +172,7 @@ function VendorProfileContent() {
                   type="email"
                   placeholder="Enter email"
                   register={register("email")}
+                  error={errors.email?.message}
                   disabled={isUpdating}
                 />
                 <InputField
@@ -173,6 +187,7 @@ function VendorProfileContent() {
                   type="text"
                   placeholder="Enter website URL"
                   register={register("website")}
+                  error={errors.website?.message}
                   disabled={isUpdating}
                 />
                 <InputField

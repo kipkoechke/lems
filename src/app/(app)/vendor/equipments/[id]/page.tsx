@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  dicomConfigureSchema,
+  DicomConfigureFormData,
+} from "@/lib/validations";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useVendorEquipment } from "@/features/vendors/useVendorEquipments";
@@ -12,10 +17,7 @@ import {
   useVendorEquipmentDicomStatus,
   useVendorWorklistTest,
 } from "@/features/vendors/useVendorEquipmentDicom";
-import {
-  vendorEquipmentDicom,
-  VendorDicomConfigureRequest,
-} from "@/services/apiEquipment";
+import { vendorEquipmentDicom } from "@/services/apiEquipment";
 import { InputField } from "@/components/common/InputField";
 import { ErrorState } from "@/components/common/ErrorState";
 import EquipmentWorklistTests from "@/features/equipment/EquipmentWorklistTests";
@@ -79,7 +81,9 @@ function VendorEquipmentDetailContent() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<VendorDicomConfigureRequest>();
+  } = useForm<DicomConfigureFormData>({
+    resolver: zodResolver(dicomConfigureSchema),
+  });
 
   useEffect(() => {
     if (dicom) {

@@ -1,6 +1,11 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  patientLookupSchema,
+  PatientLookupFormData,
+} from "@/lib/validations";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -10,11 +15,6 @@ import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
 import { useRegisterPatient } from "@/features/patients/useRegisterPatient";
 
-interface PatientFormData {
-  identificationType: string;
-  identificationNumber: string;
-}
-
 export default function NewPatientPage() {
   const router = useRouter();
   const { registerPatients, isRegistering } = useRegisterPatient();
@@ -23,11 +23,12 @@ export default function NewPatientPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<PatientFormData>({
+  } = useForm<PatientLookupFormData>({
+    resolver: zodResolver(patientLookupSchema),
     mode: "onBlur",
   });
 
-  const onSubmit = async (data: PatientFormData) => {
+  const onSubmit = async (data: PatientLookupFormData) => {
     registerPatients(data, {
       onSuccess: (patient) => {
         toast.success(

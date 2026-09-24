@@ -3,6 +3,11 @@
 import { IFacilityReport, ReportForm } from "@/services/apiReport";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  reportRangeSchema,
+  ReportRangeFormData,
+} from "@/lib/validations";
 import { useCreateFacilityReport } from "./useCreateFacilityReport";
 
 const FacilityReport: React.FC = () => {
@@ -15,7 +20,9 @@ const FacilityReport: React.FC = () => {
     handleSubmit,
 
     formState: { errors },
-  } = useForm<ReportForm>();
+  } = useForm<ReportRangeFormData>({
+    resolver: zodResolver(reportRangeSchema),
+  });
 
   const onSubmit = (data: ReportForm) => {
     setError(null);

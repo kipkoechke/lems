@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { userCreateSchema, UserCreateFormData } from "@/lib/validations";
 import { PermissionGate } from "@/components/PermissionGate";
 import {
   Permission,
@@ -13,7 +15,6 @@ import {
 import { useCurrentUser, useCurrentFacility } from "@/hooks/useAuth";
 import { useAssignableRoles, useCreateUser } from "@/features/users/useUsers";
 import { useVendors } from "@/features/vendors/useVendors";
-import { UserCreateRequest } from "@/services/apiUsers";
 import BackButton from "@/components/common/BackButton";
 import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
@@ -59,7 +60,8 @@ const ID_TYPES = [
   { value: "Military ID", label: "Military ID" },
 ];
 
-type UserFormData = Omit<UserCreateRequest, "postal_address">;
+/** The form mirrors the schema; the request adds facility_id / vendor_id. */
+type UserFormData = UserCreateFormData;
 
 function NewUserContent() {
   const router = useRouter();
@@ -103,9 +105,10 @@ function NewUserContent() {
     setError,
     formState: { errors },
   } = useForm<UserFormData>({
+    resolver: zodResolver(userCreateSchema),
     // No default role: the options arrive from the API, so preselecting one
     // from the fallback list could leave a value the API will not accept.
-    defaultValues: { role: "", is_active: true },
+    defaultValues: { role: "", email: "", phone: "" },
   });
 
   const role = watch("role");
@@ -139,6 +142,7 @@ function NewUserContent() {
         ...data,
         email: data.email || undefined,
         phone: data.phone || undefined,
+        gender: data.gender || undefined,
         is_active: true,
         // Omitted entirely for a facility admin — the API rejects them.
         facility_id: needsFacility ? facilityId : undefined,
@@ -180,7 +184,7 @@ function NewUserContent() {
                 label="Full Name"
                 type="text"
                 placeholder="Enter full name"
-                register={register("name", { required: "Name is required" })}
+                register={register("name")}
                 error={errors.name?.message}
                 required
                 disabled={isCreating}
@@ -188,7 +192,7 @@ function NewUserContent() {
 
               <SelectField
                 label="Role"
-                register={register("role", { required: "Role is required" })}
+                register={register("role")}
                 error={errors.role?.message}
                 required
                 placeholder="Select role"

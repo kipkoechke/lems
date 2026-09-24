@@ -2,13 +2,17 @@
 
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  facilityEditSchema,
+  FacilityEditFormData,
+} from "@/lib/validations";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useFacilityByCode } from "@/features/facilities/useFacilityByCode";
 import { useUpdateFacility } from "@/features/facilities/useUpdateFacility";
-import type { EditFacilityForm } from "@/services/apiFacility";
 import { SelectField } from "@/components/common/SelectField";
 
 const KEPH_LEVELS = [
@@ -71,7 +75,9 @@ export default function EditFacilityPage() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<EditFacilityForm>();
+  } = useForm<FacilityEditFormData>({
+    resolver: zodResolver(facilityEditSchema),
+  });
 
   // Pre-fill form when facility data loads
   useEffect(() => {
@@ -92,7 +98,7 @@ export default function EditFacilityPage() {
     }
   }, [facility, reset]);
 
-  const onSubmit = (data: EditFacilityForm) => {
+  const onSubmit = (data: FacilityEditFormData) => {
     updateFacility(
       { id: facility?.id || facilityCode, data },
       {
@@ -227,9 +233,7 @@ export default function EditFacilityPage() {
               <div>
                 <SelectField
                   label="KEPH Level"
-                  register={register("keph_level", {
-                    required: "KEPH level is required",
-                  })}
+                  register={register("keph_level")}
                   error={errors.keph_level?.message}
                   required
                   placeholder="Select KEPH Level"
@@ -240,9 +244,7 @@ export default function EditFacilityPage() {
               <div>
                 <SelectField
                   label="Facility Type"
-                  register={register("facility_type", {
-                    required: "Facility type is required",
-                  })}
+                  register={register("facility_type")}
                   error={errors.facility_type?.message}
                   required
                   placeholder="Select Facility Type"
@@ -253,9 +255,7 @@ export default function EditFacilityPage() {
               <div>
                 <SelectField
                   label="Ownership"
-                  register={register("owner", {
-                    required: "Ownership is required",
-                  })}
+                  register={register("owner")}
                   error={errors.owner?.message}
                   required
                   placeholder="Select Ownership"

@@ -63,12 +63,15 @@ export function useFacilitiesPaginated(params?: FacilityQueryParams) {
 export function useUpdateFacility() {
   const queryClient = useQueryClient();
   const { mutate: editFacility, isPending: isEditing } = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: EditFacilityForm }) => {
-      return updateFacility(id, {
-        name: data.name,
-        code: data.code,
-      });
-    },
+    // Only the name and code are sent, so only those are asked for — the
+    // caller is the inline rename dialog, not the full edit page.
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Pick<EditFacilityForm, "name" | "code">;
+    }) => updateFacility(id, { name: data.name, code: data.code }),
     onSuccess: () => {
       toast.success("Facility updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["facilities"] });

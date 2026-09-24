@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { permissionSchema, PermissionFormData } from "@/lib/validations";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import {
@@ -44,7 +46,7 @@ function PermissionsContent() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<PermissionCreateRequest>();
+  } = useForm<PermissionFormData>({ resolver: zodResolver(permissionSchema) });
 
   const openCreate = () => {
     setEditing(null);
@@ -259,7 +261,7 @@ function PermissionsContent() {
                   label="Code"
                   type="text"
                   placeholder="e.g. bookings.create"
-                  register={register("code", { required: "Code is required" })}
+                  register={register("code")}
                   error={errors.code?.message}
                   required
                   disabled={!!editing}
@@ -269,7 +271,7 @@ function PermissionsContent() {
                   label="Name"
                   type="text"
                   placeholder="e.g. Create Bookings"
-                  register={register("name", { required: "Name is required" })}
+                  register={register("name")}
                   error={errors.name?.message}
                   required
                 />

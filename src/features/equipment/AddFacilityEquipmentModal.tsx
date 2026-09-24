@@ -5,6 +5,11 @@ import { FaSave, FaTimes, FaInfoCircle } from "react-icons/fa";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { InputField } from "@/components/common/InputField";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  facilityEquipmentCreateSchema,
+  FacilityEquipmentCreateFormData,
+} from "@/lib/validations";
 import {
   useCreateFacilityEquipment,
   useFacilityEquipments,
@@ -12,12 +17,6 @@ import {
 
 interface AddFacilityEquipmentModalProps {
   onClose: () => void;
-}
-
-interface FormValues {
-  ae_title: string;
-  name?: string;
-  serial_number?: string;
 }
 
 /**
@@ -77,9 +76,11 @@ export default function AddFacilityEquipmentModal({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>();
+  } = useForm<FacilityEquipmentCreateFormData>({
+    resolver: zodResolver(facilityEquipmentCreateSchema),
+  });
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = (values: FacilityEquipmentCreateFormData) => {
     if (!contractServiceId) return;
 
     createEquipment(
@@ -150,10 +151,7 @@ export default function AddFacilityEquipmentModal({
               label="AE Title"
               type="text"
               placeholder="e.g. XRD01"
-              register={register("ae_title", {
-                required: "AE title is required",
-                maxLength: { value: 64, message: "Maximum 64 characters" },
-              })}
+              register={register("ae_title")}
               error={errors.ae_title?.message}
               required
               disabled={isCreating}

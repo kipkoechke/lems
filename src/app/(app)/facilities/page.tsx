@@ -15,13 +15,17 @@ import {
   useWards,
 } from "@/features/counties/useCounties";
 import {
-  EditFacilityForm as EditFacility,
   Facility,
   KephLevel,
 } from "@/services/apiFacility";
 import { useRouter } from "next/navigation";
 import { Suspense, useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  facilityRenameSchema,
+  FacilityRenameFormData,
+} from "@/lib/validations";
 import {
   FaBuilding,
   FaEdit,
@@ -42,7 +46,12 @@ function EditFacilityForm({
   facility: Facility;
   onSuccess: () => void;
 }) {
-  const { register, handleSubmit } = useForm<EditFacility>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FacilityRenameFormData>({
+    resolver: zodResolver(facilityRenameSchema),
     defaultValues: {
       name: facility.name,
       code: facility.code,
@@ -51,7 +60,7 @@ function EditFacilityForm({
 
   const { editFacility, isEditing } = useUpdateFacility();
 
-  const onSubmit = (data: EditFacility) => {
+  const onSubmit = (data: FacilityRenameFormData) => {
     editFacility({ id: facility.id, data });
   };
 
@@ -69,20 +78,30 @@ function EditFacilityForm({
               Facility Name
             </label>
             <input
-              {...register("name", { required: true })}
+              {...register("name")}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter facility name"
             />
+            {errors.name && (
+              <p className="text-red-600 text-sm mt-1">
+                {errors.name.message}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Facility Code
             </label>
             <input
-              {...register("code", { required: true })}
+              {...register("code")}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter facility code"
             />
+            {errors.code && (
+              <p className="text-red-600 text-sm mt-1">
+                {errors.code.message}
+              </p>
+            )}
           </div>
         </div>
 

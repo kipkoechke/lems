@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  dicomConfigureSchema,
+  DicomConfigureFormData,
+} from "@/lib/validations";
 import {
   FaCog,
   FaEdit,
@@ -34,7 +39,6 @@ import {
 } from "@/features/dicom/useDicom";
 import EquipmentWorklistTests from "@/features/equipment/EquipmentWorklistTests";
 import { dicomStatusHost } from "@/services/apiDicom";
-import type { DicomConfigureRequest } from "@/services/apiDicom";
 import {
   equipmentDicom,
   equipmentStatus,
@@ -103,7 +107,9 @@ function AdminEquipmentDetails() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<DicomConfigureRequest>();
+  } = useForm<DicomConfigureFormData>({
+    resolver: zodResolver(dicomConfigureSchema),
+  });
 
   // Prefill the configure form with whatever is already set.
   useEffect(() => {

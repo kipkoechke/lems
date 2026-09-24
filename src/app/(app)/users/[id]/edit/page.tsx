@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { userEditSchema, UserEditFormData } from "@/lib/validations";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useUpdateUser, useUser } from "@/features/users/useUsers";
@@ -11,13 +13,6 @@ import BackButton from "@/components/common/BackButton";
 import { InputField } from "@/components/common/InputField";
 import { ErrorState } from "@/components/common/ErrorState";
 import { FaSave, FaTimes } from "react-icons/fa";
-
-interface EditUserFormData {
-  email: string;
-  full_name?: string;
-  password?: string;
-  is_active: boolean;
-}
 
 function EditUserContent() {
   const params = useParams();
@@ -33,7 +28,7 @@ function EditUserContent() {
     reset,
     watch,
     formState: { errors },
-  } = useForm<EditUserFormData>();
+  } = useForm<UserEditFormData>({ resolver: zodResolver(userEditSchema) });
 
   useEffect(() => {
     if (user) {
@@ -75,7 +70,7 @@ function EditUserContent() {
     );
   }
 
-  const onSubmit = (data: EditUserFormData) => {
+  const onSubmit = (data: UserEditFormData) => {
     updateUser(
       {
         userId,
@@ -113,7 +108,7 @@ function EditUserContent() {
                 label="Email"
                 type="email"
                 placeholder="Enter email address"
-                register={register("email", { required: "Email is required" })}
+                register={register("email")}
                 error={errors.email?.message}
                 required
                 disabled={isUpdating}
