@@ -201,7 +201,6 @@ export default function UnmatchedStudiesPage() {
                       searchable={false}
                     />
                   </Table.HeaderCell>
-                  <Table.HeaderCell>Body Part</Table.HeaderCell>
                   <Table.HeaderCell>
                     <ColumnFilter
                       label="Equipment"
@@ -220,9 +219,9 @@ export default function UnmatchedStudiesPage() {
               </Table.Header>
               <Table.Body>
                 {isLoading ? (
-                  <Table.Loading colSpan={6} rows={8} />
+                  <Table.Loading colSpan={5} rows={8} />
                 ) : studies.length === 0 ? (
-                  <Table.Empty colSpan={6}>
+                  <Table.Empty colSpan={5}>
                     {search.term || period || modality || attributed
                       ? "No studies match these filters."
                       : "No studies have arrived without an order."}
@@ -251,32 +250,39 @@ export default function UnmatchedStudiesPage() {
                           )}
                         </div>
                       </Table.Cell>
+                      {/* Description and body part describe the same thing and
+                          are rarely both present — DX sends a body part and no
+                          description, US the reverse — so one column carries
+                          whichever arrived, with the other beside it. */}
                       <Table.Cell>
-                        <div className="text-sm text-slate-700">
-                          {study.study_description || "-"}
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-slate-700">
+                            {study.study_description || study.body_part || "-"}
+                          </span>
+                          {study.study_description && study.body_part && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-600">
+                              {study.body_part}
+                            </span>
+                          )}
                         </div>
-                        {study.institution_name && (
-                          <div className="text-[11px] text-slate-400">
-                            {study.institution_name}
-                          </div>
-                        )}
+                        <div className="text-[11px] text-slate-400">
+                          {[
+                            study.institution_name,
+                            study.series_count != null ||
+                            study.instance_count != null
+                              ? `${study.series_count ?? "-"} series · ${
+                                  study.instance_count ?? "-"
+                                } images`
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </div>
                       </Table.Cell>
                       <Table.Cell>
                         <span className="text-sm text-slate-700">
                           {study.modality || "-"}
                         </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-sm text-slate-700">
-                          {study.body_part || "-"}
-                        </span>
-                        {(study.series_count != null ||
-                          study.instance_count != null) && (
-                          <div className="text-[11px] text-slate-400">
-                            {study.series_count ?? "-"} series ·{" "}
-                            {study.instance_count ?? "-"} images
-                          </div>
-                        )}
                       </Table.Cell>
                       <Table.Cell>
                         {study.attributed && study.equipment ? (
