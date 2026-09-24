@@ -21,6 +21,7 @@ import {
   useEquipmentDetail,
 } from "@/features/vendors/useEquipmentDetail";
 import {
+  equipmentDicom,
   equipmentStatus,
   equipmentStatusLabel,
 } from "@/services/apiEquipment";
@@ -122,6 +123,10 @@ export default function VendorEquipmentDetailPage() {
       </div>
     );
   }
+
+  // `/equipment/{id}` returns the connection details flat on the equipment in
+  // some deployments and nested under `dicom` in others.
+  const dicom = equipmentDicom(equipment);
 
   return (
     <div className="px-4 py-4 space-y-4">
@@ -274,7 +279,7 @@ export default function VendorEquipmentDetailPage() {
           )}
 
         {/* DICOM Configuration */}
-        {equipment.dicom && (
+        {dicom && (
           <div className="border-t border-slate-100 pt-4">
             <h2 className="text-sm font-semibold text-slate-900 mb-3">
               DICOM Configuration
@@ -283,31 +288,31 @@ export default function VendorEquipmentDetailPage() {
               <div>
                 <p className="text-xs text-slate-500">AE Title</p>
                 <p className="text-sm font-mono text-slate-900">
-                  {equipment.dicom.ae_title || "-"}
+                  {dicom?.ae_title || "-"}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-slate-500">Device Host / IP</p>
                 <p className="text-sm font-mono text-slate-900">
-                  {equipment.dicom.hl7_host || "-"}
+                  {dicom?.hl7_host || "-"}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-slate-500">HL7 Port</p>
                 <p className="text-sm font-mono text-slate-900">
-                  {equipment.dicom.hl7_port ?? "-"}
+                  {dicom?.hl7_port ?? "-"}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-slate-500">DICOM Port</p>
                 <p className="text-sm font-mono text-slate-900">
-                  {equipment.dicom.dicom_port ?? "-"}
+                  {dicom.dicom_port ?? "-"}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-slate-500">Connection Status</p>
                 <p className="text-sm text-slate-900">
-                  {equipment.dicom.is_connected ? (
+                  {dicom.is_connected ? (
                     <span className="inline-flex items-center gap-1 text-emerald-700">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
                       Connected
@@ -320,11 +325,11 @@ export default function VendorEquipmentDetailPage() {
                   )}
                 </p>
               </div>
-              {equipment.dicom.last_seen_at && (
+              {dicom.last_seen_at && (
                 <div>
                   <p className="text-xs text-slate-500">Last Seen</p>
                   <p className="text-sm text-slate-900">
-                    {formatDate(equipment.dicom.last_seen_at)}
+                    {formatDate(dicom.last_seen_at)}
                   </p>
                 </div>
               )}

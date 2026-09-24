@@ -553,6 +553,16 @@ export interface EquipmentDetail extends Partial<AdminEquipment> {
   dicom_aet?: string | null;
   dicom_host?: string | null;
   dicom_port?: number | null;
+
+  // Flat-shape fields: `/equipment/{id}` returns the connection details on the
+  // equipment itself (`ae_title`, `host`, `dicom_port`), not under `dicom`.
+  ae_title?: string | null;
+  host?: string | null;
+  hl7_port?: number | null;
+  is_connected?: boolean;
+  linked?: boolean;
+  last_seen_at?: string | null;
+  connected_at?: string | null;
 }
 
 /** Machine-readable status, whichever field the deployment sends. */
@@ -571,14 +581,18 @@ export const equipmentDicom = (
   equipment: EquipmentDetail,
 ): AdminEquipmentDicom | null => {
   if (equipment.dicom) return equipment.dicom;
-  if (!equipment.dicom_aet && !equipment.dicom_host && !equipment.dicom_port) {
+  const aeTitle = equipment.dicom_aet ?? equipment.ae_title ?? null;
+  const host = equipment.dicom_host ?? equipment.host ?? null;
+  if (!aeTitle && !host && !equipment.dicom_port) {
     return null;
   }
   return {
-    ae_title: equipment.dicom_aet ?? null,
-    hl7_host: equipment.dicom_host ?? null,
+    ae_title: aeTitle,
+    hl7_host: host,
+    hl7_port: equipment.hl7_port ?? null,
     dicom_port: equipment.dicom_port ?? null,
-    is_connected: false,
+    is_connected: equipment.is_connected ?? false,
+    last_seen_at: equipment.last_seen_at ?? null,
   };
 };
 

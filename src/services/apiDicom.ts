@@ -94,6 +94,8 @@ export interface DicomEquipmentVendorConfig {
 export interface DicomEquipmentStatus {
   equipment_id?: string;
   ae_title?: string | null;
+  /** Device host/IP. Sent as `host`; older deployments used `hl7_host`. */
+  host?: string | null;
   hl7_host?: string | null;
   hl7_port?: number | null;
   dicom_port?: number | null;
@@ -101,6 +103,11 @@ export interface DicomEquipmentStatus {
   last_seen_at?: string | null;
   vendor_config?: DicomEquipmentVendorConfig | null;
 }
+
+/** Device host/IP, whichever field the deployment sends. */
+export const dicomStatusHost = (
+  status: DicomEquipmentStatus | null | undefined,
+): string | null => status?.host ?? status?.hl7_host ?? null;
 
 export interface DicomConfigureRequest {
   ae_title: string;

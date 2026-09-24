@@ -32,6 +32,7 @@ import {
   useTestEquipmentDicom,
   useWorklistTest,
 } from "@/features/dicom/useDicom";
+import { dicomStatusHost } from "@/services/apiDicom";
 import type { DicomConfigureRequest } from "@/services/apiDicom";
 import {
   equipmentDicom,
@@ -108,7 +109,7 @@ function AdminEquipmentDetails() {
     if (!dicomStatus) return;
     reset({
       ae_title: dicomStatus.ae_title ?? "",
-      ip: dicomStatus.hl7_host ?? "",
+      ip: dicomStatusHost(dicomStatus) ?? "",
       port: dicomStatus.dicom_port ?? undefined,
     });
   }, [dicomStatus, reset]);
@@ -168,7 +169,7 @@ function AdminEquipmentDetails() {
   const dicom = dicomStatus?.ae_title
     ? {
         ae_title: dicomStatus.ae_title ?? null,
-        hl7_host: dicomStatus.hl7_host ?? null,
+        hl7_host: dicomStatusHost(dicomStatus),
         hl7_port: dicomStatus.hl7_port ?? null,
         dicom_port: dicomStatus.dicom_port ?? null,
         is_connected: dicomStatus.is_connected ?? false,
