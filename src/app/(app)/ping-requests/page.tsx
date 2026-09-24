@@ -21,6 +21,23 @@ import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { InputField } from "@/components/common/InputField";
 import { ErrorState } from "@/components/common/ErrorState";
 import { FaSatelliteDish, FaCheck, FaTimes } from "react-icons/fa";
+import DeviceActivityView from "@/features/pingRequests/DeviceActivityView";
+import PendingInstallationView from "@/features/pingRequests/PendingInstallationView";
+
+/**
+ * Three views of the same device story:
+ *
+ * - approvals: ping requests waiting for a decision.
+ * - activity:  the arrival log — every connect, worklist pull and study send.
+ * - install:   discovered devices that still have no vendor or facility.
+ */
+type PingTab = "approvals" | "activity" | "install";
+
+const TABS: { value: PingTab; label: string }[] = [
+  { value: "approvals", label: "Approvals" },
+  { value: "activity", label: "Device Activity" },
+  { value: "install", label: "Pending Installation" },
+];
 
 const AE_TITLE_SOURCES: { value: AeTitleSource; label: string }[] = [
   { value: "machine_ping", label: "Use AE title from machine ping" },
@@ -52,6 +69,7 @@ function PingRequestsContent() {
   const { rejectRequest, isRejecting } = useRejectPingRequest();
   const { equipments } = useAdminEquipments({ per_page: 100 });
 
+  const [tab, setTab] = useState<PingTab>("approvals");
   const [active, setActive] = useState<PingRequest | null>(null);
   const [mode, setMode] = useState<"approve" | "reject">("approve");
   const [equipmentId, setEquipmentId] = useState("");
@@ -94,32 +112,6 @@ function PingRequestsContent() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen p-3 md:p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg border border-slate-200 p-8 animate-pulse space-y-4">
-            <div className="h-8 bg-slate-200 rounded w-1/4" />
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-14 bg-slate-100 rounded" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <ErrorState
-        title="Unable to Load Ping Requests"
-        error={error}
-        action={{ label: "Try Again", onClick: () => refetch() }}
-        fullScreen
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -138,9 +130,46 @@ function PingRequestsContent() {
               </p>
             </div>
           </div>
+
+          <div className="flex gap-1 mt-4 border-b border-slate-100 -mb-4">
+            {TABS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setTab(option.value)}
+                className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  tab === option.value
+                    ? "border-blue-600 text-blue-700"
+                    : "border-transparent text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
 
+        {tab === "activity" && <DeviceActivityView />}
+        {tab === "install" && <PendingInstallationView />}
+
+        {tab === "approvals" && isLoading && (
+          <div className="bg-white rounded-lg border border-slate-200 p-8 animate-pulse space-y-4">
+            <div className="h-8 bg-slate-200 rounded w-1/4" />
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-14 bg-slate-100 rounded" />
+            ))}
+          </div>
+        )}
+
+        {tab === "approvals" && !isLoading && error && (
+          <ErrorState
+            title="Unable to Load Ping Requests"
+            error={error}
+            action={{ label: "Try Again", onClick: () => refetch() }}
+          />
+        )}
+
         {/* Queue */}
+        {tab === "approvals" && !isLoading && !error && (
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
           <Table className="w-full">
             <Table.Header>
@@ -220,6 +249,7 @@ function PingRequestsContent() {
             </Table.Body>
           </Table>
         </div>
+        )}
       </div>
 
       {/* Decision modal */}

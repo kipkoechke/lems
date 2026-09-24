@@ -176,6 +176,13 @@ export interface MedicalRequestListParams {
   patient?: string;
   facility_id?: string;
   facility_name?: string;
+  /** Vendor of the named machine, or of the contract when only a facility is named. */
+  vendor_id?: string;
+  /** `7d`, `30d`, `90d`, `12m`, `this_month`, `this_year`. */
+  period?: string;
+  /** Explicit range; overrides `period`. */
+  from?: string;
+  to?: string;
   page?: number;
   page_size?: number;
 }

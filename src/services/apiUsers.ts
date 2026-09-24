@@ -217,6 +217,32 @@ export const getUsers = async (
   };
 };
 
+/**
+ * GET /users/roles — the roles the caller may assign.
+ *
+ * Scoped by the caller: a facility admin gets only their four assignable
+ * facility roles, a system admin gets every role. Driving the role picker from
+ * this keeps the form honest when the backend's role set changes.
+ */
+export interface AssignableRole {
+  value: string;
+  label: string;
+  type: "system" | "vendor" | "facility" | string;
+}
+
+export interface AssignableRolesResponse {
+  data: AssignableRole[];
+  scope: "facility" | "system" | string;
+}
+
+export const getAssignableRoles = async (): Promise<AssignableRolesResponse> => {
+  const response = await axios.get<AssignableRolesResponse>("/users/roles");
+  return {
+    data: response.data?.data ?? [],
+    scope: response.data?.scope ?? "system",
+  };
+};
+
 // GET /users/{id} — includes assigned permissions
 export const getUser = async (userId: string): Promise<AdminUser> => {
   const response = await axios.get<{ data: AdminUser }>(`/users/${userId}`);

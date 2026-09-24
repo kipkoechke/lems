@@ -13,6 +13,7 @@ import { ActionMenu } from "@/components/common/ActionMenu";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
+import { useLots } from "@/features/lots/useLots";
 
 const CONTRACT_STATUS_OPTIONS = [
   { value: "active", label: "Active" },
@@ -24,17 +25,25 @@ const CONTRACT_STATUS_OPTIONS = [
 export default function ContractsPage() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState("");
+  const [lotFilter, setLotFilter] = useState("");
   const [page, setPage] = useState(1);
   const search = useSearchControl(() => setPage(1));
 
+  // Lots that the contracts can be filtered by. `lot_id` matches a contract
+  // that includes any service from that lot.
+  const { lots } = useLots(undefined);
+
   const { contracts, pagination, isLoading, error } = useContracts({
-    // This endpoint has no search param, so filtering is client-side. Drop
-    // pagination while searching, or the filter only ever sees one page of
-    // contracts and most matches are invisible.
+    status: statusFilter || undefined,
+    search: search.term || undefined,
+    lot_id: lotFilter || undefined,
+    // Drop pagination while searching so the client-side narrowing below sees
+    // the whole list rather than one page of it.
     ...(search.isSearching ? {} : { page, per_page: 25 }),
   });
 
-  // Filter contracts based on search and status
+  // Belt and braces: the API filters these too, so this only narrows further
+  // on a deployment that ignores the params.
   const term = search.term.toLowerCase();
   const filteredContracts = contracts?.filter((contract: Contract) => {
     if (statusFilter && contract.status !== statusFilter) return false;
@@ -127,6 +136,22 @@ export default function ContractsPage() {
                 placeholder="Search contracts by vendor, facility, or lot..."
               />
             </div>
+
+            <select
+              value={lotFilter}
+              onChange={(event) => {
+                setLotFilter(event.target.value);
+                setPage(1);
+              }}
+              className="shrink-0 w-full lg:w-56 text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All lots</option>
+              {lots.map((lot) => (
+                <option key={lot.id} value={lot.id}>
+                  LOT {lot.number} — {lot.name}
+                </option>
+              ))}
+            </select>
 
             <PermissionGate permission={Permission.CREATE_CONTRACTS}>
               <button

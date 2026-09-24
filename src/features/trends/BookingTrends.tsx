@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   MdPeople,
   MdPrecisionManufacturing,
@@ -20,25 +20,22 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
 } from "recharts";
 import { useDashboard } from "./useDashboard";
-import { useRouter } from "next/navigation";
 import { DashboardSkeleton } from "@/components/common/Skeleton";
+import type {
+  DashboardAvailableFilters,
+  DashboardParams,
+  TrendGranularity,
+} from "@/services/apiDashboard";
 
 const formatCurrency = (value: number) =>
   `KES ${value.toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-const formatDate = (dateString: string) => {
-  if (!dateString) return "-";
-  return new Date(dateString).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-};
 
 // ===== Donut Chart Colors =====
 const DONUT_COLORS = {
@@ -195,6 +192,75 @@ function StatCard({
   );
 }
 
+/**
+ * Dashboard filter bar.
+ *
+ * Every dropdown is driven by the `filters.available` block the dashboard
+ * itself returns, so a filter only appears when the API offers options for it
+ * — no separate county/facility/vendor lookups, and no stale hardcoded lists.
+ */
+function DashboardFilterBar({
+  available,
+  filters,
+  onChange,
+  onReset,
+}: {
+  available?: DashboardAvailableFilters;
+  filters: DashboardParams;
+  onChange: (key: keyof DashboardParams, value: string) => void;
+  onReset: () => void;
+}) {
+  type Field = {
+    key: keyof DashboardParams;
+    label: string;
+    options?: { value: string; label: string }[];
+  };
+
+  const fields: Field[] = ([
+    { key: "period", label: "All time", options: available?.period },
+    { key: "county_id", label: "All counties", options: available?.county },
+    {
+      key: "facility_type",
+      label: "All facility types",
+      options: available?.facility_type,
+    },
+    { key: "facility_id", label: "All facilities", options: available?.facility },
+    { key: "vendor_id", label: "All vendors", options: available?.vendor },
+  ] as Field[]).filter((field) => field.options && field.options.length > 0);
+
+  if (fields.length === 0) return null;
+
+  const hasFilters = fields.some((field) => filters[field.key]);
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {fields.map((field) => (
+        <select
+          key={field.key}
+          value={(filters[field.key] as string) ?? ""}
+          onChange={(event) => onChange(field.key, event.target.value)}
+          className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 max-w-[12rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">{field.label}</option>
+          {field.options!.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ))}
+      {hasFilters && (
+        <button
+          onClick={onReset}
+          className="text-xs font-medium text-blue-600 hover:text-blue-700"
+        >
+          Clear
+        </button>
+      )}
+    </div>
+  );
+}
+
 const MODALITY_BAR_COLORS = [
   "#6366f1",
   "#10b981",
@@ -209,11 +275,16 @@ const MODALITY_BAR_COLORS = [
 ];
 
 export default function BookingTrends() {
-  const router = useRouter();
-  const { dashboardData, isLoading, error } = useDashboard();
+  const [filters, setFilters] = useState<DashboardParams>({});
+  const { dashboardData, isLoading, isFetching, error } = useDashboard(filters);
+
+  const setFilter = (key: keyof DashboardParams, value: string) =>
+    setFilters((current) => ({ ...current, [key]: value || undefined }));
 
   const efficiency = dashboardData?.efficiency;
-  const recentActivity = dashboardData?.recent_activity || [];
+  const bookingTrend = dashboardData?.booking_trend;
+  const trendPoints = bookingTrend?.points ?? [];
+  const availableFilters = dashboardData?.filters?.available;
   const modalities = dashboardData?.modalities || [];
   const shaClaims = dashboardData?.sha_claims;
 
@@ -305,11 +376,20 @@ export default function BookingTrends() {
     <div className="min-h-screen p-4">
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Header */}
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            System overview &amp; key metrics
-          </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
+            <p className="text-xs text-slate-500 mt-0.5">
+              System overview &amp; key metrics
+              {isFetching && !isLoading && " — updating…"}
+            </p>
+          </div>
+          <DashboardFilterBar
+            available={availableFilters}
+            filters={filters}
+            onChange={setFilter}
+            onReset={() => setFilters({})}
+          />
         </div>
 
         {/* Quick Stats Row */}
@@ -531,96 +611,88 @@ export default function BookingTrends() {
           </div>
         )}
 
-        {/* Recent Activity — Full width */}
+        {/* Booking trend — Full width */}
         <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100">
-            <MdAssignment className="w-4 h-4 text-slate-400" />
+          <div className="flex flex-wrap items-center gap-2 mb-3 pb-2 border-b border-slate-100">
+            <MdTrendingUp className="w-4 h-4 text-slate-400" />
             <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-              Recent Activity
+              Booking Trend
             </p>
-            <span className="ml-auto text-xs text-slate-400">
-              Last {recentActivity.length} bookings
-            </span>
+            {bookingTrend && (
+              <span className="text-xs text-slate-400">
+                {bookingTrend.total.toLocaleString()} bookings over the last{" "}
+                {bookingTrend.buckets}{" "}
+                {bookingTrend.granularity === "monthly" ? "months" : "days"}
+              </span>
+            )}
+            <div className="ml-auto flex rounded-lg border border-slate-200 overflow-hidden">
+              {(["daily", "monthly"] as TrendGranularity[]).map((option) => {
+                const active = (filters.trend ?? "daily") === option;
+                return (
+                  <button
+                    key={option}
+                    onClick={() => setFilter("trend", option)}
+                    className={`px-3 py-1 text-xs font-medium capitalize transition-colors ${
+                      active
+                        ? "bg-blue-600 text-white"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    {option}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          {recentActivity.length === 0 ? (
-            <p className="text-sm text-slate-400 text-center py-8">
-              No recent activity
+
+          {trendPoints.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-12">
+              No bookings in this period
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-100">
-                    <th className="text-left py-2 px-3 text-xs font-medium text-slate-400 uppercase tracking-wide">
-                      Booking
-                    </th>
-                    <th className="text-left py-2 px-3 text-xs font-medium text-slate-400 uppercase tracking-wide">
-                      Patient
-                    </th>
-                    <th className="text-left py-2 px-3 text-xs font-medium text-slate-400 uppercase tracking-wide">
-                      Facility
-                    </th>
-                    <th className="text-center py-2 px-3 text-xs font-medium text-slate-400 uppercase tracking-wide">
-                      Services
-                    </th>
-                    <th className="text-center py-2 px-3 text-xs font-medium text-slate-400 uppercase tracking-wide">
-                      Status
-                    </th>
-                    <th className="text-right py-2 px-3 text-xs font-medium text-slate-400 uppercase tracking-wide">
-                      Date
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentActivity.map((activity) => (
-                    <tr
-                      key={activity.id}
-                      className="border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors"
-                      onClick={() => router.push(`/bookings/${activity.id}`)}
-                    >
-                      <td className="py-2.5 px-3">
-                        <span className="font-medium text-slate-900">
-                          {activity.booking_number}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-700">
-                        {activity.patient.name}
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-700">
-                        {activity.facility.name}
-                      </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className="text-slate-700">
-                          {activity.services_count}
-                        </span>
-                        {activity.services_status && (
-                          <span className="text-xs text-slate-400 ml-1">
-                            ({activity.services_status.completed}/
-                            {activity.services_status.pending})
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span
-                          className={`inline-flex px-1.5 py-0.5 rounded-full text-xs font-medium border ${
-                            activity.status === "active"
-                              ? "bg-blue-50 text-blue-700 border-blue-200"
-                              : activity.status === "completed"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                : "bg-slate-50 text-slate-600 border-slate-200"
-                          }`}
-                        >
-                          {activity.status}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-slate-500 text-xs">
-                        {formatDate(activity.created_at)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveContainer width="100%" height={280}>
+              <AreaChart
+                data={trendPoints}
+                margin={{ top: 4, right: 16, left: 0, bottom: 4 }}
+              >
+                <defs>
+                  <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: "#64748b" }}
+                  axisLine={{ stroke: "#e2e8f0" }}
+                  tickLine={false}
+                  minTickGap={16}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "#64748b" }}
+                  axisLine={{ stroke: "#e2e8f0" }}
+                  tickLine={false}
+                  allowDecimals={false}
+                />
+                <Tooltip
+                  formatter={(value: number) => [value, "Bookings"]}
+                  labelFormatter={(label: string) => label}
+                  contentStyle={{
+                    borderRadius: "8px",
+                    border: "1px solid #e2e8f0",
+                    fontSize: "12px",
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  fill="url(#trendFill)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           )}
         </div>
       </div>

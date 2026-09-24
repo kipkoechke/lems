@@ -21,6 +21,7 @@ import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
+import { FacilityFilter } from "@/components/common/FacilityFilter";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import { useCurrentUserWithLoading } from "@/hooks/useAuth";
@@ -33,6 +34,15 @@ const STATUS_FILTER_OPTIONS = [
   { value: "inactive", label: "Inactive" },
   { value: "decommissioned", label: "Decommissioned" },
   { value: "pending_installation", label: "Pending Installation" },
+];
+
+/**
+ * `linked` is "has this device ever been seen on the network", which is not
+ * the same as being connected right now.
+ */
+const LINKED_FILTER_OPTIONS = [
+  { value: "true", label: "Seen on the network" },
+  { value: "false", label: "Never seen" },
 ];
 
 const STATUS_BADGE: Record<string, string> = {
@@ -65,6 +75,8 @@ function AdminEquipmentsView() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("");
   const [modalityFilter, setModalityFilter] = useState("");
+  const [facilityFilter, setFacilityFilter] = useState("");
+  const [linkedFilter, setLinkedFilter] = useState("");
   const search = useSearchControl(() => setPage(1));
 
   const { equipments, pagination, availableFilters, isLoading, error, refetch } =
@@ -74,6 +86,9 @@ function AdminEquipmentsView() {
       ...(search.isSearching ? {} : { page, per_page: 15 }),
       status: statusFilter || undefined,
       modality: modalityFilter || undefined,
+      facility_id: facilityFilter || undefined,
+      // Tri-state — "" means no filter, not false.
+      linked: linkedFilter === "" ? undefined : linkedFilter === "true",
       search: search.term || undefined,
     });
 
@@ -87,6 +102,8 @@ function AdminEquipmentsView() {
     isLoading: countsLoading,
   } = useAdminEquipmentCounts({
     status: statusFilter || undefined,
+    facility_id: facilityFilter || undefined,
+    linked: linkedFilter === "" ? undefined : linkedFilter === "true",
     search: search.term || undefined,
   });
 
@@ -153,6 +170,17 @@ function AdminEquipmentsView() {
               />
             </div>
 
+            <div className="w-full lg:w-56 shrink-0">
+              <FacilityFilter
+                value={facilityFilter}
+                onChange={(value) => {
+                  setFacilityFilter(value);
+                  setPage(1);
+                }}
+                hideLabel
+              />
+            </div>
+
             <button
               onClick={() => router.push("/equipments/new")}
               className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
@@ -173,6 +201,7 @@ function AdminEquipmentsView() {
                 {statusFilter
                   ? `${STATUS_FILTER_OPTIONS.find((o) => o.value === statusFilter)?.label} equipment only`
                   : "All equipment, every status"}
+                {facilityFilter && " — selected facility"}
                 {countsTruncated && " — partial count"}
               </p>
             </div>
@@ -284,7 +313,19 @@ function AdminEquipmentsView() {
                     searchable={false}
                   />
                 </Table.HeaderCell>
-                <Table.HeaderCell>Linked</Table.HeaderCell>
+                <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Linked"
+                    options={LINKED_FILTER_OPTIONS}
+                    value={linkedFilter}
+                    onChange={(v) => {
+                      setLinkedFilter(v);
+                      setPage(1);
+                    }}
+                    allLabel="All Devices"
+                    searchable={false}
+                  />
+                </Table.HeaderCell>
                 <Table.HeaderCell align="center">Actions</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
@@ -316,9 +357,17 @@ function AdminEquipmentsView() {
                       </span>
                     </Table.Cell>
                     <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {eq.vendor?.name || "-"}
-                      </span>
+                      {eq.vendor?.name ? (
+                        <span className="text-sm text-slate-700">
+                          {eq.vendor.name}
+                        </span>
+                      ) : (
+                        // Discovered devices arrive unowned rather than under
+                        // a placeholder vendor.
+                        <span className="text-xs text-slate-400">
+                          Unassigned
+                        </span>
+                      )}
                     </Table.Cell>
                     <Table.Cell>
                       <span
@@ -336,7 +385,12 @@ function AdminEquipmentsView() {
                           Linked
                         </span>
                       ) : eq.linked === false ? (
-                        <span className="text-xs text-slate-400">—</span>
+                        <span
+                          className="text-xs text-slate-400"
+                          title="This device has never been seen on the network"
+                        >
+                          Never seen
+                        </span>
                       ) : (
                         <span className="text-xs text-slate-400">—</span>
                       )}

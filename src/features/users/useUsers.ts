@@ -3,6 +3,7 @@ import { toast } from "react-hot-toast";
 import {
   createUser,
   deleteUser,
+  getAssignableRoles,
   getUser,
   getUsers,
   updateUser,
@@ -24,6 +25,25 @@ export const useUsers = (params: UserListParams = {}) => {
     error,
     refetch,
   };
+};
+
+/**
+ * The roles this account may assign, for the user form's role picker.
+ *
+ * The API scopes the list to the caller, so the form does not have to know
+ * that a facility admin may never create another facility admin.
+ */
+export const useAssignableRoles = () => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["users", "roles"],
+    queryFn: getAssignableRoles,
+    staleTime: 10 * 60 * 1000,
+    // A deployment that predates this endpoint 404s; the form falls back to
+    // its own list rather than retrying.
+    retry: false,
+  });
+
+  return { roles: data?.data ?? [], scope: data?.scope, isLoading, error };
 };
 
 export const useUser = (userId: string) => {

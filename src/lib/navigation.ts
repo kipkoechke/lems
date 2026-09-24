@@ -104,7 +104,8 @@ const NAV_ITEMS: NavItem[] = [
     label: "Ping Requests",
     href: "/ping-requests",
     permission: Permission.MANAGE_DICOM,
-    description: "Approve machine ping requests",
+    description:
+      "Approvals, the device activity log and devices awaiting installation",
   },
   {
     label: "SHA Interventions",

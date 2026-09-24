@@ -276,6 +276,19 @@ export const FACILITY_ROLES: string[] = [
 export const isFacilityRole = (role?: string | null): boolean =>
   !!role && FACILITY_ROLES.includes(role);
 
+/**
+ * Accounts that may read but never write.
+ *
+ * The permission map already withholds every write grant from these roles, so
+ * anything behind a `MANAGE_*` gate is hidden already. This exists for the
+ * controls that are not gated on one — bulk approve/reject, say — where the
+ * button would otherwise be offered and answered with a 403.
+ */
+export const READ_ONLY_ROLES: string[] = [UserRole.F_VIEW_ONLY];
+
+export const isReadOnlyRole = (role?: string | null): boolean =>
+  !!role && READ_ONLY_ROLES.includes(role);
+
 // Helper functions
 export const getUserPermissions = (role: UserRole): Permission[] => {
   return ROLE_PERMISSIONS[role] || [];

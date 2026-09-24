@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useMedicalRequests } from "@/features/requests/useRequests";
+import { VendorFilter } from "@/components/common/VendorFilter";
+import { PERIOD_PRESETS } from "@/services/apiPingRequests";
 import {
   REQUEST_STATUS_OPTIONS,
   requestFacility,
@@ -45,6 +47,8 @@ function RequestsContent() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
   const [patient, setPatient] = useState("");
+  const [vendorId, setVendorId] = useState("");
+  const [period, setPeriod] = useState("");
 
   const { requests, pagination, isLoading, error, refetch } = useMedicalRequests(
     {
@@ -52,6 +56,10 @@ function RequestsContent() {
       page_size: 20,
       status: status || undefined,
       patient: patient || undefined,
+      // The vendor of the named machine, or of the contract when the order
+      // names only a facility.
+      vendor_id: vendorId || undefined,
+      period: period || undefined,
     },
   );
 
@@ -111,6 +119,33 @@ function RequestsContent() {
                 placeholder="Search by patient name..."
               />
             </div>
+
+            <div className="w-full lg:w-56 shrink-0">
+              <VendorFilter
+                value={vendorId}
+                onChange={(id) => {
+                  setVendorId(id);
+                  setPage(1);
+                }}
+                hideLabel
+              />
+            </div>
+
+            <select
+              value={period}
+              onChange={(event) => {
+                setPeriod(event.target.value);
+                setPage(1);
+              }}
+              className="shrink-0 text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All time</option>
+              {PERIOD_PRESETS.map((preset) => (
+                <option key={preset.value} value={preset.value}>
+                  {preset.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -143,7 +178,7 @@ function RequestsContent() {
             <Table.Body>
               {requests.length === 0 ? (
                 <Table.Empty colSpan={7}>
-                  {status || patient
+                  {status || patient || vendorId || period
                     ? "No requests match your criteria"
                     : "No medical requests received yet."}
                 </Table.Empty>

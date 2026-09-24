@@ -8,6 +8,7 @@ import {
   hasAnyPermission,
   hasAllPermissions,
   getEffectivePermissions,
+  isReadOnlyRole,
 } from "../lib/rbac";
 
 // Hook to get current user's role
@@ -26,6 +27,9 @@ const useApiPermissions = (): Record<string, boolean> | undefined => {
   const user = useCurrentUser();
   return user?.permissions;
 };
+
+/** True for accounts that may read but never write — hide write controls. */
+export const useIsReadOnly = (): boolean => isReadOnlyRole(useUserRole());
 
 // Hook to check if user has a specific permission
 export const useHasPermission = (permission: Permission): boolean => {

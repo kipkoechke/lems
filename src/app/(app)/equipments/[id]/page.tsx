@@ -404,8 +404,14 @@ function AdminEquipmentDetails() {
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">Device Host / IP</p>
-                  <p className="text-sm font-mono text-slate-900">
-                    {dicom.hl7_host || "-"}
+                  {/* The address is learned from the device's own traffic, so
+                      a newly provisioned unit legitimately has none yet. */}
+                  <p
+                    className={`text-sm font-mono ${
+                      dicom.hl7_host ? "text-slate-900" : "text-slate-400"
+                    }`}
+                  >
+                    {dicom.hl7_host || "Awaiting first contact"}
                   </p>
                 </div>
                 <div>
@@ -418,6 +424,16 @@ function AdminEquipmentDetails() {
                   <p className="text-xs text-slate-500">DICOM Port</p>
                   <p className="text-sm font-mono text-slate-900">
                     {dicom.dicom_port ?? "-"}
+                    {/* 11112 is the placeholder every discovered device is
+                        stamped with — not a verified listening port. */}
+                    {dicom.dicom_port === 11112 && (
+                      <span
+                        className="ml-1.5 text-xs font-sans text-amber-600"
+                        title="Default port — confirm it against the device itself"
+                      >
+                        unverified
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div>

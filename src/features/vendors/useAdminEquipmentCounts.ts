@@ -6,7 +6,7 @@ import {
 
 type CountParams = Pick<
   AdminEquipmentParams,
-  "status" | "vendor_id" | "search"
+  "status" | "vendor_id" | "facility_id" | "linked" | "search"
 >;
 
 /**

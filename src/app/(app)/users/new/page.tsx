@@ -11,7 +11,7 @@ import {
   isFacilityRole,
 } from "@/lib/rbac";
 import { useCurrentUser, useCurrentFacility } from "@/hooks/useAuth";
-import { useCreateUser } from "@/features/users/useUsers";
+import { useAssignableRoles, useCreateUser } from "@/features/users/useUsers";
 import { useVendors } from "@/features/vendors/useVendors";
 import { UserCreateRequest } from "@/services/apiUsers";
 import BackButton from "@/components/common/BackButton";
@@ -20,6 +20,11 @@ import { SelectField } from "@/components/common/SelectField";
 import { FacilityFilter } from "@/components/common/FacilityFilter";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { FaSave, FaTimes } from "react-icons/fa";
+
+/**
+ * Fallback role lists, used only when `GET /users/roles` is unavailable — the
+ * API is authoritative about who may assign what.
+ */
 
 /** Roles a facility admin may provision — never another admin. */
 const FACILITY_ADMIN_CREATABLE_ROLES: UserRole[] = [
@@ -70,7 +75,18 @@ function NewUserContent() {
   const [vendorId, setVendorId] = useState("");
   const { vendors, isLoading: vendorsLoading } = useVendors();
 
+  // The API scopes the role list to the caller. Fall back to the local lists
+  // when it is unreachable, so the form still works.
+  const { roles: assignableRoles } = useAssignableRoles();
+
   const roleOptions = useMemo(() => {
+    if (assignableRoles.length > 0) {
+      return assignableRoles.map((role) => ({
+        value: role.value,
+        label: role.label,
+      }));
+    }
+
     const roles = isFacilityAdmin
       ? FACILITY_ADMIN_CREATABLE_ROLES
       : SYSTEM_ADMIN_CREATABLE_ROLES;
@@ -78,7 +94,7 @@ function NewUserContent() {
       value: role,
       label: getRoleDisplayName(role),
     }));
-  }, [isFacilityAdmin]);
+  }, [assignableRoles, isFacilityAdmin]);
 
   const {
     register,
@@ -87,7 +103,9 @@ function NewUserContent() {
     setError,
     formState: { errors },
   } = useForm<UserFormData>({
-    defaultValues: { role: roleOptions[0]?.value, is_active: true },
+    // No default role: the options arrive from the API, so preselecting one
+    // from the fallback list could leave a value the API will not accept.
+    defaultValues: { role: "", is_active: true },
   });
 
   const role = watch("role");

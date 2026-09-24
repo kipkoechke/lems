@@ -440,6 +440,13 @@ export interface AdminEquipmentParams {
   status?: string;
   search?: string;
   vendor_id?: string;
+  /** Owning facility. */
+  facility_id?: string;
+  /**
+   * Ever seen on the network (`last_seen_at` set) — not the same as
+   * `is_connected`, which is live state. Tri-state: omit for both.
+   */
+  linked?: boolean;
   sort_by?: string;
   sort_order?: string;
 }
@@ -447,7 +454,13 @@ export interface AdminEquipmentParams {
 export const getAdminEquipments = async (
   params: AdminEquipmentParams = {},
 ): Promise<AdminEquipmentResponse> => {
-  const response = await axios.get("/admin/equipment", { params });
+  const response = await axios.get("/admin/equipment", {
+    // `linked` is tri-state, so it is only sent when explicitly set.
+    params: {
+      ...params,
+      linked: params.linked === undefined ? undefined : String(params.linked),
+    },
+  });
   return {
     data: response.data?.data ?? [],
     // This endpoint sends `total_pages`, not `last_page` — see the normaliser.

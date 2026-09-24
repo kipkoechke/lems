@@ -136,6 +136,8 @@ export interface FacilityEquipmentAvailableFilters {
   status?: FacilityEquipmentFilterOption[];
   category?: FacilityEquipmentFilterOption[];
   modality?: FacilityEquipmentModalityOption[];
+  ownership_type?: FacilityEquipmentFilterOption[];
+  linked?: FacilityEquipmentFilterOption[];
   sort_by?: FacilityEquipmentFilterOption[];
   sort_order?: FacilityEquipmentFilterOption[];
 }
@@ -145,7 +147,13 @@ export interface FacilityEquipmentParams {
   modality?: string;
   category?: string;
   status?: string;
+  /** Connected right now. */
   is_connected?: boolean;
+  /**
+   * Ever seen on the network. Tri-state: omit for both, `true` for ever-seen,
+   * `false` for never-seen. Not the same question as `is_connected`.
+   */
+  linked?: boolean;
   ownership_type?: FacilityEquipmentOwnership;
   sort_by?:
     | "name"
@@ -170,16 +178,29 @@ export interface FacilityEquipmentsResponse {
 export const getFacilityEquipments = async (
   params: FacilityEquipmentParams = {},
 ): Promise<FacilityEquipmentsResponse> => {
-  const response = await axios.get("/facility/equipments", { params });
+  const response = await axios.get("/facility/equipments", {
+    // `linked` is tri-state, so it is only sent when explicitly set; the API
+    // wants the literal string.
+    params: {
+      ...params,
+      linked: params.linked === undefined ? undefined : String(params.linked),
+    },
+  });
+
+  // The summary and filter options moved under `meta`; earlier deployments
+  // sent them at the top level.
+  const body = response.data ?? {};
+  const meta = body.meta ?? {};
+
   return {
-    summary: response.data?.summary ?? { total: 0 },
-    data: response.data?.data ?? [],
+    summary: meta.summary ?? body.summary ?? { total: 0 },
+    data: body.data ?? [],
     // This endpoint sends `total_pages`, not `last_page` — see the normaliser.
     pagination: normalisePagination(
-      response.data?.pagination,
+      body.pagination ?? meta.pagination,
       params.per_page ?? 20,
     ),
-    available_filters: response.data?.available_filters,
+    available_filters: meta.available_filters ?? body.available_filters,
   };
 };
 

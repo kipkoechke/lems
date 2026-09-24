@@ -109,11 +109,21 @@ export const dicomStatusHost = (
   status: DicomEquipmentStatus | null | undefined,
 ): string | null => status?.host ?? status?.hl7_host ?? null;
 
+/**
+ * Configure a device's connection details and register it with Orthanc.
+ *
+ * This is also how a discovered, pending-installation device is claimed:
+ * unknown devices arrive unowned, and `vendor_id` / `facility_id` assign them.
+ * It is likewise the only way to correct a port — `dicom_port: 11112` is a
+ * placeholder, and a DICOM association never advertises the peer's listening
+ * port, so nothing can discover it automatically.
+ */
 export interface DicomConfigureRequest {
   ae_title: string;
   ip: string;
   port: number;
   vendor_id?: string;
+  facility_id?: string;
 }
 
 export interface DicomConfigureResponse {

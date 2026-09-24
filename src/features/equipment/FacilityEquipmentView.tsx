@@ -34,6 +34,16 @@ const OWNERSHIP_OPTIONS = [
   { value: "vendor", label: "Vendor supplied" },
 ];
 
+/**
+ * `linked` and `is_connected` answer different questions: `linked` is "has
+ * this device ever been seen on the network", `is_connected` is "is it
+ * connected right now". The filter is on the former, the badge on the latter.
+ */
+const LINKED_OPTIONS = [
+  { value: "true", label: "Seen on the network" },
+  { value: "false", label: "Never seen" },
+];
+
 const label = (value?: string | null) =>
   value ? value.replace(/_/g, " ") : "-";
 
@@ -56,6 +66,7 @@ export default function FacilityEquipmentView() {
   const [modality, setModality] = useState("");
   const [category, setCategory] = useState("");
   const [ownership, setOwnership] = useState("");
+  const [linked, setLinked] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const search = useSearchControl(() => setPage(1));
 
@@ -77,6 +88,8 @@ export default function FacilityEquipmentView() {
     ownership_type: (ownership || undefined) as
       | FacilityEquipmentOwnership
       | undefined,
+    // Tri-state — "" means no filter, not false.
+    linked: linked === "" ? undefined : linked === "true",
   });
 
   // The summary is a status map plus a total; render the statuses the API
@@ -252,7 +265,19 @@ export default function FacilityEquipmentView() {
                     />
                   </Table.HeaderCell>
                   <Table.HeaderCell>Services</Table.HeaderCell>
-                  <Table.HeaderCell>Connection</Table.HeaderCell>
+                  <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Connection"
+                    options={availableFilters?.linked ?? LINKED_OPTIONS}
+                    value={linked}
+                    onChange={(v) => {
+                      setLinked(v);
+                      setPage(1);
+                    }}
+                    allLabel="All Devices"
+                    searchable={false}
+                  />
+                </Table.HeaderCell>
                   <Table.HeaderCell>
                     <ColumnFilter
                       label="Status"
@@ -273,7 +298,12 @@ export default function FacilityEquipmentView() {
                   <Table.Loading colSpan={8} rows={6} />
                 ) : equipments.length === 0 ? (
                   <Table.Empty colSpan={8}>
-                    {search.term || status || modality || ownership || category
+                    {search.term ||
+                    status ||
+                    modality ||
+                    ownership ||
+                    linked ||
+                    category
                       ? "No equipment matches these filters."
                       : "No equipment at this facility yet."}
                   </Table.Empty>
@@ -344,6 +374,13 @@ export default function FacilityEquipmentView() {
                           />
                           {equipment.is_connected ? "Online" : "Offline"}
                         </span>
+                        {/* Never seen at all is a different problem from
+                            being offline right now — say which. */}
+                        {equipment.linked === false && (
+                          <div className="text-xs text-slate-400">
+                            Awaiting first contact
+                          </div>
+                        )}
                       </Table.Cell>
                       <Table.Cell>
                         <span

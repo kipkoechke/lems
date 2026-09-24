@@ -327,6 +327,14 @@ export interface ContractFilterParams {
   facility_code?: string;
   lot_number?: string;
   vendor_id?: string;
+  vendor_code?: string;
+  facility_id?: string;
+  /** Contracts that include any service from this lot. */
+  lot_id?: string;
+  status?: string;
+  search?: string;
+  current_only?: boolean;
+  expired_only?: boolean;
   page?: number;
   per_page?: number;
 }
@@ -587,19 +595,9 @@ export const getVendorBookingsPaginated = async (
 export const getContracts = async (
   params?: ContractFilterParams,
 ): Promise<PaginatedContractsResponse> => {
-  const queryParams = new URLSearchParams();
-  if (params?.facility_code)
-    queryParams.append("facility_code", params.facility_code);
-  if (params?.lot_number) queryParams.append("lot_number", params.lot_number);
-  if (params?.vendor_id) queryParams.append("vendor_id", params.vendor_id);
-  if (params?.page) queryParams.append("page", params.page.toString());
-  if (params?.per_page)
-    queryParams.append("per_page", params.per_page.toString());
-
-  const url = `contracts${
-    queryParams.toString() ? `?${queryParams.toString()}` : ""
-  }`;
-  const response = await axios.get<PaginatedContractsResponse>(url);
+  const response = await axios.get<PaginatedContractsResponse>("contracts", {
+    params,
+  });
   return response.data;
 };
 

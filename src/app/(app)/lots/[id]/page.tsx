@@ -39,9 +39,11 @@ export default function LotDetailPage() {
     isLoading: contractsLoading,
     error: contractsError,
   } = useQuery({
-    queryKey: ["contracts", id],
-    queryFn: () => getContracts({ lot_number: lot?.number }),
-    enabled: !!lot?.number,
+    queryKey: ["contracts", { lot_id: id }],
+    // `lot_id` matches contracts carrying any service from this lot; it is
+    // the documented param, and needs no round-trip for the lot number.
+    queryFn: () => getContracts({ lot_id: id }),
+    enabled: !!id,
   });
 
   const contracts = contractsData?.data || [];

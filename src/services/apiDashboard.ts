@@ -54,27 +54,60 @@ export interface ModalityBreakdown {
   categories: ModalityCategory[];
 }
 
-export interface RecentActivityServiceStatus {
-  completed: number;
-  pending: number;
-  cancelled: number;
+/**
+ * Booking volume over time, which replaced the recent-activity block.
+ *
+ * Empty periods come back as `count: 0`, so the chart plots `points` as-is —
+ * no gap-filling, and no need to derive buckets from dates on the client.
+ */
+export type TrendGranularity = "daily" | "monthly";
+
+export interface BookingTrendPoint {
+  /** Machine-readable bucket key, e.g. "2026-08-26" or "2026-08". */
+  bucket: string;
+  /** Pre-formatted axis label, e.g. "26 Aug". */
+  label: string;
+  count: number;
 }
 
-export interface RecentActivity {
-  id: string;
-  booking_number: string;
-  status: string;
-  patient: {
-    name: string;
-    cr_no: string;
-  };
-  facility: {
-    name: string;
-    fr_code: string;
-  };
-  services_count: number;
-  services_status: RecentActivityServiceStatus;
-  created_at: string;
+export interface BookingTrend {
+  granularity: TrendGranularity;
+  buckets: number;
+  total: number;
+  points: BookingTrendPoint[];
+}
+
+export interface DashboardFilterOption {
+  value: string;
+  label: string;
+}
+
+/**
+ * The option lists for the dashboard filter bar, cached server-side for five
+ * minutes. Driving the dropdowns from this saves a lookup request per filter.
+ */
+export interface DashboardAvailableFilters {
+  county?: DashboardFilterOption[];
+  facility?: DashboardFilterOption[];
+  facility_type?: DashboardFilterOption[];
+  vendor?: DashboardFilterOption[];
+  period?: DashboardFilterOption[];
+  trend?: DashboardFilterOption[];
+}
+
+export interface DashboardFilters {
+  applied?: Record<string, string | null>;
+  available?: DashboardAvailableFilters;
+}
+
+export interface DashboardParams {
+  county_id?: string;
+  facility_id?: string;
+  facility_type?: string;
+  vendor_id?: string;
+  lot_id?: string;
+  period?: string;
+  trend?: TrendGranularity;
 }
 
 export interface DailyBreakdown {
@@ -97,14 +130,17 @@ export interface DashboardResponse {
   counts: DashboardCounts;
   sha_claims?: ShaClaims | null;
   modalities?: ModalityBreakdown[] | null;
-  recent_activity?: RecentActivity[] | null;
+  booking_trend?: BookingTrend | null;
+  filters?: DashboardFilters | null;
   efficiency?: Efficiency | null;
 }
 
 // ===== API Functions =====
 
-export const getDashboard = async (): Promise<DashboardResponse> => {
-  const response = await axios.get("/admin/dashboard");
+export const getDashboard = async (
+  params: DashboardParams = {},
+): Promise<DashboardResponse> => {
+  const response = await axios.get("/admin/dashboard", { params });
   // Handle both wrapped and unwrapped responses
   const body = response.data as { data?: DashboardResponse } & DashboardResponse;
   return (body.data ?? response.data) as DashboardResponse;

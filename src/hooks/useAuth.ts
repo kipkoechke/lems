@@ -54,7 +54,8 @@ const prefetchDashboard = (
     return;
   }
 
-  prefetch(["admin-dashboard"], () => getDashboard());
+  // Must match the unfiltered key the dashboard mounts with.
+  prefetch(["admin-dashboard", {}], () => getDashboard());
 };
 
 

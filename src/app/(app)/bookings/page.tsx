@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { FacilityFilter } from "@/components/common/FacilityFilter";
+import { VendorFilter } from "@/components/common/VendorFilter";
+import { useIsReadOnly } from "@/hooks/usePermissions";
 import { useCurrentFacility } from "@/hooks/useAuth";
 import { approvalStatus, serviceStatus } from "@/lib/bookingStatus";
 import React, { useMemo, useState } from "react";
@@ -30,6 +32,9 @@ const BookingReport: React.FC = () => {
   // narrowing it client-side would only filter the page you happen to have.
   const [facilityId, setFacilityId] = useState<string>("");
   const [facilityName, setFacilityName] = useState<string>("");
+  // Bookings with a service assigned to this vendor. Also filtered
+  // server-side, for the same reason as the facility.
+  const [vendorId, setVendorId] = useState<string>("");
 
   // A facility account is pinned to its own facility: the API does not scope
   // this list by the caller, so without it they see every other facility's
@@ -37,11 +42,15 @@ const BookingReport: React.FC = () => {
   const facility = useCurrentFacility();
   const effectiveFacilityId = facility?.id || facilityId;
 
-  const { isLoading, bookings, error, refetchBookings } = useBookings(
-    effectiveFacilityId ? { facility_id: effectiveFacilityId } : {},
-  );
+  const { isLoading, bookings, error, refetchBookings } = useBookings({
+    ...(effectiveFacilityId ? { facility_id: effectiveFacilityId } : {}),
+    ...(vendorId ? { vendor_id: vendorId } : {}),
+  });
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<string>("all");
+  // A view-only account may read this list but never act on it; offering the
+  // approve controls would only produce a 403.
+  const isReadOnly = useIsReadOnly();
   const { approve, isApproving } = useApproveBooking();
   const { reject, isRejecting } = useRejectBooking();
   const [approvingIds, setApprovingIds] = useState<Set<string>>(new Set());
@@ -305,13 +314,9 @@ const BookingReport: React.FC = () => {
           </span>
         </div>
 
-        {/* Facility filter */}
-        <div
-          className={`mb-5 flex flex-wrap items-end gap-3 ${
-            facility?.id ? "hidden" : ""
-          }`}
-        >
-          <div className="w-full sm:w-80">
+        {/* Facility and vendor filters */}
+        <div className="mb-5 flex flex-wrap items-end gap-3">
+          <div className={`w-full sm:w-80 ${facility?.id ? "hidden" : ""}`}>
             <FacilityFilter
               value={facilityId}
               onChange={(id, facility) => {
@@ -321,7 +326,7 @@ const BookingReport: React.FC = () => {
               }}
             />
           </div>
-          {facilityId && (
+          {facilityId && !facility?.id && (
             <button
               onClick={() => {
                 setFacilityId("");
@@ -335,6 +340,16 @@ const BookingReport: React.FC = () => {
               <X className="h-3 w-3" />
             </button>
           )}
+
+          <div className="w-full sm:w-72">
+            <VendorFilter
+              value={vendorId}
+              onChange={(id) => {
+                setVendorId(id);
+                setSelectedBookings(new Set());
+              }}
+            />
+          </div>
         </div>
 
         {/* Tabs */}
@@ -392,7 +407,7 @@ const BookingReport: React.FC = () => {
                 )}
               </div>
 
-              {selectedBookings.size > 0 && (
+              {selectedBookings.size > 0 && !isReadOnly && (
                 <div className="flex space-x-2">
                   <button
                     onClick={handleBulkApprove}
@@ -705,7 +720,8 @@ const BookingReport: React.FC = () => {
                                 : "View Details"}
                             </ActionMenu.Item>
 
-                            {approvalStatus(booking) === "pending" && (
+                            {approvalStatus(booking) === "pending" &&
+                              !isReadOnly && (
                               <>
                                 <ActionMenu.Item
                                   onClick={() => handleApproval(booking.id)}

@@ -65,11 +65,13 @@ Full system access — all endpoints.
 | `/dicom/equipment/{id}/register`         | POST/DELETE    | Register / Unregister          |
 | `/dicom/equipment/{id}/test`             | POST           | Test connection                |
 | `/dicom/equipment/{id}/status`           | GET            | Equipment DICOM status         |
-| `/dicom/events/ping-events`              | GET            | DICOM ping events              |
+| `/dicom/events/ping-events`              | GET            | Device activity log            |
 | `/dicom/dead-letters`                    | GET            | Failed DICOM events            |
 | `/dicom/callback/result`                 | POST           | DICOM result callback          |
 | `/dicom/callback/status`                 | POST           | DICOM status callback          |
 | `/equipment/ping-requests/*`             | *              | Equipment ping requests        |
+| `/equipment/ping-requests/activity`      | GET            | Device activity log            |
+| `/equipment/ping-requests/pending-installation` | GET     | Equipment awaiting installation |
 | `/equipment/{id}/publish-orthanc`        | POST           | Publish to Orthanc             |
 | `/equipment/sync-dicom-aet`              | POST           | Sync DICOM AET                 |
 | `/equipment/facility/{id}/operational`   | GET            | Facility operational equipment |
@@ -1396,16 +1398,17 @@ The equipment response now includes vendor and ownership information.
 
 ### POST `/dicom/equipment/{equipment}/configure`
 
-Set or update DICOM connection details (AE title, IP, port) and register with Orthanc in one step. Also supports assigning a vendor during configuration.
+Set or update DICOM connection details (AE title, IP, port) and register with Orthanc in one step. Also supports assigning a vendor and/or facility during configuration — this is how a discovered, pending-installation device is claimed.
 
 **Request Body**
 
-| Field       | Type    | Required | Notes                                         |
-| ----------- | ------- | -------- | --------------------------------------------- |
-| `ae_title`  | string  | Yes      | DICOM AE title, max 16 chars, auto-uppercased |
-| `ip`        | string  | Yes      | IP address or hostname of the physical device |
-| `port`      | integer | Yes      | DICOM port, 1–65535                           |
-| `vendor_id` | string  | No       | UUID of the vendor to assign                  |
+| Field         | Type    | Required | Notes                                         |
+| ------------- | ------- | -------- | --------------------------------------------- |
+| `ae_title`    | string  | Yes      | DICOM AE title, max 16 chars, auto-uppercased |
+| `ip`          | string  | Yes      | IP address or hostname of the physical device |
+| `port`        | integer | Yes      | DICOM port, 1–65535                           |
+| `vendor_id`   | string  | No       | UUID of the vendor to assign                  |
+| `facility_id` | string  | No       | UUID of the facility to assign                |
 
 **Response `200`**
 
@@ -1428,7 +1431,9 @@ Set or update DICOM connection details (AE title, IP, port) and register with Or
 
 > **Internal endpoint** — called automatically by Orthanc's `on-cfind-discovery.lua` when an unrecognized device sends a C-FIND or MWL request.
 
-Auto-discovers a DICOM device. Creates a new equipment record under the **Uncategorized Equipments** vendor (code `UNCAT`). The admin must later assign the equipment to the correct vendor and configure ports.
+Auto-discovers a DICOM device. Unknown devices are created **unowned and `pending_installation`** — they are not attached to a placeholder vendor. An admin later assigns a vendor and/or facility (see `POST /dicom/equipment/{equipment}/configure`).
+
+Every call is also written to the device activity log as a `worklist_pull`.
 
 **Request Body**
 
@@ -1436,7 +1441,7 @@ Auto-discovers a DICOM device. Creates a new equipment record under the **Uncate
 | ------------- | ------- | -------- | --------------------------------------------- |
 | `ae_title`    | string  | Yes      | DICOM AE Title, max 16 chars                  |
 | `remote_ip`   | string  | No       | IP address of the connecting device           |
-| `remote_port` | integer | No       | Port the device uses to communicate (1–65535) |
+| `remote_port` | integer | No       | The device's **listening** DICOM port — never the ephemeral TCP source port of the connection |
 
 **Response `201`** — First discovery
 
@@ -1455,11 +1460,7 @@ Auto-discovers a DICOM device. Creates a new equipment record under the **Uncate
       "discovered_ip": "192.168.1.100",
       "discovered_port": 11112
     },
-    "vendor": {
-      "id": "uuid",
-      "name": "Uncategorized Equipments",
-      "code": "UNCAT"
-    }
+    "vendor": null
   }
 }
 ```
@@ -1519,6 +1520,64 @@ Capture a machine ping/storage/test-connection event for approval review. **Publ
 
 **Response `201`** — Ping request captured.
 
+#### GET `/equipment/ping-requests/activity`
+
+Every inbound device event, in arrival order — the running log behind the ping
+requests screen. Records the **bare name the device sent**, plus a best-effort
+link to known equipment. Nothing is enriched or created on the way in.
+
+| Param           | Type    | Notes                                                        |
+| --------------- | ------- | ------------------------------------------------------------ |
+| `activity_type` | string  | `connect`, `worklist_pull` or `study_send`                    |
+| `source_name`   | string  | Partial match on the name the device sent                     |
+| `equipment_id`  | uuid    | Only events linked to this equipment                          |
+| `linked`        | boolean | `true` for linked events only, `false` for unlinked only      |
+| `period`        | string  | `7d`, `30d`, `90d`, `12m`, `this_month`, `this_year`          |
+| `from` / `to`   | date    | Explicit range; overrides `period`                            |
+| `page_size`     | integer | 1–100, default 50                                             |
+
+**Response `200`**
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "activity_type": "worklist_pull",
+      "source_name": "XRDFAC01",
+      "device_name": null,
+      "ip_addr": "10.0.0.9",
+      "port": 11112,
+      "modality": null,
+      "equipment": { "id": "uuid", "code": "FID224094115 DX", "name": "Digital X-Ray Unit" },
+      "facility": { "id": "uuid", "name": "Kenyatta National Hospital", "fr_code": "FID-22-109411-5" },
+      "context": { "discovered": false },
+      "occurred_at": "2026-09-24T09:30:45+03:00"
+    }
+  ],
+  "pagination": { "current_page": 1, "per_page": 50, "total": 1, "total_pages": 1 },
+  "available_filters": {
+    "activity_type": [{ "value": "connect", "label": "Connect" }],
+    "period": [{ "value": "7d", "label": "Last 7 Days" }]
+  }
+}
+```
+
+The same log is served at `GET /dicom/events/ping-events` for backward compatibility.
+
+#### GET `/equipment/ping-requests/pending-installation`
+
+Equipment awaiting installation — typically devices discovered on the network
+that have not been assigned a vendor or facility yet.
+
+| Param             | Type    | Notes                                              |
+| ----------------- | ------- | -------------------------------------------------- |
+| `unassigned_only` | boolean | Only equipment with no vendor **and** no facility  |
+| `page_size`       | integer | 1–100, default 50                                  |
+
+Each row carries `discovered.ip` / `discovered.port` from the discovery payload
+so an admin can recognise the device.
+
 #### GET `/equipment/ping-requests/pending`
 
 List pending ping requests waiting for approval. **Auth required** (admin/nesp/moh/cog).
@@ -1577,6 +1636,7 @@ filter options for dropdowns.
 | `category`     | string  | `EquipmentCategory` value                                                    |
 | `status`       | string  | `EquipmentStatus` value                                                      |
 | `is_connected` | boolean |                                                                              |
+| `linked`       | boolean | `true` = seen on the network, `false` = never seen                            |
 | `ownership_type` | string | `facility` or `vendor` — omit to get both                                    |
 | `sort_by`      | string  | `name`\|`code`\|`category`\|`status`\|`created_at`\|`last_seen_at` (default `name`) |
 | `sort_order`   | string  | `asc`\|`desc` (default `asc`)                                                 |
@@ -1829,16 +1889,17 @@ Bulk-register all equipment with DICOM config as Orthanc modalities.
 
 ### POST `/dicom/equipment/{equipment}/configure`
 
-Set or update DICOM connection details (AE title, IP, port) and register with Orthanc in one step. Also supports assigning a vendor during configuration.
+Set or update DICOM connection details (AE title, IP, port) and register with Orthanc in one step. Also supports assigning a vendor and/or facility during configuration — this is how a discovered, pending-installation device is claimed.
 
 **Request Body**
 
-| Field       | Type    | Required | Notes                                         |
-| ----------- | ------- | -------- | --------------------------------------------- |
-| `ae_title`  | string  | Yes      | DICOM AE title, max 16 chars, auto-uppercased |
-| `ip`        | string  | Yes      | IP address or hostname of the physical device |
-| `port`      | integer | Yes      | DICOM port, 1–65535                           |
-| `vendor_id` | string  | No       | UUID of the vendor to assign                  |
+| Field         | Type    | Required | Notes                                         |
+| ------------- | ------- | -------- | --------------------------------------------- |
+| `ae_title`    | string  | Yes      | DICOM AE title, max 16 chars, auto-uppercased |
+| `ip`          | string  | Yes      | IP address or hostname of the physical device |
+| `port`        | integer | Yes      | DICOM port, 1–65535                           |
+| `vendor_id`   | string  | No       | UUID of the vendor to assign                  |
+| `facility_id` | string  | No       | UUID of the facility to assign                |
 
 **Response `200`**
 
@@ -1943,7 +2004,7 @@ Get equipment DICOM connectivity status (last seen, connected state).
 
 > **Internal endpoint** — called automatically by Orthanc's `on-cfind-discovery.lua` when an unrecognized device sends a C-FIND or MWL request.
 
-Auto-discovers a DICOM device. Creates a new equipment record under the **Uncategorized Equipments** vendor (code `UNCAT`).
+Auto-discovers a DICOM device. Unknown devices are created **unowned and `pending_installation`**, and recorded in the device activity log as a `worklist_pull`.
 
 **Request Body**
 
@@ -1951,7 +2012,7 @@ Auto-discovers a DICOM device. Creates a new equipment record under the **Uncate
 | ------------- | ------- | -------- | --------------------------------------------- |
 | `ae_title`    | string  | Yes      | DICOM AE Title, max 16 chars                  |
 | `remote_ip`   | string  | No       | IP address of the connecting device           |
-| `remote_port` | integer | No       | Port the device uses to communicate (1–65535) |
+| `remote_port` | integer | No       | The device's **listening** DICOM port — never the ephemeral TCP source port of the connection |
 
 **Response `201`** — First discovery
 
@@ -1965,7 +2026,7 @@ Auto-discovers a DICOM device. Creates a new equipment record under the **Uncate
     "hl7_host": "192.168.1.100",
     "dicom_port": 11112,
     "status": "pending_installation",
-    "vendor": { "id": "uuid", "name": "Uncategorized Equipments", "code": "UNCAT" }
+    "vendor": null
   }
 }
 ```
@@ -1982,25 +2043,81 @@ Auto-discovers a DICOM device. Creates a new equipment record under the **Uncate
 
 ### POST `/dicom/equipment/heartbeat`
 
-> **Internal endpoint** — called by Orthanc's Lua scripts when equipment sends a periodic heartbeat/ping. Updates the equipment's connectivity timestamp (`last_seen_at`) and marks it as connected.
+> **Internal endpoint** — called by Orthanc's Lua scripts when equipment sends a periodic heartbeat/ping. Refreshes the device's address, connectivity timestamp (`last_seen_at`) and marks it as connected.
+
+The address is refreshed on **every** heartbeat, including for equipment that is
+still `pending_installation` — a device that has never been claimed still gets
+its IP/port captured, so it can be C-ECHO'd once it is.
 
 **Request Body**
 
-| Field         | Type    | Required | Notes                               |
-| ------------- | ------- | -------- | ----------------------------------- |
-| `ae_title`    | string  | Yes      | DICOM AE Title of the equipment     |
-| `remote_ip`   | string  | No       | IP address of the connecting device |
-| `remote_port` | integer | No       | Port the device uses                |
+| Field         | Type    | Required | Notes                                                                   |
+| ------------- | ------- | -------- | ----------------------------------------------------------------------- |
+| `ae_title`    | string  | Yes      | DICOM AE Title of the equipment                                         |
+| `remote_ip`   | string  | No       | Device IP — written to `hl7_host`                                        |
+| `remote_port` | integer | No       | Device's **listening** DICOM port — written to `dicom_port`/`hl7_port`   |
+
+Omitted values are never written, so a bare heartbeat cannot blank an address
+that is already configured. The same capture happens on `POST /dicom/discovered`
+(for known devices), and on MPPS / C-STORE / result callbacks that report a
+`station_ae_title` together with `remote_ip` / `remote_port`.
+
+**A port is only ever filled when it is missing.** The host is refreshed whenever
+it is observed (devices move), but a port is never replaced, because the value
+arriving here was read back from Orthanc — which stored it from this same column
+in the first place. Writing it blindly could only echo a stale value or stamp the
+`11112` placeholder. To change a port on purpose use
+`POST /dicom/equipment/{equipment}/configure`.
+
+**Repairing existing addresses:**
+
+```bash
+# Which devices can't be pinged, and why (exit code 1 when any need attention)
+php artisan vems:audit-modality-addresses
+
+# One device only
+php artisan vems:audit-modality-addresses --aet=XRD01
+
+# Fill missing host/port from Orthanc's own modality config (never overwrites)
+php artisan vems:audit-modality-addresses --from-orthanc
+
+# Re-push the stored address to Orthanc, clearing drift
+php artisan vems:audit-modality-addresses --register
+
+# Totals only — no per-device table (what the scheduler runs)
+php artisan vems:audit-modality-addresses --from-orthanc --summary
+```
+
+This also runs as a background service: the scheduler executes
+`vems:audit-modality-addresses --from-orthanc --summary` daily at 03:00, so any
+address Orthanc knows about is pulled into the equipment table without operator
+involvement. Daily log volume is a handful of lines; run the command by hand
+(without `--summary`) when you need the per-device table.
+
+Findings are `missing ip`, `missing port`, `default port` (the `11112`
+placeholder), `not in orthanc`, `host drift` and `port drift`. A missing or
+wrong port cannot be discovered automatically — a DICOM association never
+advertises the peer's listening port — so those need `configure` once per
+device.
+
+**Provisioning never fakes an address.** `vems:setup-imaging`,
+`provision:facility` and `contracts:generate-all` create equipment with
+`hl7_host` left `null`, because the address belongs to the device and is only
+learned from its own traffic. They consequently skip Orthanc registration for
+those rows until the device checks in — that is expected, not a failure.
+`SyncOrthancModalitiesJob` and `CheckEquipmentConnectivity` also ignore
+equipment without a host.
 
 **Response `200`** — Heartbeat recorded.
 
 ```json
 {
-  "acknowledged": true,
-  "ae_title": "GEXR001",
-  "last_seen_at": "2026-08-04T10:30:00+03:00"
+  "status": "ok",
+  "ae_title": "GEXR001"
 }
 ```
+
+`status` is `unknown_ae` when no equipment matches the AE title.
 
 ---
 
@@ -2009,6 +2126,29 @@ Auto-discovers a DICOM device. Creates a new equipment record under the **Uncate
 #### POST `/dicom/callback/result`
 
 Called by Orthanc Lua/Python plugin when a DICOM C-STORE result is received.
+
+Besides the result itself, the study metadata below is persisted on the
+worklist. **Pixel data is never stored** — only descriptors *about* the image
+(dimensions, bit depth, windowing), so the study detail page can show what the
+image was without any patient images being retained.
+
+| Field                                                | Notes                                             |
+| ---------------------------------------------------- | ------------------------------------------------- |
+| `study_instance_uid`, `series_instance_uid`          | DICOM UIDs                                        |
+| `study_date`, `study_time`                           | Study start date and time (`study_start_date` / `study_start_time` also accepted) |
+| `series_count`, `instance_count`                     | Study extent                                      |
+| `institution_name`                                   | Where the study was performed                     |
+| `body_part`                                          | `body_part_examined` also accepted                |
+| `pixel_metadata.rows` / `.columns`                   | Image dimensions                                  |
+| `pixel_metadata.bits_allocated` / `.bits_stored`      | Bit depth                                         |
+| `pixel_metadata.window_center` / `.window_width`      | Windowing                                         |
+| `pixel_metadata.*`                                   | Also `samples_per_pixel`, `photometric_interpretation`, `high_bit`, `pixel_representation`, `rescale_slope`, `rescale_intercept`, `pixel_spacing`, `slice_thickness`, `frame_count` |
+
+Pixel descriptors may be nested under `pixel_metadata` / `image_metadata`, or
+sent flat at the top level. Any key outside the list above is ignored, so a
+payload carrying `PixelData` stores no pixels.
+
+The callback is also recorded in the device activity log as a `study_send`.
 
 #### POST `/dicom/callback/status`
 
@@ -2563,7 +2703,7 @@ Remove service from lot.
 
 ### GET `/contracts`
 
-List contracts with pagination.
+List contracts with pagination. Filter with `vendor_id`, `vendor_code`, `facility_id`, `lot_id` (contracts that include any service from that lot), `status`, `search`, `current_only` and `expired_only`.
 
 **Response `200`**
 
@@ -2972,6 +3112,7 @@ List bookings. Returns a summary alongside paginated results.
 | ------------------ | ------- | ------------------------------------------------- |
 | `fr_code`          | string  | Filter by facility FR code                        |
 | `facility_id`      | uuid    |                                                   |
+| `vendor_id`        | uuid    | Bookings with a service assigned to this vendor   |
 | `patient_id`       | uuid    |                                                   |
 | `status`           | string  | `pending_otp`, `active`, `completed`, `cancelled` |
 | `source`           | string  | `provider_portal`, `hmis`, `standalone`           |
@@ -3652,6 +3793,9 @@ List medical requests with filtering and pagination.
 | `patient_id`    | string  |                                                              |
 | `patient`       | string  | Patient name search                                          |
 | `facility_id`   | string  |                                                              |
+| `vendor_id`     | string  | Vendor from the named machine, or from the contract when the order names a facility only |
+| `period`        | string  | `7d`, `30d`, `90d`, `12m`, `this_month`, `this_year`         |
+| `from` / `to`   | date    | Explicit range; overrides `period`                           |
 | `facility_name` | string  |                                                              |
 | `page`          | integer | Default 1                                                    |
 | `page_size`     | integer | 1–100, default 20                                            |
@@ -3774,6 +3918,9 @@ Receive MPPS (Modality Performed Procedure Step) event update from equipment.
 | `internal_request_id` | string   | Yes      |                                        |
 | `equipment_id`        | string   | No       | Equipment UUID                         |
 | `equipment_code`      | string   | No       | Equipment code, asset_id, or DICOM AET |
+| `station_ae_title`    | string   | No       | Credits the reporting machine            |
+| `remote_ip`           | string   | No       | Refreshes the station's `hl7_host`       |
+| `remote_port`         | integer  | No       | Refreshes its `dicom_port`/`hl7_port`    |
 | `procedure_code`      | string   | Yes      |                                        |
 | `status`              | string   | Yes      |                                        |
 | `performed_at`        | datetime | No       |                                        |
@@ -3790,6 +3937,9 @@ Receive C-STORE payload and persist structured result.
 | `internal_request_id` | string   | Yes      |                                        |
 | `equipment_id`        | string   | No       | Equipment UUID                         |
 | `equipment_code`      | string   | No       | Equipment code, asset_id, or DICOM AET |
+| `station_ae_title`    | string   | No       | Credits the reporting machine            |
+| `remote_ip`           | string   | No       | Refreshes the station's `hl7_host`       |
+| `remote_port`         | integer  | No       | Refreshes its `dicom_port`/`hl7_port`    |
 | `procedure_code`      | string   | Yes      |                                        |
 | `performed_at`        | datetime | No       |                                        |
 | `result_payload`      | object   | Yes      |                                        |
@@ -3805,6 +3955,12 @@ Same body as `POST /equipment/ping-requests`.
 ---
 
 ### GET `/dicom/events/ping-events`
+
+The device activity log — same response as `GET /equipment/ping-requests/activity`,
+which is the preferred route. Records connects, worklist pulls and study sends
+with the bare source name.
+
+**Auth required** (admin/nesp/moh/cog).
 
 List Orthanc ping events.
 
@@ -3992,7 +4148,19 @@ Expose completed interventions with request, equipment, timing, and result detai
 
 ### GET `/admin/dashboard`
 
-High-level counts, modality breakdown, SHA claim stats, recent patient activity, and efficiency stats.
+High-level counts, modality breakdown, SHA claim stats, a booking trend, and efficiency stats.
+
+**Query Parameters**
+
+| Param           | Type   | Notes                                                                      |
+| --------------- | ------ | -------------------------------------------------------------------------- |
+| `county_id`     | uuid   |                                                                            |
+| `facility_id`   | uuid   |                                                                            |
+| `facility_type` | string |                                                                            |
+| `vendor_id`     | uuid   |                                                                            |
+| `lot_id`        | uuid   |                                                                            |
+| `period`        | string | `7d`, `30d`, `90d`, `12m`, `this_month`, `this_year`                       |
+| `trend`         | string | `daily` (last 30 days, default) or `monthly` (last 12 months)              |
 
 **Response `200`**
 
@@ -4017,7 +4185,15 @@ High-level counts, modality breakdown, SHA claim stats, recent patient activity,
     { "modality": "CT", "label": "CT", "count": 3, "categories": [...] },
     { "modality": "DX", "label": "DX", "count": 8, "categories": [...] }
   ],
-  "recent_activity": [...],
+  "booking_trend": {
+    "granularity": "daily",
+    "buckets": 30,
+    "total": 156,
+    "points": [
+      { "bucket": "2026-08-26", "label": "26 Aug", "count": 4 },
+      { "bucket": "2026-08-27", "label": "27 Aug", "count": 7 }
+    ]
+  },
   "efficiency": {
     "period_days": 30, "total_scheduled": 200,
     "total_completed": 156, "total_cancelled": 12,
@@ -4031,20 +4207,22 @@ High-level counts, modality breakdown, SHA claim stats, recent patient activity,
 
 ### GET `/admin/equipment`
 
-Paginated equipment listing with modality, category, status, search, and vendor filters.
+Paginated equipment listing with modality, category, status, search, vendor and facility filters.
 
 **Query Parameters**
 
-| Param        | Type    | Default | Values                                                                                        |
-| ------------ | ------- | ------- | --------------------------------------------------------------------------------------------- |
-| `modality`   | string  | —       | `CT`, `DX`, `MR`, `US`, `MG`, `NM`, `PT`, `XA`, `RF`, `ECG`, `RTPLAN`, `RTSIM`, `non_imaging` |
-| `category`   | string  | —       | Any equipment category value                                                                  |
-| `status`     | string  | —       | Any equipment status value                                                                    |
-| `search`     | string  | —       | Free-text search                                                                              |
-| `vendor_id`  | uuid    | —       |                                                                                               |
-| `sort_by`    | string  | `name`  | `name`, `code`, `category`, `status`, `created_at`                                            |
-| `sort_order` | string  | `asc`   | `asc`, `desc`                                                                                 |
-| `per_page`   | integer | 15      | 1–100                                                                                         |
+| Param         | Type    | Default | Values                                                                                        |
+| ------------- | ------- | ------- | --------------------------------------------------------------------------------------------- |
+| `modality`    | string  | —       | `CT`, `DX`, `MR`, `US`, `MG`, `NM`, `PT`, `XA`, `RF`, `ECG`, `RTPLAN`, `RTSIM`, `non_imaging` |
+| `category`    | string  | —       | Any equipment category value                                                                  |
+| `status`      | string  | —       | Any equipment status value                                                                    |
+| `search`      | string  | —       | Free-text search                                                                              |
+| `vendor_id`   | uuid    | —       |                                                                                               |
+| `facility_id` | uuid    | —       | Owning facility                                                                               |
+| `linked`      | boolean | —       | `true` = seen on the network (`last_seen_at` set), `false` = never seen                        |
+| `sort_by`     | string  | `name`  | `name`, `code`, `category`, `status`, `created_at`                                            |
+| `sort_order`  | string  | `asc`   | `asc`, `desc`                                                                                 |
+| `per_page`    | integer | 15      | 1–100                                                                                         |
 
 ---
 
@@ -4071,6 +4249,31 @@ Procedure analytics accept `start_time`, `end_time`, and `procedure_type` query 
 ## 22. Users & Permissions (Admin)
 
 Admin user and permission management. **Auth required.**
+
+### GET `/users/roles`
+
+The roles the caller is allowed to assign, for the role picker on the user form.
+A facility admin (`f_admin`) gets only their four assignable roles; a
+system-level admin gets every role.
+
+**Response `200`**
+
+```json
+{
+  "data": [
+    { "value": "f_finance", "label": "Finance Manager", "type": "facility" },
+    { "value": "f_practitioner", "label": "Practitioner", "type": "facility" },
+    { "value": "f_equipment_user", "label": "Equipment User", "type": "facility" },
+    { "value": "f_view_only", "label": "View Only", "type": "facility" }
+  ],
+  "scope": "facility"
+}
+```
+
+`scope` is `facility` or `system`. `f_equipment_user` is the spelling to use for
+the role value; `type` is one of `system`, `vendor`, `facility`.
+
+---
 
 ### GET `/users` (Admin scope)
 
