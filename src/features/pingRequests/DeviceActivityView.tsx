@@ -82,6 +82,7 @@ export default function DeviceActivityView() {
 
   const {
     activity,
+    summary,
     pagination,
     availableFilters,
     isLoading,
@@ -122,8 +123,10 @@ export default function DeviceActivityView() {
                 Device Activity
               </h2>
               <p className="text-sm text-slate-500">
-                {pagination?.total ?? activity.length} events — everything that
-                has reached VEMS
+                {(summary?.total ?? pagination?.total ?? activity.length
+                ).toLocaleString()}{" "}
+                events from {summary?.devices ?? 0} device
+                {summary?.devices === 1 ? "" : "s"}
               </p>
             </div>
           </div>
@@ -153,6 +156,66 @@ export default function DeviceActivityView() {
         </div>
       </div>
 
+      {/* The counters describe the filtered set, not the whole table, so they
+          move with the controls above. */}
+      {summary && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-white rounded-lg border border-slate-200 px-4 py-3">
+            <p className="text-xs text-slate-500">Events</p>
+            <p className="text-lg font-bold text-slate-900">
+              {summary.total.toLocaleString()}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg border border-slate-200 px-4 py-3">
+            <p className="text-xs text-slate-500">Known devices</p>
+            <p className="text-lg font-bold text-emerald-600">
+              {summary.linked.toLocaleString()}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg border border-slate-200 px-4 py-3">
+            <p className="text-xs text-slate-500">Unknown devices</p>
+            <p className="text-lg font-bold text-amber-600">
+              {summary.unlinked.toLocaleString()}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg border border-slate-200 px-4 py-3">
+            <p className="text-xs text-slate-500">Last arrival</p>
+            <p className="text-sm font-medium text-slate-900">
+              {formatDateTime(summary.latest_at)}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Every activity type is listed, including the ones nothing arrived as,
+          so the legend keeps its shape. */}
+      {!!summary?.by_type?.length && (
+        <div className="flex flex-wrap gap-2">
+          {summary.by_type.map((type) => {
+            const style = ACTIVITY_STYLE[type.value as DeviceActivityType];
+            const active = activityType === type.value;
+            return (
+              <button
+                key={type.value}
+                onClick={() => {
+                  setActivityType(active ? "" : type.value);
+                  setPage(1);
+                }}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  style?.cls ?? "bg-slate-50 text-slate-700 border-slate-200"
+                } ${active ? "ring-2 ring-blue-400" : "hover:opacity-80"}`}
+              >
+                {style?.icon}
+                {type.label}
+                <span className="font-bold">
+                  {type.count.toLocaleString()}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
         <div className="overflow-x-auto">
           <Table className="w-full">
@@ -176,7 +239,7 @@ export default function DeviceActivityView() {
                 <Table.HeaderCell>
                   <ColumnFilter
                     label="Equipment"
-                    options={LINKED_OPTIONS}
+                    options={availableFilters?.linked ?? LINKED_OPTIONS}
                     value={linked}
                     onChange={(value) => {
                       setLinked(value);

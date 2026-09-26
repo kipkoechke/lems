@@ -108,6 +108,18 @@ const NAV_ITEMS: NavItem[] = [
       "Approvals, the device activity log and devices awaiting installation",
   },
   {
+    label: "Facility Readiness",
+    href: "/readiness",
+    permission: Permission.VIEW_EQUIPMENT_STATUS,
+    description: "Which machines are proven working, and what is blocking the rest",
+  },
+  {
+    label: "Facility Ranking",
+    href: "/facilities/ranking",
+    permission: Permission.VIEW_REPORTS,
+    description: "Facilities by booking volume and completion rate",
+  },
+  {
     label: "Non-SHA Studies",
     href: "/studies/unmatched",
     permission: Permission.VIEW_UNMATCHED_STUDIES,

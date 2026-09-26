@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -27,6 +27,8 @@ import type { Booking } from "@/types/booking";
 import { facilityDashboardFilters } from "./facilityDashboardQuery";
 import { ConnectivityCard } from "@/components/common/ConnectivityCard";
 import { getFacilityDashboard } from "@/services/apiFacilityDashboard";
+import { BookingTrendChart } from "@/components/common/BookingTrendChart";
+import type { TrendGranularity } from "@/services/apiDashboard";
 import { unmatchedStudyCount } from "@/services/apiDashboard";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -67,14 +69,19 @@ export default function FacilityDashboard() {
   const router = useRouter();
   const facility = useCurrentFacility();
 
+  const [trend, setTrend] = useState<TrendGranularity>("daily");
+
   const {
     data: dashboard,
     isLoading: dashboardLoading,
     error: dashboardError,
   } = useQuery({
-    queryKey: ["facility-dashboard"],
-    queryFn: getFacilityDashboard,
+    queryKey: ["facility-dashboard", trend],
+    queryFn: () => getFacilityDashboard({ trend }),
     staleTime: 5 * 60 * 1000,
+    // Switching granularity re-queries; keep the figures on screen rather
+    // than dropping the whole page back to the skeleton.
+    placeholderData: (previous) => previous,
   });
 
   const { data, isLoading, error } = useBookingsWithPagination(
@@ -262,6 +269,14 @@ export default function FacilityDashboard() {
             </span>
           </button>
         )}
+
+        <BookingTrendChart
+          trend={dashboard?.booking_trend}
+          granularity={trend}
+          onGranularityChange={setTrend}
+          options={dashboard?.trend_options}
+          subject="bookings at this facility"
+        />
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {/* Recent bookings */}

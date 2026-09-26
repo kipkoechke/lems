@@ -1,6 +1,10 @@
 import axios from "../lib/axios";
 import type { EquipmentConnectivity } from "./apiConnectivity";
-import type { UnmatchedStudiesCount } from "./apiDashboard";
+import type {
+  BookingTrend,
+  DashboardFilterOption,
+  UnmatchedStudiesCount,
+} from "./apiDashboard";
 
 // =============================================
 // Vendor Dashboard API Types — matched to live API response
@@ -82,12 +86,19 @@ export interface VendorDashboardResponse {
    * `unmatchedStudyCount()`.
    */
   unmatched_studies?: number | UnmatchedStudiesCount;
+  /**
+   * Bookings on this vendor's machines, wherever they stand. Same shape as the
+   * admin and facility dashboards.
+   */
+  booking_trend?: BookingTrend | null;
+  trend_options?: DashboardFilterOption[];
 }
 
 // Filter params for vendor dashboard
 export interface VendorDashboardFilters {
   from?: string;
   to?: string;
+  trend?: "daily" | "monthly";
   facility_id?: string;
   lot_id?: string;
   service_id?: string;

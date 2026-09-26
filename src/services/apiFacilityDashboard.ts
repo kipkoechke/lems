@@ -1,6 +1,11 @@
 import axios from "../lib/axios";
 import type { EquipmentConnectivity } from "./apiConnectivity";
-import type { UnmatchedStudiesCount } from "./apiDashboard";
+import type {
+  BookingTrend,
+  DashboardFilterOption,
+  TrendGranularity,
+  UnmatchedStudiesCount,
+} from "./apiDashboard";
 
 /**
  * Facility Portal — dashboard (`GET /facility/dashboard`).
@@ -78,13 +83,26 @@ export interface FacilityDashboardResponse {
    * `unmatchedStudyCount()`.
    */
   unmatched_studies?: number | UnmatchedStudiesCount;
+  /**
+   * Bookings made at this facility, over time. The same shape the admin and
+   * vendor dashboards use, so one chart component serves all three.
+   */
+  booking_trend?: BookingTrend | null;
+  trend_options?: DashboardFilterOption[];
+}
+
+export interface FacilityDashboardParams {
+  trend?: TrendGranularity;
 }
 
 // GET /facility/dashboard
 export const getFacilityDashboard =
-  async (): Promise<FacilityDashboardResponse> => {
+  async (
+    params: FacilityDashboardParams = {},
+  ): Promise<FacilityDashboardResponse> => {
     const response = await axios.get<{ data?: FacilityDashboardResponse }>(
       "/facility/dashboard",
+      { params },
     );
     return (
       response.data?.data ??

@@ -158,6 +158,8 @@ export interface DashboardResponse {
   sha_claims?: ShaClaims | null;
   modalities?: ModalityBreakdown[] | null;
   booking_trend?: BookingTrend | null;
+  /** The granularities this deployment offers, for the trend toggle. */
+  trend_options?: DashboardFilterOption[];
   filters?: DashboardFilters | null;
   efficiency?: Efficiency | null;
 }

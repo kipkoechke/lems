@@ -87,7 +87,14 @@ export interface FacilityEquipmentStatusHistoryEntry {
 export interface FacilityEquipmentDicom {
   ae_title?: string | null;
   calling_ae_title?: string | null;
+  /** The address a C-ECHO uses. */
   host?: string | null;
+  /**
+   * The address the machine last contacted from. Behind NAT this is the site's
+   * router rather than the device, which is why it is reported separately
+   * instead of being adopted as the host.
+   */
+  reported_ip?: string | null;
   dicom_port?: number | null;
   hl7_port?: number | null;
   is_connected?: boolean;

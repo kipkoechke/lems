@@ -98,10 +98,29 @@ export interface UnmatchedStudiesParams {
   page?: number;
 }
 
+export interface UnmatchedStudiesFilterOption {
+  value: string;
+  label: string;
+}
+
+/**
+ * The options the caller may actually use.
+ *
+ * `modality` lists only what is present in the studies that caller can see, so
+ * nobody is offered a filter that would come back empty. Equipment, vendor and
+ * facility are absent by design — those are chosen from their own listings.
+ */
+export interface UnmatchedStudiesAvailableFilters {
+  modality?: UnmatchedStudiesFilterOption[];
+  attributed?: UnmatchedStudiesFilterOption[];
+  period?: UnmatchedStudiesFilterOption[];
+}
+
 export interface UnmatchedStudiesResponse {
   summary: UnmatchedStudiesSummary;
   data: UnmatchedStudy[];
   pagination: NormalisedPagination;
+  available_filters?: UnmatchedStudiesAvailableFilters;
 }
 
 /**
@@ -141,5 +160,6 @@ export const getUnmatchedStudies = async (
       response.data?.pagination,
       params.page_size ?? 25,
     ),
+    available_filters: response.data?.available_filters,
   };
 };

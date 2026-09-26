@@ -99,6 +99,11 @@ export default function FacilityEquipmentDetail({ id }: { id: string }) {
     { label: "Calling AE Title", value: dicom?.calling_ae_title },
     // Learned from the device's own traffic, so a new unit has none yet.
     { label: "Host", value: dicom?.host || "Awaiting first contact" },
+    // Only worth showing when it differs: that means the machine is behind a
+    // shared address and a C-ECHO to it would stop at the site boundary.
+    ...(dicom?.reported_ip && dicom.reported_ip !== dicom.host
+      ? [{ label: "Contacts From (shared)", value: dicom.reported_ip }]
+      : []),
     { label: "DICOM Port", value: dicom?.dicom_port?.toString() },
     { label: "HL7 Port", value: dicom?.hl7_port?.toString() },
     { label: "Last Seen", value: formatDateTime(dicom?.last_seen_at) },

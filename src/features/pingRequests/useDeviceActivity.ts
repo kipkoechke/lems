@@ -21,6 +21,7 @@ export const useDeviceActivity = (params: DeviceActivityParams = {}) => {
 
   return {
     activity: data?.data ?? [],
+    summary: data?.summary,
     pagination: data?.pagination,
     availableFilters: data?.available_filters,
     isLoading,

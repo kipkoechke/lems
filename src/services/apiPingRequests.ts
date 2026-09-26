@@ -126,6 +126,8 @@ export interface DeviceActivityParams {
   activity_type?: DeviceActivityType;
   source_name?: string;
   equipment_id?: string;
+  facility_id?: string;
+  vendor_id?: string;
   /** Tri-state: omit for both, true for ever-seen, false for never-seen. */
   linked?: boolean;
   period?: PeriodPreset;
@@ -141,11 +143,31 @@ export interface FilterOption {
   label: string;
 }
 
+/**
+ * Counters for the **filtered** set the rows came from, not the whole table,
+ * so they move with the screen's controls.
+ *
+ * `devices` counts a machine once however it announced itself: a linked event
+ * counts as its equipment, an unlinked one as the name it sent, and the two
+ * are deduplicated together. `by_type` lists every activity type, including
+ * the ones nothing arrived as, so a legend keeps its shape as traffic changes.
+ */
+export interface DeviceActivitySummary {
+  total: number;
+  linked: number;
+  unlinked: number;
+  devices: number;
+  latest_at?: string | null;
+  by_type?: (FilterOption & { count: number })[];
+}
+
 export interface DeviceActivityResponse {
   data: DeviceActivity[];
+  summary?: DeviceActivitySummary;
   pagination: NormalisedPagination;
   available_filters?: {
     activity_type?: FilterOption[];
+    linked?: FilterOption[];
     period?: FilterOption[];
   };
 }
@@ -189,6 +211,7 @@ export const getDeviceActivity = async (
 
   return {
     data: response.data?.data ?? [],
+    summary: response.data?.summary,
     pagination: normalisePagination(
       response.data?.pagination,
       params.page_size ?? 50,

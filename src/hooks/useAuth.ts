@@ -48,7 +48,10 @@ const prefetchDashboard = (
   if (user.role === "vendor") return;
 
   if (isFacilityRole(user.role)) {
-    prefetch(["facility-dashboard"], () => getFacilityDashboard());
+    // Must match the key the dashboard mounts with — daily is its default.
+    prefetch(["facility-dashboard", "daily"], () =>
+      getFacilityDashboard({ trend: "daily" }),
+    );
     const filters = facilityDashboardFilters(facility?.id);
     prefetch(["bookings-paginated", filters], () =>
       getBookingsWithPagination(filters),

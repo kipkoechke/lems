@@ -57,6 +57,8 @@ Full system access — all endpoints.
 | `/users/{id}/password-reset-link`        | POST           | Email a colleague a reset link |
 | `/admin/dashboard`                       | GET            | Dashboard overview             |
 | `/admin/equipment`                       | GET            | Equipment listing              |
+| `/admin/facility-readiness`              | GET            | Equipment readiness by facility |
+| `/admin/facility-ranking`                | GET            | Facility bookings ranking      |
 | `/admin/permissions`                     | GET/POST       | List / Create permissions      |
 | `/admin/permissions/{id}`                | GET/PUT/DELETE | Permission CRUD                |
 | `/admin/users/{id}/permissions`          | GET            | List user permissions          |
@@ -127,6 +129,8 @@ Read-only oversight across the system.
 | `/vendors/{id}/dashboard`              | GET    | Vendor dashboard               |
 | `/admin/dashboard`                     | GET    | Dashboard overview             |
 | `/admin/equipment`                     | GET    | Equipment listing              |
+| `/admin/facility-readiness`            | GET    | Equipment readiness by facility |
+| `/admin/facility-ranking`              | GET    | Facility bookings ranking      |
 | `/analytics/*`                         | GET    | All analytics endpoints        |
 | `/requests/stats/summary`              | GET    | Request stats                  |
 | `/sha/interventions`                   | GET    | SHA interventions list         |
@@ -1151,6 +1155,10 @@ List bookings for all equipment belonging to the vendor.
 
 Get vendor-specific dashboard with equipment counts, booking stats, and revenue summaries.
 
+This is the admin's view of one vendor, and it does not carry a booking series.
+Trends live on the three dashboards the portals themselves use, in one shared
+shape — see [`GET /facility/dashboard`](#get-facilitydashboard).
+
 **Response `200`**
 
 ```json
@@ -1528,7 +1536,7 @@ Every call is also written to the device activity log as a `worklist_pull`.
 }
 ```
 
-> When a known device reconnects, only `hl7_host` and `last_seen_at` are updated — admin-set values (vendor, ports, etc.) are **never** overwritten.
+> When a known device reconnects, `reported_ip` and `last_seen_at` are updated. `hl7_host` is moved only when the address is that machine's own — admin-set values (vendor, ports, etc.) are **never** overwritten.
 
 ---
 
@@ -1585,10 +1593,19 @@ link to known equipment. Nothing is enriched or created on the way in.
 | `activity_type` | string  | `connect`, `worklist_pull` or `study_send`                    |
 | `source_name`   | string  | Partial match on the name the device sent                     |
 | `equipment_id`  | uuid    | Only events linked to this equipment                          |
+| `facility_id`   | uuid    | Only events on this facility's machines                       |
+| `vendor_id`     | uuid    | Only events on machines owned by this vendor                  |
 | `linked`        | boolean | `true` for linked events only, `false` for unlinked only      |
 | `period`        | string  | `7d`, `30d`, `90d`, `12m`, `this_month`, `this_year`          |
 | `from` / `to`   | date    | Explicit range; overrides `period`                            |
 | `page_size`     | integer | 1–100, default 50                                             |
+
+`summary` describes the **filtered** set the rows came from, not the whole
+table, so the counters move with the screen's controls. `devices` counts a
+machine once however it announced itself: a linked event counts as its
+equipment, an unlinked one as the name it sent, and the two are deduplicated
+together. `by_type` lists every activity type, including the ones nothing
+arrived as, so a legend does not change shape as traffic changes.
 
 **Response `200`**
 
@@ -1609,9 +1626,25 @@ link to known equipment. Nothing is enriched or created on the way in.
       "occurred_at": "2026-09-24T09:30:45+03:00"
     }
   ],
-  "pagination": { "current_page": 1, "per_page": 50, "total": 1, "total_pages": 1 },
+  "pagination": { "current_page": 1, "per_page": 50, "total": 248, "total_pages": 5 },
+  "summary": {
+    "total": 248,
+    "linked": 231,
+    "unlinked": 17,
+    "devices": 12,
+    "latest_at": "2026-09-24T09:30:45+03:00",
+    "by_type": [
+      { "value": "connect", "label": "Connect", "count": 96 },
+      { "value": "worklist_pull", "label": "Worklist Pull", "count": 88 },
+      { "value": "study_send", "label": "Study Send", "count": 64 }
+    ]
+  },
   "available_filters": {
     "activity_type": [{ "value": "connect", "label": "Connect" }],
+    "linked": [
+      { "value": "true", "label": "Known device" },
+      { "value": "false", "label": "Unknown device" }
+    ],
     "period": [{ "value": "7d", "label": "Last 7 Days" }]
   }
 }
@@ -1686,6 +1719,34 @@ scoped to the facility resolved from the caller's profile.
 Counts the same equipment population as the facility equipment listings — the
 units the facility owns **plus** the vendor units mapped to it through an active
 contract service.
+
+**Query Parameters**
+
+| Param   | Type   | Notes                                                                     |
+| ------- | ------ | ------------------------------------------------------------------------- |
+| `trend` | string | `daily` (last 30 days, default) or `monthly` (last 12 months)              |
+
+Alongside the counters the response carries `booking_trend` and `trend_options`
+in the same shape as the [admin dashboard](#21-admin-dashboard--analytics):
+
+```json
+"booking_trend": {
+  "granularity": "daily",
+  "buckets": 30,
+  "total": 42,
+  "points": [{ "bucket": "2026-08-26", "label": "26 Aug", "count": 3 }]
+},
+"trend_options": [
+  { "value": "daily", "label": "Daily (30 days)" },
+  { "value": "monthly", "label": "Monthly (12 months)" }
+]
+```
+
+The series counts **bookings made at this facility**. Buckets are oldest first
+and every bucket is present whether or not anything happened in it, so the chart
+is drawn from the response without filling gaps. `GET /vendor/dashboard` answers
+with the same two fields, counting bookings on that vendor's machines wherever
+they stand — one chart component serves all three dashboards.
 
 **Response `200`**
 
@@ -2182,7 +2243,7 @@ its IP/port captured, so it can be C-ECHO'd once it is.
 | Field         | Type    | Required | Notes                                                                   |
 | ------------- | ------- | -------- | ----------------------------------------------------------------------- |
 | `ae_title`    | string  | Yes      | DICOM AE Title of the equipment                                         |
-| `remote_ip`   | string  | No       | Device IP — written to `hl7_host`                                        |
+| `remote_ip`   | string  | No       | Device IP — always written to `reported_ip`, and to `hl7_host` when no other machine reports it |
 | `remote_port` | integer | No       | Device's **listening** DICOM port — written to `dicom_port`/`hl7_port`   |
 
 Omitted values are never written, so a bare heartbeat cannot blank an address
@@ -2196,6 +2257,15 @@ arriving here was read back from Orthanc — which stored it from this same colu
 in the first place. Writing it blindly could only echo a stale value or stamp the
 `11112` placeholder. To change a port on purpose use
 `POST /dicom/equipment/{equipment}/configure`.
+
+**An address is only adopted when it is that machine's own.** The address a
+machine reports from is written to `reported_ip` on every contact, and to
+`hl7_host` — the address a C-ECHO uses — only when no other machine reports the
+same one. Behind NAT every machine at a site reports the site's address, and
+storing that as a device's host would point its C-ECHO at the hospital boundary
+and could overwrite a working LAN address. Being seen still counts:
+`last_seen_at`, `is_connected` and `linked` all update regardless. The audit
+below reports a shared address as `shared address (+N)`.
 
 **Repairing existing addresses:**
 
@@ -2223,10 +2293,12 @@ involvement. Daily log volume is a handful of lines; run the command by hand
 (without `--summary`) when you need the per-device table.
 
 Findings are `missing ip`, `missing port`, `default port` (the `11112`
-placeholder), `not in orthanc`, `host drift` and `port drift`. A missing or
-wrong port cannot be discovered automatically — a DICOM association never
-advertises the peer's listening port — so those need `configure` once per
-device.
+placeholder), `not in orthanc`, `host drift`, `port drift` and
+`shared address (+N)` — the last meaning the address is reported by other
+machines too, so it is the site's router rather than the device's, and a C-ECHO
+to it stops at the boundary. A missing or wrong port cannot be discovered
+automatically — a DICOM association never advertises the peer's listening port —
+so those need `configure` once per device.
 
 **Provisioning never fakes an address.** `vems:setup-imaging`,
 `provision:facility` and `contracts:generate-all` create equipment with
@@ -2263,7 +2335,7 @@ image was without any patient images being retained.
 | Field                                                | Notes                                             |
 | ---------------------------------------------------- | ------------------------------------------------- |
 | `study_instance_uid`, `series_instance_uid`          | DICOM UIDs                                        |
-| `study_date`, `study_time`                           | Study start date and time (`study_start_date` / `study_start_time` also accepted) |
+| `study_date`, `study_time`                           | Study start date and time (`study_start_date` / `study_start_time` also accepted). Judged before it is stored — see below |
 | `performed_date`, `performed_time`                   | `PerformedProcedureStepStartDate`/`Time` → `performed_at`. When the study was actually acquired, which is not always the same day as `StudyDate` |
 | `series_count`, `instance_count`                     | Study extent. A single instance cannot know these, so when they are absent or `0` the counts are read back from Orthanc |
 | `institution_name`                                   | Where the study was performed                     |
@@ -2284,12 +2356,32 @@ cannot supply them, because a DICOM instance carries no series or instance count
 of its own. An unreachable Orthanc leaves them unset rather than recording a
 zero.
 
+Those counts are read from a study that is still arriving, so a multi-series study
+records what had arrived by then. The [settled callback](#post-dicomcallbackstudy-settled)
+re-reads the study once it is complete and replaces them with the real ones.
+
+Two things stop that resolution, and both are logged rather than left to be
+discovered later: a callback with no `study_instance_uid`, and a study Orthanc
+cannot find (`Orthanc: study not found, details not captured`). Check for those
+lines before concluding a study simply had no images.
+
 **Pixel descriptors are filled in from Orthanc too.** The Lua callback does not
 send `pixel_metadata`, so VEMS reads the descriptors of the study's first
 instance back from Orthanc (`/instances/{id}/tags?simplify`) and filters them
 through the same whitelist above — tag *values* only, never pixel data. A value
 supplied by the callback wins over the one read back. A study with no image
 instances (an SR or KOS, say) simply has no descriptors.
+
+**A device date is judged, not trusted.** A machine whose clock was never set
+sends a fixed placeholder date — one estate reports every study as `1970-08-23`.
+`study_date` and `performed_at` are therefore recorded only when the value is a
+real calendar date, no earlier than 1990, not in the future, and exactly eight
+digits. When the claimed study date is refused but
+`PerformedProcedureStepStartDate` can be believed, the study is dated by when it
+was performed; when neither can be believed both are left `null`, and
+`received_at` is the date to render. Every refusal is logged, and the raw
+callback body is kept with the study, so what the device claimed can still be
+read back.
 
 **The machine's own description of itself.** Every study a device sends carries
 its manufacturer, model, serial number, station name and software version —
@@ -2322,6 +2414,64 @@ as it arrives, and `vems:prune-orthanc-studies` (daily, 03:30) deletes the
 metadata-only record once VEMS holds it — see
 [retention](#retention--nothing-is-kept-in-orthanc).
 
+### POST `/dicom/callback/study-settled`
+
+Called by the Lua once Orthanc has stopped receiving instances for a study, which
+is one stability window after the last instance — 60 seconds by default
+(`StableAge`). The result callback above fires on the study's *first* instance, so
+what it reports is an unfinished study: the counts are the counts so far, and
+instances arriving after it are not covered by the strip. This closes both gaps.
+
+**Request Body**
+
+| Field                | Type   | Required | Notes                                        |
+| -------------------- | ------ | -------- | -------------------------------------------- |
+| `study_instance_uid` | string | Yes      | How the study is matched — `422` without one |
+| `accession_number`   | string | No       | Logged with a warning if nothing matches     |
+
+No AE title is sent: Orthanc does not report the sending association for a settled
+study, and the study already knows which machine it came from.
+
+**What it does**
+
+1. Queues `CaptureStudy` for the study — every instance is present by now, so the
+   whole study can be stripped, and the counts finally mean something. Queued
+   rather than inline because Orthanc holds its lock while it waits for this
+   response, and calling back into it from here would deadlock until the call
+   timed out (see the changelog).
+2. In that job, if a worklist or non-SHA study matches the UID, **re-reads it from
+   Orthanc** and replaces `series_count`, `instance_count` and `pixel_metadata`
+   with the settled values — the opposite rule to the result callback, which only
+   fills gaps.
+
+`series_count` and `instance_count` in the response are as stored when it was
+built: the read-back is in the queue, so with a worker already waiting they are
+usually there, and otherwise they are what the earlier capture recorded.
+
+**Response `200`**
+
+```json
+{
+  "message": "Study settled; details refreshed.",
+  "study_instance_uid": "1.2.826...",
+  "recorded": true,
+  "series_count": 3,
+  "instance_count": 6
+}
+```
+
+When no VEMS record matches the UID — the first callback was lost, say — the study
+is still stripped (images are not kept for a study we never recorded), a warning
+is logged, and the response says so:
+
+```json
+{
+  "message": "Study settled; its images are being stripped, but no VEMS record matches it.",
+  "study_instance_uid": "1.2.826...",
+  "recorded": false
+}
+```
+
 ### Retention — nothing is kept in Orthanc
 
 VEMS never stores images. A study leaves nothing behind in Orthanc either:
@@ -2329,7 +2479,8 @@ VEMS never stores images. A study leaves nothing behind in Orthanc either:
 | Step | What is on disk |
 | ---- | --------------- |
 | Study arrives | The DICOM file, for seconds |
-| Result callback runs | **Pixel data stripped** — metadata only |
+| Result callback runs | **Pixel data stripped** — the instances received so far |
+| Study settles | **Rest of the pixel data stripped** — instances that arrived after the callback |
 | `vems:prune-orthanc-studies` (daily) | **Study deleted** — nothing |
 | VEMS | The metadata, permanently |
 
@@ -2342,10 +2493,14 @@ the delete is a separate, later step rather than happening on arrival.
 ```bash
 php artisan vems:prune-orthanc-studies --hours=48   # grace period (default)
 php artisan vems:prune-orthanc-studies --dry-run    # list what would go
+php artisan vems:prune-orthanc-studies --recheck    # re-ask about ones already pruned
 ```
 
 A study is removed only when VEMS already holds it, its `study_instance_uid` is
-known, it is past the grace period, and it has not already been pruned.
+known, it is past the grace period, and it has not already been pruned. Being
+marked pruned is normally final, so a study is only ever looked at once;
+`--recheck` goes back over the marked ones, which is how a backlog built up while
+the study lookup was broken gets cleared.
 
 `accession_number`, `patient_id` and `study_date`/`study_time` keep the
 behaviour they had; the rest is described above.
@@ -2441,9 +2596,27 @@ title, description), `attributed` (`true`/`false`), `period` / `from` / `to`, an
       "facility": null
     }
   ],
-  "pagination": { "current_page": 1, "per_page": 25, "total": 12, "total_pages": 1 }
+  "pagination": { "current_page": 1, "per_page": 25, "total": 12, "total_pages": 1 },
+  "available_filters": {
+    "modality": [
+      { "value": "DX", "label": "DX" },
+      { "value": "CT", "label": "CT" }
+    ],
+    "attributed": [
+      { "value": "true", "label": "On a known machine" },
+      { "value": "false", "label": "Unattributed" }
+    ],
+    "period": [{ "value": "7d", "label": "Last 7 Days" }]
+  }
 }
 ```
+
+`available_filters.modality` lists only the modalities present in the studies
+that caller can see, so no one is offered a filter that would come back empty —
+a facility never sees a modality it has never received, and a vendor is never
+shown another vendor's. `attributed` and `period` report the values the filters
+accept. `equipment_id`, `vendor_id` and `facility_id` are absent by design: those
+are chosen from the equipment and facility listings rather than offered here.
 
 Every dashboard carries the same counter as `unmatched_studies`
 (`counts.unmatched_studies` on the admin dashboard, `data.unmatched_studies` on
@@ -4345,7 +4518,7 @@ Receive MPPS (Modality Performed Procedure Step) event update from equipment.
 | `equipment_id`        | string   | No       | Equipment UUID                         |
 | `equipment_code`      | string   | No       | Equipment code, asset_id, or DICOM AET |
 | `station_ae_title`    | string   | No       | Credits the reporting machine            |
-| `remote_ip`           | string   | No       | Refreshes the station's `hl7_host`       |
+| `remote_ip`           | string   | No       | Refreshes the station's `reported_ip`; `hl7_host` only when no other machine reports it |
 | `remote_port`         | integer  | No       | Refreshes its `dicom_port`/`hl7_port`    |
 | `procedure_code`      | string   | Yes      |                                        |
 | `status`              | string   | Yes      |                                        |
@@ -4364,7 +4537,7 @@ Receive C-STORE payload and persist structured result.
 | `equipment_id`        | string   | No       | Equipment UUID                         |
 | `equipment_code`      | string   | No       | Equipment code, asset_id, or DICOM AET |
 | `station_ae_title`    | string   | No       | Credits the reporting machine            |
-| `remote_ip`           | string   | No       | Refreshes the station's `hl7_host`       |
+| `remote_ip`           | string   | No       | Refreshes the station's `reported_ip`; `hl7_host` only when no other machine reports it |
 | `remote_port`         | integer  | No       | Refreshes its `dicom_port`/`hl7_port`    |
 | `procedure_code`      | string   | Yes      |                                        |
 | `performed_at`        | datetime | No       |                                        |
@@ -4667,6 +4840,175 @@ Paginated equipment listing with modality, category, status, search, vendor and 
 
 ---
 
+### GET `/admin/facility-readiness`
+
+The follow-up report: every facility with the equipment installed there —
+vendor-owned or facility-owned — judged on four **evidence-based** checks and
+annotated with the notes a follow-up needs.
+
+**Checks**
+
+| Check | True when |
+| ----- | --------- |
+| `linked` | The machine has reached VEMS at least once (`last_seen_at` is set) |
+| `live` | It is connected right now (`is_connected`) |
+| `worklist_ready` | It has actually pulled a worklist — a C-FIND was logged, a test probe returned, or the machine performed a production order |
+| `results_ready` | It has actually returned a study — a study send was logged, a worklist result arrived, or a non-SHA study was recorded |
+
+A machine that is online but has no worklist/study evidence is **not** worklist-
+or results-ready, however good its configuration looks. Each equipment row
+carries `notes` — one per blocker, most fundamental first — saying what it would
+take to get it fully working (e.g. *“No end-to-end test exists yet. Create an
+MWL test worklist and run a C-FIND from the machine…”*).
+
+**Readiness levels**
+
+| Level | Meaning |
+| ----- | ------- |
+| `ready` | All four checks pass and the equipment status is `active` |
+| `attention` | A known machine with something missing — offline, untested, in maintenance, or not yet proven in production |
+| `not_ready` | Never linked (nothing to test yet) or decommissioned |
+
+**Query Parameters**
+
+| Param            | Type    | Notes |
+| ---------------- | ------- | ----- |
+| `county_id`      | uuid    | |
+| `facility_id`    | uuid    | Single facility |
+| `facility_type`  | string  | |
+| `search`         | string  | Facility name/FR code, or any of its equipment's name/code/AE title |
+| `vendor_id`      | uuid    | Only facilities with equipment from this vendor |
+| `ownership_type` | string  | `facility`, `vendor` |
+| `status`         | string  | Equipment status value |
+| `readiness`      | string  | `ready`, `attention`, `not_ready` |
+| `linked`         | boolean | `true` = seen on the network, `false` = never seen |
+| `is_connected`   | boolean | `true` = live now, `false` = not connected |
+| `per_page`       | integer | Facilities per page, 1–100 (default 20) |
+
+The response is paginated **by facility**. `summary` counts every facility
+matching the filters, not just the page. `data[].summary` rolls up the
+equipment shown beneath each facility.
+
+**Response `200`**
+
+```json
+{
+  "summary": {
+    "total": 42,
+    "by_ownership": { "vendor": 30, "facility": 12 },
+    "by_check": { "linked": 27, "live": 9, "worklist_ready": 14, "results_ready": 11 },
+    "by_readiness": { "ready": 8, "attention": 19, "not_ready": 15 }
+  },
+  "data": [
+    {
+      "facility": {
+        "id": "...", "name": "Bondo Sub-County Hospital",
+        "fr_code": "FID-34-115630-8", "keph_level": "Level 4",
+        "facility_type": "HOSPITAL", "county": { "id": "...", "name": "Siaya", "code": "34" }
+      },
+      "summary": {
+        "total": 3,
+        "by_readiness": { "ready": 1, "attention": 2, "not_ready": 0 },
+        "by_ownership": { "vendor": 2, "facility": 1 },
+        "by_check": { "linked": 3, "live": 2, "worklist_ready": 1, "results_ready": 1 }
+      },
+      "equipment": [
+        {
+          "id": "...", "code": "FID341156308CT", "name": "Siemens CT",
+          "modality": "CT", "status": "active", "status_label": "Active",
+          "ownership_type": "vendor",
+          "vendor": { "id": "...", "name": "Melco Kenya Ltd", "code": "VEN001" },
+          "dicom": { "ae_title": "CT01", "host": "10.0.0.5", "port": 104 },
+          "checks": { "linked": true, "live": true, "worklist_ready": true, "results_ready": false },
+          "tests": { "total": 2, "succeeded": 1, "awaiting_result": 1, "last_tested_at": "...", "last_accession_number": "ACC202609240001" },
+          "activity": {
+            "last_seen_at": "...", "connected_at": "...",
+            "last_worklist_pull_at": "...", "last_study_sent_at": "...",
+            "orders_performed": 3, "results_received": 1, "unmatched_studies": 0
+          },
+          "readiness": "attention", "ready": false, "score": 3,
+          "notes": [
+            { "level": "warning", "code": "results_never_returned", "message": "Worklists are delivered, but no study has ever been sent back — acquire a study and confirm the C-STORE destination (AE title, host and port) points at VEMS." }
+          ]
+        }
+      ]
+    }
+  ],
+  "pagination": { "current_page": 1, "per_page": 20, "total": 18, "total_pages": 1 },
+  "filters": { "available": { "county": [], "facility_type": [], "vendor": [], "status": [], "readiness": [], "linked": [] }, "applied": {} }
+}
+```
+
+Note codes on `notes[]`: `decommissioned`, `pending_installation`,
+`under_maintenance`, `inactive`, `never_linked`, `not_live`,
+`no_end_to_end_test`, `worklist_never_pulled`, `results_never_returned`,
+`non_sha_studies`.
+
+---
+
+### GET `/admin/facility-ranking`
+
+Facilities ranked by booking volume, each with its booking status breakdown,
+completion rate, and the non-SHA studies performed on its equipment with no
+order behind them.
+
+`completion_rate` = completed ÷ (total − cancelled). A cancelled booking was
+never expected to complete, so it is not counted against the facility.
+`pending` is `pending_otp + active`. `non_sha_studies` counts studies recorded
+on the facility's machines that were never initiated from a booking.
+
+**Query Parameters**
+
+| Param           | Type    | Notes |
+| --------------- | ------- | ----- |
+| `period`        | string  | `7d`, `30d`, `90d`, `12m`, `this_month`, `this_year` (applies to `bookings.created_at` and `unmatched_studies.received_at`; default all time) |
+| `county_id`     | uuid    | |
+| `facility_id`   | uuid    | Single facility |
+| `facility_type` | string  | |
+| `search`        | string  | Facility name or FR code |
+| `is_active`     | boolean | |
+| `sort_by`       | string  | `total_bookings` (default), `patients`, `completed`, `completion_rate`, `cancelled`, `non_sha_studies` |
+| `sort_order`    | string  | `asc`, `desc` (default) |
+| `per_page`      | integer | Facilities per page, 1–100 (default 20) |
+
+Rank is assigned over the whole filtered set, so it stays stable across pages;
+`summary` likewise counts every facility in the ranking, not just the page.
+
+**Response `200`**
+
+```json
+{
+  "summary": {
+    "facilities": 18, "total_bookings": 340, "completed": 300, "pending": 20,
+    "cancelled": 20, "completion_rate": 93.8, "patients": 280,
+    "non_sha_studies": 15,
+    "top_facility": { "id": "...", "name": "Bondo Sub-County Hospital", "total_bookings": 96 }
+  },
+  "data": [
+    {
+      "rank": 1,
+      "facility": {
+        "id": "...", "name": "Bondo Sub-County Hospital",
+        "fr_code": "FID-34-115630-8", "keph_level": "Level 4",
+        "facility_type": "HOSPITAL", "county": { "id": "...", "name": "Siaya", "code": "34" }
+      },
+      "bookings": {
+        "total": 96, "pending": 4, "completed": 90, "cancelled": 2,
+        "by_status": { "pending_otp": 2, "active": 2, "completed": 90, "cancelled": 2 },
+        "by_source": { "standalone": 60, "hmis": 30, "provider_portal": 6 },
+        "completion_rate": 95.7, "patients": 81,
+        "last_booking_at": "2026-09-25T14:12:00+03:00"
+      },
+      "non_sha_studies": { "total": 4, "last_received_at": "2026-09-24T09:30:00+03:00" }
+    }
+  ],
+  "pagination": { "current_page": 1, "per_page": 20, "total": 18, "total_pages": 1 },
+  "filters": { "available": { "county": [], "facility_type": [], "period": [], "sort_by": [], "sort_order": [] }, "applied": {} }
+}
+```
+
+---
+
 ### Analytics Endpoints
 
 All analytics require authentication.
@@ -4800,6 +5142,19 @@ it went:
 `welcome_email_sent` is `false` only when there is no email on file. Through this
 endpoint that cannot happen — `email` is required — but imported rows can lack
 one, and the field makes the outcome visible rather than assumed.
+
+> **`true` means queued, not delivered.** For the mail to actually arrive, two
+> further things must be true: a queue worker must be running against the
+> connection in `QUEUE_CONNECTION`, and `MAIL_MAILER` must be a real transport.
+> With the default `MAIL_MAILER=log` the message is written to
+> `storage/logs/laravel.log` and never sent — which looks exactly like a mail
+> that was sent and lost. Which of the two happened is one command:
+>
+> ```bash
+> grep -c "activate your account" storage/logs/laravel.log
+> ```
+>
+> A count above zero means the whole chain worked and only the mailer is wrong.
 
 ### POST `/users/{user_id}/password-reset-link`
 

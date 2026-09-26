@@ -445,6 +445,17 @@ function AdminEquipmentDetails() {
                   >
                     {dicom.hl7_host || "Awaiting first contact"}
                   </p>
+                  {/* A reported address that differs from the host means other
+                      machines report it too: it is the site's router, and a
+                      C-ECHO to it would stop at the boundary. */}
+                  {dicom.reported_ip && dicom.reported_ip !== dicom.hl7_host && (
+                    <p
+                      className="text-[11px] text-amber-600 mt-0.5"
+                      title="This machine contacts VEMS from a shared address, so it is not usable as its own host"
+                    >
+                      Contacts from {dicom.reported_ip} (shared)
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">HL7 Port</p>

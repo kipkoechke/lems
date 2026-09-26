@@ -86,7 +86,16 @@ export interface VendorEquipmentSpecifications {
 
 export interface VendorEquipmentDicom {
   ae_title: string | null;
+  /** The address a C-ECHO uses — only ever this machine's own. */
   hl7_host: string | null;
+  /**
+   * The address this machine last contacted VEMS from, recorded on every
+   * contact. Behind NAT every machine at a site reports the site's address, so
+   * this is adopted as `hl7_host` only when no other machine reports it too.
+   * When the two differ, the device is behind a shared address and a C-ECHO to
+   * `reported_ip` would stop at the hospital boundary.
+   */
+  reported_ip?: string | null;
   hl7_port: number | null;
   dicom_port: number | null;
   is_connected: boolean;
@@ -498,6 +507,8 @@ export interface AdminEquipmentVendor {
 export interface AdminEquipmentDicom {
   ae_title: string | null;
   hl7_host: string | null;
+  /** See VendorEquipmentDicom.reported_ip — not necessarily the device's own. */
+  reported_ip?: string | null;
   hl7_port?: number | null;
   dicom_port: number | null;
   is_connected: boolean;
@@ -681,6 +692,7 @@ export interface EquipmentDetail extends Partial<AdminEquipment> {
   // equipment itself (`ae_title`, `host`, `dicom_port`), not under `dicom`.
   ae_title?: string | null;
   host?: string | null;
+  reported_ip?: string | null;
   hl7_port?: number | null;
   is_connected?: boolean;
   linked?: boolean;
@@ -712,6 +724,7 @@ export const equipmentDicom = (
   return {
     ae_title: aeTitle,
     hl7_host: host,
+    reported_ip: equipment.reported_ip ?? null,
     hl7_port: equipment.hl7_port ?? null,
     dicom_port: equipment.dicom_port ?? null,
     is_connected: equipment.is_connected ?? false,

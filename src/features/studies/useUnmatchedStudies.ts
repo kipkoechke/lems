@@ -37,6 +37,7 @@ export const useUnmatchedStudies = (
   return {
     studies: data?.data ?? [],
     summary: data?.summary,
+    availableFilters: data?.available_filters,
     pagination: data?.pagination,
     isLoading,
     isFetching,

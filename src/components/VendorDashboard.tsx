@@ -33,6 +33,8 @@ import { VendorDashboardFilters } from "@/services/apiVendorDashboard";
 import StatCard from "@/components/common/StatCard";
 import { ConnectivityCard } from "@/components/common/ConnectivityCard";
 import { unmatchedStudyCount } from "@/services/apiDashboard";
+import type { TrendGranularity } from "@/services/apiDashboard";
+import { BookingTrendChart } from "@/components/common/BookingTrendChart";
 import { useRouter } from "next/navigation";
 import { ErrorState } from "@/components/common/ErrorState";
 
@@ -213,6 +215,7 @@ const BOOKING_STATUS_COLORS: Record<string, string> = {
 
 const VendorDashboard: React.FC = () => {
   const router = useRouter();
+  const [trend, setTrend] = useState<TrendGranularity>("daily");
   const { vendorId, isLoading: vendorLoading } = useMyVendor();
 
   // Filter states
@@ -276,6 +279,7 @@ const VendorDashboard: React.FC = () => {
     const activeFilters: VendorDashboardFilters = {
       from: dateRange.from,
       to: dateRange.to,
+      trend,
     };
 
     if (facilityId) activeFilters.facility_id = facilityId;
@@ -283,7 +287,7 @@ const VendorDashboard: React.FC = () => {
     if (serviceId) activeFilters.service_id = serviceId;
 
     return activeFilters;
-  }, [selectedDuration, facilityId, lotId, serviceId]);
+  }, [selectedDuration, facilityId, lotId, serviceId, trend]);
 
   // Fetch dashboard data
   const {
@@ -541,6 +545,15 @@ const VendorDashboard: React.FC = () => {
           </button>
         )}
       </div>
+
+      {/* Bookings on this vendor's machines, wherever they stand. */}
+      <BookingTrendChart
+        trend={dashboard?.booking_trend}
+        granularity={trend}
+        onGranularityChange={setTrend}
+        options={dashboard?.trend_options}
+        subject="bookings on your machines"
+      />
 
       {/* Revenue & Services Charts - First after stat cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

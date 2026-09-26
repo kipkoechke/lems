@@ -56,16 +56,34 @@ const formatDateTime = (value?: string | null) =>
 export default function UnmatchedStudiesPage() {
   const scope = useUnmatchedStudiesScope();
 
+  // The ranking page links in with a facility already chosen. Read from
+  // window rather than useSearchParams, which would put a Suspense bailout in
+  // front of the whole table.
+  const [facilityId] = useState(() =>
+    typeof window === "undefined"
+      ? ""
+      : (new URLSearchParams(window.location.search).get("facility_id") ?? ""),
+  );
+
   const [page, setPage] = useState(1);
   const [attributed, setAttributed] = useState("");
   const [period, setPeriod] = useState("");
   const [modality, setModality] = useState("");
   const search = useSearchControl(() => setPage(1));
 
-  const { studies, summary, pagination, isLoading, error, refetch } =
+  const {
+    studies,
+    summary,
+    availableFilters,
+    pagination,
+    isLoading,
+    error,
+    refetch,
+  } =
     useUnmatchedStudies(scope, {
       page,
       page_size: 25,
+      facility_id: facilityId || undefined,
       search: search.term || undefined,
       period: period || undefined,
       modality: modality || undefined,
@@ -73,11 +91,14 @@ export default function UnmatchedStudiesPage() {
       attributed: attributed === "" ? undefined : attributed === "true",
     });
 
-  // The listing has no modality filter options of its own, so they are taken
-  // from what has actually arrived.
-  const modalityOptions = Array.from(
-    new Set(studies.map((study) => study.modality).filter(Boolean)),
-  ).map((value) => ({ value: value as string, label: value as string }));
+  // The API lists only the modalities this caller can actually see, so nobody
+  // is offered a filter that comes back empty. Deriving them from the page was
+  // a stand-in for that and only ever saw one page's worth.
+  const modalityOptions =
+    availableFilters?.modality ??
+    Array.from(
+      new Set(studies.map((study) => study.modality).filter(Boolean)),
+    ).map((value) => ({ value: value as string, label: value as string }));
 
   if (error) {
     return (
@@ -130,7 +151,7 @@ export default function UnmatchedStudiesPage() {
                 setPage(1);
               }}
               placeholder="All time"
-              options={PERIOD_PRESETS}
+              options={availableFilters?.period ?? PERIOD_PRESETS}
             />
           </div>
         </div>
@@ -202,7 +223,9 @@ export default function UnmatchedStudiesPage() {
                   <Table.HeaderCell>
                     <ColumnFilter
                       label="Equipment"
-                      options={ATTRIBUTION_OPTIONS}
+                      options={
+                        availableFilters?.attributed ?? ATTRIBUTION_OPTIONS
+                      }
                       value={attributed}
                       onChange={(value) => {
                         setAttributed(value);
