@@ -117,6 +117,7 @@ export interface DashboardAvailableFilters {
   county?: DashboardFilterOption[];
   facility?: DashboardFilterOption[];
   facility_type?: DashboardFilterOption[];
+  keph_level?: DashboardFilterOption[];
   vendor?: DashboardFilterOption[];
   period?: DashboardFilterOption[];
   trend?: DashboardFilterOption[];
@@ -131,6 +132,8 @@ export interface DashboardParams {
   county_id?: string;
   facility_id?: string;
   facility_type?: string;
+  /** Facility KEPH level, as stored: "Level 4". Case-insensitive. */
+  keph_level?: string;
   vendor_id?: string;
   lot_id?: string;
   period?: string;

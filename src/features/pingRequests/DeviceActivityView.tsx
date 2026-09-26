@@ -16,6 +16,7 @@ import { SearchField } from "@/components/common/SearchField";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import { useDeviceActivity } from "./useDeviceActivity";
 import {
@@ -78,6 +79,7 @@ export default function DeviceActivityView() {
   const [activityType, setActivityType] = useState("");
   const [period, setPeriod] = useState("");
   const [linked, setLinked] = useState("");
+  const [kephLevel, setKephLevel] = useState("");
   const search = useSearchControl(() => setPage(1));
 
   const {
@@ -96,6 +98,7 @@ export default function DeviceActivityView() {
       | DeviceActivityType
       | undefined,
     period: (period || undefined) as PeriodPreset | undefined,
+    keph_level: kephLevel || undefined,
     // Tri-state — "" means no filter at all, not false.
     linked: linked === "" ? undefined : linked === "true",
   });
@@ -140,6 +143,15 @@ export default function DeviceActivityView() {
               placeholder="Search by the name the device sent..."
             />
           </div>
+
+          <KephLevelFilter
+            value={kephLevel}
+            onChange={(value) => {
+              setKephLevel(value);
+              setPage(1);
+            }}
+            className="shrink-0 w-full lg:w-40"
+          />
 
           <SearchableSelect
             label=""
@@ -258,7 +270,11 @@ export default function DeviceActivityView() {
                 <Table.Loading colSpan={6} rows={8} />
               ) : activity.length === 0 ? (
                 <Table.Empty colSpan={6}>
-                  {search.term || activityType || period || linked
+                  {search.term ||
+                  activityType ||
+                  period ||
+                  kephLevel ||
+                  linked
                     ? "No activity matches these filters."
                     : "No device activity recorded yet."}
                 </Table.Empty>

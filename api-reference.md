@@ -810,6 +810,7 @@ List facilities with pagination and filtering.
 | Param                 | Type    | Notes                                      |
 | --------------------- | ------- | ------------------------------------------ |
 | `county`              | string  | County name filter                         |
+| `keph_level`          | string  | Facility KEPH level (case-insensitive)     |
 | `hmis`                | string  | HMIS code filter                           |
 | `status`              | string  | `active`, `inactive`, `suspended`          |
 | `sha_contract_status` | string  | `active`, `pending`, `inactive`, `expired` |
@@ -1158,6 +1159,17 @@ Get vendor-specific dashboard with equipment counts, booking stats, and revenue 
 This is the admin's view of one vendor, and it does not carry a booking series.
 Trends live on the three dashboards the portals themselves use, in one shared
 shape — see [`GET /facility/dashboard`](#get-facilitydashboard).
+
+**Query Parameters**
+
+| Param            | Type   | Notes |
+| ---------------- | ------ | ----- |
+| `facility_id`    | uuid   | Only bookings at this facility |
+| `keph_level`     | string | Only bookings at facilities of this KEPH level (case-insensitive) |
+| `source`         | string | `provider_portal`, `hmis`, `standalone` |
+| `revenue_type`   | string | `cash`, `sha`, `other_insurance` |
+| `from` / `to`    | date   | `Y-m-d`; default: last 30 days |
+| `trend_grouping` | string | `day`, `week`, `month`, `year` |
 
 **Response `200`**
 
@@ -1594,6 +1606,7 @@ link to known equipment. Nothing is enriched or created on the way in.
 | `source_name`   | string  | Partial match on the name the device sent                     |
 | `equipment_id`  | uuid    | Only events linked to this equipment                          |
 | `facility_id`   | uuid    | Only events on this facility's machines                       |
+| `keph_level`    | string  | Only events at facilities of this KEPH level (case-insensitive) |
 | `vendor_id`     | uuid    | Only events on machines owned by this vendor                  |
 | `linked`        | boolean | `true` for linked events only, `false` for unlinked only      |
 | `period`        | string  | `7d`, `30d`, `90d`, `12m`, `this_month`, `this_year`          |
@@ -2549,7 +2562,8 @@ As with ordered studies, no pixel data is retained — the study is stripped in
 Orthanc the same way.
 
 Reported newest first, filterable by `modality`, `equipment_id`, `vendor_id`,
-`facility_id`, `search` (accession, study UID, patient id, station name, AE
+`facility_id`, `keph_level` (the attributed facility's level,
+case-insensitive), `search` (accession, study UID, patient id, station name, AE
 title, description), `attributed` (`true`/`false`), `period` / `from` / `to`, and
 `page_size`.
 
@@ -3175,7 +3189,7 @@ Remove service from lot.
 
 ### GET `/contracts`
 
-List contracts with pagination. Filter with `vendor_id`, `vendor_code`, `facility_id`, `lot_id` (contracts that include any service from that lot), `status`, `search`, `current_only` and `expired_only`.
+List contracts with pagination. Filter with `vendor_id`, `vendor_code`, `facility_id`, `keph_level` (the facility's level, case-insensitive), `lot_id` (contracts that include any service from that lot), `status`, `search`, `current_only` and `expired_only`.
 
 **Response `200`**
 
@@ -3584,6 +3598,7 @@ List bookings. Returns a summary alongside paginated results.
 | ------------------ | ------- | ------------------------------------------------- |
 | `fr_code`          | string  | Filter by facility FR code                        |
 | `facility_id`      | uuid    |                                                   |
+| `keph_level`       | string  | The facility's KEPH level (case-insensitive)      |
 | `vendor_id`        | uuid    | Bookings with a service assigned to this vendor   |
 | `patient_id`       | uuid    |                                                   |
 | `status`           | string  | `pending_otp`, `active`, `completed`, `cancelled` |
@@ -4265,6 +4280,7 @@ List medical requests with filtering and pagination.
 | `patient_id`    | string  |                                                              |
 | `patient`       | string  | Patient name search                                          |
 | `facility_id`   | string  |                                                              |
+| `keph_level`    | string  | The addressed facility's KEPH level (case-insensitive)       |
 | `vendor_id`     | string  | Vendor from the named machine, or from the contract when the order names a facility only |
 | `period`        | string  | `7d`, `30d`, `90d`, `12m`, `this_month`, `this_year`         |
 | `from` / `to`   | date    | Explicit range; overrides `period`                           |
@@ -4375,6 +4391,7 @@ Get request statistics.
 | Param         | Type    | Notes              |
 | ------------- | ------- | ------------------ |
 | `facility_id` | string  | Filter by facility |
+| `keph_level`  | string  | Filter by the facility's KEPH level (case-insensitive) |
 | `days`        | integer | 1–90, default 7    |
 
 ---
@@ -4756,6 +4773,7 @@ High-level counts, modality breakdown, SHA claim stats, a booking trend, and eff
 | `county_id`     | uuid   |                                                                            |
 | `facility_id`   | uuid   |                                                                            |
 | `facility_type` | string |                                                                            |
+| `keph_level`    | string | Facility KEPH level (case-insensitive)                                     |
 | `vendor_id`     | uuid   |                                                                            |
 | `lot_id`        | uuid   |                                                                            |
 | `period`        | string | `7d`, `30d`, `90d`, `12m`, `this_month`, `this_year`                       |
@@ -4833,6 +4851,7 @@ Paginated equipment listing with modality, category, status, search, vendor and 
 | `search`      | string  | —       | Free-text search                                                                              |
 | `vendor_id`   | uuid    | —       |                                                                                               |
 | `facility_id` | uuid    | —       | Owning facility                                                                               |
+| `keph_level`  | string  | —       | Owning facility's KEPH level (case-insensitive)                                               |
 | `linked`      | boolean | —       | `true` = seen on the network (`last_seen_at` set), `false` = never seen                        |
 | `sort_by`     | string  | `name`  | `name`, `code`, `category`, `status`, `created_at`                                            |
 | `sort_order`  | string  | `asc`   | `asc`, `desc`                                                                                 |
@@ -4876,6 +4895,7 @@ MWL test worklist and run a C-FIND from the machine…”*).
 | `county_id`      | uuid    | |
 | `facility_id`    | uuid    | Single facility |
 | `facility_type`  | string  | |
+| `keph_level`     | string  | Facility KEPH level (case-insensitive) |
 | `search`         | string  | Facility name/FR code, or any of its equipment's name/code/AE title |
 | `vendor_id`      | uuid    | Only facilities with equipment from this vendor |
 | `ownership_type` | string  | `facility`, `vendor` |
@@ -4965,6 +4985,7 @@ on the facility's machines that were never initiated from a booking.
 | `county_id`     | uuid    | |
 | `facility_id`   | uuid    | Single facility |
 | `facility_type` | string  | |
+| `keph_level`    | string  | Facility KEPH level (case-insensitive) |
 | `search`        | string  | Facility name or FR code |
 | `is_active`     | boolean | |
 | `sort_by`       | string  | `total_bookings` (default), `patients`, `completed`, `completion_rate`, `cancelled`, `non_sha_studies` |
@@ -5068,6 +5089,10 @@ users belonging to their own facility; any `facility_id` they pass is ignored.
 | ----------- | ------- | ----------------- |
 | `is_active` | boolean |                   |
 | `search`    | string  |                   |
+| `role`      | string  | Any `UserRole` value |
+| `vendor_id` | uuid    | Users of this vendor |
+| `facility_id` | uuid  | Users of this facility |
+| `keph_level` | string | Users whose facility is at this KEPH level (case-insensitive) |
 | `page`      | integer | Default 1         |
 | `page_size` | integer | 1–100, default 20 |
 

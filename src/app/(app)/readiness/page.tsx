@@ -16,6 +16,7 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { SearchField } from "@/components/common/SearchField";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
@@ -250,6 +251,7 @@ function FacilityReadinessContent() {
   const [ownership, setOwnership] = useState("");
   const [county, setCounty] = useState("");
   const [vendor, setVendor] = useState("");
+  const [kephLevel, setKephLevel] = useState("");
   const search = useSearchControl(() => setPage(1));
 
   const {
@@ -268,6 +270,7 @@ function FacilityReadinessContent() {
     ownership_type: (ownership || undefined) as "vendor" | "facility" | undefined,
     county_id: county || undefined,
     vendor_id: vendor || undefined,
+    keph_level: kephLevel || undefined,
   });
 
   if (error) {
@@ -336,6 +339,15 @@ function FacilityReadinessContent() {
               }}
               placeholder="All ownership"
               options={OWNERSHIP_OPTIONS}
+            />
+            <KephLevelFilter
+              value={kephLevel}
+              onChange={(value) => {
+                setKephLevel(value);
+                setPage(1);
+              }}
+              options={availableFilters?.keph_level}
+              className="w-48"
             />
             {!!availableFilters?.county?.length && (
               <SearchableSelect

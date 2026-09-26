@@ -26,6 +26,7 @@ import { ActionMenu } from "@/components/common/ActionMenu";
 import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { FacilityFilter } from "@/components/common/FacilityFilter";
+import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import { ConnectivityBadges } from "@/components/common/ConnectivityBadges";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -81,6 +82,7 @@ function AdminEquipmentsView() {
   const [statusFilter, setStatusFilter] = useState("");
   const [modalityFilter, setModalityFilter] = useState("");
   const [facilityFilter, setFacilityFilter] = useState("");
+  const [kephFilter, setKephFilter] = useState("");
   const [linkedFilter, setLinkedFilter] = useState("");
   const search = useSearchControl(() => setPage(1));
 
@@ -92,6 +94,7 @@ function AdminEquipmentsView() {
       status: statusFilter || undefined,
       modality: modalityFilter || undefined,
       facility_id: facilityFilter || undefined,
+      keph_level: kephFilter || undefined,
       // Tri-state — "" means no filter, not false.
       linked: linkedFilter === "" ? undefined : linkedFilter === "true",
       search: search.term || undefined,
@@ -174,6 +177,15 @@ function AdminEquipmentsView() {
                 placeholder="Search by name, code, serial number..."
               />
             </div>
+
+            <KephLevelFilter
+              value={kephFilter}
+              onChange={(value) => {
+                setKephFilter(value);
+                setPage(1);
+              }}
+              className="w-full lg:w-40 shrink-0"
+            />
 
             <div className="w-full lg:w-56 shrink-0">
               <FacilityFilter

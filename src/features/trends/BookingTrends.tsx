@@ -226,6 +226,7 @@ function DashboardFilterBar({
       label: "All facility types",
       options: available?.facility_type,
     },
+    { key: "keph_level", label: "All KEPH levels", options: available?.keph_level },
     { key: "facility_id", label: "All facilities", options: available?.facility },
     { key: "vendor_id", label: "All vendors", options: available?.vendor },
   ] as Field[]).filter((field) => field.options && field.options.length > 0);

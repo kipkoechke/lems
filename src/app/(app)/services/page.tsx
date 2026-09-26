@@ -12,6 +12,7 @@ import { SearchField } from "@/components/common/SearchField";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import { FacilityFilter } from "@/components/common/FacilityFilter";
+import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
 import {
   MdCalendarToday,
@@ -47,6 +48,7 @@ export default function ServicesPage() {
   const [facilityId, setFacilityId] = useState("");
   const [status, setStatus] = useState("");
   const [source, setSource] = useState("");
+  const [kephLevel, setKephLevel] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const search = useSearchControl(() => setPage(1));
@@ -60,6 +62,7 @@ export default function ServicesPage() {
       search: search.term || undefined,
       status: status || undefined,
       source: source || undefined,
+      keph_level: kephLevel || undefined,
       from: from || undefined,
       to: to || undefined,
       sort_by: "created_at",
@@ -73,6 +76,7 @@ export default function ServicesPage() {
       search.isSearching,
       status,
       source,
+      kephLevel,
       from,
       to,
     ],
@@ -218,6 +222,15 @@ export default function ServicesPage() {
                 </div>
               )}
               {/* Status */}
+              <KephLevelFilter
+                value={kephLevel}
+                onChange={(value) => {
+                  setKephLevel(value);
+                  setPage(1);
+                }}
+                className="min-w-[150px]"
+              />
+
               <SearchableSelect
                 label=""
                 compact

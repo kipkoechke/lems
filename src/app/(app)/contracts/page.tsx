@@ -14,6 +14,7 @@ import { ColumnFilter } from "@/components/common/ColumnFilter";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import { useLots } from "@/features/lots/useLots";
 
 const CONTRACT_STATUS_OPTIONS = [
@@ -27,6 +28,7 @@ export default function ContractsPage() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState("");
   const [lotFilter, setLotFilter] = useState("");
+  const [kephFilter, setKephFilter] = useState("");
   const [page, setPage] = useState(1);
   const search = useSearchControl(() => setPage(1));
 
@@ -38,6 +40,7 @@ export default function ContractsPage() {
     status: statusFilter || undefined,
     search: search.term || undefined,
     lot_id: lotFilter || undefined,
+    keph_level: kephFilter || undefined,
     // Drop pagination while searching so the client-side narrowing below sees
     // the whole list rather than one page of it.
     ...(search.isSearching ? {} : { page, per_page: 25 }),
@@ -137,6 +140,15 @@ export default function ContractsPage() {
                 placeholder="Search contracts by vendor, facility, or lot..."
               />
             </div>
+
+            <KephLevelFilter
+              value={kephFilter}
+              onChange={(value) => {
+                setKephFilter(value);
+                setPage(1);
+              }}
+              className="shrink-0 w-full lg:w-40"
+            />
 
             <SearchableSelect
               label=""

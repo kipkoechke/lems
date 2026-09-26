@@ -329,6 +329,8 @@ export interface ContractFilterParams {
   vendor_id?: string;
   vendor_code?: string;
   facility_id?: string;
+  /** The facility's KEPH level, as stored: "Level 4". Case-insensitive. */
+  keph_level?: string;
   /** Contracts that include any service from this lot. */
   lot_id?: string;
   status?: string;

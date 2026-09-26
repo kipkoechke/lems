@@ -201,6 +201,8 @@ export interface MedicalRequestListParams {
   patient_id?: string;
   patient?: string;
   facility_id?: string;
+  /** The addressed facility's KEPH level, as stored: "Level 4". */
+  keph_level?: string;
   facility_name?: string;
   /** Vendor of the named machine, or of the contract when only a facility is named. */
   vendor_id?: string;
@@ -361,6 +363,8 @@ export const regenerateMwl = async (
 // GET /requests/stats/summary
 export const getRequestStats = async (params?: {
   facility_id?: string;
+  /** The facility's KEPH level, as stored: "Level 4". Case-insensitive. */
+  keph_level?: string;
   days?: number;
 }): Promise<RequestStatsSummary> => {
   const response = await axios.get<

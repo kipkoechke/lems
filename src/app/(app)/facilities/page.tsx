@@ -9,6 +9,7 @@ import {
 } from "@/features/facilities/useFacilities";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import { SearchField } from "@/components/common/SearchField";
+import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import {
   useCounties,
   useSubCounties,
@@ -16,7 +17,6 @@ import {
 } from "@/features/counties/useCounties";
 import {
   Facility,
-  KephLevel,
 } from "@/services/apiFacility";
 import { useRouter } from "next/navigation";
 import { Suspense, useState, useRef, useEffect } from "react";
@@ -141,19 +141,16 @@ function FacilitiesContent() {
   const [isCountyDropdownOpen, setIsCountyDropdownOpen] = useState(false);
   const [isSubCountyDropdownOpen, setIsSubCountyDropdownOpen] = useState(false);
   const [isWardDropdownOpen, setIsWardDropdownOpen] = useState(false);
-  const [isKephLevelDropdownOpen, setIsKephLevelDropdownOpen] = useState(false);
 
   // Search states for filter dropdowns
   const [countySearch, setCountySearch] = useState("");
   const [subCountySearch, setSubCountySearch] = useState("");
   const [wardSearch, setWardSearch] = useState("");
-  const [kephLevelSearch, setKephLevelSearch] = useState("");
 
   // Refs for dropdowns
   const countyDropdownRef = useRef<HTMLDivElement>(null);
   const subCountyDropdownRef = useRef<HTMLDivElement>(null);
   const wardDropdownRef = useRef<HTMLDivElement>(null);
-  const kephLevelDropdownRef = useRef<HTMLDivElement>(null);
 
   // Location data hooks
   const { counties } = useCounties();
@@ -173,10 +170,6 @@ function FacilitiesContent() {
     ward.name.toLowerCase().includes(wardSearch.toLowerCase())
   );
 
-  const filteredKephLevels = Object.values(KephLevel).filter((level) =>
-    `Level ${level}`.toLowerCase().includes(kephLevelSearch.toLowerCase())
-  );
-
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -184,7 +177,6 @@ function FacilitiesContent() {
         { ref: countyDropdownRef, setter: setIsCountyDropdownOpen },
         { ref: subCountyDropdownRef, setter: setIsSubCountyDropdownOpen },
         { ref: wardDropdownRef, setter: setIsWardDropdownOpen },
-        { ref: kephLevelDropdownRef, setter: setIsKephLevelDropdownOpen },
       ];
 
       dropdowns.forEach(({ ref, setter }) => {
@@ -205,7 +197,6 @@ function FacilitiesContent() {
     setIsCountyDropdownOpen(false);
     setIsSubCountyDropdownOpen(false);
     setIsWardDropdownOpen(false);
-    setIsKephLevelDropdownOpen(false);
   };
 
   // Use facilities hook with filters
@@ -217,7 +208,7 @@ function FacilitiesContent() {
     county: selectedCounty || undefined,
     sub_county: selectedSubCounty || undefined,
     ward: selectedWard || undefined,
-    keph_level: selectedLevel ? `Level ${selectedLevel}` : undefined,
+    keph_level: selectedLevel || undefined,
   });
 
   // Removed effect tied to location filters
@@ -266,7 +257,6 @@ function FacilitiesContent() {
     setCountySearch("");
     setSubCountySearch("");
     setWardSearch("");
-    setKephLevelSearch("");
 
     // Close all dropdowns
     closeAllDropdowns();
@@ -638,86 +628,16 @@ function FacilitiesContent() {
 
             {/* Level Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                KEPH Level
-              </label>
-              <div className="relative" ref={kephLevelDropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsKephLevelDropdownOpen(!isKephLevelDropdownOpen);
-                    closeAllDropdowns();
-                    setIsKephLevelDropdownOpen(!isKephLevelDropdownOpen);
-                  }}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-left flex items-center justify-between"
-                >
-                  <span
-                    className={`truncate ${
-                      selectedLevel ? "text-gray-900" : "text-gray-500"
-                    }`}
-                  >
-                    {selectedLevel ? `Level ${selectedLevel}` : "All Levels"}
-                  </span>
-                  <FaChevronDown
-                    className={`text-gray-400 transition-transform w-3 h-3 ${
-                      isKephLevelDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {isKephLevelDropdownOpen && (
-                  <div className="absolute z-[9999] w-80 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-80 overflow-hidden">
-                    <div className="p-3 border-b border-gray-100">
-                      <div className="relative">
-                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3" />
-                        <input
-                          type="text"
-                          placeholder="Search levels..."
-                          value={kephLevelSearch}
-                          onChange={(e) => setKephLevelSearch(e.target.value)}
-                          className="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    </div>
-                    <div className="max-h-60 overflow-y-auto">
-                      <div
-                        className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
-                        onClick={() => {
-                          handleLevelChange("");
-                          setIsKephLevelDropdownOpen(false);
-                          setKephLevelSearch("");
-                        }}
-                      >
-                        <div className="font-semibold text-gray-900 text-sm">
-                          All Levels
-                        </div>
-                      </div>
-                      {filteredKephLevels && filteredKephLevels.length > 0 ? (
-                        filteredKephLevels.map((level) => (
-                          <div
-                            key={level}
-                            className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
-                            onClick={() => {
-                              handleLevelChange(level);
-                              setIsKephLevelDropdownOpen(false);
-                              setKephLevelSearch("");
-                            }}
-                          >
-                            <div className="font-semibold text-gray-900 text-sm">
-                              Level {level}
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="px-3 py-4 text-center text-gray-500 text-sm">
-                          No levels found
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* The register stores the full label, so the filter sends it
+                  back rather than a bare digit. */}
+              <KephLevelFilter
+                label="KEPH Level"
+                compact={false}
+                className="w-full"
+                value={selectedLevel}
+                onChange={handleLevelChange}
+                placeholder="All Levels"
+              />
             </div>
 
           </div>

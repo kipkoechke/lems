@@ -14,6 +14,7 @@ import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import {
   useUnmatchedStudies,
@@ -69,6 +70,7 @@ export default function UnmatchedStudiesPage() {
   const [attributed, setAttributed] = useState("");
   const [period, setPeriod] = useState("");
   const [modality, setModality] = useState("");
+  const [kephLevel, setKephLevel] = useState("");
   const search = useSearchControl(() => setPage(1));
 
   const {
@@ -87,6 +89,7 @@ export default function UnmatchedStudiesPage() {
       search: search.term || undefined,
       period: period || undefined,
       modality: modality || undefined,
+      keph_level: kephLevel || undefined,
       // Tri-state — "" means no filter, not false.
       attributed: attributed === "" ? undefined : attributed === "true",
     });
@@ -140,6 +143,15 @@ export default function UnmatchedStudiesPage() {
                 placeholder="Search accession, study UID, patient, station or AE title..."
               />
             </div>
+
+            <KephLevelFilter
+              value={kephLevel}
+              onChange={(value) => {
+                setKephLevel(value);
+                setPage(1);
+              }}
+              className="shrink-0 w-full lg:w-40"
+            />
 
             <SearchableSelect
               label=""
@@ -243,7 +255,11 @@ export default function UnmatchedStudiesPage() {
                   <Table.Loading colSpan={5} rows={8} />
                 ) : studies.length === 0 ? (
                   <Table.Empty colSpan={5}>
-                    {search.term || period || modality || attributed
+                    {search.term ||
+                    period ||
+                    modality ||
+                    kephLevel ||
+                    attributed
                       ? "No studies match these filters."
                       : "No studies have arrived without an order."}
                   </Table.Empty>

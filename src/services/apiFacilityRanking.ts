@@ -71,6 +71,8 @@ export interface FacilityRankingParams {
   facility_id?: string;
   facility_type?: string;
   search?: string;
+  /** Facility KEPH level, as stored: "Level 4". Case-insensitive. */
+  keph_level?: string;
   is_active?: boolean;
   sort_by?: FacilityRankingSortBy;
   sort_order?: "asc" | "desc";

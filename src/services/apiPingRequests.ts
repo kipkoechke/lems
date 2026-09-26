@@ -127,6 +127,8 @@ export interface DeviceActivityParams {
   source_name?: string;
   equipment_id?: string;
   facility_id?: string;
+  /** Only events at facilities of this KEPH level, as stored: "Level 4". */
+  keph_level?: string;
   vendor_id?: string;
   /** Tri-state: omit for both, true for ever-seen, false for never-seen. */
   linked?: boolean;

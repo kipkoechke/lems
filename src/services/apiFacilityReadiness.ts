@@ -105,6 +105,8 @@ export interface FacilityReadinessParams {
   county_id?: string;
   facility_id?: string;
   facility_type?: string;
+  /** Facility KEPH level, as stored: "Level 4". Case-insensitive. */
+  keph_level?: string;
   /** Facility name/FR code, or any of its equipment's name/code/AE title. */
   search?: string;
   vendor_id?: string;

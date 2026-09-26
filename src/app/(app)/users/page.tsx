@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission, isFacilityRole } from "@/lib/rbac";
 import {
+  useAssignableRoles,
   useDeleteUser,
   useSendPasswordResetLink,
   useUsers,
@@ -16,6 +17,7 @@ import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import Pagination from "@/components/common/Pagination";
 import { SearchField } from "@/components/common/SearchField";
+import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { ErrorState } from "@/components/common/ErrorState";
 import {
@@ -37,6 +39,8 @@ function UsersContent() {
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [activeFilter, setActiveFilter] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+  const [kephFilter, setKephFilter] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const search = useSearchControl(() => setPage(1));
 
@@ -46,7 +50,13 @@ function UsersContent() {
     ...(search.isSearching ? {} : { page, page_size: 20 }),
     search: search.term || undefined,
     is_active: activeFilter ? activeFilter === "true" : undefined,
+    role: roleFilter || undefined,
+    keph_level: kephFilter || undefined,
   });
+
+  // The role picker is the same list the create form uses, so it never offers
+  // a role this account could not have created in the first place.
+  const { roles: assignableRoles } = useAssignableRoles();
 
   const currentUser = useCurrentUser();
   const { deleteUser, isDeleting } = useDeleteUser();
@@ -111,6 +121,15 @@ function UsersContent() {
               />
             </div>
 
+            <KephLevelFilter
+              value={kephFilter}
+              onChange={(value) => {
+                setKephFilter(value);
+                setPage(1);
+              }}
+              className="shrink-0 w-full lg:w-40"
+            />
+
             <button
               onClick={() => router.push("/users/new")}
               className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
@@ -127,7 +146,22 @@ function UsersContent() {
               <Table.Row>
                 <Table.HeaderCell>User</Table.HeaderCell>
                 <Table.HeaderCell>Email</Table.HeaderCell>
-                <Table.HeaderCell>Role</Table.HeaderCell>
+                <Table.HeaderCell>
+                  <ColumnFilter
+                    label="Role"
+                    options={assignableRoles.map((role) => ({
+                      value: role.value,
+                      label: role.label,
+                    }))}
+                    value={roleFilter}
+                    onChange={(v) => {
+                      setRoleFilter(v);
+                      setPage(1);
+                    }}
+                    allLabel="All Roles"
+                    searchPlaceholder="Search roles..."
+                  />
+                </Table.HeaderCell>
                 <Table.HeaderCell>Institution</Table.HeaderCell>
                 <Table.HeaderCell>
                   <ColumnFilter

@@ -88,6 +88,8 @@ export interface UnmatchedStudiesParams {
   equipment_id?: string;
   vendor_id?: string;
   facility_id?: string;
+  /** The attributed facility's KEPH level, as stored: "Level 4". */
+  keph_level?: string;
   /** Accession, study UID, patient id, station name, AE title or description. */
   search?: string;
   attributed?: boolean;

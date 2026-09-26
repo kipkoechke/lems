@@ -106,6 +106,12 @@ export const userScopeLabel = (
 export interface UserListParams {
   is_active?: boolean;
   search?: string;
+  /** Any UserRole value. */
+  role?: string;
+  vendor_id?: string;
+  facility_id?: string;
+  /** The user's facility KEPH level, as stored: "Level 4". */
+  keph_level?: string;
   page?: number;
   page_size?: number;
 }

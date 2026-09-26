@@ -6,6 +6,7 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useMedicalRequests } from "@/features/requests/useRequests";
 import { VendorFilter } from "@/components/common/VendorFilter";
+import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import { PERIOD_PRESETS } from "@/services/apiPingRequests";
 import {
   REQUEST_STATUS_OPTIONS,
@@ -49,6 +50,7 @@ function RequestsContent() {
   const [status, setStatus] = useState("");
   const [patient, setPatient] = useState("");
   const [vendorId, setVendorId] = useState("");
+  const [kephLevel, setKephLevel] = useState("");
   const [period, setPeriod] = useState("");
 
   const { requests, pagination, isLoading, error, refetch } = useMedicalRequests(
@@ -60,6 +62,7 @@ function RequestsContent() {
       // The vendor of the named machine, or of the contract when the order
       // names only a facility.
       vendor_id: vendorId || undefined,
+      keph_level: kephLevel || undefined,
       period: period || undefined,
     },
   );
@@ -121,6 +124,15 @@ function RequestsContent() {
               />
             </div>
 
+            <KephLevelFilter
+              value={kephLevel}
+              onChange={(value) => {
+                setKephLevel(value);
+                setPage(1);
+              }}
+              className="shrink-0 w-full lg:w-40"
+            />
+
             <div className="w-full lg:w-56 shrink-0">
               <VendorFilter
                 value={vendorId}
@@ -176,7 +188,7 @@ function RequestsContent() {
             <Table.Body>
               {requests.length === 0 ? (
                 <Table.Empty colSpan={7}>
-                  {status || patient || vendorId || period
+                  {status || patient || vendorId || period || kephLevel
                     ? "No requests match your criteria"
                     : "No medical requests received yet."}
                 </Table.Empty>

@@ -276,6 +276,8 @@ export interface BookingFilters {
   // API-spec params
   fr_code?: string;
   facility_id?: string;
+  /** The facility's KEPH level, as stored: "Level 4". Case-insensitive. */
+  keph_level?: string;
   patient_id?: string;
   status?: "pending_otp" | "active" | "completed" | "cancelled" | string;
   source?: "provider_portal" | "hmis" | "standalone" | string;

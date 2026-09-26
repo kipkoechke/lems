@@ -559,6 +559,8 @@ export interface AdminEquipmentParams {
   vendor_id?: string;
   /** Owning facility. */
   facility_id?: string;
+  /** That facility's KEPH level, as stored: "Level 4". Case-insensitive. */
+  keph_level?: string;
   /**
    * Ever seen on the network (`last_seen_at` set) — not the same as
    * `is_connected`, which is live state. Tri-state: omit for both.

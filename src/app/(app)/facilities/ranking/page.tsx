@@ -14,6 +14,7 @@ import { Permission } from "@/lib/rbac";
 import { Table } from "@/components/Table";
 import { SearchField } from "@/components/common/SearchField";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
@@ -65,6 +66,7 @@ function FacilityRankingContent() {
   const [page, setPage] = useState(1);
   const [period, setPeriod] = useState("");
   const [county, setCounty] = useState("");
+  const [kephLevel, setKephLevel] = useState("");
   const [sortBy, setSortBy] = useState<FacilityRankingSortBy>("total_bookings");
   const search = useSearchControl(() => setPage(1));
 
@@ -82,6 +84,7 @@ function FacilityRankingContent() {
     search: search.term || undefined,
     period: period || undefined,
     county_id: county || undefined,
+    keph_level: kephLevel || undefined,
     sort_by: sortBy,
   });
 
@@ -150,6 +153,16 @@ function FacilityRankingContent() {
               }}
               placeholder="Rank by"
               options={availableFilters?.sort_by ?? RANKING_SORT_OPTIONS}
+            />
+
+            <KephLevelFilter
+              value={kephLevel}
+              onChange={(value) => {
+                setKephLevel(value);
+                setPage(1);
+              }}
+              options={availableFilters?.keph_level}
+              className="shrink-0 w-full lg:w-40"
             />
 
             {!!availableFilters?.county?.length && (

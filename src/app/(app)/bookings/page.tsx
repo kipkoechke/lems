@@ -20,6 +20,7 @@ import {
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { FacilityFilter } from "@/components/common/FacilityFilter";
 import { VendorFilter } from "@/components/common/VendorFilter";
+import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import { useIsReadOnly } from "@/hooks/usePermissions";
 import { useCurrentFacility } from "@/hooks/useAuth";
 import { approvalStatus, serviceStatus } from "@/lib/bookingStatus";
@@ -35,6 +36,7 @@ const BookingReport: React.FC = () => {
   // Bookings with a service assigned to this vendor. Also filtered
   // server-side, for the same reason as the facility.
   const [vendorId, setVendorId] = useState<string>("");
+  const [kephLevel, setKephLevel] = useState<string>("");
 
   // A facility account is pinned to its own facility: the API does not scope
   // this list by the caller, so without it they see every other facility's
@@ -45,6 +47,7 @@ const BookingReport: React.FC = () => {
   const { isLoading, bookings, error, refetchBookings } = useBookings({
     ...(effectiveFacilityId ? { facility_id: effectiveFacilityId } : {}),
     ...(vendorId ? { vendor_id: vendorId } : {}),
+    ...(kephLevel ? { keph_level: kephLevel } : {}),
   });
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -340,6 +343,15 @@ const BookingReport: React.FC = () => {
               <X className="h-3 w-3" />
             </button>
           )}
+
+          <KephLevelFilter
+            value={kephLevel}
+            onChange={(value) => {
+              setKephLevel(value);
+              setSelectedBookings(new Set());
+            }}
+            className="w-full sm:w-44"
+          />
 
           <div className="w-full sm:w-72">
             <VendorFilter
