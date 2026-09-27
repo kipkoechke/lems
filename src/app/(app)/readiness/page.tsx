@@ -16,6 +16,7 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { SearchField } from "@/components/common/SearchField";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { FilterBar } from "@/components/common/FilterBar";
 import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -315,11 +316,25 @@ function FacilityReadinessContent() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 mt-3">
+          <FilterBar
+            className="mt-3"
+            activeCount={
+              [readiness, ownership, county, vendor, kephLevel].filter(Boolean)
+                .length
+            }
+            onReset={() => {
+              setReadiness("");
+              setOwnership("");
+              setCounty("");
+              setVendor("");
+              setKephLevel("");
+              setPage(1);
+            }}
+          >
             <SearchableSelect
               label=""
               compact
-              className="w-48"
+              className="w-full lg:w-48"
               value={readiness}
               onChange={(value) => {
                 setReadiness(value);
@@ -331,7 +346,7 @@ function FacilityReadinessContent() {
             <SearchableSelect
               label=""
               compact
-              className="w-48"
+              className="w-full lg:w-48"
               value={ownership}
               onChange={(value) => {
                 setOwnership(value);
@@ -347,13 +362,13 @@ function FacilityReadinessContent() {
                 setPage(1);
               }}
               options={availableFilters?.keph_level}
-              className="w-48"
+              className="w-full lg:w-48"
             />
             {!!availableFilters?.county?.length && (
               <SearchableSelect
                 label=""
                 compact
-                className="w-48"
+                className="w-full lg:w-48"
                 value={county}
                 onChange={(value) => {
                   setCounty(value);
@@ -368,7 +383,7 @@ function FacilityReadinessContent() {
               <SearchableSelect
                 label=""
                 compact
-                className="w-48"
+                className="w-full lg:w-48"
                 value={vendor}
                 onChange={(value) => {
                   setVendor(value);
@@ -379,7 +394,7 @@ function FacilityReadinessContent() {
                 options={availableFilters.vendor}
               />
             )}
-          </div>
+          </FilterBar>
         </div>
 
         {/* Readiness split */}

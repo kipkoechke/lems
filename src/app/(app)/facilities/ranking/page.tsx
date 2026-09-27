@@ -129,57 +129,59 @@ function FacilityRankingContent() {
               />
             </div>
 
-            <SearchableSelect
-              label=""
-              compact
-              className="shrink-0 w-full lg:w-44"
-              value={period}
-              onChange={(value) => {
-                setPeriod(value);
-                setPage(1);
-              }}
-              placeholder="All time"
-              options={availableFilters?.period ?? PERIOD_PRESETS}
-            />
-
-            <SearchableSelect
-              label=""
-              compact
-              className="shrink-0 w-full lg:w-48"
-              value={sortBy}
-              onChange={(value) => {
-                setSortBy(value as FacilityRankingSortBy);
-                setPage(1);
-              }}
-              placeholder="Rank by"
-              options={availableFilters?.sort_by ?? RANKING_SORT_OPTIONS}
-            />
-
-            <KephLevelFilter
-              value={kephLevel}
-              onChange={(value) => {
-                setKephLevel(value);
-                setPage(1);
-              }}
-              options={availableFilters?.keph_level}
-              className="shrink-0 w-full lg:w-40"
-            />
-
-            {!!availableFilters?.county?.length && (
+            <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 lg:gap-3">
               <SearchableSelect
                 label=""
                 compact
                 className="shrink-0 w-full lg:w-44"
-                value={county}
+                value={period}
                 onChange={(value) => {
-                  setCounty(value);
+                  setPeriod(value);
                   setPage(1);
                 }}
-                placeholder="All counties"
-                searchPlaceholder="Search counties..."
-                options={availableFilters.county}
+                placeholder="All time"
+                options={availableFilters?.period ?? PERIOD_PRESETS}
               />
-            )}
+
+              <SearchableSelect
+                label=""
+                compact
+                className="shrink-0 w-full lg:w-48"
+                value={sortBy}
+                onChange={(value) => {
+                  setSortBy(value as FacilityRankingSortBy);
+                  setPage(1);
+                }}
+                placeholder="Rank by"
+                options={availableFilters?.sort_by ?? RANKING_SORT_OPTIONS}
+              />
+
+              <KephLevelFilter
+                value={kephLevel}
+                onChange={(value) => {
+                  setKephLevel(value);
+                  setPage(1);
+                }}
+                options={availableFilters?.keph_level}
+                className="shrink-0 w-full lg:w-40"
+              />
+
+              {!!availableFilters?.county?.length && (
+                <SearchableSelect
+                  label=""
+                  compact
+                  className="shrink-0 w-full lg:w-44"
+                  value={county}
+                  onChange={(value) => {
+                    setCounty(value);
+                    setPage(1);
+                  }}
+                  placeholder="All counties"
+                  searchPlaceholder="Search counties..."
+                  options={availableFilters.county}
+                />
+              )}
+            </div>
           </div>
         </div>
 

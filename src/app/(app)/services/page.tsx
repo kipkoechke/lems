@@ -207,85 +207,87 @@ export default function ServicesPage() {
                   placeholder="Search booking number, patient, ID..."
                 />
               </div>
-              {/* Facility — hidden for facility-scoped users, who only ever
-                  see their own bookings anyway */}
-              {!facility?.id && (
-                <div className="min-w-[220px]">
-                  <FacilityFilter
-                    hideLabel
-                    value={facilityId}
-                    onChange={(id) => {
-                      setFacilityId(id);
-                      setPage(1);
-                    }}
-                  />
-                </div>
-              )}
-              {/* Status */}
-              <KephLevelFilter
-                value={kephLevel}
-                onChange={(value) => {
-                  setKephLevel(value);
-                  setPage(1);
-                }}
-                className="min-w-[150px]"
-              />
+              <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 lg:gap-3">
+                {/* Facility — hidden for facility-scoped users, who only ever
+                    see their own bookings anyway */}
+                {!facility?.id && (
+                  <div className="w-full lg:min-w-[220px]">
+                    <FacilityFilter
+                      hideLabel
+                      value={facilityId}
+                      onChange={(id) => {
+                        setFacilityId(id);
+                        setPage(1);
+                      }}
+                    />
+                  </div>
+                )}
+                {/* Status */}
+                <KephLevelFilter
+                  value={kephLevel}
+                  onChange={(value) => {
+                    setKephLevel(value);
+                    setPage(1);
+                  }}
+                  className="w-full lg:min-w-[150px]"
+                />
 
-              <SearchableSelect
-                label=""
-                compact
-                className="min-w-[150px]"
-                value={status}
-                onChange={(value) => {
-                  setStatus(value);
-                  setPage(1);
-                }}
-                placeholder="All Statuses"
-                options={[
-                  { value: "active", label: "Active" },
-                  { value: "completed", label: "Completed" },
-                  { value: "cancelled", label: "Cancelled" },
-                  { value: "pending_otp", label: "Pending OTP" },
-                ]}
-              />
-              {/* Source */}
-              <SearchableSelect
-                label=""
-                compact
-                className="min-w-[150px]"
-                value={source}
-                onChange={(value) => {
-                  setSource(value);
-                  setPage(1);
-                }}
-                placeholder="All Sources"
-                options={[
-                  { value: "standalone", label: "Standalone" },
-                  { value: "hmis", label: "HMIS" },
-                  { value: "provider_portal", label: "Provider Portal" },
-                ]}
-              />
-              {/* Date range */}
-              <input
-                type="date"
-                value={from}
-                onChange={(e) => {
-                  setFrom(e.target.value);
-                  setPage(1);
-                }}
-                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
-                title="From date"
-              />
-              <input
-                type="date"
-                value={to}
-                onChange={(e) => {
-                  setTo(e.target.value);
-                  setPage(1);
-                }}
-                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
-                title="To date"
-              />
+                <SearchableSelect
+                  label=""
+                  compact
+                  className="w-full lg:min-w-[150px]"
+                  value={status}
+                  onChange={(value) => {
+                    setStatus(value);
+                    setPage(1);
+                  }}
+                  placeholder="All Statuses"
+                  options={[
+                    { value: "active", label: "Active" },
+                    { value: "completed", label: "Completed" },
+                    { value: "cancelled", label: "Cancelled" },
+                    { value: "pending_otp", label: "Pending OTP" },
+                  ]}
+                />
+                {/* Source */}
+                <SearchableSelect
+                  label=""
+                  compact
+                  className="w-full lg:min-w-[150px]"
+                  value={source}
+                  onChange={(value) => {
+                    setSource(value);
+                    setPage(1);
+                  }}
+                  placeholder="All Sources"
+                  options={[
+                    { value: "standalone", label: "Standalone" },
+                    { value: "hmis", label: "HMIS" },
+                    { value: "provider_portal", label: "Provider Portal" },
+                  ]}
+                />
+                {/* Date range */}
+                <input
+                  type="date"
+                  value={from}
+                  onChange={(e) => {
+                    setFrom(e.target.value);
+                    setPage(1);
+                  }}
+                  className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+                  title="From date"
+                />
+                <input
+                  type="date"
+                  value={to}
+                  onChange={(e) => {
+                    setTo(e.target.value);
+                    setPage(1);
+                  }}
+                  className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+                  title="To date"
+                />
+              </div>
             </div>
           </div>
 

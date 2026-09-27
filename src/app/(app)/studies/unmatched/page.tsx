@@ -144,27 +144,29 @@ export default function UnmatchedStudiesPage() {
               />
             </div>
 
-            <KephLevelFilter
-              value={kephLevel}
-              onChange={(value) => {
-                setKephLevel(value);
-                setPage(1);
-              }}
-              className="shrink-0 w-full lg:w-40"
-            />
+            <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 lg:gap-3">
+              <KephLevelFilter
+                value={kephLevel}
+                onChange={(value) => {
+                  setKephLevel(value);
+                  setPage(1);
+                }}
+                className="shrink-0 w-full lg:w-40"
+              />
 
-            <SearchableSelect
-              label=""
-              compact
-              className="shrink-0 w-full lg:w-44"
-              value={period}
-              onChange={(value) => {
-                setPeriod(value);
-                setPage(1);
-              }}
-              placeholder="All time"
-              options={availableFilters?.period ?? PERIOD_PRESETS}
-            />
+              <SearchableSelect
+                label=""
+                compact
+                className="shrink-0 w-full lg:w-44"
+                value={period}
+                onChange={(value) => {
+                  setPeriod(value);
+                  setPage(1);
+                }}
+                placeholder="All time"
+                options={availableFilters?.period ?? PERIOD_PRESETS}
+              />
+            </div>
           </div>
         </div>
 

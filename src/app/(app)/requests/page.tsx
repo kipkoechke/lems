@@ -124,38 +124,40 @@ function RequestsContent() {
               />
             </div>
 
-            <KephLevelFilter
-              value={kephLevel}
-              onChange={(value) => {
-                setKephLevel(value);
-                setPage(1);
-              }}
-              className="shrink-0 w-full lg:w-40"
-            />
-
-            <div className="w-full lg:w-56 shrink-0">
-              <VendorFilter
-                value={vendorId}
-                onChange={(id) => {
-                  setVendorId(id);
+            <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 lg:gap-3">
+              <KephLevelFilter
+                value={kephLevel}
+                onChange={(value) => {
+                  setKephLevel(value);
                   setPage(1);
                 }}
-                hideLabel
+                className="shrink-0 w-full lg:w-40"
+              />
+
+              <div className="w-full lg:w-56 shrink-0">
+                <VendorFilter
+                  value={vendorId}
+                  onChange={(id) => {
+                    setVendorId(id);
+                    setPage(1);
+                  }}
+                  hideLabel
+                />
+              </div>
+
+              <SearchableSelect
+                label=""
+                compact
+                className="shrink-0 w-full lg:w-44"
+                value={period}
+                onChange={(value) => {
+                  setPeriod(value);
+                  setPage(1);
+                }}
+                placeholder="All time"
+                options={PERIOD_PRESETS}
               />
             </div>
-
-            <SearchableSelect
-              label=""
-              compact
-              className="shrink-0 w-full lg:w-44"
-              value={period}
-              onChange={(value) => {
-                setPeriod(value);
-                setPage(1);
-              }}
-              placeholder="All time"
-              options={PERIOD_PRESETS}
-            />
           </div>
         </div>
 

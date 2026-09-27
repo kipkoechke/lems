@@ -141,32 +141,33 @@ export default function ContractsPage() {
               />
             </div>
 
-            <KephLevelFilter
-              value={kephFilter}
-              onChange={(value) => {
-                setKephFilter(value);
-                setPage(1);
-              }}
-              className="shrink-0 w-full lg:w-40"
-            />
+            <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 lg:gap-3">
+              <KephLevelFilter
+                value={kephFilter}
+                onChange={(value) => {
+                  setKephFilter(value);
+                  setPage(1);
+                }}
+                className="shrink-0 w-full lg:w-40"
+              />
 
-            <SearchableSelect
-              label=""
-              compact
-              className="shrink-0 w-full lg:w-56"
-              value={lotFilter}
-              onChange={(value) => {
-                setLotFilter(value);
-                setPage(1);
-              }}
-              placeholder="All lots"
-              searchPlaceholder="Search lots..."
-              options={lots.map((lot) => ({
-                value: lot.id,
-                label: `LOT ${lot.number} — ${lot.name}`,
-              }))}
-            />
-
+              <SearchableSelect
+                label=""
+                compact
+                className="shrink-0 w-full lg:w-56"
+                value={lotFilter}
+                onChange={(value) => {
+                  setLotFilter(value);
+                  setPage(1);
+                }}
+                placeholder="All lots"
+                searchPlaceholder="Search lots..."
+                options={lots.map((lot) => ({
+                  value: lot.id,
+                  label: `LOT ${lot.number} — ${lot.name}`,
+                }))}
+              />
+            </div>
             <PermissionGate permission={Permission.CREATE_CONTRACTS}>
               <button
                 onClick={() => router.push("/contracts/new")}

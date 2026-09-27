@@ -319,48 +319,50 @@ const BookingReport: React.FC = () => {
 
         {/* Facility and vendor filters */}
         <div className="mb-5 flex flex-wrap items-end gap-3">
-          <div className={`w-full sm:w-80 ${facility?.id ? "hidden" : ""}`}>
-            <FacilityFilter
-              value={facilityId}
-              onChange={(id, facility) => {
-                setFacilityId(id);
-                setFacilityName(facility?.name ?? "");
-                setSelectedBookings(new Set());
-              }}
-            />
-          </div>
-          {facilityId && !facility?.id && (
-            <button
-              onClick={() => {
-                setFacilityId("");
-                setFacilityName("");
-                setSelectedBookings(new Set());
-              }}
-              className="mb-0.5 inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
-            >
-              <Building className="h-3 w-3" />
-              {facilityName || "Selected facility"}
-              <X className="h-3 w-3" />
-            </button>
-          )}
+          <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 lg:gap-3">
+            <div className={`w-full lg:w-80 ${facility?.id ? "hidden" : ""}`}>
+              <FacilityFilter
+                value={facilityId}
+                onChange={(id, facility) => {
+                  setFacilityId(id);
+                  setFacilityName(facility?.name ?? "");
+                  setSelectedBookings(new Set());
+                }}
+              />
+            </div>
+            {facilityId && !facility?.id && (
+              <button
+                onClick={() => {
+                  setFacilityId("");
+                  setFacilityName("");
+                  setSelectedBookings(new Set());
+                }}
+                className="mb-0.5 inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+              >
+                <Building className="h-3 w-3" />
+                {facilityName || "Selected facility"}
+                <X className="h-3 w-3" />
+              </button>
+            )}
 
-          <KephLevelFilter
-            value={kephLevel}
-            onChange={(value) => {
-              setKephLevel(value);
-              setSelectedBookings(new Set());
-            }}
-            className="w-full sm:w-44"
-          />
-
-          <div className="w-full sm:w-72">
-            <VendorFilter
-              value={vendorId}
-              onChange={(id) => {
-                setVendorId(id);
+            <KephLevelFilter
+              value={kephLevel}
+              onChange={(value) => {
+                setKephLevel(value);
                 setSelectedBookings(new Set());
               }}
+              className="w-full lg:w-44"
             />
+
+            <div className="w-full lg:w-72">
+              <VendorFilter
+                value={vendorId}
+                onChange={(id) => {
+                  setVendorId(id);
+                  setSelectedBookings(new Set());
+                }}
+              />
+            </div>
           </div>
         </div>
 

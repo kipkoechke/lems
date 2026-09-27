@@ -178,26 +178,27 @@ function AdminEquipmentsView() {
               />
             </div>
 
-            <KephLevelFilter
-              value={kephFilter}
-              onChange={(value) => {
-                setKephFilter(value);
-                setPage(1);
-              }}
-              className="w-full lg:w-40 shrink-0"
-            />
-
-            <div className="w-full lg:w-56 shrink-0">
-              <FacilityFilter
-                value={facilityFilter}
+            <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 lg:gap-3">
+              <KephLevelFilter
+                value={kephFilter}
                 onChange={(value) => {
-                  setFacilityFilter(value);
+                  setKephFilter(value);
                   setPage(1);
                 }}
-                hideLabel
+                className="w-full lg:w-40 shrink-0"
               />
-            </div>
 
+              <div className="w-full lg:w-56 shrink-0">
+                <FacilityFilter
+                  value={facilityFilter}
+                  onChange={(value) => {
+                    setFacilityFilter(value);
+                    setPage(1);
+                  }}
+                  hideLabel
+                />
+              </div>
+            </div>
             <button
               onClick={() => router.push("/equipments/new")}
               className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"

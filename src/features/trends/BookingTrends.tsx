@@ -28,6 +28,7 @@ import { useDashboard } from "./useDashboard";
 import { DashboardSkeleton } from "@/components/common/Skeleton";
 import { ConnectivityCard } from "@/components/common/ConnectivityCard";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { FilterBar } from "@/components/common/FilterBar";
 import { BookingTrendChart } from "@/components/common/BookingTrendChart";
 import { useRouter } from "next/navigation";
 import { unmatchedStudyCount } from "@/services/apiDashboard";
@@ -233,16 +234,16 @@ function DashboardFilterBar({
 
   if (fields.length === 0) return null;
 
-  const hasFilters = fields.some((field) => filters[field.key]);
+  const activeCount = fields.filter((field) => filters[field.key]).length;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <FilterBar activeCount={activeCount} onReset={onReset}>
       {fields.map((field) => (
         <SearchableSelect
           key={field.key}
           label=""
           compact
-          className="w-44"
+          className="w-full lg:w-44"
           value={(filters[field.key] as string) ?? ""}
           onChange={(value) => onChange(field.key, value)}
           placeholder={field.label}
@@ -250,15 +251,7 @@ function DashboardFilterBar({
           options={field.options!}
         />
       ))}
-      {hasFilters && (
-        <button
-          onClick={onReset}
-          className="text-xs font-medium text-blue-600 hover:text-blue-700"
-        >
-          Clear
-        </button>
-      )}
-    </div>
+    </FilterBar>
   );
 }
 
@@ -377,7 +370,7 @@ export default function BookingTrends() {
     <div className="min-h-screen p-4">
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Header */}
-        <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
             <p className="text-xs text-slate-500 mt-0.5">
