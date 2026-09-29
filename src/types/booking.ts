@@ -279,6 +279,16 @@ export interface BookingFilters {
   /** The facility's KEPH level, as stored: "Level 4". Case-insensitive. */
   keph_level?: string;
   patient_id?: string;
+  /**
+   * Bookings whose services run on equipment of this modality — `CT`, `DX`,
+   * `non_imaging` and so on. This is what makes modality tracking possible
+   * from the booking list rather than by way of the equipment register.
+   */
+  modality?: string;
+  /** Bookings for any service in this lot. */
+  lot_id?: string;
+  /** Bookings for this one lot service. */
+  lot_service_id?: string;
   status?: "pending_otp" | "active" | "completed" | "cancelled" | string;
   source?: "provider_portal" | "hmis" | "standalone" | string;
   from?: string; // Y-m-d

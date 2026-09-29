@@ -45,6 +45,29 @@ export const OPERATION_STATUS_OPTIONS: SelectOption[] = [
   { value: "Temporarily Closed", label: "Temporarily Closed" },
 ];
 
+/**
+ * Imaging modalities, as the API spells them.
+ *
+ * `non_imaging` is a real value, not an absence: it covers the equipment that
+ * performs a service without producing a study, so it belongs in the list
+ * rather than being treated as "no modality".
+ */
+export const MODALITY_OPTIONS: SelectOption[] = [
+  { value: "CT", label: "CT — Computed Tomography" },
+  { value: "DX", label: "DX — Digital Radiography" },
+  { value: "MR", label: "MR — Magnetic Resonance" },
+  { value: "US", label: "US — Ultrasound" },
+  { value: "MG", label: "MG — Mammography" },
+  { value: "NM", label: "NM — Nuclear Medicine" },
+  { value: "PT", label: "PT — Positron Emission Tomography" },
+  { value: "XA", label: "XA — X-Ray Angiography" },
+  { value: "RF", label: "RF — Radiofluoroscopy" },
+  { value: "ECG", label: "ECG — Electrocardiography" },
+  { value: "RTPLAN", label: "RTPLAN — Radiotherapy Plan" },
+  { value: "RTSIM", label: "RTSIM — Radiotherapy Simulation" },
+  { value: "non_imaging", label: "Non-imaging" },
+];
+
 export const GENDER_OPTIONS: SelectOption[] = [
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },

@@ -21,6 +21,9 @@ import { ActionMenu } from "@/components/common/ActionMenu";
 import { FacilityFilter } from "@/components/common/FacilityFilter";
 import { VendorFilter } from "@/components/common/VendorFilter";
 import { KephLevelFilter } from "@/components/common/KephLevelFilter";
+import { LotServiceFilter } from "@/components/common/LotServiceFilter";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { MODALITY_OPTIONS } from "@/lib/selectOptions";
 import { useIsReadOnly } from "@/hooks/usePermissions";
 import { useCurrentFacility } from "@/hooks/useAuth";
 import { approvalStatus, serviceStatus } from "@/lib/bookingStatus";
@@ -37,6 +40,9 @@ const BookingReport: React.FC = () => {
   // server-side, for the same reason as the facility.
   const [vendorId, setVendorId] = useState<string>("");
   const [kephLevel, setKephLevel] = useState<string>("");
+  const [modality, setModality] = useState<string>("");
+  const [lotId, setLotId] = useState<string>("");
+  const [lotServiceId, setLotServiceId] = useState<string>("");
 
   // A facility account is pinned to its own facility: the API does not scope
   // this list by the caller, so without it they see every other facility's
@@ -48,6 +54,9 @@ const BookingReport: React.FC = () => {
     ...(effectiveFacilityId ? { facility_id: effectiveFacilityId } : {}),
     ...(vendorId ? { vendor_id: vendorId } : {}),
     ...(kephLevel ? { keph_level: kephLevel } : {}),
+    ...(modality ? { modality } : {}),
+    ...(lotId ? { lot_id: lotId } : {}),
+    ...(lotServiceId ? { lot_service_id: lotServiceId } : {}),
   });
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -344,6 +353,34 @@ const BookingReport: React.FC = () => {
                 <X className="h-3 w-3" />
               </button>
             )}
+
+            <SearchableSelect
+              label=""
+              compact
+              className="w-full lg:w-44"
+              value={modality}
+              onChange={(value) => {
+                setModality(value);
+                setSelectedBookings(new Set());
+              }}
+              placeholder="All modalities"
+              searchPlaceholder="Search modalities..."
+              options={MODALITY_OPTIONS}
+            />
+
+            <LotServiceFilter
+              lotId={lotId}
+              onLotChange={(value) => {
+                setLotId(value);
+                setSelectedBookings(new Set());
+              }}
+              serviceId={lotServiceId}
+              onServiceChange={(value) => {
+                setLotServiceId(value);
+                setSelectedBookings(new Set());
+              }}
+              className="w-full lg:w-48"
+            />
 
             <KephLevelFilter
               value={kephLevel}

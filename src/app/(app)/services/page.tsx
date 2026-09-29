@@ -13,6 +13,8 @@ import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import { FacilityFilter } from "@/components/common/FacilityFilter";
 import { KephLevelFilter } from "@/components/common/KephLevelFilter";
+import { LotServiceFilter } from "@/components/common/LotServiceFilter";
+import { MODALITY_OPTIONS } from "@/lib/selectOptions";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
 import {
   MdCalendarToday,
@@ -49,6 +51,9 @@ export default function ServicesPage() {
   const [status, setStatus] = useState("");
   const [source, setSource] = useState("");
   const [kephLevel, setKephLevel] = useState("");
+  const [modality, setModality] = useState("");
+  const [lotId, setLotId] = useState("");
+  const [lotServiceId, setLotServiceId] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const search = useSearchControl(() => setPage(1));
@@ -63,6 +68,9 @@ export default function ServicesPage() {
       status: status || undefined,
       source: source || undefined,
       keph_level: kephLevel || undefined,
+      modality: modality || undefined,
+      lot_id: lotId || undefined,
+      lot_service_id: lotServiceId || undefined,
       from: from || undefined,
       to: to || undefined,
       sort_by: "created_at",
@@ -77,6 +85,9 @@ export default function ServicesPage() {
       status,
       source,
       kephLevel,
+      modality,
+      lotId,
+      lotServiceId,
       from,
       to,
     ],
@@ -223,6 +234,34 @@ export default function ServicesPage() {
                   </div>
                 )}
                 {/* Status */}
+                <SearchableSelect
+                  label=""
+                  compact
+                  className="w-full lg:min-w-[150px]"
+                  value={modality}
+                  onChange={(value) => {
+                    setModality(value);
+                    setPage(1);
+                  }}
+                  placeholder="All modalities"
+                  searchPlaceholder="Search modalities..."
+                  options={MODALITY_OPTIONS}
+                />
+
+                <LotServiceFilter
+                  lotId={lotId}
+                  onLotChange={(value) => {
+                    setLotId(value);
+                    setPage(1);
+                  }}
+                  serviceId={lotServiceId}
+                  onServiceChange={(value) => {
+                    setLotServiceId(value);
+                    setPage(1);
+                  }}
+                  className="w-full lg:min-w-[170px]"
+                />
+
                 <KephLevelFilter
                   value={kephLevel}
                   onChange={(value) => {
