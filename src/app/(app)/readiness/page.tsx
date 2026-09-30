@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FaClipboardCheck,
@@ -11,6 +11,7 @@ import {
   FaExclamationTriangle,
   FaBuilding,
   FaTruck,
+  FaDownload,
 } from "react-icons/fa";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
@@ -22,7 +23,10 @@ import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
 import { useSearchControl } from "@/hooks/useSearchControl";
-import { useFacilityReadiness } from "@/features/readiness/useFacilityReadiness";
+import {
+  useFacilityReadiness,
+  useReadinessExport,
+} from "@/features/readiness/useFacilityReadiness";
 import {
   READINESS_CHECKS,
   READINESS_LABELS,
@@ -255,6 +259,21 @@ function FacilityReadinessContent() {
   const [kephLevel, setKephLevel] = useState("");
   const search = useSearchControl(() => setPage(1));
 
+  const filters = useMemo(
+    () => ({
+      search: search.term || undefined,
+      readiness: (readiness || undefined) as ReadinessLevel | undefined,
+      ownership_type: (ownership || undefined) as
+        | "vendor"
+        | "facility"
+        | undefined,
+      county_id: county || undefined,
+      vendor_id: vendor || undefined,
+      keph_level: kephLevel || undefined,
+    }),
+    [search.term, readiness, ownership, county, vendor, kephLevel],
+  );
+
   const {
     facilities,
     summary,
@@ -263,16 +282,10 @@ function FacilityReadinessContent() {
     isLoading,
     error,
     refetch,
-  } = useFacilityReadiness({
-    page,
-    per_page: 20,
-    search: search.term || undefined,
-    readiness: (readiness || undefined) as ReadinessLevel | undefined,
-    ownership_type: (ownership || undefined) as "vendor" | "facility" | undefined,
-    county_id: county || undefined,
-    vendor_id: vendor || undefined,
-    keph_level: kephLevel || undefined,
-  });
+  } = useFacilityReadiness({ page, per_page: 20, ...filters });
+
+  // The export covers everything these filters select, not the page on screen.
+  const { download, isExporting } = useReadinessExport(filters);
 
   if (error) {
     return (
@@ -314,6 +327,16 @@ function FacilityReadinessContent() {
                 placeholder="Search facility, FR code, equipment or AE title..."
               />
             </div>
+
+            <button
+              onClick={download}
+              disabled={isExporting}
+              title="Download every machine these filters select — facility, equipment, when it was last seen, and its vendor"
+              className="shrink-0 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <FaDownload className="w-3.5 h-3.5" />
+              {isExporting ? "Preparing..." : "Export"}
+            </button>
           </div>
 
           <FilterBar
