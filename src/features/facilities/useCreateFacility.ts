@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage } from "@/lib/apiError";
 import {
   createFacilityNew,
   CreateFacilityPayload,
@@ -14,12 +15,8 @@ export function useCreateFacility() {
       toast.success("Facility created successfully!");
       queryClient.invalidateQueries({ queryKey: ["facilities"] });
     },
-    onError: (error: any) => {
-      const message =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to create facility";
-      toast.error(message);
+    onError: (error: unknown) => {
+      toast.error(apiErrorMessage(error, "Failed to create facility"));
     },
   });
 

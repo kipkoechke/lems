@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage } from "@/lib/apiError";
 import { createBatch, CreateBatchRequest } from "@/services/apiSyncBooking";
 import toast from "react-hot-toast";
 
@@ -14,12 +15,8 @@ export const useCreateBatch = () => {
       queryClient.invalidateQueries({ queryKey: ["vendorBatches"] });
       queryClient.invalidateQueries({ queryKey: ["facilityPayments"] });
     },
-    onError: (error: any) => {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to create batch";
-      toast.error(errorMessage);
+    onError: (error: unknown) => {
+      toast.error(apiErrorMessage(error, "Failed to create batch"));
     },
   });
 

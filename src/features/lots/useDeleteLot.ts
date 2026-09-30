@@ -1,4 +1,5 @@
 import { deleteLot } from "@/services/apiLots";
+import { apiErrorMessage } from "@/lib/apiError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -14,7 +15,7 @@ export const useDeleteLot = () => {
     onError: (
       error: Error & { response?: { data?: { message?: string } } },
     ) => {
-      toast.error(error?.response?.data?.message || "Failed to delete lot");
+      toast.error(apiErrorMessage(error, "Failed to delete lot"));
     },
   });
 

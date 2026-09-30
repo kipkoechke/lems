@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage } from "@/lib/apiError";
 import { toast } from "react-hot-toast";
 import {
   createProcedure,
@@ -46,7 +47,7 @@ export const useCreateProcedure = () => {
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
       toast.error(
-        error?.response?.data?.message || "Failed to create procedure",
+        apiErrorMessage(error, "Failed to create procedure"),
       ),
   });
 

@@ -1,4 +1,5 @@
 "use client";
+import { apiErrorMessage } from "@/lib/apiError";
 
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -95,9 +96,9 @@ export default function ResetPasswordPage() {
   // explained rather than reported as a failure.
   const status = (mutation.error as { response?: { status?: number } })
     ?.response?.status;
-  const apiMessage = (
-    mutation.error as { response?: { data?: { message?: string } } }
-  )?.response?.data?.message;
+  const apiMessage = mutation.error
+    ? apiErrorMessage(mutation.error, "")
+    : "";
 
   const shell = (children: React.ReactNode) => (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">

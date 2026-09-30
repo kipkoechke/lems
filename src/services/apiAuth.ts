@@ -1,4 +1,5 @@
 import axios from "../lib/axios";
+import { apiErrorMessage } from "@/lib/apiError";
 import { LoginFormData } from "../lib/validations";
 
 // Role object from API response
@@ -237,15 +238,13 @@ export const loginFetcher = async (
       facility,
       token: data.token,
     };
-  } catch (error: any) {
-    // For React Query, we want to throw errors to trigger the error state
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
-    }
-    if (error.response?.data) {
-      throw new Error("Login failed");
-    }
-    throw new Error("Network error occurred. Please try again.");
+  } catch (error: unknown) {
+    // React Query surfaces the thrown message, and the useful part of a
+    // rejected login lives under `errors.email` — "These credentials do not
+    // match our records." — not in the "Validation failed." top line.
+    throw new Error(
+      apiErrorMessage(error, "Network error occurred. Please try again."),
+    );
   }
 };
 

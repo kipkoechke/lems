@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage } from "@/lib/apiError";
 import { toast } from "react-hot-toast";
 import {
   createEquipmentStatusLog,
@@ -61,7 +62,7 @@ export const useCreateEquipmentStatusLog = () => {
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
       toast.error(
-        error?.response?.data?.message || "Failed to log status change",
+        apiErrorMessage(error, "Failed to log status change"),
       ),
   });
 

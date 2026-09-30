@@ -1,4 +1,5 @@
 import { createService, type ServiceCreateRequest } from "@/services/apiLots";
+import { apiErrorMessage } from "@/lib/apiError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -15,7 +16,7 @@ export const useCreateService = (lotId: string) => {
     onError: (
       error: Error & { response?: { data?: { message?: string } } },
     ) => {
-      toast.error(error?.response?.data?.message || "Failed to create service");
+      toast.error(apiErrorMessage(error, "Failed to create service"));
     },
   });
 };

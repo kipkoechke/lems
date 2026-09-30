@@ -1,4 +1,5 @@
 import axios from "../lib/axios";
+import { normaliseFilterBlock } from "@/lib/filterOptions";
 import { normalisePagination, NormalisedPagination } from "./pagination";
 import type { FilterOption } from "./apiFacilityReadiness";
 
@@ -118,7 +119,7 @@ export const getFacilityRanking = async (
       response.data?.pagination,
       params.per_page ?? 20,
     ),
-    available_filters: response.data?.filters?.available,
+    available_filters: normaliseFilterBlock(response.data?.filters?.available),
   };
 };
 

@@ -1,4 +1,5 @@
 import axios from "../lib/axios";
+import { normaliseFilterBlock } from "@/lib/filterOptions";
 import { normalisePagination, NormalisedPagination } from "./pagination";
 
 export type AeTitleSource = "machine_ping" | "system_generated" | "custom";
@@ -218,7 +219,7 @@ export const getDeviceActivity = async (
       response.data?.pagination,
       params.page_size ?? 50,
     ),
-    available_filters: response.data?.available_filters,
+    available_filters: normaliseFilterBlock(response.data?.available_filters),
   };
 };
 

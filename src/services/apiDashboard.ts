@@ -1,4 +1,5 @@
 import axios from "../lib/axios";
+import { normaliseFilterBlock } from "@/lib/filterOptions";
 import type { EquipmentConnectivity } from "./apiConnectivity";
 
 // ===== Dashboard Types =====
@@ -175,5 +176,17 @@ export const getDashboard = async (
   const response = await axios.get("/admin/dashboard", { params });
   // Handle both wrapped and unwrapped responses
   const body = response.data as { data?: DashboardResponse } & DashboardResponse;
-  return (body.data ?? response.data) as DashboardResponse;
+  const dashboard = (body.data ?? response.data) as DashboardResponse;
+
+  return {
+    ...dashboard,
+    filters: dashboard.filters
+      ? {
+          ...dashboard.filters,
+          available: normaliseFilterBlock<DashboardAvailableFilters>(
+            dashboard.filters.available,
+          ),
+        }
+      : dashboard.filters,
+  };
 };

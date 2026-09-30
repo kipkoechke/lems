@@ -1,4 +1,5 @@
 "use client";
+import { apiErrorMessage } from "@/lib/apiError";
 import { goToNextStep, goToPreviousStep } from "@/context/workflowSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import React, { useCallback, useEffect, useState } from "react";
@@ -243,7 +244,7 @@ const PatientConsent: React.FC = () => {
           }
         },
         onError: (error: any) => {
-          toast.error(error.response?.data?.message || "Failed to resend OTP");
+          toast.error(apiErrorMessage(error, "Failed to resend OTP"));
         },
       },
     );

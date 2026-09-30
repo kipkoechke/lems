@@ -1,4 +1,5 @@
 import { deleteService } from "@/services/apiLots";
+import { apiErrorMessage } from "@/lib/apiError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -15,7 +16,7 @@ export const useDeleteService = (lotId: string) => {
     onError: (
       error: Error & { response?: { data?: { message?: string } } },
     ) => {
-      toast.error(error?.response?.data?.message || "Failed to delete service");
+      toast.error(apiErrorMessage(error, "Failed to delete service"));
     },
   });
 };

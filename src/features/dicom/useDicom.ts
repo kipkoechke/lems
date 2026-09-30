@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage } from "@/lib/apiError";
 import { toast } from "react-hot-toast";
 import {
   configureEquipmentDicom,
@@ -44,7 +45,7 @@ export const useRegisterAllModalities = () => {
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
       toast.error(
-        error?.response?.data?.message || "Failed to register modalities",
+        apiErrorMessage(error, "Failed to register modalities"),
       ),
   });
 
@@ -85,7 +86,7 @@ export const useConfigureEquipmentDicom = () => {
       queryClient.invalidateQueries({ queryKey: ["dicom"] });
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
-      toast.error(error?.response?.data?.message || "Failed to configure DICOM"),
+      toast.error(apiErrorMessage(error, "Failed to configure DICOM")),
   });
 
   return { configureDicom: mutate, isConfiguring: isPending };
@@ -103,7 +104,7 @@ export const useTestEquipmentDicom = () => {
       }
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
-      toast.error(error?.response?.data?.message || "Connection test failed"),
+      toast.error(apiErrorMessage(error, "Connection test failed")),
   });
 
   return { testConnection: mutate, isTesting: isPending };
@@ -132,7 +133,7 @@ export const useWorklistTest = () => {
       queryClient.invalidateQueries({ queryKey: ["facility-equipment"] });
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
-      toast.error(error?.response?.data?.message || "Worklist test failed"),
+      toast.error(apiErrorMessage(error, "Worklist test failed")),
   });
 
   return { runWorklistTest: mutate, isRunningTest: isPending };

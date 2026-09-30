@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage } from "@/lib/apiError";
 import { toast } from "react-hot-toast";
 import {
   assignUserPermission,
@@ -41,7 +42,7 @@ export const useCreatePermission = () => {
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
       toast.error(
-        error?.response?.data?.message || "Failed to create permission",
+        apiErrorMessage(error, "Failed to create permission"),
       ),
   });
 

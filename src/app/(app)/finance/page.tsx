@@ -1,4 +1,5 @@
 "use client";
+import { apiErrorMessage } from "@/lib/apiError";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import Modal from "@/components/common/Modal";
 import Pagination from "@/components/common/Pagination";
@@ -262,8 +263,7 @@ function BookingActionsCell({ booking }: BookingActionsCellProps) {
         },
         onError: (error: any) => {
           toast.error(
-            error.response?.data?.message ||
-              "Failed to process finance approval",
+            apiErrorMessage(error, "Failed to process finance approval"),
           );
         },
       },

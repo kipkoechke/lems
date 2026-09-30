@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage } from "@/lib/apiError";
 import { toast } from "react-hot-toast";
 import {
   cancelMedicalRequest,
@@ -81,7 +82,7 @@ export const useCancelMedicalRequest = () => {
       queryClient.invalidateQueries({ queryKey: ["request"] });
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
-      toast.error(error?.response?.data?.message || "Failed to cancel request"),
+      toast.error(apiErrorMessage(error, "Failed to cancel request")),
   });
 
   return { cancelRequest: mutate, isCancelling: isPending };
@@ -104,7 +105,7 @@ export const useRetargetMedicalRequest = () => {
       queryClient.invalidateQueries({ queryKey: ["request"] });
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
-      toast.error(error?.response?.data?.message || "Failed to retarget request"),
+      toast.error(apiErrorMessage(error, "Failed to retarget request")),
   });
 
   return { retargetRequest: mutate, isRetargeting: isPending };
@@ -127,7 +128,7 @@ export const useRegenerateMwl = () => {
       queryClient.invalidateQueries({ queryKey: ["request"] });
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
-      toast.error(error?.response?.data?.message || "Failed to regenerate MWL"),
+      toast.error(apiErrorMessage(error, "Failed to regenerate MWL")),
   });
 
   return { regenerate: mutate, isRegenerating: isPending };

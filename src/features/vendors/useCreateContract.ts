@@ -1,4 +1,5 @@
 import { ContractCreateRequest, createContract } from "@/services/apiVendors";
+import { apiErrorMessage } from "@/lib/apiError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -13,7 +14,7 @@ export const useCreateContract = () => {
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Failed to create contract"
+        apiErrorMessage(error, "Failed to create contract")
       );
     },
   });

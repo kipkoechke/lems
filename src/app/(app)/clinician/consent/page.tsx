@@ -1,4 +1,5 @@
 "use client";
+import { apiErrorMessage } from "@/lib/apiError";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -179,7 +180,7 @@ export default function ConsentVerificationPage() {
           toast.success("OTP has been resent successfully!");
         },
         onError: (error: any) => {
-          toast.error(error.response?.data?.message || "Failed to resend OTP");
+          toast.error(apiErrorMessage(error, "Failed to resend OTP"));
         },
       }
     );

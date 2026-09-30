@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage } from "@/lib/apiError";
 import { toast } from "react-hot-toast";
 import {
   assignProviderClaim,
@@ -48,7 +49,7 @@ export const useAssignProviderClaim = () => {
       queryClient.invalidateQueries({ queryKey: ["provider-booking"] });
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
-      toast.error(error?.response?.data?.message || "Failed to assign claim ID"),
+      toast.error(apiErrorMessage(error, "Failed to assign claim ID")),
   });
 
   return { assignClaim: mutate, isAssigning: isPending };

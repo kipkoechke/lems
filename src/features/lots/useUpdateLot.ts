@@ -1,4 +1,5 @@
 import { LotUpdateRequest, updateLot } from "@/services/apiLots";
+import { apiErrorMessage } from "@/lib/apiError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -20,7 +21,7 @@ export const useUpdateLot = () => {
     onError: (
       error: Error & { response?: { data?: { message?: string } } },
     ) => {
-      toast.error(error?.response?.data?.message || "Failed to update lot");
+      toast.error(apiErrorMessage(error, "Failed to update lot"));
     },
   });
 

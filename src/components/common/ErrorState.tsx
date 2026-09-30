@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { apiErrorMessage } from "@/lib/apiError";
 
 interface ErrorStateProps {
   /** Title of the error message */
@@ -21,34 +22,6 @@ interface ErrorStateProps {
 }
 
 /**
- * Extract error message from various error types (Axios, Error, string, etc.)
- */
-const getErrorMessage = (err: unknown): string => {
-  if (!err) return "An unexpected error occurred";
-
-  if (typeof err === "string") return err;
-
-  if (err && typeof err === "object") {
-    // Axios error with response data
-    const axiosErr = err as {
-      response?: { data?: { message?: string } };
-      message?: string;
-    };
-
-    if (axiosErr.response?.data?.message) {
-      return axiosErr.response.data.message;
-    }
-
-    // Standard Error object
-    if (axiosErr.message) {
-      return axiosErr.message;
-    }
-  }
-
-  return "An unexpected error occurred";
-};
-
-/**
  * Reusable error state component for displaying API errors and other error states
  */
 export const ErrorState: React.FC<ErrorStateProps> = ({
@@ -61,7 +34,9 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
 }) => {
   const errorMessage =
     message ||
-    (error ? getErrorMessage(error) : "An unexpected error occurred");
+    (error
+      ? apiErrorMessage(error, "An unexpected error occurred")
+      : "An unexpected error occurred");
 
   const content = (
     <div

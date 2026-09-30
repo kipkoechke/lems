@@ -7,6 +7,7 @@ import {
   updateFacility,
 } from "@/services/apiFacility";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage } from "@/lib/apiError";
 import toast from "react-hot-toast";
 
 export function useFacilities(
@@ -76,12 +77,8 @@ export function useUpdateFacility() {
       toast.success("Facility updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["facilities"] });
     },
-    onError: (err: any) => {
-      toast.error(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to update facility",
-      );
+    onError: (err: unknown) => {
+      toast.error(apiErrorMessage(err, "Failed to update facility"));
     },
   });
 

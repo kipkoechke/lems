@@ -1,4 +1,5 @@
 "use client";
+import { apiErrorMessage } from "@/lib/apiError";
 
 import BackButton from "@/components/common/BackButton";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
@@ -285,7 +286,7 @@ const ServiceRecommendation: React.FC = () => {
       onError: (error: any) => {
         console.error("Booking creation error:", error);
         toast.error(
-          error?.response?.data?.message || "Failed to create booking",
+          apiErrorMessage(error, "Failed to create booking"),
         );
       },
     });

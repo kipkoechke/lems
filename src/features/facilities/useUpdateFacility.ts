@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage } from "@/lib/apiError";
 import toast from "react-hot-toast";
 import { updateFacility, EditFacilityForm } from "@/services/apiFacility";
 
@@ -20,7 +21,7 @@ export const useUpdateFacility = () => {
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Failed to update facility"
+        apiErrorMessage(error, "Failed to update facility")
       );
     },
   });

@@ -1,4 +1,5 @@
 import { deleteVendor } from "@/services/apiVendors";
+import { apiErrorMessage } from "@/lib/apiError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -12,7 +13,7 @@ export const useDeleteVendor = () => {
       queryClient.invalidateQueries({ queryKey: ["vendors"] });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to delete vendor");
+      toast.error(apiErrorMessage(error, "Failed to delete vendor"));
     },
   });
 

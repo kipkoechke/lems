@@ -1,4 +1,5 @@
 "use client";
+import { apiErrorMessage } from "@/lib/apiError";
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -48,9 +49,10 @@ export default function ForgotPasswordPage() {
   const errorMessage =
     status === 429
       ? "Too many requests for that address. Wait a minute and try again."
-      : (mutation.error as { response?: { data?: { message?: string } } })
-          ?.response?.data?.message ||
-        "Could not send the link. Check your connection and try again.";
+      : apiErrorMessage(
+          mutation.error,
+          "Could not send the link. Check your connection and try again.",
+        );
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">

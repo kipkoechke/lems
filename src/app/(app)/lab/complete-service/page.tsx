@@ -1,4 +1,5 @@
 "use client";
+import { apiErrorMessage } from "@/lib/apiError";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -99,8 +100,7 @@ export default function ServiceCompletionPage() {
       },
       onError: (error: any) => {
         toast.error(
-          error.response?.data?.message ||
-            "Failed to send OTP. Please try again.",
+          apiErrorMessage(error, "Failed to send OTP. Please try again."),
         );
       },
     });
@@ -244,10 +244,7 @@ export default function ServiceCompletionPage() {
           }
         },
         onError: (error: unknown) => {
-          const message = (
-            error as { response?: { data?: { message?: string } } }
-          )?.response?.data?.message;
-          toast.error(message || "Failed to resend OTP");
+          toast.error(apiErrorMessage(error, "Failed to resend OTP"));
         },
       },
     );

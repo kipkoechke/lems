@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage } from "@/lib/apiError";
 import toast from "react-hot-toast";
 import { updatePatient, PatientUpdateRequest } from "@/services/apiPatient";
 
@@ -13,7 +14,7 @@ export const useUpdatePatient = () => {
       queryClient.invalidateQueries({ queryKey: ["patient", variables.id] });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to update patient");
+      toast.error(apiErrorMessage(error, "Failed to update patient"));
     },
   });
 

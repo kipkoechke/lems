@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage } from "@/lib/apiError";
 import toast from "react-hot-toast";
 import {
   createFacilityEquipment,
@@ -51,9 +52,7 @@ export const useCreateFacilityEquipment = () => {
       toast.success("Equipment added to your facility");
     },
     onError: (error: unknown) => {
-      const message = (error as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message;
-      toast.error(message || "Failed to add equipment");
+      toast.error(apiErrorMessage(error, "Failed to add equipment"));
     },
   });
 

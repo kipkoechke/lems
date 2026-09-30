@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage } from "@/lib/apiError";
 import { toast } from "react-hot-toast";
 import {
   createUser,
@@ -75,7 +76,7 @@ export const useSendPasswordResetLink = () => {
         toast.error("That account has no email address, so there is nowhere to send it.");
         return;
       }
-      toast.error(error?.response?.data?.message || "Could not send the link");
+      toast.error(apiErrorMessage(error, "Could not send the link"));
     },
   });
 
@@ -118,7 +119,7 @@ export const useCreateUser = () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
-      toast.error(error?.response?.data?.message || "Failed to create user"),
+      toast.error(apiErrorMessage(error, "Failed to create user")),
   });
 
   return { createUser: mutate, isCreating: isPending };
@@ -136,7 +137,7 @@ export const useUpdateUser = () => {
       queryClient.invalidateQueries({ queryKey: ["user", variables.userId] });
     },
     onError: (error: { response?: { data?: { message?: string } } }) =>
-      toast.error(error?.response?.data?.message || "Failed to update user"),
+      toast.error(apiErrorMessage(error, "Failed to update user")),
   });
 
   return { updateUser: mutate, isUpdating: isPending };
