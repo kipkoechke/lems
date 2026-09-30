@@ -57,9 +57,11 @@ export const useFacilityRanking = (params: FacilityRankingParams = {}) => {
 /**
  * Downloads the readiness report as a spreadsheet.
  *
- * Four columns — facility, equipment, when it was last seen, and who supplies
- * it. A blank "Last Seen" is the whole story for most rows: the machine has
- * never reached VEMS at all.
+ * The columns follow the four checks the report is built on. Status collapses
+ * two of them, because "Connected" already implies linked: a machine reachable
+ * right now has plainly reached VEMS before. Every cell is written as a word —
+ * "Not Linked", "Never", "No" — rather than as a dash, so a row means the same
+ * thing read on its own as it does read against the legend.
  *
  * It walks every page of the current filters rather than exporting the page
  * on screen, because a file covering twenty of six hundred facilities would be
@@ -88,19 +90,28 @@ export const useReadinessExport = (params: FacilityReadinessParams = {}) => {
 
         for (const facility of response.data) {
           for (const equipment of facility.equipment) {
+            const { linked, live, worklist_ready, results_ready } =
+              equipment.checks;
+
             rows.push([
               facility.facility.name,
               // The stored name repeats the facility after an em dash, which
               // is noise next to a facility column.
               equipmentDeviceName(equipment.name),
+              equipment.modality ?? "",
+              equipment.ownership_type === "vendor"
+                ? (equipment.vendor?.name ?? "Vendor")
+                : "Facility owned",
+              live ? "Connected" : linked ? "Linked" : "Not Linked",
               equipment.activity?.last_seen_at
                 ? new Date(equipment.activity.last_seen_at).toLocaleString(
                     "en-GB",
                   )
                 : "Never",
-              equipment.ownership_type === "vendor"
-                ? (equipment.vendor?.name ?? "Vendor")
-                : "Facility owned",
+              // Both are evidence, not configuration: a study has actually
+              // come back, a worklist has actually been pulled.
+              results_ready ? "Yes" : "No",
+              worklist_ready ? "Yes" : "No",
             ]);
           }
         }
@@ -115,7 +126,16 @@ export const useReadinessExport = (params: FacilityReadinessParams = {}) => {
 
       downloadCsv(
         datedFilename("equipment-status"),
-        ["Facility", "Equipment", "Last Seen", "Vendor"],
+        [
+          "Facility",
+          "Equipment",
+          "Modality",
+          "Vendor",
+          "Status",
+          "Last Seen",
+          "Sending Results",
+          "Querying Worklist",
+        ],
         rows,
       );
       toast.success(`Exported ${rows.length} machines`);
