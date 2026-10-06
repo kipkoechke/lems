@@ -27,6 +27,7 @@ import {
 import { useDashboard } from "./useDashboard";
 import { DashboardSkeleton } from "@/components/common/Skeleton";
 import { ConnectivityCard } from "@/components/common/ConnectivityCard";
+import { ShaVerificationCard } from "@/components/common/ShaVerificationCard";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { FilterBar } from "@/components/common/FilterBar";
 import { BookingTrendChart } from "@/components/common/BookingTrendChart";
@@ -614,22 +615,28 @@ export default function BookingTrends() {
             className="lg:col-span-2"
           />
 
-          {unmatchedStudyCount(counts.unmatched_studies) > 0 && (
-            <button
-              onClick={() => router.push("/studies/unmatched")}
-              className="bg-white rounded-lg border border-amber-200 p-4 text-left hover:bg-amber-50 transition-colors"
-            >
-              <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
-                Non-SHA Studies
-              </p>
-              <p className="text-2xl font-bold text-amber-600">
-                {unmatchedStudyCount(counts.unmatched_studies).toLocaleString()}
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                Studies that arrived with no VEMS order behind them
-              </p>
-            </button>
-          )}
+          {/* The third column stacks, so it is filled whether or not there are
+              non-SHA studies to report. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+            <ShaVerificationCard summary={counts.sha_verifications} />
+
+            {unmatchedStudyCount(counts.unmatched_studies) > 0 && (
+              <button
+                onClick={() => router.push("/studies/unmatched")}
+                className="bg-white rounded-lg border border-amber-200 p-4 text-left hover:bg-amber-50 transition-colors"
+              >
+                <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                  Non-SHA Studies
+                </p>
+                <p className="text-2xl font-bold text-amber-600">
+                  {unmatchedStudyCount(counts.unmatched_studies).toLocaleString()}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Studies that arrived with no VEMS order behind them
+                </p>
+              </button>
+            )}
+          </div>
         </div>
 
         <BookingTrendChart
