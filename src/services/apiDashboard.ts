@@ -14,23 +14,12 @@ export interface EquipmentByLinkage {
   not_linked: number;
 }
 
-export interface ShaVerifications {
-  total: number;
-  verified: number;
-  unverified: number;
-  success_rate: number;
-  from_vems: number;
-  from_nesp: number;
-  latest_at?: string | null;
-}
-
 export interface DashboardCounts {
   total_vendors: number;
   total_equipment: number;
   equipment_by_owner: EquipmentByOwner;
   equipment_by_linkage?: EquipmentByLinkage;
   equipment_connectivity?: EquipmentConnectivity;
-  sha_verifications?: ShaVerifications | null;
   /**
    * Studies that arrived with no VEMS order behind them.
    *
@@ -40,9 +29,31 @@ export interface DashboardCounts {
    * "[object Object]".
    */
   unmatched_studies?: number | UnmatchedStudiesCount;
+  /**
+   * Payer queries about a claim, and who answered them.
+   *
+   * Absent until the API that counts them is deployed, so the card renders
+   * only when this is present.
+   */
+  sha_verifications?: ShaVerificationSummary | null;
   total_facilities: number;
   completed_studies: number;
   active_worklists: number;
+}
+
+export interface ShaVerificationSummary {
+  /** Every query asked, whether or not it could be answered. */
+  total: number;
+  /** Queries we could answer — a claim we know, here or at NESP. */
+  verified: number;
+  /** Queries neither side knew: recorded so a dispute has the question. */
+  unverified: number;
+  success_rate: number;
+  /** Answered from VEMS' own booking records. */
+  from_vems: number;
+  /** Answered by NESP Link, which holds the claims VEMS does not. */
+  from_nesp: number;
+  latest_at?: string | null;
 }
 
 export interface ShaClaimPaid {

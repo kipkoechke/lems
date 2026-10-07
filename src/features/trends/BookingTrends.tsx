@@ -11,7 +11,6 @@ import {
   MdTrendingUp,
   MdRadio,
   MdLink,
-  MdVerifiedUser,
 } from "react-icons/md";
 import {
   PieChart,
@@ -28,6 +27,8 @@ import {
 import { useDashboard } from "./useDashboard";
 import { DashboardSkeleton } from "@/components/common/Skeleton";
 import { ConnectivityCard } from "@/components/common/ConnectivityCard";
+import { ShaVerificationCard } from "@/components/common/ShaVerificationCard";
+import { LatestTime } from "@/components/common/LatestTime";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { FilterBar } from "@/components/common/FilterBar";
 import { BookingTrendChart } from "@/components/common/BookingTrendChart";
@@ -46,33 +47,8 @@ const DONUT_COLORS = {
   equipment: ["#6366f1", "#10b981"], // indigo, emerald
   linkage: ["#8b5cf6", "#e2e8f0"], // violet, slate
   sha: ["#10b981", "#ef4444", "#f59e0b"], // emerald, red, amber
-  verifications: ["#10b981", "#e2e8f0"], // verified, unverified
   efficiency: ["#10b981", "#ef4444", "#3b82f6"], // emerald, red, blue (completed, cancelled, remaining)
 };
-
-function LatestTime({ label, value }: { label: string; value?: string | null }) {
-  const date = value ? new Date(value) : null;
-  const validDate = date && !Number.isNaN(date.getTime());
-
-  return (
-    <p className="text-xs text-slate-500 mt-2">
-      {label}: {validDate ? (
-        <time dateTime={value!}>
-          {date.toLocaleString("en-KE", {
-            timeZone: "Africa/Nairobi",
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: false,
-          })} EAT
-        </time>
-      ) : "Not available"}
-    </p>
-  );
-}
 
 // ===== Donut Chart Component =====
 function DonutCard({
@@ -84,7 +60,6 @@ function DonutCard({
   centerValue,
   legendItems,
   emptyMessage = "No data yet",
-  footer,
 }: {
   title: string;
   icon: React.ReactNode;
@@ -94,7 +69,6 @@ function DonutCard({
   centerValue?: string | number;
   legendItems?: { label: string; value: string | number; color: string }[];
   emptyMessage?: string;
-  footer?: React.ReactNode;
 }) {
   const total = data.reduce((sum, d) => sum + (d.value || 0), 0);
 
@@ -183,9 +157,6 @@ function DonutCard({
           ))}
           </div>
         </div>
-      )}
-      {footer && (
-        <div className="mt-3 pt-3 border-t border-slate-100">{footer}</div>
       )}
     </div>
   );
@@ -312,7 +283,6 @@ export default function BookingTrends() {
   const availableFilters = dashboardData?.filters?.available;
   const modalities = dashboardData?.modalities || [];
   const shaClaims = dashboardData?.sha_claims;
-  const shaVerifications = dashboardData?.counts?.sha_verifications;
 
   // Equipment ownership donut data
   const equipmentDonutData = useMemo(() => {
@@ -468,7 +438,7 @@ export default function BookingTrends() {
           )}
         </div>
 
-        {/* Donut Charts */}
+        {/* Donut Charts Row — 3 columns */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Equipment Ownership Donut */}
           <DonutCard
@@ -513,47 +483,6 @@ export default function BookingTrends() {
                   color: DONUT_COLORS.linkage[1],
                 },
               ]}
-            />
-          )}
-
-          {shaVerifications && (
-            <DonutCard
-              title="SHA Verifications"
-              icon={<MdVerifiedUser className="w-3.5 h-3.5" />}
-              data={[
-                { name: "Verified", value: shaVerifications.verified },
-                { name: "Unverified", value: shaVerifications.unverified },
-              ]}
-              colors={DONUT_COLORS.verifications}
-              centerLabel="Success rate"
-              centerValue={`${shaVerifications.success_rate}%`}
-              emptyMessage="No SHA verifications yet"
-              legendItems={[
-                {
-                  label: "Total",
-                  value: shaVerifications.total.toLocaleString(),
-                  color: "#64748b",
-                },
-                {
-                  label: "Verified",
-                  value: shaVerifications.verified.toLocaleString(),
-                  color: DONUT_COLORS.verifications[0],
-                },
-                {
-                  label: "Unverified",
-                  value: shaVerifications.unverified.toLocaleString(),
-                  color: DONUT_COLORS.verifications[1],
-                },
-              ]}
-              footer={
-                <>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-                    <span>From VEMS: <strong className="font-medium text-slate-700">{shaVerifications.from_vems.toLocaleString()}</strong></span>
-                    <span>From NESP: <strong className="font-medium text-slate-700">{shaVerifications.from_nesp.toLocaleString()}</strong></span>
-                  </div>
-                  <LatestTime label="Latest verification" value={shaVerifications.latest_at} />
-                </>
-              }
             />
           )}
 
@@ -687,28 +616,34 @@ export default function BookingTrends() {
             className="lg:col-span-2"
           />
 
-          {unmatchedStudyCount(counts.unmatched_studies) > 0 && (
-            <button
-              onClick={() => router.push("/studies/unmatched")}
-              className="bg-white rounded-lg border border-amber-200 p-4 text-left hover:bg-amber-50 transition-colors"
-            >
-              <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
-                Non-SHA Studies
-              </p>
-              <p className="text-2xl font-bold text-amber-600">
-                {unmatchedStudyCount(counts.unmatched_studies).toLocaleString()}
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                Studies that arrived with no VEMS order behind them
-              </p>
-              {typeof counts.unmatched_studies === "object" && (
-                <LatestTime
-                  label="Latest received"
-                  value={counts.unmatched_studies?.latest_received_at}
-                />
-              )}
-            </button>
-          )}
+          {/* The third column stacks, so it is filled whether or not there are
+              non-SHA studies to report. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+            <ShaVerificationCard summary={counts.sha_verifications} />
+
+            {unmatchedStudyCount(counts.unmatched_studies) > 0 && (
+              <button
+                onClick={() => router.push("/studies/unmatched")}
+                className="bg-white rounded-lg border border-amber-200 p-4 text-left hover:bg-amber-50 transition-colors"
+              >
+                <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                  Non-SHA Studies
+                </p>
+                <p className="text-2xl font-bold text-amber-600">
+                  {unmatchedStudyCount(counts.unmatched_studies).toLocaleString()}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Studies that arrived with no VEMS order behind them
+                </p>
+                {typeof counts.unmatched_studies === "object" && (
+                  <LatestTime
+                    label="Latest received"
+                    value={counts.unmatched_studies?.latest_received_at}
+                  />
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         <BookingTrendChart
