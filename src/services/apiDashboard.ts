@@ -14,12 +14,23 @@ export interface EquipmentByLinkage {
   not_linked: number;
 }
 
+export interface ShaVerifications {
+  total: number;
+  verified: number;
+  unverified: number;
+  success_rate: number;
+  from_vems: number;
+  from_nesp: number;
+  latest_at?: string | null;
+}
+
 export interface DashboardCounts {
   total_vendors: number;
   total_equipment: number;
   equipment_by_owner: EquipmentByOwner;
   equipment_by_linkage?: EquipmentByLinkage;
   equipment_connectivity?: EquipmentConnectivity;
+  sha_verifications?: ShaVerifications | null;
   /**
    * Studies that arrived with no VEMS order behind them.
    *
