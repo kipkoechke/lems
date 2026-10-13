@@ -15,6 +15,8 @@ interface FacilityFilterProps {
   className?: string;
   /** Hide the field label, for filter rows that align controls on one line. */
   hideLabel?: boolean;
+  /** Tighter sizing, for filter rows that sit beside compact controls. */
+  compact?: boolean;
 }
 
 /**
@@ -30,6 +32,7 @@ export const FacilityFilter: React.FC<FacilityFilterProps> = ({
   placeholder = "All facilities",
   className = "",
   hideLabel = false,
+  compact = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 350);
@@ -70,6 +73,7 @@ export const FacilityFilter: React.FC<FacilityFilterProps> = ({
         options={options}
         value={value}
         isLoading={isLoading}
+        compact={compact}
         onSearchChange={setSearchTerm}
         onChange={(facilityId) => {
           const facility = facilities.find((f) => f.id === facilityId);

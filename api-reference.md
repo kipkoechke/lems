@@ -59,6 +59,7 @@ Full system access — all endpoints.
 | `/admin/equipment`                       | GET            | Equipment listing              |
 | `/admin/facility-readiness`              | GET            | Equipment readiness by facility |
 | `/admin/facility-ranking`                | GET            | Facility bookings ranking      |
+| `/admin/equipment-utilization`           | GET            | Per-machine worklist utilization |
 | `/admin/permissions`                     | GET/POST       | List / Create permissions      |
 | `/admin/permissions/{id}`                | GET/PUT/DELETE | Permission CRUD                |
 | `/admin/users/{id}/permissions`          | GET            | List user permissions          |
@@ -131,6 +132,7 @@ Read-only oversight across the system.
 | `/admin/equipment`                     | GET    | Equipment listing              |
 | `/admin/facility-readiness`            | GET    | Equipment readiness by facility |
 | `/admin/facility-ranking`              | GET    | Facility bookings ranking      |
+| `/admin/equipment-utilization`         | GET    | Per-machine worklist utilization |
 | `/analytics/*`                         | GET    | All analytics endpoints        |
 | `/requests/stats/summary`              | GET    | Request stats                  |
 | `/sha/interventions`                   | GET    | SHA interventions list         |
@@ -5027,6 +5029,90 @@ Rank is assigned over the whole filtered set, so it stays stable across pages;
   "filters": { "available": { "county": [], "facility_type": [], "period": [], "sort_by": [], "sort_order": [] }, "applied": {} }
 }
 ```
+
+---
+
+### GET `/admin/equipment-utilization`
+
+Every machine matching the filters, with what it has actually been asked to do
+and what it actually did: production worklists raised against it, MWL (C-FIND)
+queries it pulled, worklists that came back as a study, and studies sent with no
+VEMS order behind them. Default order is highest `worklist_count` first, ties
+broken by equipment name.
+
+Machines with all-zero counts are **in scope**, not omitted — a machine sitting
+idle is the thing this report exists to surface. The boolean filters are how you
+choose to hide them (`?linked=false` alone gives the never-seen units).
+
+**Query Parameters**
+
+| Param              | Type    | Notes |
+| ------------------ | ------- | ----- |
+| `vendor_id`        | uuid    | Only equipment owned by this vendor |
+| `facility_id`      | uuid    | Only equipment installed at this facility |
+| `linked`           | boolean | `true` = seen on the network (`last_seen_at` set), `false` = never seen |
+| `live`             | boolean | `true` = connected now, `false` = not connected |
+| `pulling_worklist` | boolean | `true` = has pulled a worklist, `false` = never has |
+| `sending_results`  | boolean | `true` = has returned a study, `false` = never has |
+| `sort_by`          | string  | `worklist_count` (default), `pulled_count`, `study_results_sent`, `non_sha_sent_count`, `conversion_rate`, `last_seen_at`, `name` |
+| `sort_order`       | string  | `asc`, `desc` (default) |
+| `per_page`         | integer | 1–100 (default 20) |
+| `page`             | integer | Page number (default 1) |
+
+Booleans are sent as the strings `"true"` / `"false"`.
+
+`conversion_rate` is `study_results_sent ÷ worklist_count × 100`, to one
+decimal, and `0` when there are no worklists. `pulling_worklist` and
+`sending_results` mirror the readiness report's evidence checks: a
+`worklist_pull` or `study_send` was logged, a worklist result arrived, or a
+non-SHA study was recorded.
+
+`summary` counts **the whole filtered set**, not the page, so it is safe for
+header totals. Filter options come from `filters.available` (cached ~5 minutes)
+and `filters.applied` echoes back the resolved values.
+
+**Response `200`**
+
+```json
+{
+  "summary": {
+    "equipment": 2,
+    "by_state": { "linked": 1, "live": 1 },
+    "worklist_count": 96, "pulled_count": 90, "study_results_sent": 90,
+    "non_sha_sent_count": 4, "conversion_rate": 93.8
+  },
+  "data": [
+    {
+      "equipment": {
+        "id": "...", "code": "FID341156308CT", "name": "Siemens CT",
+        "category": "ct_scanner", "category_label": "CT Scanner", "modality": "CT",
+        "status": "active", "status_label": "Active",
+        "is_connected": true, "last_seen_at": "2026-09-25T14:12:00+03:00"
+      },
+      "ae_title": "CT01",
+      "facility": { "id": "...", "name": "Bondo Sub-County Hospital", "fr_code": "FID-34-115630-8" },
+      "vendor": { "id": "...", "name": "Melco Kenya Ltd", "code": "VEN001" },
+      "linked": true, "live": true,
+      "worklist_count": 96, "pulled_count": 90, "study_results_sent": 90,
+      "non_sha_sent_count": 4,
+      "last_seen_at": "2026-09-25T14:12:00+03:00",
+      "conversion_rate": 93.8
+    }
+  ],
+  "pagination": { "current_page": 1, "per_page": 20, "total": 2, "total_pages": 1 },
+  "filters": {
+    "available": {
+      "vendor": [], "linked": [], "live": [], "pulling_worklist": [],
+      "sending_results": [], "sort_by": [], "sort_order": []
+    },
+    "applied": {}
+  }
+}
+```
+
+`facility` and `vendor` are `null` when the machine is not mapped to one.
+`422` for an invalid `vendor_id` / `facility_id` / `sort_by` / `per_page`, `403`
+for non-admin callers.
 
 ---
 

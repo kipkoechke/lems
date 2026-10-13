@@ -114,6 +114,13 @@ const NAV_ITEMS: NavItem[] = [
     description: "Which machines are proven working, and what is blocking the rest",
   },
   {
+    label: "Equipment Utilization",
+    href: "/equipment-utilization",
+    permission: Permission.VIEW_EQUIPMENT_STATUS,
+    description:
+      "Worklists, pulls and results per machine, including the idle ones",
+  },
+  {
     label: "Facility Ranking",
     href: "/facilities/ranking",
     permission: Permission.VIEW_REPORTS,
