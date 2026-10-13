@@ -411,7 +411,7 @@ function ResultBlock({ result }: { result: NonNullable<BookingService["result"]>
 // at the top of the page is saying the booking moved after the claim was
 // verified — which is the sort of thing a claim query turns on.
 //
-// The 360-style summary card on the dashboard counts these; this is the row
+// The dashboard's SHA verification card counts these queries; this is the row
 // behind the count.
 
 const humanise = (value?: string | null) => value?.replace(/_/g, " ") ?? "-";
