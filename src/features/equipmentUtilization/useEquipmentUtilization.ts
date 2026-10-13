@@ -41,11 +41,11 @@ export const useEquipmentUtilization = (
  * as the whole picture. The page size is the API's maximum, so a full export
  * is a handful of requests rather than dozens.
  *
- * The columns are the counts themselves rather than a verdict derived from
- * them: the report is read to see which machines are actually working and
- * which are idle, and a derived "is it pulling?" column would hide the
- * difference between a machine that has pulled nothing and one that has pulled
- * a little.
+ * Both kinds of column are written out: the counts, and the API's own evidence
+ * flags — pulling worklists, sending results, and the 360 pair. The counts
+ * alone would not settle whether a machine is doing end-to-end work, since a
+ * pull can be logged against a machine with no production worklists; the flags
+ * alone would lose how much work is actually flowing.
  */
 export const useEquipmentUtilizationExport = (
   params: EquipmentUtilizationParams = {},
@@ -82,6 +82,11 @@ export const useEquipmentUtilizationExport = (
             row.vendor?.name ?? "Not mapped",
             row.linked ? "Linked" : "Never linked",
             row.live ? "Live" : "Not connected",
+            // The evidence flags, not the counts: a machine can have pulled
+            // nothing and still have a pull logged. `round_trip` is the pair.
+            row.pulling_worklist ? "Yes" : "No",
+            row.sending_results ? "Yes" : "No",
+            row.round_trip ? "Yes" : "No",
             row.worklist_count,
             row.pulled_count,
             row.study_results_sent,
@@ -115,6 +120,9 @@ export const useEquipmentUtilizationExport = (
           "Vendor",
           "Link status",
           "Connection",
+          "Pulling worklists",
+          "Sending results",
+          "End to end (360)",
           "Worklists",
           "Pulled",
           "Study results sent",

@@ -13,6 +13,7 @@ import {
   FaCheckCircle,
   FaXRay,
   FaPercentage,
+  FaSyncAlt,
 } from "react-icons/fa";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
@@ -33,6 +34,7 @@ import {
   LINKED_OPTIONS,
   LIVE_OPTIONS,
   PULLING_WORKLIST_OPTIONS,
+  ROUND_TRIP_FILTER,
   SENDING_RESULTS_OPTIONS,
   SORT_ORDER_OPTIONS,
   UTILIZATION_SORT_OPTIONS,
@@ -102,6 +104,51 @@ function ConversionBar({
         />
       </div>
     </div>
+  );
+}
+
+/**
+ * Whether the machine closes the loop: it queries worklists and results come
+ * back. Half-working is worth naming rather than folding into "not 360" — a
+ * machine that pulls but never sends points at the C-STORE destination, and
+ * one that sends but never pulls is pushing studies, not querying for them.
+ */
+function RoundTripBadge({ row }: { row: EquipmentUtilizationRow }) {
+  if (row.round_trip) {
+    return (
+      <span
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-violet-50 text-violet-700 border-violet-200"
+        title="360 — this machine queries worklists and results come back"
+      >
+        <FaSyncAlt className="w-2.5 h-2.5" />
+        360
+      </span>
+    );
+  }
+
+  if (row.pulling_worklist || row.sending_results) {
+    const pullsOnly = row.pulling_worklist;
+    const hint = pullsOnly
+      ? "Pulls worklists, but no results have ever come back — check the C-STORE destination (AE title, host and port) points at VEMS"
+      : "Sends results, but has never pulled a worklist — it is pushing studies rather than querying for them";
+
+    return (
+      <span
+        className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border bg-amber-50 text-amber-700 border-amber-200"
+        title={`Half the loop — ${hint}`}
+      >
+        {pullsOnly ? "Pulls only" : "Sends only"}
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className="text-sm text-slate-400"
+      title="Neither a worklist pull nor a study send has ever been recorded for this machine"
+    >
+      —
+    </span>
   );
 }
 
@@ -176,6 +223,10 @@ function UtilizationRow({ row }: { row: EquipmentUtilizationRow }) {
           lastSeenAt={row.last_seen_at}
           stacked
         />
+      </Table.Cell>
+
+      <Table.Cell>
+        <RoundTripBadge row={row} />
       </Table.Cell>
 
       <Table.Cell>
@@ -292,6 +343,22 @@ function EquipmentUtilizationContent() {
       setSortBy(key as EquipmentUtilizationSortBy);
       setSortOrder("desc");
     }
+    setPage(1);
+  };
+
+  // 360 is the two evidence filters together — there is no `round_trip` param.
+  const roundTripOnly =
+    pullingWorklist === String(ROUND_TRIP_FILTER.pulling_worklist) &&
+    sendingResults === String(ROUND_TRIP_FILTER.sending_results);
+
+  const toggleRoundTrip = () => {
+    const next = roundTripOnly
+      ? ""
+      : String(ROUND_TRIP_FILTER.pulling_worklist);
+    setPullingWorklist(next);
+    setSendingResults(
+      roundTripOnly ? "" : String(ROUND_TRIP_FILTER.sending_results),
+    );
     setPage(1);
   };
 
@@ -527,6 +594,27 @@ function EquipmentUtilizationContent() {
           >
             <FaBolt className="w-4 h-4 text-emerald-500" />
           </StatCard>
+          {/* The 360 count and the filter pair that lists exactly these
+              machines are the same evidence, so one click on the card turns
+              both on and both off again. */}
+          <StatCard
+            compact
+            title="End to End (360)"
+            mainValue={(summary?.by_state?.round_trip ?? 0).toLocaleString()}
+            subtitle="Pulls worklists, returns results"
+            onClick={toggleRoundTrip}
+            className={`border ${
+              roundTripOnly
+                ? "border-blue-500 ring-1 ring-blue-500"
+                : "border-slate-200"
+            }`}
+          >
+            <FaSyncAlt className="w-4 h-4 text-violet-500" />
+          </StatCard>
+        </div>
+
+        {/* Volume across the same filtered set. */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           <StatCard
             compact
             title="Worklists"
@@ -592,6 +680,7 @@ function EquipmentUtilizationContent() {
                 <Table.HeaderCell>Facility</Table.HeaderCell>
                 <Table.HeaderCell>Vendor</Table.HeaderCell>
                 <Table.HeaderCell>Connection</Table.HeaderCell>
+                <Table.HeaderCell>End to End</Table.HeaderCell>
                 <Table.HeaderCell
                   sortable
                   sortKey="worklist_count"
@@ -630,9 +719,9 @@ function EquipmentUtilizationContent() {
             </Table.Header>
             <Table.Body>
               {isLoading ? (
-                <Table.Loading colSpan={11} rows={8} />
+                <Table.Loading colSpan={12} rows={8} />
               ) : rows.length === 0 ? (
-                <Table.Empty colSpan={11}>
+                <Table.Empty colSpan={12}>
                   {activeFilterCount > 0
                     ? "No equipment matches these filters. Machines with no activity are included unless you filter them out."
                     : "No equipment recorded yet."}

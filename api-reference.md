@@ -5067,6 +5067,12 @@ decimal, and `0` when there are no worklists. `pulling_worklist` and
 `worklist_pull` or `study_send` was logged, a worklist result arrived, or a
 non-SHA study was recorded.
 
+`round_trip` is the two of them together — a **360** machine: it queries
+worklists **and** results come back. It is derived from those flags rather than
+reported separately, so `summary.by_state.round_trip` and the listing returned
+by `?pulling_worklist=true&sending_results=true` always agree. To list the 360
+machines, send that pair; there is no `round_trip` query param.
+
 `summary` counts **the whole filtered set**, not the page, so it is safe for
 header totals. Filter options come from `filters.available` (cached ~5 minutes)
 and `filters.applied` echoes back the resolved values.
@@ -5077,7 +5083,7 @@ and `filters.applied` echoes back the resolved values.
 {
   "summary": {
     "equipment": 2,
-    "by_state": { "linked": 1, "live": 1 },
+    "by_state": { "linked": 1, "live": 1, "round_trip": 1 },
     "worklist_count": 96, "pulled_count": 90, "study_results_sent": 90,
     "non_sha_sent_count": 4, "conversion_rate": 93.8
   },
@@ -5093,6 +5099,7 @@ and `filters.applied` echoes back the resolved values.
       "facility": { "id": "...", "name": "Bondo Sub-County Hospital", "fr_code": "FID-34-115630-8" },
       "vendor": { "id": "...", "name": "Melco Kenya Ltd", "code": "VEN001" },
       "linked": true, "live": true,
+      "pulling_worklist": true, "sending_results": true, "round_trip": true,
       "worklist_count": 96, "pulled_count": 90, "study_results_sent": 90,
       "non_sha_sent_count": 4,
       "last_seen_at": "2026-09-25T14:12:00+03:00",

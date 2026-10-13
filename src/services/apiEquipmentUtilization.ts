@@ -13,6 +13,9 @@ import type { FilterOption } from "./apiFacilityReadiness";
  * appears — including the ones with all-zero counts, which is the point of the
  * `linked` / `live` / `pulling_worklist` / `sending_results` filters: they
  * exist to hide idle kit, not to hide it by default.
+ *
+ * `round_trip` is the headline of the per-row flags: the machine queries
+ * worklists and results come back, so the loop is closed end to end.
  */
 
 export interface UtilizationEquipment {
@@ -54,6 +57,16 @@ export interface EquipmentUtilizationRow {
   linked: boolean;
   /** Connected right now. */
   live: boolean;
+  /** Has actually queried a worklist — the same evidence the filter reads. */
+  pulling_worklist: boolean;
+  /** Results have actually come back — the same evidence the filter reads. */
+  sending_results: boolean;
+  /**
+   * A 360 machine: it queries worklists **and** results come back. Derived from
+   * the two flags above rather than reported separately, so the count and the
+   * `?pulling_worklist=true&sending_results=true` listing always agree.
+   */
+  round_trip: boolean;
   /** Production worklists raised against the machine (test probes excluded). */
   worklist_count: number;
   /** MWL (C-FIND) queries the machine pulled. */
@@ -70,7 +83,12 @@ export interface EquipmentUtilizationRow {
 export interface EquipmentUtilizationSummary {
   /** Machines matching the filters — the whole set, not the page. */
   equipment: number;
-  by_state?: { linked?: number; live?: number };
+  by_state?: {
+    linked?: number;
+    live?: number;
+    /** Machines that both query worklists and get results back. */
+    round_trip?: number;
+  };
   worklist_count: number;
   pulled_count: number;
   study_results_sent: number;
@@ -167,6 +185,19 @@ export const SORT_ORDER_OPTIONS: FilterOption[] = [
   { value: "desc", label: "Descending" },
   { value: "asc", label: "Ascending" },
 ];
+
+/**
+ * The filter pair that lists the 360 machines.
+ *
+ * There is no `round_trip` query param — the API derives the flag from these
+ * two — so the card that counts them and the listing it opens share this one
+ * definition rather than spelling the pair out in two places and letting them
+ * drift.
+ */
+export const ROUND_TRIP_FILTER = {
+  pulling_worklist: true,
+  sending_results: true,
+} as const;
 
 // The four tri-state filters. "Linked"/"Live" keep the same meaning here as
 // they do on the equipment listings and the readiness report: linked is "has
