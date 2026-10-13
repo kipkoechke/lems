@@ -15,8 +15,14 @@ import {
   MdCheckCircle,
   MdRadio,
   MdPersonPin,
+  MdExpandMore,
 } from "react-icons/md";
-import type { BookingService } from "@/types/booking";
+import type {
+  BookingService,
+  BookingPayment,
+  BookingShaVerifications,
+  ShaVerification,
+} from "@/types/booking";
 
 const STATUS_BADGE: Record<string, string> = {
   active: "bg-blue-50 text-blue-700 border-blue-200",
@@ -397,6 +403,292 @@ function ResultBlock({ result }: { result: NonNullable<BookingService["result"]>
   );
 }
 
+// ===== SHA Verifications =====
+//
+// Every payer query against this booking's claim, and what we answered. The
+// amounts are the figures as they stood when the question was asked rather
+// than as the booking stands now, so an entry that disagrees with the totals
+// at the top of the page is saying the booking moved after the claim was
+// verified — which is the sort of thing a claim query turns on.
+//
+// The 360-style summary card on the dashboard counts these; this is the row
+// behind the count.
+
+const humanise = (value?: string | null) => value?.replace(/_/g, " ") ?? "-";
+
+/** The most recent entry, whatever order the API lists the history in. */
+const newestVerification = (history: ShaVerification[]) =>
+  history.reduce<ShaVerification | null>(
+    (latest, entry) =>
+      !latest || new Date(entry.queried_at) > new Date(latest.queried_at)
+        ? entry
+        : latest,
+    null,
+  );
+
+function ShaVerifications({
+  verifications,
+  payment,
+}: {
+  verifications: BookingShaVerifications;
+  payment?: BookingPayment;
+}) {
+  const history = verifications.history ?? [];
+  const newest = newestVerification(history);
+
+  // The latest answer is the one being read, so it opens; the rest are history
+  // and stay folded.
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () => new Set(newest ? [newest.id] : []),
+  );
+
+  const toggle = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const answered = history.filter((entry) => entry.verified).length;
+  const unanswered = history.length - answered;
+  // `count` is the API's own total across the whole history, which may be
+  // longer than the window it returns.
+  const truncated = verifications.count > history.length;
+
+  return (
+    <div className="bg-white rounded-lg border border-slate-200 p-4">
+      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100">
+        <span className="text-slate-400">
+          <MdVerified className="w-4 h-4" />
+        </span>
+        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+          SHA Verifications ({verifications.count})
+        </p>
+        <span className="ml-auto text-xs text-slate-400">
+          Last asked {formatDate(verifications.last_queried_at)}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <span
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-emerald-50 text-emerald-700 border-emerald-200"
+          title="Queries we could answer from our own records or from NESP Link"
+        >
+          <MdCheckCircle className="w-3 h-3" />
+          {answered} verified
+        </span>
+        {unanswered > 0 && (
+          <span
+            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-amber-50 text-amber-700 border-amber-200"
+            title="Neither our records nor NESP Link knew this claim — the question is kept so a dispute has it"
+          >
+            {unanswered} not found
+          </span>
+        )}
+        {truncated && (
+          <span className="text-xs text-slate-400">
+            showing the latest {history.length}
+          </span>
+        )}
+      </div>
+
+      {history.length === 0 ? (
+        <p className="text-sm text-slate-400 py-2">
+          No verification query has been recorded for this booking.
+        </p>
+      ) : (
+        <div className="space-y-1">
+          {history.map((entry, idx) => {
+            const key = entry.id ?? String(idx);
+            const isOpen = expanded.has(key);
+            // What the booking says now, against what we answered then.
+            const drifted =
+              entry.verified &&
+              payment &&
+              (Number(payment.sha ?? 0) !== Number(entry.sha ?? 0) ||
+                Number(payment.tariff ?? 0) !== Number(entry.tariff ?? 0));
+
+            return (
+              <div
+                key={key}
+                className="rounded-lg border border-slate-100 overflow-hidden"
+              >
+                <button
+                  onClick={() => toggle(key)}
+                  className="w-full text-left flex flex-wrap items-center gap-2 px-3 py-2.5 hover:bg-slate-50 transition-colors"
+                >
+                  <MdExpandMore
+                    className={`w-4 h-4 shrink-0 text-slate-400 transition-transform ${
+                      isOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                  <span
+                    className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+                      entry.verified
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-amber-50 text-amber-700 border-amber-200"
+                    }`}
+                  >
+                    {entry.verified ? "Verified" : "Not found"}
+                  </span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {formatDate(entry.queried_at)}
+                  </span>
+                  {entry.asked_by && (
+                    <span className="text-xs text-slate-500">
+                      by {entry.asked_by}
+                    </span>
+                  )}
+                  {entry.reference_number && (
+                    <span className="hidden sm:inline font-mono text-[10px] text-slate-400 truncate max-w-[14rem]">
+                      {entry.reference_number}
+                    </span>
+                  )}
+                  <span className="ml-auto text-xs font-medium text-slate-700">
+                    {formatCurrency(entry.sha)}
+                  </span>
+                </button>
+
+                {isOpen && (
+                  <div className="border-t border-slate-100 bg-slate-50/50">
+                    <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0">
+                      <div>
+                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
+                          The query
+                        </p>
+                        <InfoRow
+                          label="Asked At"
+                          value={formatDate(entry.queried_at)}
+                        />
+                        <InfoRow label="Asked By" value={entry.asked_by} />
+                        <InfoRow
+                          label="Source"
+                          value={
+                            <span className="capitalize">
+                              {humanise(entry.source)}
+                            </span>
+                          }
+                        />
+                        <InfoRow
+                          label="Identified By"
+                          value={
+                            entry.reference_number ? (
+                              <span>
+                                <span className="text-slate-400 capitalize">
+                                  {humanise(entry.reference_type)}:
+                                </span>{" "}
+                                <span className="font-mono text-[11px]">
+                                  {entry.reference_number}
+                                </span>
+                              </span>
+                            ) : (
+                              "-"
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
+                          As answered
+                        </p>
+                        <InfoRow
+                          label="Tariff"
+                          value={formatCurrency(entry.tariff)}
+                        />
+                        <InfoRow label="SHA" value={formatCurrency(entry.sha)} />
+                        <InfoRow
+                          label="Vendor Share"
+                          value={formatCurrency(entry.vendor_share)}
+                        />
+                        <InfoRow
+                          label="Facility Share"
+                          value={formatCurrency(entry.facility_share)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* The answer is a snapshot; say so when the booking has
+                        moved since, rather than letting the two figures
+                        disagree silently. */}
+                    {drifted && (
+                      <p className="px-3 pb-2 text-xs text-amber-700">
+                        Answered at these amounts — the booking now totals{" "}
+                        {formatCurrency(payment?.sha)} SHA on{" "}
+                        {formatCurrency(payment?.tariff)} tariff.
+                      </p>
+                    )}
+
+                    {entry.services?.length > 0 && (
+                      <div className="px-3 pb-3">
+                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
+                          Services returned
+                        </p>
+                        <div className="hidden sm:grid grid-cols-12 gap-2 px-2 py-1 text-[10px] font-medium text-slate-400 uppercase tracking-wide border-b border-slate-100">
+                          <span className="col-span-4">Service</span>
+                          <span className="col-span-2 text-right">Tariff</span>
+                          <span className="col-span-2 text-right">SHA</span>
+                          <span className="col-span-2 text-right">Vendor</span>
+                          <span className="col-span-2 text-right">Facility</span>
+                        </div>
+                        {entry.services.map((line, lineIdx) => (
+                          <div
+                            key={line.code ?? lineIdx}
+                            className="grid grid-cols-2 sm:grid-cols-12 gap-x-2 gap-y-0.5 px-2 py-2 text-xs border-b border-slate-100 last:border-0"
+                          >
+                            <div className="col-span-2 sm:col-span-4 min-w-0 flex items-center gap-1.5">
+                              <span className="text-slate-900 truncate">
+                                {line.name || "-"}
+                              </span>
+                              {line.code && (
+                                <span className="shrink-0 font-mono text-[9px] bg-blue-50 text-blue-600 px-1 rounded">
+                                  {line.code}
+                                </span>
+                              )}
+                            </div>
+                            {/* Below `sm` the columns stack, so each figure
+                                carries its own label rather than sitting as a
+                                bare number under the wrong heading. */}
+                            <span className="text-slate-700 sm:col-span-2 sm:text-right">
+                              <span className="sm:hidden text-slate-400">
+                                Tariff{" "}
+                              </span>
+                              {formatCurrency(line.tariff)}
+                            </span>
+                            <span className="text-slate-700 sm:col-span-2 sm:text-right">
+                              <span className="sm:hidden text-slate-400">
+                                SHA{" "}
+                              </span>
+                              {formatCurrency(line.sha)}
+                            </span>
+                            <span className="text-slate-500 sm:col-span-2 sm:text-right">
+                              <span className="sm:hidden text-slate-400">
+                                Vendor{" "}
+                              </span>
+                              {formatCurrency(line.vendor_share)}
+                            </span>
+                            <span className="text-slate-500 sm:col-span-2 sm:text-right">
+                              <span className="sm:hidden text-slate-400">
+                                Facility{" "}
+                              </span>
+                              {formatCurrency(line.facility_share)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function BookingDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -636,6 +928,16 @@ export default function BookingDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* SHA verifications — every payer query against this claim, and the
+            answer we gave. Renders nothing on deployments whose booking detail
+            does not carry the block yet, rather than claiming zero queries. */}
+        {booking.sha_verifications && (
+          <ShaVerifications
+            verifications={booking.sha_verifications}
+            payment={payment}
+          />
+        )}
 
         {/* Services */}
         {services.length > 0 && (

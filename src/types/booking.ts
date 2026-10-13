@@ -175,6 +175,48 @@ export interface BookingService {
   updated_at?: string;
 }
 
+// ===== SHA verifications =====
+//
+// A verification is a payer asking whether this booking's claim is ours and
+// what it is worth. Each entry is the answer as it stood at that moment: the
+// amounts are what we told them then, not what the booking says now. When
+// `verified` is false neither VEMS nor NESP Link recognised the claim, and the
+// question is kept anyway — that record is what a dispute is settled from.
+
+export interface ShaVerificationService {
+  code: string;
+  name: string;
+  tariff: number;
+  sha: number;
+  vendor_share: number;
+  facility_share: number;
+}
+
+export interface ShaVerification {
+  id: string;
+  queried_at: string;
+  /** False when neither side knew the claim; the ask is recorded regardless. */
+  verified: boolean;
+  /** Where the question came from, e.g. `provider`. */
+  source: string;
+  /** What it was identified by, e.g. `claim_id`. */
+  reference_type: string;
+  reference_number: string;
+  /** Who asked, e.g. `Payer System`. */
+  asked_by: string;
+  tariff: number;
+  sha: number;
+  vendor_share: number;
+  facility_share: number;
+  services: ShaVerificationService[];
+}
+
+export interface BookingShaVerifications {
+  count: number;
+  last_queried_at: string | null;
+  history: ShaVerification[];
+}
+
 export interface Booking {
   id: string;
   booking_number: string;
@@ -206,6 +248,8 @@ export interface Booking {
   // SHA claim status
   sha_status?: "pending" | "submitted" | "approved" | "Payment-completed" | "rejected" | "clinical-review" | null;
   claim_id?: string | null;
+  /** Every payer query against this booking's claim, newest answer included. */
+  sha_verifications?: BookingShaVerifications | null;
   // Different APIs return different structures
   services: BookingService[];
   booked_services?: BookedService[];

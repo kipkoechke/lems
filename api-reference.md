@@ -5574,6 +5574,11 @@ Root endpoint — returns API information.
   "finance_approved_at": "2025-05-01T09:15:00+03:00",
   "notes": "Routine follow-up",
   "services": [ ...booked service objects... ],
+  "sha_verifications": {
+    "count": 1,
+    "last_queried_at": "2026-10-05T15:49:47+00:00",
+    "history": [ ...sha verification objects, newest answer included... ]
+  },
   "created_by": { "id": "uuid", "name": "Dr. Jane Doe" },
   "created_at": "2025-05-01T09:00:00+03:00",
   "updated_at": "2025-05-01T09:15:00+03:00"
@@ -5637,3 +5642,54 @@ Root endpoint — returns API information.
   "worklist_status": "completed"
 }
 ```
+
+### SHA Verification Object
+
+Every payer query made against a booking's claim, and the answer given. The
+block is `null` or absent on deployments that do not record verifications yet.
+
+A verification is a payer asking whether a claim is ours and what it is worth.
+Each history entry is the answer **as it stood at that moment**, so the amounts
+can disagree with the booking's current `payment` block — that means the booking
+moved after the claim was checked. When `verified` is `false` neither VEMS nor
+NESP Link recognised the claim, and the question is recorded anyway: that record
+is what a dispute is settled from. `count` is the full total across the history;
+`history` may return only the most recent window.
+
+```json
+{
+  "count": 1,
+  "last_queried_at": "2026-10-05T15:49:47+00:00",
+  "history": [
+    {
+      "id": "uuid",
+      "queried_at": "2026-10-05T15:49:47+00:00",
+      "verified": true,
+      "source": "provider",
+      "reference_type": "claim_id",
+      "reference_number": "f4e7e380-4166-437e-aa9e-3b550bb593a4",
+      "asked_by": "Payer System",
+      "tariff": 6900,
+      "sha": 6900,
+      "vendor_share": 6210,
+      "facility_share": 690,
+      "services": [
+        {
+          "code": "SHA-09-015",
+          "name": "CT. Scan Chest",
+          "tariff": 6900,
+          "sha": 6900,
+          "vendor_share": 6210,
+          "facility_share": 690
+        }
+      ]
+    }
+  ]
+}
+```
+
+`source` is where the question came from (`provider`, `provider_portal`,
+`nesp_link`, …); `reference_type` / `reference_number` are what the payer
+identified the booking by (`claim_id`, `booking_number`, …); `asked_by` names
+the system that asked. The dashboard's `sha_verifications` summary counts these
+same queries.
