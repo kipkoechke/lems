@@ -113,3 +113,23 @@ export const SHA_CLAIM_LABELS: Record<
   submitted: "Submitted",
   unsent: "Not sent",
 };
+
+/**
+ * The service names on a booking, in the order the API lists them.
+ *
+ * Two payloads reach the listings: the nested one (`services[].service.name`)
+ * and the flat one older deployments send (`booked_services[].name`). A list
+ * row that reads only one of them renders blank against the other, so both are
+ * read here rather than in each page.
+ */
+export const serviceNames = (booking: Booking): string[] => {
+  const nested = (booking.services ?? [])
+    .map((service) => service.service?.name ?? service.name)
+    .filter((name): name is string => !!name);
+
+  if (nested.length) return nested;
+
+  return (booking.booked_services ?? [])
+    .map((service) => service.name)
+    .filter((name): name is string => !!name);
+};

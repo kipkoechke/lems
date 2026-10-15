@@ -14,8 +14,14 @@ import { ErrorState } from "@/components/common/ErrorState";
 import { FacilityFilter } from "@/components/common/FacilityFilter";
 import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import { LotServiceFilter } from "@/components/common/LotServiceFilter";
-import { MODALITY_OPTIONS } from "@/lib/selectOptions";
+import {
+  MODALITY_OPTIONS,
+  SHA_SUBMITTED_FILTER_OPTIONS,
+  SHA_VERIFIED_FILTER_OPTIONS,
+} from "@/lib/selectOptions";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { ShaClaimChip } from "@/components/common/ShaClaimBadges";
+import { serviceNames } from "@/lib/bookingStatus";
 import {
   MdCalendarToday,
   MdCheckCircle,
@@ -24,6 +30,7 @@ import {
   MdPeople,
   MdList,
   MdVisibility,
+  MdLocalHospital,
 } from "react-icons/md";
 import type { Booking, BookingFilters } from "@/types/booking";
 
@@ -56,6 +63,9 @@ export default function ServicesPage() {
   const [lotServiceId, setLotServiceId] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  // The two SHA claim facts. Tri-state: "" is no filter, which is not `false`.
+  const [shaSubmitted, setShaSubmitted] = useState("");
+  const [shaVerified, setShaVerified] = useState("");
   const search = useSearchControl(() => setPage(1));
 
   const filters: BookingFilters = useMemo(
@@ -73,6 +83,8 @@ export default function ServicesPage() {
       lot_service_id: lotServiceId || undefined,
       from: from || undefined,
       to: to || undefined,
+      sha_submitted: shaSubmitted ? shaSubmitted === "true" : undefined,
+      sha_verified: shaVerified ? shaVerified === "true" : undefined,
       sort_by: "created_at",
       sort_order: "desc",
     }),
@@ -90,6 +102,8 @@ export default function ServicesPage() {
       lotServiceId,
       from,
       to,
+      shaSubmitted,
+      shaVerified,
     ],
   );
 
@@ -305,6 +319,32 @@ export default function ServicesPage() {
                     { value: "provider_portal", label: "Provider Portal" },
                   ]}
                 />
+                {/* SHA claim facts — the claim being sent, and SHA having
+                    answered a payer's query about it. */}
+                <SearchableSelect
+                  label=""
+                  compact
+                  className="w-full lg:min-w-[150px]"
+                  value={shaSubmitted}
+                  onChange={(value) => {
+                    setShaSubmitted(value);
+                    setPage(1);
+                  }}
+                  placeholder="Any claim"
+                  options={SHA_SUBMITTED_FILTER_OPTIONS}
+                />
+                <SearchableSelect
+                  label=""
+                  compact
+                  className="w-full lg:min-w-[150px]"
+                  value={shaVerified}
+                  onChange={(value) => {
+                    setShaVerified(value);
+                    setPage(1);
+                  }}
+                  placeholder="Any verification"
+                  options={SHA_VERIFIED_FILTER_OPTIONS}
+                />
                 {/* Date range */}
                 <input
                   type="date"
@@ -338,8 +378,7 @@ export default function ServicesPage() {
                   <Table.HeaderCell>Booking #</Table.HeaderCell>
                   <Table.HeaderCell>Patient</Table.HeaderCell>
                   <Table.HeaderCell>Source</Table.HeaderCell>
-                  <Table.HeaderCell>Services</Table.HeaderCell>
-                  <Table.HeaderCell>Tariff (KES)</Table.HeaderCell>
+                  <Table.HeaderCell>Facility</Table.HeaderCell>
                   <Table.HeaderCell>Status</Table.HeaderCell>
                   <Table.HeaderCell>Date</Table.HeaderCell>
                   <Table.HeaderCell align="center">Actions</Table.HeaderCell>
@@ -347,14 +386,38 @@ export default function ServicesPage() {
               </Table.Header>
               <Table.Body>
                 {bookings.length === 0 ? (
-                  <Table.Empty colSpan={8}>No bookings found</Table.Empty>
+                  <Table.Empty colSpan={7}>No bookings found</Table.Empty>
                 ) : (
-                  bookings.map((booking: Booking) => (
+                  bookings.map((booking: Booking) => {
+                    // The service belongs with the booking it was made for, not
+                    // in a column of its own — a count there said how many
+                    // without saying which.
+                    const services = serviceNames(booking);
+
+                    return (
                     <Table.Row key={booking.id}>
                       <Table.Cell>
                         <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
                           {booking.booking_number}
                         </span>
+                        <div className="mt-1 text-xs text-slate-500 max-w-[16rem] truncate">
+                          {services.length ? (
+                            <>
+                              {services[0]}
+                              {services.length > 1 && (
+                                <span className="text-slate-400">
+                                  {" "}
+                                  +{services.length - 1} more
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-slate-400">
+                              {booking.services_count ?? 0} service
+                              {(booking.services_count ?? 0) === 1 ? "" : "s"}
+                            </span>
+                          )}
+                        </div>
                       </Table.Cell>
                       <Table.Cell>
                         <div className="font-medium text-slate-900 text-sm">
@@ -370,14 +433,14 @@ export default function ServicesPage() {
                         </span>
                       </Table.Cell>
                       <Table.Cell>
-                        <span className="text-sm text-slate-900">
-                          {booking.services_count ?? 0}
-                        </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-sm font-medium text-slate-900">
-                          {Number(booking.tariff ?? 0).toLocaleString()}
-                        </span>
+                        <div className="text-sm text-slate-900">
+                          {booking.facility?.name ?? "—"}
+                        </div>
+                        {booking.facility?.fr_code && (
+                          <div className="font-mono text-[11px] text-slate-400">
+                            {booking.facility.fr_code}
+                          </div>
+                        )}
                       </Table.Cell>
                       <Table.Cell>
                         <span
@@ -388,6 +451,9 @@ export default function ServicesPage() {
                         >
                           {STATUS_LABEL[booking.status] ?? booking.status}
                         </span>
+                        <div className="mt-1.5">
+                          <ShaClaimChip booking={booking} />
+                        </div>
                       </Table.Cell>
                       <Table.Cell>
                         <span className="text-xs text-slate-500">
@@ -411,7 +477,8 @@ export default function ServicesPage() {
                         </ActionMenu>
                       </Table.Cell>
                     </Table.Row>
-                  ))
+                    );
+                  })
                 )}
               </Table.Body>
             </Table>
@@ -434,18 +501,41 @@ export default function ServicesPage() {
                 No bookings found
               </div>
             ) : (
-              bookings.map((booking: Booking) => (
+              bookings.map((booking: Booking) => {
+                const services = serviceNames(booking);
+
+                return (
                 <div
                   key={booking.id}
                   className="bg-white rounded-lg border border-slate-200 p-4 cursor-pointer"
                   onClick={() => router.push(`/bookings/${booking.id}`)}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">
-                      {booking.booking_number}
-                    </span>
+                    <div className="min-w-0">
+                      <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">
+                        {booking.booking_number}
+                      </span>
+                      <p className="mt-1.5 text-xs text-slate-500 truncate">
+                        {services.length ? (
+                          <>
+                            {services[0]}
+                            {services.length > 1 && (
+                              <span className="text-slate-400">
+                                {" "}
+                                +{services.length - 1} more
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-slate-400">
+                            {booking.services_count ?? 0} service
+                            {(booking.services_count ?? 0) === 1 ? "" : "s"}
+                          </span>
+                        )}
+                      </p>
+                    </div>
                     <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
+                      className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
                         STATUS_BADGE[booking.status] ??
                         "bg-slate-50 text-slate-700 border-slate-200"
                       }`}
@@ -456,18 +546,20 @@ export default function ServicesPage() {
                   <p className="font-medium text-slate-900 text-sm">
                     {booking.patient?.name}
                   </p>
-                  <div className="flex gap-4 mt-2 text-xs text-slate-500">
-                    <span>{booking.services_count ?? 0} services</span>
-                    <span>
-                      KES {Number(booking.tariff ?? 0).toLocaleString()}
-                    </span>
+                  <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                    <MdLocalHospital className="w-3 h-3" />
+                    {booking.facility?.name ?? "—"}
+                  </p>
+                  <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                    <ShaClaimChip booking={booking} />
                     <span className="flex items-center gap-1">
                       <MdCalendarToday className="w-3 h-3" />
                       {new Date(booking.created_at).toLocaleDateString("en-GB")}
                     </span>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
             {!search.isSearching && pagination && pagination.last_page > 1 && (
               <div className="bg-white rounded-lg border border-slate-200">
