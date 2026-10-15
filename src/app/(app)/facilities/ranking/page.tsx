@@ -10,18 +10,21 @@ import {
   FaXRay,
   FaPaperPlane,
   FaClipboardCheck,
+  FaFileDownload,
 } from "react-icons/fa";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { Table } from "@/components/Table";
 import { SearchField } from "@/components/common/SearchField";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { FilterBar } from "@/components/common/FilterBar";
 import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import { useFacilityRanking } from "@/features/readiness/useFacilityReadiness";
+import { useFacilityRankingExport } from "@/features/readiness/useFacilityRankingExport";
 import { PERIOD_PRESETS } from "@/services/apiPingRequests";
 import {
   RANKING_SORT_OPTIONS,
@@ -89,6 +92,14 @@ function FacilityRankingContent() {
   const [sortBy, setSortBy] = useState<FacilityRankingSortBy>("total_bookings");
   const search = useSearchControl(() => setPage(1));
 
+  const filters = {
+    search: search.term || undefined,
+    period: period || undefined,
+    county_id: county || undefined,
+    keph_level: kephLevel || undefined,
+    sort_by: sortBy,
+  };
+
   const {
     rows,
     summary,
@@ -97,15 +108,29 @@ function FacilityRankingContent() {
     isLoading,
     error,
     refetch,
-  } = useFacilityRanking({
-    page,
-    per_page: 20,
-    search: search.term || undefined,
-    period: period || undefined,
-    county_id: county || undefined,
-    keph_level: kephLevel || undefined,
-    sort_by: sortBy,
-  });
+  } = useFacilityRanking({ page, per_page: 20, ...filters });
+
+  // The export covers everything these filters select, not the page on screen.
+  const { download, isExporting } = useFacilityRankingExport(
+    { ...filters, search: undefined },
+    {
+      // The report names the filters it was built with, so the labels are read
+      // from the API's own option lists rather than echoing the raw values.
+      period:
+        (availableFilters?.period ?? PERIOD_PRESETS).find(
+          (option) => option.value === period,
+        )?.label ?? "All time",
+      county:
+        availableFilters?.county?.find((option) => option.value === county)
+          ?.label ?? (county || undefined),
+      kephLevel: kephLevel || undefined,
+      sortBy:
+        (availableFilters?.sort_by ?? RANKING_SORT_OPTIONS).find(
+          (option) => option.value === sortBy,
+        )?.label ?? "Total bookings",
+      sortOrder: "desc",
+    },
+  );
 
   if (error) {
     return (
@@ -123,7 +148,7 @@ function FacilityRankingContent() {
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Header */}
         <div className="bg-white rounded-lg border border-slate-200 px-4 md:px-6 py-4">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
             <div className="flex items-center gap-3 shrink-0">
               <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
                 <FaTrophy className="w-5 h-5 text-amber-600" />
@@ -138,70 +163,97 @@ function FacilityRankingContent() {
               </div>
             </div>
 
-            <div className="flex-1 max-w-xl w-full mx-auto">
-              <SearchField
-                value={search.input}
-                onChange={search.onInputChange}
-                onSearch={search.submit}
-                onClear={search.clear}
-                placeholder="Search by facility name or FR code..."
-              />
-            </div>
-
-            <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 lg:gap-3">
-              <SearchableSelect
-                label=""
-                compact
-                className="shrink-0 w-full lg:w-44"
-                value={period}
-                onChange={(value) => {
-                  setPeriod(value);
-                  setPage(1);
-                }}
-                placeholder="All time"
-                options={availableFilters?.period ?? PERIOD_PRESETS}
-              />
-
-              <SearchableSelect
-                label=""
-                compact
-                className="shrink-0 w-full lg:w-48"
-                value={sortBy}
-                onChange={(value) => {
-                  setSortBy(value as FacilityRankingSortBy);
-                  setPage(1);
-                }}
-                placeholder="Rank by"
-                options={availableFilters?.sort_by ?? RANKING_SORT_OPTIONS}
-              />
-
-              <KephLevelFilter
-                value={kephLevel}
-                onChange={(value) => {
-                  setKephLevel(value);
-                  setPage(1);
-                }}
-                options={availableFilters?.keph_level}
-                className="shrink-0 w-full lg:w-40"
-              />
-
-              {!!availableFilters?.county?.length && (
-                <SearchableSelect
-                  label=""
-                  compact
-                  className="shrink-0 w-full lg:w-44"
-                  value={county}
-                  onChange={(value) => {
-                    setCounty(value);
-                    setPage(1);
-                  }}
-                  placeholder="All counties"
-                  searchPlaceholder="Search counties..."
-                  options={availableFilters.county}
+            {/* The search takes a line of its own until there is room to sit
+                beside the title, and never squeezes the download off the row. */}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="flex-1 min-w-0">
+                <SearchField
+                  value={search.input}
+                  onChange={search.onInputChange}
+                  onSearch={search.submit}
+                  onClear={search.clear}
+                  placeholder="Search by facility name or FR code..."
                 />
-              )}
+              </div>
+
+              <button
+                onClick={download}
+                disabled={isExporting}
+                title="Download the whole ranking as a PDF, with the filters applied to it"
+                className="shrink-0 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <FaFileDownload className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">
+                  {isExporting ? "Preparing..." : "PDF"}
+                </span>
+              </button>
             </div>
           </div>
+
+          {/* The filter row wraps rather than running off the card: with four
+              controls a fixed row overflows long before the widest screen. */}
+          <FilterBar
+            className="mt-3"
+            activeCount={[period, county, kephLevel].filter(Boolean).length}
+            onReset={() => {
+              setPeriod("");
+              setCounty("");
+              setKephLevel("");
+              setPage(1);
+            }}
+          >
+            <SearchableSelect
+              label=""
+              compact
+              className="w-full lg:w-44"
+              value={period}
+              onChange={(value) => {
+                setPeriod(value);
+                setPage(1);
+              }}
+              placeholder="All time"
+              options={availableFilters?.period ?? PERIOD_PRESETS}
+            />
+
+            <SearchableSelect
+              label=""
+              compact
+              className="w-full lg:w-48"
+              value={sortBy}
+              onChange={(value) => {
+                setSortBy(value as FacilityRankingSortBy);
+                setPage(1);
+              }}
+              placeholder="Rank by"
+              options={availableFilters?.sort_by ?? RANKING_SORT_OPTIONS}
+            />
+
+            <KephLevelFilter
+              value={kephLevel}
+              onChange={(value) => {
+                setKephLevel(value);
+                setPage(1);
+              }}
+              options={availableFilters?.keph_level}
+              className="w-full lg:w-40"
+            />
+
+            {!!availableFilters?.county?.length && (
+              <SearchableSelect
+                label=""
+                compact
+                className="w-full lg:w-44"
+                value={county}
+                onChange={(value) => {
+                  setCounty(value);
+                  setPage(1);
+                }}
+                placeholder="All counties"
+                searchPlaceholder="Search counties..."
+                options={availableFilters.county}
+              />
+            )}
+          </FilterBar>
         </div>
 
         {/* Totals across the whole ranking, not just this page */}
