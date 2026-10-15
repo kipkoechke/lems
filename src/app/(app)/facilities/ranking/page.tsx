@@ -22,13 +22,8 @@ import { ErrorState } from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import { useFacilityRanking } from "@/features/readiness/useFacilityReadiness";
-import {
-  SHA_SUBMITTED_FILTER_OPTIONS,
-  SHA_VERIFIED_FILTER_OPTIONS,
-} from "@/lib/selectOptions";
 import { PERIOD_PRESETS } from "@/services/apiPingRequests";
 import {
-  rankingShaCounts,
   RANKING_SORT_OPTIONS,
   type FacilityRankingSortBy,
   type RankingRow,
@@ -61,6 +56,23 @@ function CompletionBar({ rate }: { rate: number }) {
 }
 
 /**
+ * What the Claims cell's two numbers mean, for the hover.
+ *
+ * Worth spelling out because the two rates have different denominators — a
+ * reader who assumes both are shares of bookings will read the verification
+ * rate as far lower than it is.
+ */
+const shaTooltip = (row: RankingRow): string => {
+  const sha = row.sha;
+  if (!sha) return "This deployment does not report claim facts yet";
+
+  return [
+    `${sha.submitted.toLocaleString()} of ${row.bookings.total.toLocaleString()} bookings sent to SHA (${sha.submission_rate}%)`,
+    `${sha.verified.toLocaleString()} answered by SHA (${sha.verification_rate}% of submitted)`,
+  ].join(" · ");
+};
+
+/**
  * Facilities ranked by booking volume.
  *
  * The completion rate deliberately excludes cancelled bookings — a booking
@@ -75,9 +87,6 @@ function FacilityRankingContent() {
   const [county, setCounty] = useState("");
   const [kephLevel, setKephLevel] = useState("");
   const [sortBy, setSortBy] = useState<FacilityRankingSortBy>("total_bookings");
-  // The two SHA claim facts. Tri-state: "" is no filter, which is not `false`.
-  const [shaSubmitted, setShaSubmitted] = useState("");
-  const [shaVerified, setShaVerified] = useState("");
   const search = useSearchControl(() => setPage(1));
 
   const {
@@ -95,8 +104,6 @@ function FacilityRankingContent() {
     period: period || undefined,
     county_id: county || undefined,
     keph_level: kephLevel || undefined,
-    sha_submitted: shaSubmitted ? shaSubmitted === "true" : undefined,
-    sha_verified: shaVerified ? shaVerified === "true" : undefined,
     sort_by: sortBy,
   });
 
@@ -178,34 +185,6 @@ function FacilityRankingContent() {
                 className="shrink-0 w-full lg:w-40"
               />
 
-              {/* SHA claim facts — the claim being sent, and SHA having
-                  answered a payer's query about it. */}
-              <SearchableSelect
-                label=""
-                compact
-                className="shrink-0 w-full lg:w-44"
-                value={shaSubmitted}
-                onChange={(value) => {
-                  setShaSubmitted(value);
-                  setPage(1);
-                }}
-                placeholder="Any claim"
-                options={SHA_SUBMITTED_FILTER_OPTIONS}
-              />
-
-              <SearchableSelect
-                label=""
-                compact
-                className="shrink-0 w-full lg:w-44"
-                value={shaVerified}
-                onChange={(value) => {
-                  setShaVerified(value);
-                  setPage(1);
-                }}
-                placeholder="Any verification"
-                options={SHA_VERIFIED_FILTER_OPTIONS}
-              />
-
               {!!availableFilters?.county?.length && (
                 <SearchableSelect
                   label=""
@@ -261,35 +240,24 @@ function FacilityRankingContent() {
           >
             <FaUserInjured className="w-4 h-4 text-purple-500" />
           </StatCard>
-          {/* The two SHA claim totals, and the filters they stand for: the
-              claims that have not gone to SHA are what this pair is read for. */}
+          {/* The two SHA claim totals with their rates. The rates differ in
+              denominator: submission is of all bookings, verification is of
+              the claims actually submitted. */}
           <StatCard
             compact
             title="Claims Submitted"
-            mainValue={summary?.sha_submitted?.toLocaleString() ?? "—"}
-            subtitle="Sent to SHA"
-            onClick={() =>
-              setShaSubmitted(shaSubmitted === "true" ? "" : "true")
-            }
-            className={`border ${
-              shaSubmitted === "true"
-                ? "border-blue-500 ring-1 ring-blue-500"
-                : "border-slate-200"
-            }`}
+            mainValue={(summary?.sha_submitted ?? 0).toLocaleString()}
+            subtitle={`${summary?.sha_submission_rate ?? 0}% of bookings`}
+            className="border border-slate-200"
           >
             <FaPaperPlane className="w-4 h-4 text-violet-500" />
           </StatCard>
           <StatCard
             compact
             title="Claims Verified"
-            mainValue={summary?.sha_verified?.toLocaleString() ?? "—"}
-            subtitle="Answered by SHA"
-            onClick={() => setShaVerified(shaVerified === "true" ? "" : "true")}
-            className={`border ${
-              shaVerified === "true"
-                ? "border-blue-500 ring-1 ring-blue-500"
-                : "border-slate-200"
-            }`}
+            mainValue={(summary?.sha_verified ?? 0).toLocaleString()}
+            subtitle={`${summary?.sha_verification_rate ?? 0}% of submitted`}
+            className="border border-slate-200"
           >
             <FaClipboardCheck className="w-4 h-4 text-emerald-500" />
           </StatCard>
@@ -329,10 +297,7 @@ function FacilityRankingContent() {
                     No facilities match these filters.
                   </Table.Empty>
                 ) : (
-                  rows.map((row: RankingRow) => {
-                    const { submitted, verified } = rankingShaCounts(row);
-
-                    return (
+                  rows.map((row: RankingRow) => (
                     <Table.Row key={row.facility.id}>
                       <Table.Cell>
                         <span
@@ -377,20 +342,22 @@ function FacilityRankingContent() {
                         </span>
                       </Table.Cell>
                       <Table.Cell>
-                        {/* Both facts in one cell: two columns for two numbers
-                            spent table width the pairing does not need, and
-                            read together they answer the question the ranking
-                            is checked for — was the claim sent, and did SHA
-                            answer for it. */}
-                        <span className="text-sm text-slate-900">
-                          {submitted === null
-                            ? "—"
-                            : submitted.toLocaleString()}
+                        {/* Both counts in one cell: two columns for two
+                            numbers spends width the pairing does not need, and
+                            read together they answer what the ranking is
+                            checked for — was the claim sent, and did SHA answer
+                            for it. The rates go in the tooltip, where they
+                            explain the pair without crowding it. */}
+                        <span
+                          className="text-sm text-slate-900"
+                          title={shaTooltip(row)}
+                        >
+                          {(row.sha?.submitted ?? 0).toLocaleString()}
                         </span>
                         <div className="text-[11px] text-slate-400">
-                          {verified === null
-                            ? "—"
-                            : `${verified.toLocaleString()} verified`}
+                          {row.sha
+                            ? `${row.sha.verified.toLocaleString()} verified`
+                            : "not reported"}
                         </div>
                       </Table.Cell>
                       <Table.Cell>
@@ -416,8 +383,7 @@ function FacilityRankingContent() {
                         </span>
                       </Table.Cell>
                     </Table.Row>
-                    );
-                  })
+                  ))
                 )}
               </Table.Body>
             </Table>

@@ -4973,13 +4973,19 @@ Note codes on `notes[]`: `decommissioned`, `pending_installation`,
 ### GET `/admin/facility-ranking`
 
 Facilities ranked by booking volume, each with its booking status breakdown,
-completion rate, and the non-SHA studies performed on its equipment with no
-order behind them.
+completion rate, the SHA claim facts for its bookings, and the non-SHA studies
+performed on its equipment with no order behind them.
 
 `completion_rate` = completed ÷ (total − cancelled). A cancelled booking was
 never expected to complete, so it is not counted against the facility.
 `pending` is `pending_otp + active`. `non_sha_studies` counts studies recorded
 on the facility's machines that were never initiated from a booking.
+
+The `sha` block counts the facility's claims: `submitted` are the bookings
+carrying a `claim_id`, `verified` are those SHA has answered a payer's query
+about. **The two rates have different denominators** — `submission_rate` is
+submitted ÷ total bookings, while `verification_rate` is verified ÷ submitted:
+of the claims sent, how many came back answered.
 
 **Query Parameters**
 
@@ -4992,7 +4998,7 @@ on the facility's machines that were never initiated from a booking.
 | `keph_level`    | string  | Facility KEPH level (case-insensitive) |
 | `search`        | string  | Facility name or FR code |
 | `is_active`     | boolean | |
-| `sort_by`       | string  | `total_bookings` (default), `patients`, `completed`, `completion_rate`, `cancelled`, `non_sha_studies` |
+| `sort_by`       | string  | `total_bookings` (default), `patients`, `completed`, `completion_rate`, `cancelled`, `non_sha_studies`, `sha_submitted`, `sha_verified`, `sha_submission_rate`, `sha_verification_rate` |
 | `sort_order`    | string  | `asc`, `desc` (default) |
 | `per_page`      | integer | Facilities per page, 1–100 (default 20) |
 
@@ -5004,9 +5010,11 @@ Rank is assigned over the whole filtered set, so it stays stable across pages;
 ```json
 {
   "summary": {
-    "facilities": 18, "total_bookings": 340, "completed": 300, "pending": 20,
-    "cancelled": 20, "completion_rate": 93.8, "patients": 280,
-    "non_sha_studies": 15,
+    "facilities": 25, "total_bookings": 7312, "completed": 33, "pending": 7279,
+    "cancelled": 0, "completion_rate": 0.5,
+    "sha_submitted": 5547, "sha_verified": 1285,
+    "sha_submission_rate": 75.9, "sha_verification_rate": 23.2,
+    "patients": 6458, "non_sha_studies": 1240,
     "top_facility": { "id": "...", "name": "Bondo Sub-County Hospital", "total_bookings": 96 }
   },
   "data": [
@@ -5014,21 +5022,26 @@ Rank is assigned over the whole filtered set, so it stays stable across pages;
       "rank": 1,
       "facility": {
         "id": "...", "name": "Bondo Sub-County Hospital",
-        "fr_code": "FID-34-115630-8", "keph_level": "Level 4",
-        "facility_type": "HOSPITAL", "county": { "id": "...", "name": "Siaya", "code": "34" }
+        "fr_code": "FID-34-115630-8", "keph_level": "LEVEL 6A",
+        "facility_type": "NATIONAL TEACHING AND REFERRAL HOSPITAL",
+        "county": { "id": "...", "name": "Siaya", "code": "34" }
       },
       "bookings": {
-        "total": 96, "pending": 4, "completed": 90, "cancelled": 2,
-        "by_status": { "pending_otp": 2, "active": 2, "completed": 90, "cancelled": 2 },
-        "by_source": { "standalone": 60, "hmis": 30, "provider_portal": 6 },
-        "completion_rate": 95.7, "patients": 81,
-        "last_booking_at": "2026-09-25T14:12:00+03:00"
+        "total": 2291, "pending": 2280, "completed": 11, "cancelled": 0,
+        "by_status": { "pending_otp": 0, "active": 2280, "completed": 11, "cancelled": 0 },
+        "by_source": { "standalone": 0, "hmis": 0, "provider_portal": 2291 },
+        "completion_rate": 0.5, "patients": 1935,
+        "last_booking_at": "2026-10-15 08:14:33"
       },
-      "non_sha_studies": { "total": 4, "last_received_at": "2026-09-24T09:30:00+03:00" }
+      "sha": {
+        "submitted": 2016, "verified": 427,
+        "submission_rate": 88, "verification_rate": 21.2
+      },
+      "non_sha_studies": { "total": 17, "last_received_at": "2026-10-02 11:34:00" }
     }
   ],
-  "pagination": { "current_page": 1, "per_page": 20, "total": 18, "total_pages": 1 },
-  "filters": { "available": { "county": [], "facility_type": [], "period": [], "sort_by": [], "sort_order": [] }, "applied": {} }
+  "pagination": { "current_page": 1, "per_page": 20, "total": 25, "total_pages": 2 },
+  "filters": { "available": { "county": [], "facility_type": [], "keph_level": [], "period": [], "sort_by": [], "sort_order": [] }, "applied": {} }
 }
 ```
 
