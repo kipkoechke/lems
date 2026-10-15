@@ -26,49 +26,11 @@ import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { MODALITY_OPTIONS, SHA_SUBMITTED_FILTER_OPTIONS, SHA_VERIFIED_FILTER_OPTIONS } from "@/lib/selectOptions";
 import { useIsReadOnly } from "@/hooks/usePermissions";
 import { useCurrentFacility } from "@/hooks/useAuth";
-import {
-  approvalStatus,
-  serviceStatus,
-  shaClaimState,
-  SHA_CLAIM_LABELS,
-} from "@/lib/bookingStatus";
+import { approvalStatus, serviceStatus } from "@/lib/bookingStatus";
 import React, { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { maskPhoneNumber } from "@/lib/maskUtils";
-import type { Booking } from "@/types/booking";
-
-const SHA_CHIP_BADGE: Record<"verified" | "submitted" | "unsent", string> = {
-  verified: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  submitted: "bg-blue-50 text-blue-700 border-blue-200",
-  unsent: "bg-slate-50 text-slate-500 border-slate-200",
-};
-
-/**
- * One row's SHA claim state.
- *
- * The two flags behind this are independent, but a row only has space for the
- * stronger statement, and `verified` implies the claim was sent — so it wins
- * when both are true. "Not sent" is shown rather than left blank because the
- * claims that have not been sent are the ones this column is scanned for.
- */
-const ShaClaimChip = ({ booking }: { booking: Booking }) => {
-  const state = shaClaimState(booking);
-
-  const hint = {
-    verified: "SHA answered a payer's query about this claim",
-    submitted: "The claim has been sent to SHA — no query has been answered for it yet",
-    unsent: "No claim id on this booking, so nothing has been sent to SHA yet",
-  }[state];
-
-  return (
-    <span
-      title={hint}
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${SHA_CHIP_BADGE[state]}`}
-    >
-      {SHA_CLAIM_LABELS[state]}
-    </span>
-  );
-};
+import { ShaClaimChip } from "@/components/common/ShaClaimBadges";
 
 const BookingReport: React.FC = () => {
   // Facility filtering happens server-side — the list spans every facility, so

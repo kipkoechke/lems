@@ -16,10 +16,8 @@ import {
   MdRadio,
   MdPersonPin,
   MdExpandMore,
-  MdSend,
-  MdFactCheck,
 } from "react-icons/md";
-import { isShaSubmitted, isShaVerified } from "@/lib/bookingStatus";
+import { ShaClaimBadges } from "@/components/common/ShaClaimBadges";
 import type {
   BookingService,
   BookingPayment,
@@ -795,22 +793,7 @@ export default function BookingDetailPage() {
               {/* The claim's two facts, which survive the status moving on:
                   the id stays after the claim is answered, and a verification
                   is recorded whether or not we could answer it. */}
-              {isShaSubmitted(booking) && (
-                <span
-                  title="This booking carries a claim id — the claim has been sent to SHA"
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-violet-50 text-violet-700 border-violet-200"
-                >
-                  <MdSend className="w-3 h-3" /> Claim Submitted
-                </span>
-              )}
-              {isShaVerified(booking) && (
-                <span
-                  title="SHA answered a payer's query about this booking's claim"
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-emerald-50 text-emerald-700 border-emerald-200"
-                >
-                  <MdFactCheck className="w-3 h-3" /> SHA Verified
-                </span>
-              )}
+              <ShaClaimBadges booking={booking} />
             </div>
             <p className="text-xs text-slate-500 mt-1">
               Created {formatDate(booking.created_at)} &middot; Source:{" "}
