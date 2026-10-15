@@ -248,6 +248,19 @@ export interface Booking {
   // SHA claim status
   sha_status?: "pending" | "submitted" | "approved" | "Payment-completed" | "rejected" | "clinical-review" | null;
   claim_id?: string | null;
+  /**
+   * The claim was sent to SHA — the booking carries a `claim_id`. The callback
+   * moves `sha_status` on from `submitted`, but the id stays for as long as the
+   * claim does, so this remains true after the claim is answered.
+   */
+  sha_submitted?: boolean;
+  /**
+   * SHA answered a payer's query about this booking's claim — at least one
+   * recorded verification is `verified`. A query we could not answer is
+   * recorded too, so this is false both for a booking nobody has asked about
+   * and one we could not answer for.
+   */
+  sha_verified?: boolean;
   /** Every payer query against this booking's claim, newest answer included. */
   sha_verifications?: BookingShaVerifications | null;
   // Different APIs return different structures
@@ -343,6 +356,10 @@ export interface BookingFilters {
   per_page?: number;
   page?: number;
   finance_approved?: boolean;
+  /** Bookings whose claim SHA has answered a payer's query about. */
+  sha_verified?: boolean;
+  /** Bookings that carry a `claim_id` — the claim was sent to SHA. */
+  sha_submitted?: boolean;
   // Legacy / internal params kept for compatibility
   vendor_id?: string;
   booking_status?: string;

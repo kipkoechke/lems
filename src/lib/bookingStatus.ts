@@ -60,3 +60,56 @@ export const approvalStatus = (
 
 export const isFinanceApproved = (booking: Booking): boolean =>
   approvalStatus(booking) === "approved";
+
+/**
+ * SHA claim state.
+ *
+ * The two questions are independent, and the API answers them with
+ * `sha_submitted` (the booking carries a `claim_id`) and `sha_verified` (SHA
+ * answered a payer's query about it). A claim can be submitted and not yet
+ * answered, so neither is a step towards the other.
+ *
+ * Both flags are read with a fallback, because the payload they replace is
+ * still what older deployments send: `claim_id` is the evidence `sha_submitted`
+ * is derived from, and a verification entry carrying `verified` is what
+ * `sha_verified` is derived from. Without the fallback a page filtered on the
+ * new flags would empty itself against a deployment that does not send them.
+ */
+
+/** True when the claim has been sent to SHA. */
+export const isShaSubmitted = (booking: Booking): boolean =>
+  booking.sha_submitted ?? !!booking.claim_id;
+
+/**
+ * True when SHA answered a payer's query about this claim. A query we could not
+ * answer is recorded with `verified` false, so this stays false for a booking
+ * nobody has asked about as well as one we could not answer.
+ */
+export const isShaVerified = (booking: Booking): boolean =>
+  booking.sha_verified ??
+  (booking.sha_verifications?.history ?? []).some((entry) => entry.verified);
+
+/**
+ * Which of the two SHA facts a row should show, if any.
+ *
+ * `verified` is the stronger statement — SHA has answered for this claim — so
+ * it wins when both are true: showing "submitted" beside it would read as
+ * though the answer had not arrived.
+ */
+export const shaClaimState = (
+  booking: Booking,
+): "verified" | "submitted" | "unsent" =>
+  isShaVerified(booking)
+    ? "verified"
+    : isShaSubmitted(booking)
+      ? "submitted"
+      : "unsent";
+
+export const SHA_CLAIM_LABELS: Record<
+  "verified" | "submitted" | "unsent",
+  string
+> = {
+  verified: "SHA verified",
+  submitted: "Submitted",
+  unsent: "Not sent",
+};

@@ -23,13 +23,52 @@ import { VendorFilter } from "@/components/common/VendorFilter";
 import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import { LotServiceFilter } from "@/components/common/LotServiceFilter";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
-import { MODALITY_OPTIONS } from "@/lib/selectOptions";
+import { MODALITY_OPTIONS, SHA_SUBMITTED_FILTER_OPTIONS, SHA_VERIFIED_FILTER_OPTIONS } from "@/lib/selectOptions";
 import { useIsReadOnly } from "@/hooks/usePermissions";
 import { useCurrentFacility } from "@/hooks/useAuth";
-import { approvalStatus, serviceStatus } from "@/lib/bookingStatus";
+import {
+  approvalStatus,
+  serviceStatus,
+  shaClaimState,
+  SHA_CLAIM_LABELS,
+} from "@/lib/bookingStatus";
 import React, { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { maskPhoneNumber } from "@/lib/maskUtils";
+import type { Booking } from "@/types/booking";
+
+const SHA_CHIP_BADGE: Record<"verified" | "submitted" | "unsent", string> = {
+  verified: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  submitted: "bg-blue-50 text-blue-700 border-blue-200",
+  unsent: "bg-slate-50 text-slate-500 border-slate-200",
+};
+
+/**
+ * One row's SHA claim state.
+ *
+ * The two flags behind this are independent, but a row only has space for the
+ * stronger statement, and `verified` implies the claim was sent — so it wins
+ * when both are true. "Not sent" is shown rather than left blank because the
+ * claims that have not been sent are the ones this column is scanned for.
+ */
+const ShaClaimChip = ({ booking }: { booking: Booking }) => {
+  const state = shaClaimState(booking);
+
+  const hint = {
+    verified: "SHA answered a payer's query about this claim",
+    submitted: "The claim has been sent to SHA — no query has been answered for it yet",
+    unsent: "No claim id on this booking, so nothing has been sent to SHA yet",
+  }[state];
+
+  return (
+    <span
+      title={hint}
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${SHA_CHIP_BADGE[state]}`}
+    >
+      {SHA_CLAIM_LABELS[state]}
+    </span>
+  );
+};
 
 const BookingReport: React.FC = () => {
   // Facility filtering happens server-side — the list spans every facility, so
@@ -43,6 +82,10 @@ const BookingReport: React.FC = () => {
   const [modality, setModality] = useState<string>("");
   const [lotId, setLotId] = useState<string>("");
   const [lotServiceId, setLotServiceId] = useState<string>("");
+  // The two SHA claim facts, as the API filters them. Tri-state: "" is no
+  // filter, which is not the same as `false`.
+  const [shaSubmitted, setShaSubmitted] = useState<string>("");
+  const [shaVerified, setShaVerified] = useState<string>("");
 
   // A facility account is pinned to its own facility: the API does not scope
   // this list by the caller, so without it they see every other facility's
@@ -57,6 +100,8 @@ const BookingReport: React.FC = () => {
     ...(modality ? { modality } : {}),
     ...(lotId ? { lot_id: lotId } : {}),
     ...(lotServiceId ? { lot_service_id: lotServiceId } : {}),
+    ...(shaSubmitted ? { sha_submitted: shaSubmitted === "true" } : {}),
+    ...(shaVerified ? { sha_verified: shaVerified === "true" } : {}),
   });
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -389,6 +434,32 @@ const BookingReport: React.FC = () => {
                 setSelectedBookings(new Set());
               }}
               className="w-full lg:w-44"
+            />
+
+            <SearchableSelect
+              label=""
+              compact
+              className="w-full lg:w-44"
+              value={shaSubmitted}
+              onChange={(value) => {
+                setShaSubmitted(value);
+                setSelectedBookings(new Set());
+              }}
+              placeholder="Any claim"
+              options={SHA_SUBMITTED_FILTER_OPTIONS}
+            />
+
+            <SearchableSelect
+              label=""
+              compact
+              className="w-full lg:w-44"
+              value={shaVerified}
+              onChange={(value) => {
+                setShaVerified(value);
+                setSelectedBookings(new Set());
+              }}
+              placeholder="Any verification"
+              options={SHA_VERIFIED_FILTER_OPTIONS}
             />
 
             <div className="w-full lg:w-72">
@@ -757,6 +828,9 @@ const BookingReport: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(approvalStatus(booking))}
+                        <div className="mt-1.5">
+                          <ShaClaimChip booking={booking} />
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <ActionMenu menuId={`booking-${booking.id}`}>

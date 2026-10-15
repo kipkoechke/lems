@@ -95,3 +95,19 @@ export const BOOLEAN_FILTER_OPTIONS: SelectOption[] = [
   { value: "true", label: "Yes" },
   { value: "false", label: "No" },
 ];
+
+/**
+ * The two SHA claim facts, as filters.
+ *
+ * They are independent — a claim can be sent to SHA and not yet answered — so
+ * each gets its own pair of options rather than sharing one three-state list.
+ */
+export const SHA_VERIFIED_FILTER_OPTIONS: SelectOption[] = [
+  { value: "true", label: "SHA verified" },
+  { value: "false", label: "Not verified" },
+];
+
+export const SHA_SUBMITTED_FILTER_OPTIONS: SelectOption[] = [
+  { value: "true", label: "Submitted to SHA" },
+  { value: "false", label: "Not submitted" },
+];

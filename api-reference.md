@@ -3612,6 +3612,8 @@ List bookings. Returns a summary alongside paginated results.
 | `sort_order`       | string  | `asc`, `desc`                                     |
 | `per_page`         | integer | 1–100, default 15                                 |
 | `finance_approved` | boolean |                                                   |
+| `sha_verified`     | boolean | SHA answered a payer's query about the claim      |
+| `sha_submitted`    | boolean | The booking carries a `claim_id`, i.e. the claim was sent to SHA |
 
 **Response `200`**
 
@@ -5572,6 +5574,8 @@ Root endpoint — returns API information.
   "eligibility_verified": true,
   "eligibility_response": { ... },
   "finance_approved_at": "2025-05-01T09:15:00+03:00",
+  "sha_verified": true,
+  "sha_submitted": true,
   "notes": "Routine follow-up",
   "services": [ ...booked service objects... ],
   "sha_verifications": {
@@ -5584,6 +5588,17 @@ Root endpoint — returns API information.
   "updated_at": "2025-05-01T09:15:00+03:00"
 }
 ```
+
+**`sha_verified`** is true when SHA answered a payer's query about this
+booking's claim — at least one recorded verification carries `verified` true. A
+query we could not answer is recorded too, with `verified` false, so a booking
+nobody has asked about and one we could not answer are both `false`.
+**`sha_submitted`** is true when the booking carries a `claim_id`, which is what
+sending the claim to SHA leaves behind: the callback moves `sha_status` on from
+`submitted`, but the id stays for as long as the claim does. The two are
+independent — a claim can be submitted and not yet answered. Both flags are on
+every row of `GET /bookings` as well, and each can be filtered on with
+`sha_verified` and `sha_submitted`.
 
 ### Booked Service Object
 
