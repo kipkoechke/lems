@@ -8,6 +8,8 @@ import {
   FaCheckCircle,
   FaUserInjured,
   FaXRay,
+  FaPaperPlane,
+  FaClipboardCheck,
 } from "react-icons/fa";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
@@ -20,8 +22,13 @@ import { ErrorState } from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import { useFacilityRanking } from "@/features/readiness/useFacilityReadiness";
+import {
+  SHA_SUBMITTED_FILTER_OPTIONS,
+  SHA_VERIFIED_FILTER_OPTIONS,
+} from "@/lib/selectOptions";
 import { PERIOD_PRESETS } from "@/services/apiPingRequests";
 import {
+  rankingShaCounts,
   RANKING_SORT_OPTIONS,
   type FacilityRankingSortBy,
   type RankingRow,
@@ -68,6 +75,9 @@ function FacilityRankingContent() {
   const [county, setCounty] = useState("");
   const [kephLevel, setKephLevel] = useState("");
   const [sortBy, setSortBy] = useState<FacilityRankingSortBy>("total_bookings");
+  // The two SHA claim facts. Tri-state: "" is no filter, which is not `false`.
+  const [shaSubmitted, setShaSubmitted] = useState("");
+  const [shaVerified, setShaVerified] = useState("");
   const search = useSearchControl(() => setPage(1));
 
   const {
@@ -85,6 +95,8 @@ function FacilityRankingContent() {
     period: period || undefined,
     county_id: county || undefined,
     keph_level: kephLevel || undefined,
+    sha_submitted: shaSubmitted ? shaSubmitted === "true" : undefined,
+    sha_verified: shaVerified ? shaVerified === "true" : undefined,
     sort_by: sortBy,
   });
 
@@ -166,6 +178,34 @@ function FacilityRankingContent() {
                 className="shrink-0 w-full lg:w-40"
               />
 
+              {/* SHA claim facts — the claim being sent, and SHA having
+                  answered a payer's query about it. */}
+              <SearchableSelect
+                label=""
+                compact
+                className="shrink-0 w-full lg:w-44"
+                value={shaSubmitted}
+                onChange={(value) => {
+                  setShaSubmitted(value);
+                  setPage(1);
+                }}
+                placeholder="Any claim"
+                options={SHA_SUBMITTED_FILTER_OPTIONS}
+              />
+
+              <SearchableSelect
+                label=""
+                compact
+                className="shrink-0 w-full lg:w-44"
+                value={shaVerified}
+                onChange={(value) => {
+                  setShaVerified(value);
+                  setPage(1);
+                }}
+                placeholder="Any verification"
+                options={SHA_VERIFIED_FILTER_OPTIONS}
+              />
+
               {!!availableFilters?.county?.length && (
                 <SearchableSelect
                   label=""
@@ -186,7 +226,7 @@ function FacilityRankingContent() {
         </div>
 
         {/* Totals across the whole ranking, not just this page */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
           <StatCard
             compact
             title="Bookings"
@@ -221,6 +261,38 @@ function FacilityRankingContent() {
           >
             <FaUserInjured className="w-4 h-4 text-purple-500" />
           </StatCard>
+          {/* The two SHA claim totals, and the filters they stand for: the
+              claims that have not gone to SHA are what this pair is read for. */}
+          <StatCard
+            compact
+            title="Claims Submitted"
+            mainValue={summary?.sha_submitted?.toLocaleString() ?? "—"}
+            subtitle="Sent to SHA"
+            onClick={() =>
+              setShaSubmitted(shaSubmitted === "true" ? "" : "true")
+            }
+            className={`border ${
+              shaSubmitted === "true"
+                ? "border-blue-500 ring-1 ring-blue-500"
+                : "border-slate-200"
+            }`}
+          >
+            <FaPaperPlane className="w-4 h-4 text-violet-500" />
+          </StatCard>
+          <StatCard
+            compact
+            title="Claims Verified"
+            mainValue={summary?.sha_verified?.toLocaleString() ?? "—"}
+            subtitle="Answered by SHA"
+            onClick={() => setShaVerified(shaVerified === "true" ? "" : "true")}
+            className={`border ${
+              shaVerified === "true"
+                ? "border-blue-500 ring-1 ring-blue-500"
+                : "border-slate-200"
+            }`}
+          >
+            <FaClipboardCheck className="w-4 h-4 text-emerald-500" />
+          </StatCard>
           <StatCard
             compact
             title="Non-SHA Studies"
@@ -244,19 +316,23 @@ function FacilityRankingContent() {
                   <Table.HeaderCell>Bookings</Table.HeaderCell>
                   <Table.HeaderCell>Completion</Table.HeaderCell>
                   <Table.HeaderCell>Patients</Table.HeaderCell>
+                  <Table.HeaderCell>Claims</Table.HeaderCell>
                   <Table.HeaderCell>Non-SHA</Table.HeaderCell>
                   <Table.HeaderCell align="right">Last Booking</Table.HeaderCell>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
                 {isLoading ? (
-                  <Table.Loading colSpan={7} rows={8} />
+                  <Table.Loading colSpan={8} rows={8} />
                 ) : rows.length === 0 ? (
-                  <Table.Empty colSpan={7}>
+                  <Table.Empty colSpan={8}>
                     No facilities match these filters.
                   </Table.Empty>
                 ) : (
-                  rows.map((row: RankingRow) => (
+                  rows.map((row: RankingRow) => {
+                    const { submitted, verified } = rankingShaCounts(row);
+
+                    return (
                     <Table.Row key={row.facility.id}>
                       <Table.Cell>
                         <span
@@ -301,6 +377,23 @@ function FacilityRankingContent() {
                         </span>
                       </Table.Cell>
                       <Table.Cell>
+                        {/* Both facts in one cell: two columns for two numbers
+                            spent table width the pairing does not need, and
+                            read together they answer the question the ranking
+                            is checked for — was the claim sent, and did SHA
+                            answer for it. */}
+                        <span className="text-sm text-slate-900">
+                          {submitted === null
+                            ? "—"
+                            : submitted.toLocaleString()}
+                        </span>
+                        <div className="text-[11px] text-slate-400">
+                          {verified === null
+                            ? "—"
+                            : `${verified.toLocaleString()} verified`}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
                         {row.non_sha_studies?.total ? (
                           <button
                             onClick={() =>
@@ -323,7 +416,8 @@ function FacilityRankingContent() {
                         </span>
                       </Table.Cell>
                     </Table.Row>
-                  ))
+                    );
+                  })
                 )}
               </Table.Body>
             </Table>

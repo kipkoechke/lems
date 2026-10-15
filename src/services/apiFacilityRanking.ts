@@ -35,6 +35,16 @@ export interface RankingBookings {
   completion_rate: number;
   patients: number;
   last_booking_at?: string | null;
+  /**
+   * Bookings whose claim was sent to SHA — the ones carrying a `claim_id`.
+   * Same fact as `booking.sha_submitted`, counted per facility.
+   */
+  sha_submitted?: number;
+  /**
+   * Bookings SHA has answered a payer's query about. A query we could not
+   * answer is recorded too, so this counts the ones actually answered.
+   */
+  sha_verified?: number;
 }
 
 export interface RankingRow {
@@ -42,8 +52,27 @@ export interface RankingRow {
   rank: number;
   facility: RankingFacility;
   bookings: RankingBookings;
+  /** Accepted here as well as on `bookings`, since only one is sent. */
+  sha_submitted?: number;
+  sha_verified?: number;
   non_sha_studies?: { total: number; last_received_at?: string | null };
 }
+
+/**
+ * The facility's two SHA claim counts, from wherever the payload puts them.
+ *
+ * The counts belong with the other booking tallies, so they are read from
+ * `bookings` first; the row-level placement is accepted too so a deployment
+ * that puts them there renders rather than showing a column of dashes. `null`
+ * means the field was not sent at all, which is not the same as zero — the UI
+ * needs to tell "none submitted" from "not reported".
+ */
+export const rankingShaCounts = (
+  row: RankingRow,
+): { submitted: number | null; verified: number | null } => ({
+  submitted: row.bookings?.sha_submitted ?? row.sha_submitted ?? null,
+  verified: row.bookings?.sha_verified ?? row.sha_verified ?? null,
+});
 
 export interface FacilityRankingSummary {
   facilities: number;
@@ -54,6 +83,10 @@ export interface FacilityRankingSummary {
   completion_rate: number;
   patients: number;
   non_sha_studies: number;
+  /** Bookings across the ranking whose claim was sent to SHA. */
+  sha_submitted?: number;
+  /** Bookings across the ranking SHA has answered a payer's query about. */
+  sha_verified?: number;
   top_facility?: { id: string; name: string; total_bookings: number } | null;
 }
 
@@ -63,7 +96,9 @@ export type FacilityRankingSortBy =
   | "completed"
   | "completion_rate"
   | "cancelled"
-  | "non_sha_studies";
+  | "non_sha_studies"
+  | "sha_submitted"
+  | "sha_verified";
 
 export interface FacilityRankingParams {
   /** Applies to bookings' created_at and studies' received_at; default all time. */
@@ -75,6 +110,10 @@ export interface FacilityRankingParams {
   /** Facility KEPH level, as stored: "Level 4". Case-insensitive. */
   keph_level?: string;
   is_active?: boolean;
+  /** Facilities with bookings whose claim was sent to SHA. */
+  sha_submitted?: boolean;
+  /** Facilities with bookings SHA has answered a payer's query about. */
+  sha_verified?: boolean;
   sort_by?: FacilityRankingSortBy;
   sort_order?: "asc" | "desc";
   per_page?: number;
@@ -109,6 +148,15 @@ export const getFacilityRanking = async (
       ...params,
       is_active:
         params.is_active === undefined ? undefined : String(params.is_active),
+      // Sent as the literal strings, like the other booleans on this endpoint.
+      sha_submitted:
+        params.sha_submitted === undefined
+          ? undefined
+          : String(params.sha_submitted),
+      sha_verified:
+        params.sha_verified === undefined
+          ? undefined
+          : String(params.sha_verified),
     },
   });
 
@@ -133,4 +181,6 @@ export const RANKING_SORT_OPTIONS: {
   { value: "completion_rate", label: "Completion rate" },
   { value: "cancelled", label: "Cancelled" },
   { value: "non_sha_studies", label: "Non-SHA studies" },
+  { value: "sha_submitted", label: "Claims submitted" },
+  { value: "sha_verified", label: "Claims verified" },
 ];
