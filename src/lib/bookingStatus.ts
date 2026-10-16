@@ -110,8 +110,12 @@ export const SHA_CLAIM_LABELS: Record<
   string
 > = {
   verified: "SHA verified",
-  submitted: "Submitted",
-  unsent: "Not sent",
+  // Both name SHA. The chip sits under the booking's own status badge, where
+  // an unqualified "Submitted" or "Not sent" reads as a second opinion on the
+  // booking — "Completed / Not sent" looks like a contradiction rather than
+  // two facts about different things.
+  submitted: "SHA submitted",
+  unsent: "SHA not sent",
 };
 
 /**

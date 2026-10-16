@@ -37,7 +37,9 @@ const CHIP_HINT: Record<"verified" | "submitted" | "unsent", string> = {
   verified: "SHA answered a payer's query about this claim",
   submitted:
     "The claim has been sent to SHA — no query has been answered for it yet",
-  unsent: "No claim id on this booking, so nothing has been sent to SHA yet",
+  unsent:
+    "No claim id on this booking, so no claim has been sent to SHA yet. This " +
+    "says nothing about whether the service itself was performed.",
 };
 
 /** One row's SHA claim state, collapsed to the strongest statement. */
