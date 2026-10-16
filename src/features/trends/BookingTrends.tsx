@@ -34,6 +34,7 @@ import { FilterBar } from "@/components/common/FilterBar";
 import { BookingTrendChart } from "@/components/common/BookingTrendChart";
 import { useRouter } from "next/navigation";
 import { unmatchedStudyCount } from "@/services/apiDashboard";
+import { PERIOD_PRESETS } from "@/services/apiPingRequests";
 import type {
   DashboardAvailableFilters,
   DashboardParams,
@@ -222,7 +223,10 @@ function DashboardFilterBar({
   };
 
   const fields: Field[] = ([
-    { key: "period", label: "All time", options: available?.period },
+    // The six windows the API accepts are known, so the period control does
+    // not depend on the API publishing its own list — without this fallback a
+    // deployment that omits `available.period` gets no period filter at all.
+    { key: "period", label: "All time", options: available?.period ?? PERIOD_PRESETS },
     { key: "county_id", label: "All counties", options: available?.county },
     {
       key: "facility_type",
@@ -283,6 +287,17 @@ export default function BookingTrends() {
   const availableFilters = dashboardData?.filters?.available;
   const modalities = dashboardData?.modalities || [];
   const shaClaims = dashboardData?.sha_claims;
+
+  // Whichever period is actually in force: the API echoes the resolved value
+  // back in `applied`, which is the one the numbers were built from — the
+  // client state is only a fallback for deployments that do not echo it.
+  const appliedPeriod =
+    dashboardData?.filters?.applied?.period ?? filters.period ?? "";
+  const periodLabel = appliedPeriod
+    ? ((availableFilters?.period ?? PERIOD_PRESETS).find(
+        (option) => option.value === appliedPeriod,
+      )?.label ?? appliedPeriod)
+    : "";
 
   // Equipment ownership donut data
   const equipmentDonutData = useMemo(() => {
@@ -377,8 +392,22 @@ export default function BookingTrends() {
             <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
             <p className="text-xs text-slate-500 mt-0.5">
               System overview &amp; key metrics
+              {periodLabel && ` — ${periodLabel}`}
               {isFetching && !isLoading && " — updating…"}
             </p>
+            {/* A windowed dashboard counts only what was created inside the
+                window, and the window moves: figures can fall from one visit
+                to the next without anything being lost. Said out loud here so
+                a smaller number reads as scoped rather than as missing data. */}
+            {periodLabel && (
+              <p
+                className="text-[11px] text-slate-400 mt-0.5"
+                title="Items older than the selected period drop out of the totals as the window moves forward"
+              >
+                Counts cover {periodLabel.toLowerCase()} only — items older than
+                the window fall out, so these figures can decrease over time.
+              </p>
+            )}
           </div>
           <DashboardFilterBar
             available={availableFilters}
