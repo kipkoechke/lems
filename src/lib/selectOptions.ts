@@ -111,3 +111,18 @@ export const SHA_SUBMITTED_FILTER_OPTIONS: SelectOption[] = [
   { value: "true", label: "Submitted to SHA" },
   { value: "false", label: "Not submitted" },
 ];
+
+/**
+ * The SHA claim as one control.
+ *
+ * `sha_submitted` and `sha_verified` are independent facts, and the page used
+ * to offer a select for each — two of the nine controls that pushed the filter
+ * bar past the width of the screen. The combinations people actually filter on
+ * are a chain, so one select expresses them without losing anything: verified
+ * implies submitted, and "not sent" is the negation of submitted.
+ */
+export const SHA_CLAIM_FILTER_OPTIONS: SelectOption[] = [
+  { value: "verified", label: "SHA verified" },
+  { value: "submitted", label: "SHA submitted" },
+  { value: "unsent", label: "SHA not sent" },
+];
