@@ -137,3 +137,77 @@ export const serviceNames = (booking: Booking): string[] => {
     .map((service) => service.name)
     .filter((name): name is string => !!name);
 };
+
+/**
+ * Delivery state — whether the work actually happened.
+ *
+ * The API's own `status` is a lifecycle flag: `active` means the booking is
+ * open, which it stays from the moment OTP clears until the last service is
+ * delivered. On a list that is close to useless — nearly every row says
+ * "Active" and none of them says whether anything has been done. The counts
+ * the list API already sends answer the question that is actually being asked,
+ * so the badge is derived from them and `status` is consulted only for the
+ * states no count can express.
+ */
+export type DeliveryState =
+  | "completed"
+  | "in_progress"
+  | "not_started"
+  | "cancelled"
+  | "pending_otp";
+
+export const deliveryState = (booking: Booking): DeliveryState => {
+  if (booking.status === "cancelled") return "cancelled";
+  if (booking.status === "pending_otp") return "pending_otp";
+  if (booking.status === "completed") return "completed";
+
+  const total = booking.services_count ?? (booking.services ?? []).length;
+  const done = completedServiceCount(booking);
+
+  // A booking with no services recorded is not "completed" by vacuous truth.
+  if (total > 0 && done >= total) return "completed";
+  return done > 0 ? "in_progress" : "not_started";
+};
+
+export const DELIVERY_LABELS: Record<DeliveryState, string> = {
+  completed: "Completed",
+  in_progress: "In progress",
+  not_started: "Not started",
+  cancelled: "Cancelled",
+  pending_otp: "Pending OTP",
+};
+
+export const DELIVERY_BADGES: Record<DeliveryState, string> = {
+  completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  in_progress: "bg-blue-50 text-blue-700 border-blue-200",
+  not_started: "bg-slate-50 text-slate-600 border-slate-200",
+  cancelled: "bg-red-50 text-red-700 border-red-200",
+  pending_otp: "bg-amber-50 text-amber-700 border-amber-200",
+};
+
+/** `"2/3"`, or `""` when the booking lists no services to count. */
+export const deliveryProgress = (booking: Booking): string => {
+  const total = booking.services_count ?? (booking.services ?? []).length;
+  if (!total) return "";
+  return `${completedServiceCount(booking)}/${total}`;
+};
+
+/** Every service on the booking, whichever payload shape carried it. */
+const resultsOf = (booking: Booking) =>
+  (booking.services ?? []).map((service) => service.result).filter(Boolean);
+
+/**
+ * A study came back for at least one service on this booking.
+ *
+ * Evidence, not configuration: a result row exists with a status or a
+ * received timestamp, which only happens once the modality sent something.
+ */
+export const hasSentResults = (booking: Booking): boolean =>
+  resultsOf(booking).some((result) => !!result?.result_status || !!result?.received_at);
+
+/**
+ * The modality queried the worklist for at least one service on this booking.
+ * `worklist_status` is only ever written when a C-FIND was actually logged.
+ */
+export const hasQueriedWorklist = (booking: Booking): boolean =>
+  resultsOf(booking).some((result) => !!result?.worklist_status);
