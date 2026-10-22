@@ -42,6 +42,81 @@ const formatDateTime = (value?: string | null) =>
       })
     : "Never";
 
+/** Live means a C-ECHO answered recently, not merely that it was registered. */
+function LinkBadge({ live }: { live?: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+        live
+          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+          : "bg-slate-50 text-slate-500 border-slate-200"
+      }`}
+    >
+      <span
+        className={`w-2 h-2 rounded-full ${
+          live ? "bg-emerald-500 animate-pulse" : "bg-slate-300"
+        }`}
+      />
+      {live ? "Live" : "Offline"}
+    </span>
+  );
+}
+
+/**
+ * One machine or modality on a phone. Six columns of addresses and timestamps
+ * do not survive 390px, so the AE title and address share a line under the
+ * name, and the link state sits opposite it where a glance finds it.
+ */
+function DicomCard({
+  name,
+  code,
+  vendor,
+  aeTitle,
+  address,
+  live,
+  lastSeenAt,
+  children,
+}: {
+  name: string;
+  code?: string | null;
+  vendor?: string | null;
+  aeTitle?: string | null;
+  address: string;
+  live?: boolean;
+  lastSeenAt?: string | null;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="p-4 space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-medium text-slate-900 line-clamp-2">{name}</p>
+          {(code || vendor) && (
+            <p className="text-[11px] text-slate-400 truncate">
+              {code && <span className="font-mono">{code}</span>}
+              {code && vendor && " · "}
+              {vendor}
+            </p>
+          )}
+        </div>
+        <div className="shrink-0">
+          <LinkBadge live={live} />
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+        <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
+          {aeTitle || "-"}
+        </span>
+        <span className="font-mono text-slate-600 break-all">{address}</span>
+      </div>
+      <p className="text-[11px] text-slate-400">
+        Last seen {formatDateTime(lastSeenAt)}
+      </p>
+      {children}
+    </div>
+  );
+}
+
 function DicomContent() {
   const [tab, setTab] = useState<"equipment" | "modalities">("equipment");
   const search = useSearchControl();
@@ -57,6 +132,19 @@ function DicomContent() {
   const { testConnection, isTesting } = useTestEquipmentDicom();
   const { unregisterModality, isUnregistering } =
     useUnregisterEquipmentModality();
+
+  // Unregistering drops the machine from Orthanc, so it stops being able to
+  // query worklists until someone registers it again. One tap should not do
+  // that — least of all a stray one on a phone, where the button is wide.
+  const confirmUnregister = (eq: AdminEquipment) => {
+    if (
+      window.confirm(
+        `Unregister ${eq.name} (${eq.dicom?.ae_title ?? eq.code}) from Orthanc? It will not be able to pull worklists until it is registered again.`,
+      )
+    ) {
+      unregisterModality(eq.id);
+    }
+  };
 
   const { equipments, isLoading: equipmentLoading } = useAdminEquipments({
     // Unpaginated while searching so matches are not capped at one page.
@@ -94,7 +182,9 @@ function DicomContent() {
               disabled={isRegistering}
               className="lg:ml-auto shrink-0 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
             >
-              <FaSync className={`w-3 h-3 ${isRegistering ? "animate-spin" : ""}`} />
+              <FaSync
+                className={`w-3 h-3 ${isRegistering ? "animate-spin" : ""}`}
+              />
               {isRegistering ? "Registering..." : "Register All Modalities"}
             </button>
           </div>
@@ -159,7 +249,9 @@ function DicomContent() {
 
         {/* Tabs */}
         <div className="bg-white rounded-lg border border-slate-200">
-          <div className="flex items-center justify-between border-b border-gray-100 px-4">
+          {/* The search drops under the tabs on a phone; beside them it was
+              a fixed 16rem that the row could not fit. */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 px-4">
             <div className="flex gap-6">
               <button
                 onClick={() => setTab("equipment")}
@@ -183,7 +275,7 @@ function DicomContent() {
               </button>
             </div>
             {tab === "equipment" && (
-              <div className="w-64 py-2">
+              <div className="w-full sm:w-64 pb-2 sm:py-2">
                 <SearchField
                   value={search.input}
                   onChange={search.onInputChange}
@@ -201,11 +293,14 @@ function DicomContent() {
               {equipmentLoading ? (
                 <div className="space-y-3">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="h-14 bg-slate-100 rounded animate-pulse" />
+                    <div
+                      key={i}
+                      className="h-14 bg-slate-100 rounded animate-pulse"
+                    />
                   ))}
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-200">
                   <Table className="w-full">
                     <Table.Header>
                       <Table.Row>
@@ -214,7 +309,9 @@ function DicomContent() {
                         <Table.HeaderCell>Host : Port</Table.HeaderCell>
                         <Table.HeaderCell>Link</Table.HeaderCell>
                         <Table.HeaderCell>Last Seen</Table.HeaderCell>
-                        <Table.HeaderCell align="right">Actions</Table.HeaderCell>
+                        <Table.HeaderCell align="right">
+                          Actions
+                        </Table.HeaderCell>
                       </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -249,22 +346,7 @@ function DicomContent() {
                               </span>
                             </Table.Cell>
                             <Table.Cell>
-                              <span
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                                  eq.dicom?.is_connected
-                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                    : "bg-slate-50 text-slate-500 border-slate-200"
-                                }`}
-                              >
-                                <span
-                                  className={`w-2 h-2 rounded-full ${
-                                    eq.dicom?.is_connected
-                                      ? "bg-emerald-500 animate-pulse"
-                                      : "bg-slate-300"
-                                  }`}
-                                />
-                                {eq.dicom?.is_connected ? "Live" : "Offline"}
-                              </span>
+                              <LinkBadge live={eq.dicom?.is_connected} />
                             </Table.Cell>
                             <Table.Cell>
                               <span className="text-sm text-slate-600">
@@ -281,7 +363,7 @@ function DicomContent() {
                                   <FaPlug className="w-3 h-3" /> Test
                                 </button>
                                 <button
-                                  onClick={() => unregisterModality(eq.id)}
+                                  onClick={() => confirmUnregister(eq)}
                                   disabled={isUnregistering}
                                   className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-colors disabled:opacity-50"
                                 >
@@ -296,6 +378,48 @@ function DicomContent() {
                   </Table>
                 </div>
               )}
+              {!equipmentLoading && (
+                <div className="md:hidden rounded-lg border border-gray-200 divide-y divide-gray-100">
+                  {dicomEquipment.length === 0 ? (
+                    <p className="p-6 text-center text-sm text-slate-500">
+                      {search.isSearching
+                        ? "No DICOM equipment matches your search"
+                        : "No equipment has DICOM configured yet."}
+                    </p>
+                  ) : (
+                    dicomEquipment.map((eq: AdminEquipment) => (
+                      <DicomCard
+                        key={eq.id}
+                        name={eq.name}
+                        code={eq.code}
+                        aeTitle={eq.dicom?.ae_title}
+                        address={`${eq.dicom?.hl7_host || "-"}${
+                          eq.dicom?.dicom_port ? `:${eq.dicom.dicom_port}` : ""
+                        }`}
+                        live={eq.dicom?.is_connected}
+                        lastSeenAt={eq.dicom?.last_seen_at}
+                      >
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            onClick={() => testConnection(eq.id)}
+                            disabled={isTesting}
+                            className="flex-1 inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium border border-slate-200 text-slate-600 disabled:opacity-50"
+                          >
+                            <FaPlug className="w-3 h-3" /> Test
+                          </button>
+                          <button
+                            onClick={() => confirmUnregister(eq)}
+                            disabled={isUnregistering}
+                            className="flex-1 inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium border border-slate-200 text-red-600 disabled:opacity-50"
+                          >
+                            <FaTrash className="w-3 h-3" /> Unregister
+                          </button>
+                        </div>
+                      </DicomCard>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -305,7 +429,10 @@ function DicomContent() {
               {modalitiesLoading ? (
                 <div className="space-y-3">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="h-14 bg-slate-100 rounded animate-pulse" />
+                    <div
+                      key={i}
+                      className="h-14 bg-slate-100 rounded animate-pulse"
+                    />
                   ))}
                 </div>
               ) : modalitiesError ? (
@@ -318,7 +445,7 @@ function DicomContent() {
                   }}
                 />
               ) : (
-                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-200">
                   <Table className="w-full">
                     <Table.Header>
                       <Table.Row>
@@ -367,22 +494,7 @@ function DicomContent() {
                               </span>
                             </Table.Cell>
                             <Table.Cell>
-                              <span
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                                  m.is_connected
-                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                    : "bg-slate-50 text-slate-500 border-slate-200"
-                                }`}
-                              >
-                                <span
-                                  className={`w-2 h-2 rounded-full ${
-                                    m.is_connected
-                                      ? "bg-emerald-500 animate-pulse"
-                                      : "bg-slate-300"
-                                  }`}
-                                />
-                                {m.is_connected ? "Live" : "Offline"}
-                              </span>
+                              <LinkBadge live={m.is_connected} />
                             </Table.Cell>
                             <Table.Cell>
                               <span className="text-sm text-slate-600">
@@ -394,6 +506,30 @@ function DicomContent() {
                       )}
                     </Table.Body>
                   </Table>
+                </div>
+              )}
+              {!modalitiesLoading && !modalitiesError && (
+                <div className="md:hidden rounded-lg border border-gray-200 divide-y divide-gray-100">
+                  {modalities.length === 0 ? (
+                    <p className="p-6 text-center text-sm text-slate-500">
+                      No modalities registered in Orthanc.
+                    </p>
+                  ) : (
+                    modalities.map((m, idx) => (
+                      <DicomCard
+                        key={modalityAet(m) + idx}
+                        name={modalityName(m)}
+                        code={m.equipment?.code}
+                        vendor={m.vendor?.name}
+                        aeTitle={modalityAet(m)}
+                        address={`${modalityHost(m)}${
+                          modalityPort(m) !== "-" ? `:${modalityPort(m)}` : ""
+                        }`}
+                        live={m.is_connected}
+                        lastSeenAt={m.last_seen_at}
+                      />
+                    ))
+                  )}
                 </div>
               )}
             </div>
