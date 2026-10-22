@@ -16,6 +16,7 @@ import { Table } from "@/components/Table";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { ConnectivityBadges } from "@/components/common/ConnectivityBadges";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -70,12 +71,7 @@ function VendorEquipmentsContent() {
   const [modality, setModality] = useState("");
   const search = useSearchControl(() => setPage(1));
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useVendorEquipments(vendorId, {
+  const { data, isLoading, error, refetch } = useVendorEquipments(vendorId, {
     // Search is server-side and unpaginated, so it spans the whole inventory
     // rather than being capped at one page of matches.
     ...(search.isSearching ? {} : { page, per_page: 20 }),
@@ -88,10 +84,9 @@ function VendorEquipmentsContent() {
 
   // The endpoint publishes the valid filter values it accepts; fall back to the
   // local list only when a deployment doesn't send them.
-  const statusOptions =
-    data?.available_filters?.status?.length
-      ? data.available_filters.status
-      : STATUS_OPTIONS;
+  const statusOptions = data?.available_filters?.status?.length
+    ? data.available_filters.status
+    : STATUS_OPTIONS;
 
   // The vendor equipment endpoint has no modality filter param, so the options
   // come from what this vendor actually owns and filtering happens client-side.
@@ -147,7 +142,8 @@ function VendorEquipmentsContent() {
                   My Equipment
                 </h1>
                 <p className="text-sm text-slate-500">
-                  {pagination?.total ?? equipments.length} items · {vendor?.name}
+                  {pagination?.total ?? equipments.length} items ·{" "}
+                  {vendor?.name}
                 </p>
               </div>
             </div>
@@ -163,153 +159,234 @@ function VendorEquipmentsContent() {
             </div>
 
             <button
-              onClick={() =>
-                router.push(`/vendor/equipments/new`)
-              }
+              onClick={() => router.push(`/vendor/equipments/new`)}
               className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
             >
               <FaPlus className="w-3 h-3" /> Add Equipment
             </button>
           </div>
+
+          {/* On a desktop these two filters sit in the column headers. The
+              phone has no headers, so they come up here instead. */}
+          <div className="md:hidden grid grid-cols-2 gap-2 mt-3">
+            <SearchableSelect
+              label=""
+              compact
+              value={status}
+              onChange={(v) => {
+                setStatus(v);
+                setPage(1);
+              }}
+              placeholder="All Status"
+              options={statusOptions}
+            />
+            <SearchableSelect
+              label=""
+              compact
+              value={modality}
+              onChange={setModality}
+              placeholder="All Modalities"
+              searchPlaceholder="Search modality..."
+              options={modalityOptions}
+            />
+          </div>
         </div>
 
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <Table className="w-full table-fixed">
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell className="w-[24rem]">
-                  Equipment
-                </Table.HeaderCell>
-                <Table.HeaderCell>
-                  <ColumnFilter
-                    label="Status"
-                    options={statusOptions}
-                    value={status}
-                    onChange={(v) => {
-                      setStatus(v);
-                      setPage(1);
-                    }}
-                    allLabel="All Status"
-                    searchable={false}
-                  />
-                </Table.HeaderCell>
-                <Table.HeaderCell className="w-36">
-                  Connection
-                </Table.HeaderCell>
-                <Table.HeaderCell className="w-32">
-                  <ColumnFilter
-                    label="Modality"
-                    options={modalityOptions}
-                    value={modality}
-                    onChange={setModality}
-                    allLabel="All Modalities"
-                    searchPlaceholder="Search modality..."
-                  />
-                </Table.HeaderCell>
-                <Table.HeaderCell className="w-24" align="center">
-                  Actions
-                </Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {filtered.length === 0 ? (
-                <Table.Empty colSpan={5}>
-                  {search.isSearching || status || modality
-                    ? "No equipment matches your criteria"
-                    : "No equipment yet. Add your first item to get started."}
-                </Table.Empty>
-              ) : (
-                filtered.map((eq) => (
-                  <Table.Row key={eq.id}>
-                    {/* Code, name and serial are one identity, so they share
+          <div className="hidden md:block">
+            <Table className="w-full table-fixed">
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell className="w-[24rem]">
+                    Equipment
+                  </Table.HeaderCell>
+                  <Table.HeaderCell>
+                    <ColumnFilter
+                      label="Status"
+                      options={statusOptions}
+                      value={status}
+                      onChange={(v) => {
+                        setStatus(v);
+                        setPage(1);
+                      }}
+                      allLabel="All Status"
+                      searchable={false}
+                    />
+                  </Table.HeaderCell>
+                  <Table.HeaderCell className="w-36">
+                    Connection
+                  </Table.HeaderCell>
+                  <Table.HeaderCell className="w-32">
+                    <ColumnFilter
+                      label="Modality"
+                      options={modalityOptions}
+                      value={modality}
+                      onChange={setModality}
+                      allLabel="All Modalities"
+                      searchPlaceholder="Search modality..."
+                    />
+                  </Table.HeaderCell>
+                  <Table.HeaderCell className="w-24" align="center">
+                    Actions
+                  </Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {filtered.length === 0 ? (
+                  <Table.Empty colSpan={5}>
+                    {search.isSearching || status || modality
+                      ? "No equipment matches your criteria"
+                      : "No equipment yet. Add your first item to get started."}
+                  </Table.Empty>
+                ) : (
+                  filtered.map((eq) => (
+                    <Table.Row key={eq.id}>
+                      {/* Code, name and serial are one identity, so they share
                         a cell rather than costing two columns. */}
-                    <Table.Cell>
-                      <div
-                        className="font-medium text-slate-900 truncate max-w-[22rem]"
-                        title={eq.name}
-                      >
-                        {equipmentDeviceName(eq.name)}
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-0.5 max-w-[22rem]">
-                        <span className="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
-                          {eq.code}
-                        </span>
-                        {equipmentOwnerName(eq.name) && (
-                          <span className="text-[11px] text-slate-500 truncate">
-                            {equipmentOwnerName(eq.name)}
-                          </span>
-                        )}
-                        {eq.serial_number && (
-                          <span className="text-[11px] text-slate-400 font-mono truncate">
-                            S/N {eq.serial_number}
-                          </span>
-                        )}
-                      </div>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                          STATUS_BADGE[eq.status] ??
-                          "bg-slate-50 text-slate-700 border-slate-200"
-                        }`}
-                      >
-                        {getStatusIcon(eq.status)}
-                        {eq.status_label}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      {/* Live is now, linked is ever — the pair is what tells
-                          a vendor whether a machine is actually reachable. */}
-                      <ConnectivityBadges
-                        isConnected={
-                          eq.is_connected ?? eq.dicom?.is_connected
-                        }
-                        linked={eq.linked}
-                        lastSeenAt={eq.last_seen_at ?? eq.dicom?.last_seen_at}
-                        stacked
-                      />
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {eq.modality || "-"}
-                      </span>
-                      {eq.category_label && (
-                        <div className="text-[11px] text-slate-400 truncate">
-                          {eq.category_label}
+                      <Table.Cell>
+                        <div
+                          className="font-medium text-slate-900 truncate max-w-[22rem]"
+                          title={eq.name}
+                        >
+                          {equipmentDeviceName(eq.name)}
                         </div>
+                        <div className="flex items-center gap-1.5 mt-0.5 max-w-[22rem]">
+                          <span className="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
+                            {eq.code}
+                          </span>
+                          {equipmentOwnerName(eq.name) && (
+                            <span className="text-[11px] text-slate-500 truncate">
+                              {equipmentOwnerName(eq.name)}
+                            </span>
+                          )}
+                          {eq.serial_number && (
+                            <span className="text-[11px] text-slate-400 font-mono truncate">
+                              S/N {eq.serial_number}
+                            </span>
+                          )}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+                            STATUS_BADGE[eq.status] ??
+                            "bg-slate-50 text-slate-700 border-slate-200"
+                          }`}
+                        >
+                          {getStatusIcon(eq.status)}
+                          {eq.status_label}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        {/* Live is now, linked is ever — the pair is what tells
+                          a vendor whether a machine is actually reachable. */}
+                        <ConnectivityBadges
+                          isConnected={
+                            eq.is_connected ?? eq.dicom?.is_connected
+                          }
+                          linked={eq.linked}
+                          lastSeenAt={eq.last_seen_at ?? eq.dicom?.last_seen_at}
+                          stacked
+                        />
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm text-slate-700">
+                          {eq.modality || "-"}
+                        </span>
+                        {eq.category_label && (
+                          <div className="text-[11px] text-slate-400 truncate">
+                            {eq.category_label}
+                          </div>
+                        )}
+                      </Table.Cell>
+                      <Table.Cell align="center">
+                        <ActionMenu menuId={`my-equipment-${eq.id}`}>
+                          <ActionMenu.Trigger />
+                          <ActionMenu.Content>
+                            <ActionMenu.Item
+                              onClick={() =>
+                                router.push(`/vendor/equipments/${eq.id}`)
+                              }
+                            >
+                              <FaEye className="text-blue-500" /> View
+                            </ActionMenu.Item>
+                            <ActionMenu.Item
+                              onClick={() =>
+                                router.push(`/vendor/equipments/${eq.id}/edit`)
+                              }
+                            >
+                              <FaEdit className="text-amber-500" /> Edit
+                            </ActionMenu.Item>
+                          </ActionMenu.Content>
+                        </ActionMenu>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                )}
+              </Table.Body>
+            </Table>
+          </div>
+
+          {/* Phones get one card per machine; tapping it opens the machine,
+              which is where both View and Edit lead from. */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {filtered.length === 0 ? (
+              <p className="p-8 text-center text-sm text-slate-500">
+                {search.isSearching || status || modality
+                  ? "No equipment matches your criteria"
+                  : "No equipment yet. Add your first item to get started."}
+              </p>
+            ) : (
+              filtered.map((eq) => (
+                <div
+                  key={eq.id}
+                  className="p-4 space-y-2 cursor-pointer"
+                  onClick={() => router.push(`/vendor/equipments/${eq.id}`)}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-900 truncate">
+                        {equipmentDeviceName(eq.name)}
+                      </p>
+                      {equipmentOwnerName(eq.name) && (
+                        <p className="text-xs text-slate-500 line-clamp-2">
+                          {equipmentOwnerName(eq.name)}
+                        </p>
                       )}
-                    </Table.Cell>
-                    <Table.Cell align="center">
-                      <ActionMenu menuId={`my-equipment-${eq.id}`}>
-                        <ActionMenu.Trigger />
-                        <ActionMenu.Content>
-                          <ActionMenu.Item
-                            onClick={() =>
-                              router.push(
-                                `/vendor/equipments/${eq.id}`,
-                              )
-                            }
-                          >
-                            <FaEye className="text-blue-500" /> View
-                          </ActionMenu.Item>
-                          <ActionMenu.Item
-                            onClick={() =>
-                              router.push(
-                                `/vendor/equipments/${eq.id}/edit`,
-                              )
-                            }
-                          >
-                            <FaEdit className="text-amber-500" /> Edit
-                          </ActionMenu.Item>
-                        </ActionMenu.Content>
-                      </ActionMenu>
-                    </Table.Cell>
-                  </Table.Row>
-                ))
-              )}
-            </Table.Body>
-          </Table>
+                    </div>
+                    <span
+                      className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${
+                        STATUS_BADGE[eq.status] ??
+                        "bg-slate-50 text-slate-700 border-slate-200"
+                      }`}
+                    >
+                      {getStatusIcon(eq.status)}
+                      {eq.status_label}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
+                      {eq.code}
+                    </span>
+                    {eq.modality && (
+                      <span className="text-slate-600">{eq.modality}</span>
+                    )}
+                    {eq.serial_number && (
+                      <span className="text-slate-400 font-mono">
+                        S/N {eq.serial_number}
+                      </span>
+                    )}
+                  </div>
+                  <ConnectivityBadges
+                    isConnected={eq.is_connected ?? eq.dicom?.is_connected}
+                    linked={eq.linked}
+                    lastSeenAt={eq.last_seen_at ?? eq.dicom?.last_seen_at}
+                  />
+                </div>
+              ))
+            )}
+          </div>
 
           {!search.isSearching && pagination && pagination.last_page > 1 && (
             <Pagination
