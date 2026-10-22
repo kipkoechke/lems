@@ -16,6 +16,7 @@ import {
   requestPatientName,
   requestProcedure,
 } from "@/services/apiRequests";
+import { equipmentDeviceName } from "@/services/apiEquipment";
 import { Table } from "@/components/Table";
 import Pagination from "@/components/common/Pagination";
 import { SearchField } from "@/components/common/SearchField";
@@ -44,6 +45,18 @@ const formatDateTime = (value?: string | null) =>
       })
     : "-";
 
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${
+        STATUS_BADGE[status] ?? "bg-slate-50 text-slate-700 border-slate-200"
+      }`}
+    >
+      {String(status).replace(/_/g, " ")}
+    </span>
+  );
+}
+
 function RequestsContent() {
   const router = useRouter();
   const [page, setPage] = useState(1);
@@ -53,8 +66,8 @@ function RequestsContent() {
   const [kephLevel, setKephLevel] = useState("");
   const [period, setPeriod] = useState("");
 
-  const { requests, pagination, isLoading, error, refetch } = useMedicalRequests(
-    {
+  const { requests, pagination, isLoading, error, refetch } =
+    useMedicalRequests({
       page,
       page_size: 20,
       status: status || undefined,
@@ -64,8 +77,7 @@ function RequestsContent() {
       vendor_id: vendorId || undefined,
       keph_level: kephLevel || undefined,
       period: period || undefined,
-    },
-  );
+    });
 
   if (isLoading) {
     return (
@@ -157,121 +169,207 @@ function RequestsContent() {
                 placeholder="All time"
                 options={PERIOD_PRESETS}
               />
+
+              {/* Status filters from its column header on a desktop; a phone
+                  has no headers, so it joins the others here. */}
+              <SearchableSelect
+                label=""
+                compact
+                className="md:hidden w-full"
+                value={status}
+                onChange={(value) => {
+                  setStatus(value);
+                  setPage(1);
+                }}
+                placeholder="All Status"
+                options={REQUEST_STATUS_OPTIONS}
+              />
             </div>
           </div>
         </div>
 
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <Table className="w-full">
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>Request ID</Table.HeaderCell>
-                <Table.HeaderCell>Patient</Table.HeaderCell>
-                <Table.HeaderCell>Procedures</Table.HeaderCell>
-                <Table.HeaderCell>Facility</Table.HeaderCell>
-                <Table.HeaderCell>Equipment</Table.HeaderCell>
-                <Table.HeaderCell>
-                  <ColumnFilter
-                    label="Status"
-                    options={REQUEST_STATUS_OPTIONS}
-                    value={status}
-                    onChange={(v) => {
-                      setStatus(v);
-                      setPage(1);
-                    }}
-                    allLabel="All Status"
-                    searchable={false}
-                  />
-                </Table.HeaderCell>
-                <Table.HeaderCell>Created</Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {requests.length === 0 ? (
-                <Table.Empty colSpan={7}>
-                  {status || patient || vendorId || period || kephLevel
-                    ? "No requests match your criteria"
-                    : "No medical requests received yet."}
-                </Table.Empty>
-              ) : (
-                requests.map((r) => (
-                  <Table.Row
+          <div className="hidden md:block">
+            <Table className="w-full">
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell>Request ID</Table.HeaderCell>
+                  <Table.HeaderCell>Patient</Table.HeaderCell>
+                  <Table.HeaderCell>Procedures</Table.HeaderCell>
+                  <Table.HeaderCell>Facility</Table.HeaderCell>
+                  <Table.HeaderCell>Equipment</Table.HeaderCell>
+                  <Table.HeaderCell>
+                    <ColumnFilter
+                      label="Status"
+                      options={REQUEST_STATUS_OPTIONS}
+                      value={status}
+                      onChange={(v) => {
+                        setStatus(v);
+                        setPage(1);
+                      }}
+                      allLabel="All Status"
+                      searchable={false}
+                    />
+                  </Table.HeaderCell>
+                  <Table.HeaderCell>Created</Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {requests.length === 0 ? (
+                  <Table.Empty colSpan={7}>
+                    {status || patient || vendorId || period || kephLevel
+                      ? "No requests match your criteria"
+                      : "No medical requests received yet."}
+                  </Table.Empty>
+                ) : (
+                  requests.map((r) => (
+                    <Table.Row
+                      key={r.internal_request_id ?? requestIdentifier(r)}
+                      onClick={() =>
+                        router.push(`/requests/${requestIdentifier(r)}`)
+                      }
+                      className="cursor-pointer hover:bg-gray-50"
+                    >
+                      <Table.Cell>
+                        <div className="font-mono text-sm text-slate-900">
+                          {requestLabel(r)}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          {r.modality && (
+                            <span className="text-xs text-slate-500">
+                              {r.modality}
+                            </span>
+                          )}
+                          {/* A probe worklist from an MWL test, not a real
+                            order — it carries no booked service. */}
+                          {r.is_test && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                              Test
+                            </span>
+                          )}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="text-sm text-slate-900">
+                          {requestPatientName(r)}
+                        </div>
+                        {r.patient_mrn && (
+                          <div className="text-xs text-slate-500 font-mono">
+                            MRN: {r.patient_mrn}
+                          </div>
+                        )}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="text-sm text-slate-700">
+                          {requestProcedure(r)}
+                        </div>
+                        {r.procedure_code && (
+                          <div className="text-xs text-slate-500 font-mono">
+                            {r.procedure_code}
+                          </div>
+                        )}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm text-slate-700">
+                          {requestFacility(r)}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-xs font-mono text-slate-500">
+                          {r.equipment_code || r.equipment?.name || "-"}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <StatusBadge status={r.status} />
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm text-slate-600">
+                          {formatDateTime(r.created_at)}
+                        </span>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                )}
+              </Table.Body>
+            </Table>
+          </div>
+
+          {/* Phones get one card per order; tapping it opens the order. */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {requests.length === 0 ? (
+              <p className="p-8 text-center text-sm text-slate-500">
+                {status || patient || vendorId || period || kephLevel
+                  ? "No requests match your criteria"
+                  : "No medical requests received yet."}
+              </p>
+            ) : (
+              requests.map((r) => {
+                // Many EMR orders arrive without a patient name, so the order
+                // number leads, as it does in the table, and the patient
+                // line only appears when there is something to say.
+                const patientName = requestPatientName(r);
+                const hasPatient = patientName && patientName !== "-";
+                return (
+                  <div
                     key={r.internal_request_id ?? requestIdentifier(r)}
+                    className="p-4 space-y-1.5 cursor-pointer"
                     onClick={() =>
                       router.push(`/requests/${requestIdentifier(r)}`)
                     }
-                    className="cursor-pointer hover:bg-gray-50"
                   >
-                    <Table.Cell>
-                      <div className="font-mono text-sm text-slate-900">
-                        {requestLabel(r)}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        {r.modality && (
-                          <span className="text-xs text-slate-500">
-                            {r.modality}
-                          </span>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-mono text-sm text-slate-900 truncate">
+                          {requestLabel(r)}
+                        </p>
+                        {(hasPatient || r.patient_mrn) && (
+                          <p className="text-xs text-slate-500 truncate">
+                            {hasPatient && patientName}
+                            {hasPatient && r.patient_mrn && " · "}
+                            {r.patient_mrn && (
+                              <span className="font-mono">
+                                MRN {r.patient_mrn}
+                              </span>
+                            )}
+                          </p>
                         )}
-                        {/* A probe worklist from an MWL test, not a real
-                            order — it carries no booked service. */}
-                        {r.is_test && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
-                            Test
-                          </span>
-                        )}
                       </div>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="text-sm text-slate-900">
-                        {requestPatientName(r)}
+                      <div className="shrink-0">
+                        <StatusBadge status={r.status} />
                       </div>
-                      {r.patient_mrn && (
-                        <div className="text-xs text-slate-500 font-mono">
-                          MRN: {r.patient_mrn}
-                        </div>
+                    </div>
+                    <p className="text-xs text-slate-700 line-clamp-2">
+                      {requestProcedure(r)}
+                      {r.modality && (
+                        <span className="text-slate-400"> · {r.modality}</span>
                       )}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="text-sm text-slate-700">
-                        {requestProcedure(r)}
-                      </div>
-                      {r.procedure_code && (
-                        <div className="text-xs text-slate-500 font-mono">
-                          {r.procedure_code}
-                        </div>
+                      {r.is_test && (
+                        <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                          Test
+                        </span>
                       )}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {requestFacility(r)}
+                    </p>
+                    <p className="text-xs text-slate-500 line-clamp-2">
+                      {requestFacility(r)}
+                    </p>
+                    <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400">
+                      {/* The facility is already on the line above, so only
+                        the device half of the machine's name is kept. */}
+                      <span className="font-mono truncate">
+                        {r.equipment_code ||
+                          equipmentDeviceName(r.equipment?.name) ||
+                          "No machine"}
                       </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-xs font-mono text-slate-500">
-                        {r.equipment_code || r.equipment?.name || "-"}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${
-                          STATUS_BADGE[r.status] ??
-                          "bg-slate-50 text-slate-700 border-slate-200"
-                        }`}
-                      >
-                        {String(r.status).replace(/_/g, " ")}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-600">
+                      <span className="shrink-0">
                         {formatDateTime(r.created_at)}
                       </span>
-                    </Table.Cell>
-                  </Table.Row>
-                ))
-              )}
-            </Table.Body>
-          </Table>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
 
           {pagination && pagination.last_page > 1 && (
             <Pagination
