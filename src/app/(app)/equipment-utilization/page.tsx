@@ -172,17 +172,17 @@ function UtilizationRow({ row }: { row: EquipmentUtilizationRow }) {
         </div>
         <div className="text-[11px] text-slate-400">
           <span className="font-mono">{equipment.code}</span>
-          {equipment.category_label && <span> · {equipment.category_label}</span>}
+          {equipment.category_label && (
+            <span> · {equipment.category_label}</span>
+          )}
         </div>
-      </Table.Cell>
-
-      <Table.Cell>
-        {row.ae_title ? (
-          <span className="font-mono text-xs text-slate-600">
-            {row.ae_title}
-          </span>
-        ) : (
-          <span className="text-xs text-slate-400">—</span>
+        {/* The AE title identifies the machine on the network, so it sits
+            with the rest of its identity rather than in a column of its own —
+            which was most of what pushed the table past its card. */}
+        {row.ae_title && (
+          <div className="font-mono text-[11px] text-slate-500">
+            AE {row.ae_title}
+          </div>
         )}
       </Table.Cell>
 
@@ -278,6 +278,111 @@ function UtilizationRow({ row }: { row: EquipmentUtilizationRow }) {
 }
 
 /**
+ * The same row for a phone. Twelve columns cannot be dragged sideways usefully,
+ * so the four counts become a small grid and everything identifying the
+ * machine sits above them. Sorting moves to the filter panel's selects.
+ */
+function UtilizationCard({ row }: { row: EquipmentUtilizationRow }) {
+  const { equipment } = row;
+  const deviceName = equipmentDeviceName(equipment.name);
+  // The device name is usually the category already; saying it twice is
+  // what pushed the AE title off the end of the line.
+  const category =
+    equipment.category_label && equipment.category_label !== deviceName
+      ? equipment.category_label
+      : null;
+
+  const counts = [
+    { label: "Worklists", value: row.worklist_count },
+    { label: "Pulled", value: row.pulled_count },
+    { label: "Results", value: row.study_results_sent },
+  ];
+
+  return (
+    <div className="p-4 space-y-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-medium text-slate-900 truncate">{deviceName}</p>
+          <p className="text-[11px] text-slate-400 truncate">
+            <span className="font-mono">{equipment.code}</span>
+            {category && <span> · {category}</span>}
+            {row.ae_title && (
+              <span className="font-mono"> · {row.ae_title}</span>
+            )}
+          </p>
+        </div>
+        <span
+          className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${statusBadge(
+            equipment.status,
+          )}`}
+        >
+          {equipment.status_label ?? equipment.status}
+        </span>
+      </div>
+
+      <div className="text-xs text-slate-500 space-y-0.5">
+        <p className="line-clamp-2">
+          {row.facility?.name ?? (
+            <span className="text-slate-400">Facility not mapped</span>
+          )}
+        </p>
+        <p className="truncate">
+          {row.vendor?.name ?? (
+            <span className="text-slate-400">Vendor not mapped</span>
+          )}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        <ConnectivityBadges
+          isConnected={row.live}
+          linked={row.linked}
+          lastSeenAt={row.last_seen_at}
+        />
+        <RoundTripBadge row={row} />
+      </div>
+
+      <div className="grid grid-cols-4 gap-2 rounded-lg bg-slate-50 p-2">
+        {counts.map(({ label, value }) => (
+          <div key={label} className="min-w-0">
+            <p className="text-[11px] text-slate-400">{label}</p>
+            <p className="text-sm font-medium text-slate-900">
+              {value.toLocaleString()}
+            </p>
+          </div>
+        ))}
+        <div className="min-w-0">
+          <p className="text-[11px] text-slate-400">Non-SHA</p>
+          {row.non_sha_sent_count ? (
+            <Link
+              href="/studies/unmatched"
+              className="text-sm font-medium text-amber-600"
+            >
+              {row.non_sha_sent_count.toLocaleString()}
+            </Link>
+          ) : (
+            <p className="text-sm text-slate-400">0</p>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-end justify-between gap-3">
+        <ConversionBar
+          rate={row.conversion_rate}
+          worklistCount={row.worklist_count}
+        />
+        {/* A machine never seen already wears a "Never seen" badge above. */}
+        {row.last_seen_at && (
+          <span className="text-[11px] text-slate-400 shrink-0">
+            Last seen {formatDateTime(row.last_seen_at)}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
  * Equipment utilization.
  *
  * The volume view of the estate: what each machine was asked to do and what it
@@ -294,9 +399,8 @@ function EquipmentUtilizationContent() {
   const [live, setLive] = useState("");
   const [pullingWorklist, setPullingWorklist] = useState("");
   const [sendingResults, setSendingResults] = useState("");
-  const [sortBy, setSortBy] = useState<EquipmentUtilizationSortBy>(
-    "worklist_count",
-  );
+  const [sortBy, setSortBy] =
+    useState<EquipmentUtilizationSortBy>("worklist_count");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const filters = useMemo(
@@ -561,9 +665,7 @@ function EquipmentUtilizationContent() {
           <StatCard
             compact
             title="Linked"
-            mainValue={(
-              summary?.by_state?.linked ?? 0
-            ).toLocaleString()}
+            mainValue={(summary?.by_state?.linked ?? 0).toLocaleString()}
             subtitle="Seen on the network"
             onClick={() => {
               setLinked(linked === "true" ? "" : "true");
@@ -665,74 +767,102 @@ function EquipmentUtilizationContent() {
 
         {/* Utilization */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <Table
-            className="w-full"
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSort={handleSort}
-          >
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell sortable sortKey="name">
-                  Equipment
-                </Table.HeaderCell>
-                <Table.HeaderCell>AE Title</Table.HeaderCell>
-                <Table.HeaderCell>Facility</Table.HeaderCell>
-                <Table.HeaderCell>Vendor</Table.HeaderCell>
-                <Table.HeaderCell>Connection</Table.HeaderCell>
-                <Table.HeaderCell>End to End</Table.HeaderCell>
-                <Table.HeaderCell
-                  sortable
-                  sortKey="worklist_count"
-                  align="right"
-                >
-                  Worklists
-                </Table.HeaderCell>
-                <Table.HeaderCell sortable sortKey="pulled_count" align="right">
-                  Pulled
-                </Table.HeaderCell>
-                <Table.HeaderCell
-                  sortable
-                  sortKey="study_results_sent"
-                  align="right"
-                >
-                  Results
-                </Table.HeaderCell>
-                <Table.HeaderCell
-                  sortable
-                  sortKey="non_sha_sent_count"
-                  align="right"
-                >
-                  Non-SHA
-                </Table.HeaderCell>
-                <Table.HeaderCell sortable sortKey="conversion_rate">
-                  Conversion
-                </Table.HeaderCell>
-                <Table.HeaderCell
-                  sortable
-                  sortKey="last_seen_at"
-                  align="right"
-                >
-                  Last Seen
-                </Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {isLoading ? (
-                <Table.Loading colSpan={12} rows={8} />
-              ) : rows.length === 0 ? (
-                <Table.Empty colSpan={12}>
-                  {activeFilterCount > 0
-                    ? "No equipment matches these filters. Machines with no activity are included unless you filter them out."
-                    : "No equipment recorded yet."}
-                </Table.Empty>
-              ) : (
-                rows.map((row) => (
-                  <UtilizationRow key={row.equipment.id} row={row} />
-                ))
-              )}
-            </Table.Body>
-          </Table>
+          <div className="hidden md:block">
+            <Table
+              className="w-full [&_td]:px-3 [&_th]:px-3"
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSort={handleSort}
+            >
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell sortable sortKey="name">
+                    Equipment
+                  </Table.HeaderCell>
+                  <Table.HeaderCell>Facility</Table.HeaderCell>
+                  <Table.HeaderCell>Vendor</Table.HeaderCell>
+                  <Table.HeaderCell>Connection</Table.HeaderCell>
+                  <Table.HeaderCell>End to End</Table.HeaderCell>
+                  <Table.HeaderCell
+                    sortable
+                    sortKey="worklist_count"
+                    align="right"
+                  >
+                    Worklists
+                  </Table.HeaderCell>
+                  <Table.HeaderCell
+                    sortable
+                    sortKey="pulled_count"
+                    align="right"
+                  >
+                    Pulled
+                  </Table.HeaderCell>
+                  <Table.HeaderCell
+                    sortable
+                    sortKey="study_results_sent"
+                    align="right"
+                  >
+                    Results
+                  </Table.HeaderCell>
+                  <Table.HeaderCell
+                    sortable
+                    sortKey="non_sha_sent_count"
+                    align="right"
+                  >
+                    Non-SHA
+                  </Table.HeaderCell>
+                  <Table.HeaderCell sortable sortKey="conversion_rate">
+                    Conversion
+                  </Table.HeaderCell>
+                  <Table.HeaderCell
+                    sortable
+                    sortKey="last_seen_at"
+                    align="right"
+                  >
+                    Last Seen
+                  </Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {isLoading ? (
+                  <Table.Loading colSpan={11} rows={8} />
+                ) : rows.length === 0 ? (
+                  <Table.Empty colSpan={11}>
+                    {activeFilterCount > 0
+                      ? "No equipment matches these filters. Machines with no activity are included unless you filter them out."
+                      : "No equipment recorded yet."}
+                  </Table.Empty>
+                ) : (
+                  rows.map((row) => (
+                    <UtilizationRow key={row.equipment.id} row={row} />
+                  ))
+                )}
+              </Table.Body>
+            </Table>
+          </div>
+
+          {/* Phones get one card per machine instead of the table. */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {isLoading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="p-4 animate-pulse space-y-2">
+                  <div className="h-4 bg-slate-100 rounded w-1/2" />
+                  <div className="h-3 bg-slate-100 rounded w-1/3" />
+                  <div className="h-12 bg-slate-100 rounded" />
+                </div>
+              ))
+            ) : rows.length === 0 ? (
+              <p className="p-8 text-center text-sm text-slate-500">
+                {activeFilterCount > 0
+                  ? "No equipment matches these filters. Machines with no activity are included unless you filter them out."
+                  : "No equipment recorded yet."}
+              </p>
+            ) : (
+              rows.map((row) => (
+                <UtilizationCard key={row.equipment.id} row={row} />
+              ))
+            )}
+          </div>
 
           {pagination && pagination.last_page > 1 && (
             <Pagination
