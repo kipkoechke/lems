@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   FaXRay,
   FaExclamationTriangle,
@@ -55,16 +57,42 @@ const formatDateTime = (value?: string | null) =>
  * sees the machines it owns or has mapped to it.
  */
 export default function UnmatchedStudiesPage() {
-  const scope = useUnmatchedStudiesScope();
-
-  // The ranking page links in with a facility already chosen. Read from
-  // window rather than useSearchParams, which would put a Suspense bailout in
-  // front of the whole table.
-  const [facilityId] = useState(() =>
-    typeof window === "undefined"
-      ? ""
-      : (new URLSearchParams(window.location.search).get("facility_id") ?? ""),
+  // useSearchParams needs a Suspense boundary above it, or the build refuses
+  // to prerender the route. Everything on this page is fetched on the client
+  // anyway, so the boundary costs nothing the reader would see.
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen p-3 md:p-6">
+          <div className="max-w-7xl mx-auto h-24 rounded-lg bg-slate-100 animate-pulse" />
+        </div>
+      }
+    >
+      <UnmatchedStudiesForFacility />
+    </Suspense>
   );
+}
+
+/**
+ * The ranking links in with `?facility_id=` to narrow the list to one
+ * facility.
+ *
+ * This used to read `window.location` once, on mount. A full page load got
+ * the facility, but following the link inside the app did not: the page
+ * mounts before the router has written the new URL, so it read the old one
+ * and listed every facility's studies. useSearchParams is the router's own
+ * view of the URL, so it is right on both — and it follows the URL when the
+ * reader comes back for another facility, which a one-time read never did.
+ * Keyed on the facility so arriving for a different one starts afresh rather
+ * than on the last one's page and filters.
+ */
+function UnmatchedStudiesForFacility() {
+  const facilityId = useSearchParams().get("facility_id") ?? "";
+  return <UnmatchedStudiesContent key={facilityId} facilityId={facilityId} />;
+}
+
+function UnmatchedStudiesContent({ facilityId }: { facilityId: string }) {
+  const scope = useUnmatchedStudiesScope();
 
   const [page, setPage] = useState(1);
   const [attributed, setAttributed] = useState("");
@@ -81,18 +109,17 @@ export default function UnmatchedStudiesPage() {
     isLoading,
     error,
     refetch,
-  } =
-    useUnmatchedStudies(scope, {
-      page,
-      page_size: 25,
-      facility_id: facilityId || undefined,
-      search: search.term || undefined,
-      period: period || undefined,
-      modality: modality || undefined,
-      keph_level: kephLevel || undefined,
-      // Tri-state — "" means no filter, not false.
-      attributed: attributed === "" ? undefined : attributed === "true",
-    });
+  } = useUnmatchedStudies(scope, {
+    page,
+    page_size: 25,
+    facility_id: facilityId || undefined,
+    search: search.term || undefined,
+    period: period || undefined,
+    modality: modality || undefined,
+    keph_level: kephLevel || undefined,
+    // Tri-state — "" means no filter, not false.
+    attributed: attributed === "" ? undefined : attributed === "true",
+  });
 
   // The API lists only the modalities this caller can actually see, so nobody
   // is offered a filter that comes back empty. Deriving them from the page was
@@ -168,6 +195,27 @@ export default function UnmatchedStudiesPage() {
               />
             </div>
           </div>
+
+          {/* Arriving from the ranking narrows the list to one facility,
+              which no control on this page shows. Without this line a list
+              of two studies reads as the whole picture. */}
+          {facilityId && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-800">
+              <span>
+                Showing{" "}
+                <span className="font-medium">
+                  {studies[0]?.facility?.name ?? "one facility"}
+                </span>{" "}
+                only
+              </span>
+              <Link
+                href="/studies/unmatched"
+                className="font-medium text-blue-600 hover:text-blue-800"
+              >
+                Show all facilities
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Summary */}
