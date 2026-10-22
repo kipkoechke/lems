@@ -59,7 +59,6 @@ function NewVendorContent() {
           <BackButton onClick={() => router.back()} />
           <div>
             <h1 className="text-xl font-bold text-slate-900">Add New Vendor</h1>
-            <p className="text-sm text-slate-500">Create a new vendor profile</p>
           </div>
         </div>
 

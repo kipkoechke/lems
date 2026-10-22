@@ -119,9 +119,6 @@ function VendorsContent() {
                 <h1 className="text-xl font-bold text-slate-900">
                   Vendor Management
                 </h1>
-                <p className="text-sm text-slate-500">
-                  Manage vendors and their contracts
-                </p>
               </div>
             </div>
 

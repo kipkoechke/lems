@@ -99,9 +99,6 @@ export default function LotsPage() {
                 <h1 className="text-xl font-bold text-slate-900">
                   Lot Management
                 </h1>
-                <p className="text-sm text-slate-500">
-                  Manage service lots and categories
-                </p>
               </div>
             </div>
 

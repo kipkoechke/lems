@@ -135,9 +135,6 @@ function Patients() {
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                 Patients
               </h1>
-              <p className="text-sm md:text-base text-gray-600 mt-1">
-                Manage and monitor patient records
-              </p>
             </div>
             <div className="flex gap-3">
               <button className="inline-flex items-center gap-2 px-2 py-1 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors border border-gray-300 shadow-sm">

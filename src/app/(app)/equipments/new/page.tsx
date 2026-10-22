@@ -161,7 +161,6 @@ export default function NewEquipmentPage() {
             <h1 className="text-xl font-bold text-slate-900">
               Add New Equipment
             </h1>
-            <p className="text-sm text-slate-500">Register new equipment</p>
           </div>
         </div>
 

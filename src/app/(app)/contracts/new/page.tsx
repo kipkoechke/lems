@@ -136,9 +136,6 @@ export default function NewContractPage() {
               <h1 className="text-xl font-bold text-slate-900">
                 Create New Contract
               </h1>
-              <p className="text-sm text-slate-500">
-                Add a new vendor facility contract
-              </p>
             </div>
           </div>
 

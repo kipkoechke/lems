@@ -125,9 +125,6 @@ export default function ContractsPage() {
                 <h1 className="text-xl font-bold text-slate-900">
                   Contract Management
                 </h1>
-                <p className="text-sm text-slate-500">
-                  Manage vendor facility contracts and services
-                </p>
               </div>
             </div>
 

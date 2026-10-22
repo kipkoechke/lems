@@ -324,9 +324,6 @@ function FacilitiesContent() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-slate-900">Facilities</h1>
-                <p className="text-sm text-slate-500">
-                  Manage health facilities
-                </p>
               </div>
             </div>
 

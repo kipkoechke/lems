@@ -92,70 +92,70 @@ function DonutCard({
         </div>
       ) : (
         <div className="flex items-center gap-4">
-        <div className="relative w-28 h-28 shrink-0">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                innerRadius={32}
-                outerRadius={52}
-                paddingAngle={2}
-                dataKey="value"
-                strokeWidth={0}
-              >
-                {data.map((_, idx) => (
-                  <Cell
-                    key={idx}
-                    fill={colors[idx % colors.length]}
-                    strokeWidth={0}
-                  />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={(value: number) => value.toLocaleString()}
-                contentStyle={{
-                  borderRadius: "8px",
-                  border: "1px solid #e2e8f0",
-                  fontSize: "12px",
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-          {/* Center text */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            {centerValue !== undefined && (
-              <span className="text-lg font-bold text-slate-900">
-                {centerValue}
-              </span>
-            )}
-            {centerLabel && (
-              <span className="text-[10px] text-slate-400 leading-tight text-center">
-                {centerLabel}
-              </span>
-            )}
-          </div>
-        </div>
-        {/* Legend */}
-        <div className="flex-1 space-y-1.5 min-w-0">
-          {legendItems?.map((item) => (
-            <div
-              key={item.label}
-              className="flex items-center justify-between text-xs"
-            >
-              <span className="flex items-center gap-1.5 text-slate-500 truncate">
-                <span
-                  className="w-2 h-2 rounded-full shrink-0"
-                  style={{ backgroundColor: item.color }}
+          <div className="relative w-28 h-28 shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={32}
+                  outerRadius={52}
+                  paddingAngle={2}
+                  dataKey="value"
+                  strokeWidth={0}
+                >
+                  {data.map((_, idx) => (
+                    <Cell
+                      key={idx}
+                      fill={colors[idx % colors.length]}
+                      strokeWidth={0}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number) => value.toLocaleString()}
+                  contentStyle={{
+                    borderRadius: "8px",
+                    border: "1px solid #e2e8f0",
+                    fontSize: "12px",
+                  }}
                 />
-                {item.label}
-              </span>
-              <span className="font-medium text-slate-700 ml-2">
-                {item.value}
-              </span>
+              </PieChart>
+            </ResponsiveContainer>
+            {/* Center text */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              {centerValue !== undefined && (
+                <span className="text-lg font-bold text-slate-900">
+                  {centerValue}
+                </span>
+              )}
+              {centerLabel && (
+                <span className="text-[10px] text-slate-400 leading-tight text-center">
+                  {centerLabel}
+                </span>
+              )}
             </div>
-          ))}
+          </div>
+          {/* Legend */}
+          <div className="flex-1 space-y-1.5 min-w-0">
+            {legendItems?.map((item) => (
+              <div
+                key={item.label}
+                className="flex items-center justify-between text-xs"
+              >
+                <span className="flex items-center gap-1.5 text-slate-500 truncate">
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  {item.label}
+                </span>
+                <span className="font-medium text-slate-700 ml-2">
+                  {item.value}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -222,21 +222,35 @@ function DashboardFilterBar({
     options?: { value: string; label: string }[];
   };
 
-  const fields: Field[] = ([
-    // The six windows the API accepts are known, so the period control does
-    // not depend on the API publishing its own list — without this fallback a
-    // deployment that omits `available.period` gets no period filter at all.
-    { key: "period", label: "All time", options: available?.period ?? PERIOD_PRESETS },
-    { key: "county_id", label: "All counties", options: available?.county },
-    {
-      key: "facility_type",
-      label: "All facility types",
-      options: available?.facility_type,
-    },
-    { key: "keph_level", label: "All KEPH levels", options: available?.keph_level },
-    { key: "facility_id", label: "All facilities", options: available?.facility },
-    { key: "vendor_id", label: "All vendors", options: available?.vendor },
-  ] as Field[]).filter((field) => field.options && field.options.length > 0);
+  const fields: Field[] = (
+    [
+      // The six windows the API accepts are known, so the period control does
+      // not depend on the API publishing its own list — without this fallback a
+      // deployment that omits `available.period` gets no period filter at all.
+      {
+        key: "period",
+        label: "All time",
+        options: available?.period ?? PERIOD_PRESETS,
+      },
+      { key: "county_id", label: "All counties", options: available?.county },
+      {
+        key: "facility_type",
+        label: "All facility types",
+        options: available?.facility_type,
+      },
+      {
+        key: "keph_level",
+        label: "All KEPH levels",
+        options: available?.keph_level,
+      },
+      {
+        key: "facility_id",
+        label: "All facilities",
+        options: available?.facility,
+      },
+      { key: "vendor_id", label: "All vendors", options: available?.vendor },
+    ] as Field[]
+  ).filter((field) => field.options && field.options.length > 0);
 
   if (fields.length === 0) return null;
 
@@ -339,9 +353,7 @@ export default function BookingTrends() {
     return [
       { name: "Completed", value: efficiency.total_completed },
       { name: "Cancelled", value: efficiency.total_cancelled },
-      ...(remaining > 0
-        ? [{ name: "Remaining", value: remaining }]
-        : []),
+      ...(remaining > 0 ? [{ name: "Remaining", value: remaining }] : []),
     ];
   }, [efficiency]);
 
@@ -390,11 +402,15 @@ export default function BookingTrends() {
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
-            <p className="text-xs text-slate-500 mt-0.5">
-              System overview &amp; key metrics
-              {periodLabel && ` — ${periodLabel}`}
-              {isFetching && !isLoading && " — updating…"}
-            </p>
+            {/* Only what the heading cannot say: the window being shown,
+                and that a new one is on its way. */}
+            {(periodLabel || (isFetching && !isLoading)) && (
+              <p className="text-xs text-slate-500 mt-0.5">
+                {[periodLabel, isFetching && !isLoading && "updating…"]
+                  .filter(Boolean)
+                  .join(" — ")}
+              </p>
+            )}
             {/* A windowed dashboard counts only what was created inside the
                 window, and the window moves: figures can fall from one visit
                 to the next without anything being lost. Said out loud here so
@@ -445,9 +461,7 @@ export default function BookingTrends() {
             label="Completed Studies"
             value={counts.completed_studies}
             sub={
-              efficiency
-                ? `· ${efficiency.completion_rate}% rate`
-                : undefined
+              efficiency ? `· ${efficiency.completion_rate}% rate` : undefined
             }
           />
           <StatCard
@@ -619,15 +633,13 @@ export default function BookingTrends() {
                     fontSize: "12px",
                   }}
                 />
-                <Bar
-                  dataKey="count"
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={48}
-                >
+                <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={48}>
                   {modalityBarData.map((_, idx) => (
                     <Cell
                       key={idx}
-                      fill={MODALITY_BAR_COLORS[idx % MODALITY_BAR_COLORS.length]}
+                      fill={
+                        MODALITY_BAR_COLORS[idx % MODALITY_BAR_COLORS.length]
+                      }
                     />
                   ))}
                 </Bar>
@@ -659,7 +671,9 @@ export default function BookingTrends() {
                   Non-SHA Studies
                 </p>
                 <p className="text-2xl font-bold text-amber-600">
-                  {unmatchedStudyCount(counts.unmatched_studies).toLocaleString()}
+                  {unmatchedStudyCount(
+                    counts.unmatched_studies,
+                  ).toLocaleString()}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
                   Studies that arrived with no VEMS order behind them

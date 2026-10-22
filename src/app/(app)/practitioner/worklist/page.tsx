@@ -123,9 +123,6 @@ export default function PractitionerWorklistPage() {
           <BackButton onClick={() => router.back()} />
           <div>
             <h1 className="text-xl font-bold text-slate-900">My Worklist</h1>
-            <p className="text-sm text-slate-500">
-              Manage your assigned services and bookings
-            </p>
           </div>
         </div>
       </div>
