@@ -122,7 +122,8 @@ function FacilityRankingContent() {
         )?.label ?? "All time",
       county:
         availableFilters?.county?.find((option) => option.value === county)
-          ?.label ?? (county || undefined),
+          ?.label ??
+        (county || undefined),
       kephLevel: kephLevel || undefined,
       sortBy:
         (availableFilters?.sort_by ?? RANKING_SORT_OPTIONS).find(
@@ -327,7 +328,7 @@ function FacilityRankingContent() {
 
         {/* Ranking */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <Table className="w-full">
               <Table.Header>
                 <Table.Row>
@@ -338,7 +339,9 @@ function FacilityRankingContent() {
                   <Table.HeaderCell>Patients</Table.HeaderCell>
                   <Table.HeaderCell>Claims</Table.HeaderCell>
                   <Table.HeaderCell>Non-SHA</Table.HeaderCell>
-                  <Table.HeaderCell align="right">Last Booking</Table.HeaderCell>
+                  <Table.HeaderCell align="right">
+                    Last Booking
+                  </Table.HeaderCell>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -439,6 +442,97 @@ function FacilityRankingContent() {
                 )}
               </Table.Body>
             </Table>
+          </div>
+
+          {/* Phones get one card per facility. The claim rates live in a
+              hover title on the table, which a touch screen never shows, so
+              the card says both counts in words instead. */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {isLoading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="p-4 animate-pulse space-y-2">
+                  <div className="h-4 bg-slate-100 rounded w-2/3" />
+                  <div className="h-12 bg-slate-100 rounded" />
+                </div>
+              ))
+            ) : rows.length === 0 ? (
+              <p className="p-8 text-center text-sm text-slate-500">
+                No facilities match these filters.
+              </p>
+            ) : (
+              rows.map((row: RankingRow) => (
+                <div key={row.facility.id} className="p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={`shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                        row.rank <= 3
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {row.rank}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-900 line-clamp-2">
+                        {row.facility.name}
+                      </p>
+                      <p className="text-[11px] text-slate-400 truncate">
+                        {[
+                          row.facility.fr_code,
+                          row.facility.county?.name,
+                          row.facility.keph_level,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 rounded-lg bg-slate-50 p-2">
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-slate-400">Bookings</p>
+                      <p className="text-sm font-medium text-slate-900">
+                        {row.bookings.total.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-slate-400">Patients</p>
+                      <p className="text-sm text-slate-900">
+                        {row.bookings.patients.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-slate-400">Non-SHA</p>
+                      {row.non_sha_studies?.total ? (
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/studies/unmatched?facility_id=${row.facility.id}`,
+                            )
+                          }
+                          className="block text-left text-sm font-medium text-amber-600 leading-5"
+                        >
+                          {row.non_sha_studies.total}
+                        </button>
+                      ) : (
+                        <p className="text-sm text-slate-400">0</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-end justify-between gap-3">
+                    <CompletionBar rate={row.bookings.completion_rate} />
+                    <p className="text-[11px] text-slate-400 text-right">
+                      {row.sha
+                        ? `${row.sha.submitted.toLocaleString()} claims sent · ${row.sha.verified.toLocaleString()} verified`
+                        : "Claims not reported"}
+                      <br />
+                      Last booking {formatDate(row.bookings.last_booking_at)}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           {pagination && pagination.last_page > 1 && (
