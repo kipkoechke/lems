@@ -12,6 +12,7 @@ import { ActionMenu } from "@/components/common/ActionMenu";
 import Pagination from "@/components/common/Pagination";
 import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { ErrorState } from "@/components/common/ErrorState";
 import { FaEye, FaFileContract } from "react-icons/fa";
 
@@ -37,6 +38,18 @@ const formatDate = (value?: string | null) =>
         year: "numeric",
       })
     : "-";
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${
+        STATUS_BADGE[status] ?? "bg-slate-50 text-slate-700 border-slate-200"
+      }`}
+    >
+      {status}
+    </span>
+  );
+}
 
 function VendorContractsContent() {
   const router = useRouter();
@@ -125,6 +138,22 @@ function VendorContractsContent() {
               />
             </div>
           </div>
+
+          {/* Status filters from its column header on a desktop; a phone has
+              no headers, so it comes up here instead. */}
+          <div className="md:hidden mt-3">
+            <SearchableSelect
+              label=""
+              compact
+              value={status}
+              onChange={(v) => {
+                setStatus(v);
+                setPage(1);
+              }}
+              placeholder="All Status"
+              options={STATUS_OPTIONS}
+            />
+          </div>
         </div>
 
         {/* Stats */}
@@ -146,99 +175,140 @@ function VendorContractsContent() {
 
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <Table className="w-full">
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>Contract #</Table.HeaderCell>
-                <Table.HeaderCell>Facility</Table.HeaderCell>
-                <Table.HeaderCell>Lot</Table.HeaderCell>
-                <Table.HeaderCell>Period</Table.HeaderCell>
-                <Table.HeaderCell>Services</Table.HeaderCell>
-                <Table.HeaderCell>
-                  <ColumnFilter
-                    label="Status"
-                    options={STATUS_OPTIONS}
-                    value={status}
-                    onChange={(v) => {
-                      setStatus(v);
-                      setPage(1);
-                    }}
-                    allLabel="All Status"
-                    searchable={false}
-                  />
-                </Table.HeaderCell>
-                <Table.HeaderCell align="center">Actions</Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {filtered.length === 0 ? (
-                <Table.Empty colSpan={7}>
-                  {search.isSearching || status
-                    ? "No contracts match your criteria"
-                    : "No contracts found for your vendor yet."}
-                </Table.Empty>
-              ) : (
-                filtered.map((c) => (
-                  <Table.Row key={c.id}>
-                    <Table.Cell>
-                      <span className="font-mono text-sm text-slate-900">
-                        {c.contract_number || c.id.slice(0, 8)}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="text-sm text-slate-900">
-                        {c.facility?.name || "-"}
-                      </div>
-                      {(c.facility?.code || c.facility?.fr_code) && (
-                        <div className="text-xs text-slate-500 font-mono">
-                          {c.facility.code ?? c.facility.fr_code}
+          <div className="hidden md:block">
+            <Table className="w-full">
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell>Contract #</Table.HeaderCell>
+                  <Table.HeaderCell>Facility</Table.HeaderCell>
+                  <Table.HeaderCell>Lot</Table.HeaderCell>
+                  <Table.HeaderCell>Period</Table.HeaderCell>
+                  <Table.HeaderCell>Services</Table.HeaderCell>
+                  <Table.HeaderCell>
+                    <ColumnFilter
+                      label="Status"
+                      options={STATUS_OPTIONS}
+                      value={status}
+                      onChange={(v) => {
+                        setStatus(v);
+                        setPage(1);
+                      }}
+                      allLabel="All Status"
+                      searchable={false}
+                    />
+                  </Table.HeaderCell>
+                  <Table.HeaderCell align="center">Actions</Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {filtered.length === 0 ? (
+                  <Table.Empty colSpan={7}>
+                    {search.isSearching || status
+                      ? "No contracts match your criteria"
+                      : "No contracts found for your vendor yet."}
+                  </Table.Empty>
+                ) : (
+                  filtered.map((c) => (
+                    <Table.Row key={c.id}>
+                      <Table.Cell>
+                        <span className="font-mono text-sm text-slate-900">
+                          {c.contract_number || c.id.slice(0, 8)}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="text-sm text-slate-900">
+                          {c.facility?.name || "-"}
                         </div>
-                      )}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {contractLot(c)?.name || "-"}
+                        {(c.facility?.code || c.facility?.fr_code) && (
+                          <div className="text-xs text-slate-500 font-mono">
+                            {c.facility.code ?? c.facility.fr_code}
+                          </div>
+                        )}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm text-slate-700">
+                          {contractLot(c)?.name || "-"}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm text-slate-700">
+                          {formatDate(c.start_date)} – {formatDate(c.end_date)}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm text-slate-700">
+                          {c.services_count ?? "-"}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <StatusBadge status={c.status} />
+                      </Table.Cell>
+                      <Table.Cell align="center">
+                        <ActionMenu menuId={`vendor-contract-${c.id}`}>
+                          <ActionMenu.Trigger />
+                          <ActionMenu.Content>
+                            <ActionMenu.Item
+                              onClick={() =>
+                                router.push(`/vendor/contracts/${c.id}`)
+                              }
+                            >
+                              <FaEye className="text-blue-500" /> View Details
+                            </ActionMenu.Item>
+                          </ActionMenu.Content>
+                        </ActionMenu>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                )}
+              </Table.Body>
+            </Table>
+          </div>
+
+          {/* Phones get one card per contract. View Details was the only
+              action, so tapping the card does it. */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {filtered.length === 0 ? (
+              <p className="p-8 text-center text-sm text-slate-500">
+                {search.isSearching || status
+                  ? "No contracts match your criteria"
+                  : "No contracts found for your vendor yet."}
+              </p>
+            ) : (
+              filtered.map((c) => (
+                <div
+                  key={c.id}
+                  className="p-4 space-y-1.5 cursor-pointer"
+                  onClick={() => router.push(`/vendor/contracts/${c.id}`)}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-mono text-sm text-slate-900 truncate">
+                      {c.contract_number || c.id.slice(0, 8)}
+                    </span>
+                    <div className="shrink-0">
+                      <StatusBadge status={c.status} />
+                    </div>
+                  </div>
+                  <p className="text-sm text-slate-700 line-clamp-2">
+                    {c.facility?.name || "-"}
+                    {(c.facility?.code || c.facility?.fr_code) && (
+                      <span className="font-mono text-xs text-slate-400 whitespace-nowrap">
+                        {" "}
+                        · {c.facility.code ?? c.facility.fr_code}
                       </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {formatDate(c.start_date)} – {formatDate(c.end_date)}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {c.services_count ?? "-"}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${
-                          STATUS_BADGE[c.status] ??
-                          "bg-slate-50 text-slate-700 border-slate-200"
-                        }`}
-                      >
-                        {c.status}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell align="center">
-                      <ActionMenu menuId={`vendor-contract-${c.id}`}>
-                        <ActionMenu.Trigger />
-                        <ActionMenu.Content>
-                          <ActionMenu.Item
-                            onClick={() =>
-                              router.push(`/vendor/contracts/${c.id}`)
-                            }
-                          >
-                            <FaEye className="text-blue-500" /> View Details
-                          </ActionMenu.Item>
-                        </ActionMenu.Content>
-                      </ActionMenu>
-                    </Table.Cell>
-                  </Table.Row>
-                ))
-              )}
-            </Table.Body>
-          </Table>
+                    )}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {contractLot(c)?.name || "No lot"}
+                    {c.services_count !== undefined &&
+                      ` · ${c.services_count} service${c.services_count === 1 ? "" : "s"}`}
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    {formatDate(c.start_date)} – {formatDate(c.end_date)}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
 
           {!search.isSearching && pagination && pagination.last_page > 1 && (
             <Pagination
