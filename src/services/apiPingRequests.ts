@@ -177,12 +177,7 @@ export interface DeviceActivityResponse {
 
 /** The shared period presets, used across activity, requests and dashboard. */
 export type PeriodPreset =
-  | "7d"
-  | "30d"
-  | "90d"
-  | "12m"
-  | "this_month"
-  | "this_year";
+  "7d" | "30d" | "90d" | "12m" | "this_month" | "this_year";
 
 export const PERIOD_PRESETS: FilterOption[] = [
   { value: "7d", label: "Last 7 Days" },
@@ -212,9 +207,30 @@ export const getDeviceActivity = async (
     },
   });
 
+  const summary = response.data?.summary as
+    | (Omit<DeviceActivitySummary, "by_type"> & {
+        by_type?: {
+          value?: string;
+          type?: string;
+          label: string;
+          count: number;
+        }[];
+      })
+    | undefined;
+
   return {
     data: response.data?.data ?? [],
-    summary: response.data?.summary,
+    // The API names each type `type`, not `value`. Without this every legend
+    // chip had an undefined value, so clicking one filtered nothing and lit
+    // up all of them.
+    summary: summary && {
+      ...summary,
+      by_type: summary.by_type?.map(({ value, type, label, count }) => ({
+        value: value ?? type ?? "",
+        label,
+        count,
+      })),
+    },
     pagination: normalisePagination(
       response.data?.pagination,
       params.page_size ?? 50,
