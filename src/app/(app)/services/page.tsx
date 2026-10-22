@@ -482,7 +482,7 @@ export default function ServicesPage() {
                         key={booking.id}
                         onClick={() => router.push(`/bookings/${booking.id}`)}
                       >
-                        <Table.Cell className="px-3 whitespace-normal align-top">
+                        <Table.Cell className="px-3 align-top">
                           <div className="flex items-center gap-1.5">
                             <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">
                               {booking.booking_number}
@@ -512,7 +512,7 @@ export default function ServicesPage() {
                             )}
                           </div>
                         </Table.Cell>
-                        <Table.Cell className="px-3 whitespace-normal align-top">
+                        <Table.Cell className="px-3 align-top">
                           <div className="font-medium text-slate-900 text-sm line-clamp-2">
                             {booking.patient?.name}
                           </div>
@@ -520,7 +520,7 @@ export default function ServicesPage() {
                             {booking.patient?.identification_no}
                           </div>
                         </Table.Cell>
-                        <Table.Cell className="px-3 whitespace-normal align-top">
+                        <Table.Cell className="px-3 align-top">
                           <div className="text-sm text-slate-900 line-clamp-2">
                             {booking.facility?.name ?? "—"}
                           </div>
@@ -530,7 +530,7 @@ export default function ServicesPage() {
                             </div>
                           )}
                         </Table.Cell>
-                        <Table.Cell className="px-3 whitespace-normal align-top">
+                        <Table.Cell className="px-3 align-top">
                           <div className="flex items-center gap-1.5">
                             <span
                               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${DELIVERY_BADGES[state]}`}

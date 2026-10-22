@@ -136,7 +136,7 @@ const TableHeaderCell = ({
 
   return (
     <th
-      className={`px-6 py-2 ${
+      className={`px-4 py-2 ${
         alignClasses[align]
       } text-xs font-semibold text-gray-700 tracking-wide ${
         sortable ? "cursor-pointer hover:bg-gray-100" : ""
@@ -156,12 +156,23 @@ interface TableCellProps {
   children: ReactNode;
   className?: string;
   align?: "left" | "center" | "right";
+  /**
+   * Keep the cell on one line. Off by default.
+   *
+   * Every cell used to be `whitespace-nowrap`, which is what made these
+   * tables scroll sideways: one long facility name set the width of the
+   * column and nothing could reflow. Short values — dates, codes, amounts —
+   * have no spaces to break at and stay on one line regardless, so the
+   * default costs them nothing. Opt in where a cell must not wrap.
+   */
+  nowrap?: boolean;
 }
 
 const TableCell = ({
   children,
   className = "",
   align = "left",
+  nowrap = false,
 }: TableCellProps) => {
   const alignClasses = {
     left: "text-left",
@@ -171,7 +182,9 @@ const TableCell = ({
 
   return (
     <td
-      className={`px-6 py-2.5 whitespace-nowrap text-sm text-gray-900 ${alignClasses[align]} ${className}`}
+      className={`px-4 py-2.5 ${
+        nowrap ? "whitespace-nowrap" : ""
+      } text-sm text-gray-900 ${alignClasses[align]} ${className}`}
     >
       {children}
     </td>
@@ -186,15 +199,17 @@ interface TableEmptyProps {
 }
 
 const TableEmpty = ({ children, colSpan, className = "" }: TableEmptyProps) => {
+  // A <td> nested inside a <div> inside another <td> is not valid table
+  // markup: the browser drops it, so the message landed in the first column
+  // and colSpan was never applied. One cell, spanning the table.
   return (
     <TableRow hover={false}>
-      <TableCell className={`text-center py-12 ${className}`}>
-        <div className="col-span-full">
-          <td colSpan={colSpan} className="px-6 py-12 text-center">
-            {children}
-          </td>
-        </div>
-      </TableCell>
+      <td
+        colSpan={colSpan}
+        className={`px-4 py-12 text-center text-sm text-gray-500 ${className}`}
+      >
+        {children}
+      </td>
     </TableRow>
   );
 };
