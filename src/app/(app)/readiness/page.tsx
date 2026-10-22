@@ -25,6 +25,7 @@ import StatCard from "@/components/common/StatCard";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import {
   useFacilityReadiness,
+  useReadinessEvidence,
   useReadinessExport,
 } from "@/features/readiness/useFacilityReadiness";
 import {
@@ -137,9 +138,7 @@ function EquipmentRow({ equipment }: { equipment: ReadinessEquipment }) {
                 >
                   <FaExclamationTriangle
                     className={`w-3 h-3 mt-0.5 shrink-0 ${
-                      note.level === "error"
-                        ? "text-red-500"
-                        : "text-amber-500"
+                      note.level === "error" ? "text-red-500" : "text-amber-500"
                     }`}
                   />
                   <span>{note.message}</span>
@@ -149,13 +148,16 @@ function EquipmentRow({ equipment }: { equipment: ReadinessEquipment }) {
           )}
 
           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[11px] text-slate-400">
-            <span>Last seen {formatDateTime(equipment.activity?.last_seen_at)}</span>
+            <span>
+              Last seen {formatDateTime(equipment.activity?.last_seen_at)}
+            </span>
             <span>
               Worklist pulled{" "}
               {formatDateTime(equipment.activity?.last_worklist_pull_at)}
             </span>
             <span>
-              Study sent {formatDateTime(equipment.activity?.last_study_sent_at)}
+              Study sent{" "}
+              {formatDateTime(equipment.activity?.last_study_sent_at)}
             </span>
             {!!equipment.tests?.total && (
               <span>
@@ -264,9 +266,7 @@ function FacilityReadinessContent() {
       search: search.term || undefined,
       readiness: (readiness || undefined) as ReadinessLevel | undefined,
       ownership_type: (ownership || undefined) as
-        | "vendor"
-        | "facility"
-        | undefined,
+        "vendor" | "facility" | undefined,
       county_id: county || undefined,
       vendor_id: vendor || undefined,
       keph_level: kephLevel || undefined,
@@ -283,6 +283,7 @@ function FacilityReadinessContent() {
     error,
     refetch,
   } = useFacilityReadiness({ page, per_page: 20, ...filters });
+  const { evidence } = useReadinessEvidence(filters);
 
   // The export covers everything these filters select, not the page on screen.
   const { download, isExporting } = useReadinessExport(filters);
@@ -422,11 +423,14 @@ function FacilityReadinessContent() {
 
         {/* Readiness split */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* summary.total counts machines, not facilities — the three
+              readiness cards beside it add up to it — so the facility count
+              comes from the pagination, and the machines go underneath. */}
           <StatCard
             compact
             title="Facilities"
-            mainValue={(summary?.total ?? 0).toLocaleString()}
-            subtitle="Matching these filters"
+            mainValue={(pagination?.total ?? 0).toLocaleString()}
+            subtitle={`${(summary?.total ?? 0).toLocaleString()} machines`}
             className="border border-slate-200"
           />
           {(["ready", "attention", "not_ready"] as ReadinessLevel[]).map(
@@ -435,7 +439,9 @@ function FacilityReadinessContent() {
                 key={level}
                 compact
                 title={READINESS_LABELS[level]}
-                mainValue={(summary?.by_readiness?.[level] ?? 0).toLocaleString()}
+                mainValue={(
+                  summary?.by_readiness?.[level] ?? 0
+                ).toLocaleString()}
                 subtitle="Equipment"
                 onClick={() => {
                   setReadiness(readiness === level ? "" : level);
@@ -453,7 +459,10 @@ function FacilityReadinessContent() {
 
         {/* Where the estate stands on each check. The gap between "live" and
             "worklist" is the one worth acting on. */}
-        {summary?.by_check && (
+        {/* Counted from the machines themselves, not summary.by_check, which
+            has reported none linked while its own rows marked dozens — see
+            useReadinessEvidence. */}
+        {(evidence || summary?.by_check) && (
           <div className="bg-white rounded-lg border border-slate-200 p-4">
             <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3 pb-2 border-b border-slate-100">
               Evidence across the estate
@@ -462,7 +471,17 @@ function FacilityReadinessContent() {
               {READINESS_CHECKS.map((check) => (
                 <div key={check.key} title={check.hint}>
                   <p className="text-xl font-bold text-slate-900">
-                    {(summary.by_check?.[check.key] ?? 0).toLocaleString()}
+                    {evidence ? (
+                      <>
+                        {evidence[check.key].toLocaleString()}
+                        <span className="text-sm font-normal text-slate-400">
+                          {" "}
+                          of {evidence.machines.toLocaleString()}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    )}
                   </p>
                   <p className="text-xs text-slate-500">{check.label}</p>
                   <p className="text-[11px] text-slate-400">{check.hint}</p>
@@ -484,9 +503,7 @@ function FacilityReadinessContent() {
           </div>
         ) : facilities.length === 0 ? (
           <div className="bg-white rounded-lg border border-slate-200 p-12 text-center">
-            <p className="text-slate-500">
-              No facilities match these filters.
-            </p>
+            <p className="text-slate-500">No facilities match these filters.</p>
           </div>
         ) : (
           <div className="space-y-3">

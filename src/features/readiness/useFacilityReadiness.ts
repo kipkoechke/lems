@@ -37,6 +37,60 @@ export const useFacilityReadiness = (params: FacilityReadinessParams = {}) => {
   };
 };
 
+/**
+ * How many machines in the filtered set pass each of the four checks,
+ * counted from the machines themselves.
+ *
+ * The response's own `summary.by_check` cannot be trusted for this: on
+ * 2026-10-22 it reported 0 linked and 0 live while its rows marked 33
+ * linked, and while 25 machines had sent results — which no machine can do
+ * without being linked. So every page of the same filters is walked and the
+ * per-machine checks are counted. The page size is the API's maximum, so
+ * that is a request or two.
+ */
+export const useReadinessEvidence = (params: FacilityReadinessParams) => {
+  const { data, isLoading } = useQuery({
+    queryKey: ["readiness-evidence", params],
+    queryFn: async () => {
+      const counts = {
+        machines: 0,
+        linked: 0,
+        live: 0,
+        worklist_ready: 0,
+        results_ready: 0,
+      };
+      let page = 1;
+      let lastPage = 1;
+
+      do {
+        const response = await getFacilityReadiness({
+          ...params,
+          per_page: 100,
+          page,
+        });
+        lastPage = response.pagination?.last_page ?? 1;
+
+        for (const row of response.data) {
+          for (const equipment of row.equipment) {
+            counts.machines += 1;
+            if (equipment.checks.linked) counts.linked += 1;
+            if (equipment.checks.live) counts.live += 1;
+            if (equipment.checks.worklist_ready) counts.worklist_ready += 1;
+            if (equipment.checks.results_ready) counts.results_ready += 1;
+          }
+        }
+
+        page += 1;
+      } while (page <= lastPage);
+
+      return counts;
+    },
+    placeholderData: (previous) => previous,
+  });
+
+  return { evidence: data, isLoading };
+};
+
 export const useFacilityRanking = (
   params: FacilityRankingParams = {},
   { enabled = true }: { enabled?: boolean } = {},
