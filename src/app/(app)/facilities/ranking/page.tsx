@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FaTrophy,
@@ -11,6 +11,8 @@ import {
   FaPaperPlane,
   FaClipboardCheck,
   FaFileDownload,
+  FaChevronDown,
+  FaCheck,
 } from "react-icons/fa";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
@@ -23,14 +25,25 @@ import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
 import { useSearchControl } from "@/hooks/useSearchControl";
-import { useFacilityRanking } from "@/features/readiness/useFacilityReadiness";
+import {
+  useFacilityRanking,
+  useFacilityResults,
+  useFullFacilityRanking,
+} from "@/features/readiness/useFacilityReadiness";
 import { useFacilityRankingExport } from "@/features/readiness/useFacilityRankingExport";
 import { PERIOD_PRESETS } from "@/services/apiPingRequests";
 import {
+  isClientOrder,
+  LAST_RESULT_ORDER,
+  orderByLastResult,
   RANKING_SORT_OPTIONS,
-  type FacilityRankingSortBy,
+  withResults,
+  type RankingOrder,
   type RankingRow,
+  type RankingRowWithResults,
 } from "@/services/apiFacilityRanking";
+
+const PER_PAGE = 20;
 
 const formatDate = (value?: string | null) =>
   value
@@ -76,6 +89,118 @@ const shaTooltip = (row: RankingRow): string => {
 };
 
 /**
+ * When the facility last sent a result back, or that it never has.
+ *
+ * "Never" is in amber, not grey: a facility that has machines but has never
+ * returned a study is exactly what this column is read to find.
+ */
+function LastResult({ row }: { row: RankingRowWithResults }) {
+  if (!row.results) {
+    return <span className="text-slate-400">No machines</span>;
+  }
+  if (!row.results.lastResultAt) {
+    return (
+      <span
+        className="font-medium text-amber-600"
+        title={`None of its ${row.results.machines} machine${row.results.machines === 1 ? "" : "s"} has ever sent a study back`}
+      >
+        Never sent
+      </span>
+    );
+  }
+  return (
+    <span
+      className="text-slate-600"
+      title={`${row.results.sending} of ${row.results.machines} machines have sent results back`}
+    >
+      {formatDate(row.results.lastResultAt.replace(" ", "T"))}
+    </span>
+  );
+}
+
+/**
+ * Download the ranking as a PDF, ranked by any of the orders.
+ *
+ * A menu rather than one button: the PDF used to follow the "Rank by" filter,
+ * which worked but was invisible — it hid under Filters on a phone, and a
+ * reader wanting three reports had to re-sort the page three times.
+ */
+function PdfMenu({
+  current,
+  options,
+  exporting,
+  onDownload,
+}: {
+  current: RankingOrder;
+  options: { value: RankingOrder; label: string }[];
+  exporting: RankingOrder | null;
+  onDownload: (order: RankingOrder) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: MouseEvent) => {
+      if (!ref.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        disabled={exporting !== null}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        title="Download the whole ranking as a PDF, with the filters applied to it"
+        className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        <FaFileDownload className="w-3.5 h-3.5" />
+        <span className="hidden sm:inline">
+          {exporting ? "Preparing..." : "PDF"}
+        </span>
+        <FaChevronDown className="w-2.5 h-2.5 text-slate-400" />
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 z-30 mt-1 w-60 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+        >
+          <p className="px-3 pt-1.5 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            Download ranked by
+          </p>
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                onDownload(option.value);
+              }}
+              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+            >
+              {option.label}
+              {option.value === current && (
+                <FaCheck
+                  className="w-3 h-3 text-blue-600"
+                  title="The order on screen"
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * Facilities ranked by booking volume.
  *
  * The completion rate deliberately excludes cancelled bookings — a booking
@@ -89,7 +214,7 @@ function FacilityRankingContent() {
   const [period, setPeriod] = useState("");
   const [county, setCounty] = useState("");
   const [kephLevel, setKephLevel] = useState("");
-  const [sortBy, setSortBy] = useState<FacilityRankingSortBy>("total_bookings");
+  const [sortBy, setSortBy] = useState<RankingOrder>("total_bookings");
   const search = useSearchControl(() => setPage(1));
 
   const filters = {
@@ -97,21 +222,64 @@ function FacilityRankingContent() {
     period: period || undefined,
     county_id: county || undefined,
     keph_level: kephLevel || undefined,
-    sort_by: sortBy,
   };
 
-  const {
-    rows,
-    summary,
-    availableFilters,
-    pagination,
-    isLoading,
-    error,
-    refetch,
-  } = useFacilityRanking({ page, per_page: 20, ...filters });
+  // "Last result sent" is an order the API cannot apply, so for that one the
+  // whole ranking is fetched and ordered here; every other order stays a
+  // paged query the API sorts. Only one of the two queries runs at a time.
+  const clientOrder = isClientOrder(sortBy);
+  const paged = useFacilityRanking(
+    {
+      page,
+      per_page: PER_PAGE,
+      ...filters,
+      sort_by: clientOrder ? "total_bookings" : sortBy,
+    },
+    { enabled: !clientOrder },
+  );
+  const full = useFullFacilityRanking(
+    { ...filters, sort_by: "total_bookings" },
+    clientOrder,
+  );
+  const { results } = useFacilityResults();
 
-  // The export covers everything these filters select, not the page on screen.
-  const { download, isExporting } = useFacilityRankingExport(
+  const ordered = clientOrder
+    ? orderByLastResult(withResults(full.rows, results))
+    : [];
+  const rows: RankingRowWithResults[] = clientOrder
+    ? ordered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+    : withResults(paged.rows, results);
+  const summary = clientOrder ? full.summary : paged.summary;
+  const pagination = clientOrder
+    ? {
+        current_page: page,
+        last_page: Math.max(1, Math.ceil(ordered.length / PER_PAGE)),
+        total: ordered.length,
+        per_page: PER_PAGE,
+        from: ordered.length ? (page - 1) * PER_PAGE + 1 : 0,
+        to: Math.min(page * PER_PAGE, ordered.length),
+      }
+    : paged.pagination;
+  const isLoading = clientOrder ? full.isLoading : paged.isLoading;
+  const error = clientOrder ? full.error : paged.error;
+  const refetch = clientOrder ? full.refetch : paged.refetch;
+  // Filter options come from the paged query; keep its last answer while the
+  // full one is in charge.
+  const availableFilters = paged.availableFilters;
+
+  const orderOptions = [
+    ...((availableFilters?.sort_by as
+      { value: RankingOrder; label: string }[] | undefined) ??
+      RANKING_SORT_OPTIONS),
+    LAST_RESULT_ORDER,
+  ];
+  const orderLabel =
+    orderOptions.find((option) => option.value === sortBy)?.label ??
+    "Total bookings";
+
+  // The export covers everything these filters select, not the page on screen,
+  // in whichever order the menu asks for.
+  const { download, exporting } = useFacilityRankingExport(
     { ...filters, search: undefined },
     {
       // The report names the filters it was built with, so the labels are read
@@ -125,11 +293,6 @@ function FacilityRankingContent() {
           ?.label ??
         (county || undefined),
       kephLevel: kephLevel || undefined,
-      sortBy:
-        (availableFilters?.sort_by ?? RANKING_SORT_OPTIONS).find(
-          (option) => option.value === sortBy,
-        )?.label ?? "Total bookings",
-      sortOrder: "desc",
     },
   );
 
@@ -159,7 +322,8 @@ function FacilityRankingContent() {
                   Facility Ranking
                 </h1>
                 <p className="text-sm text-slate-500">
-                  {summary?.facilities ?? 0} facilities by booking volume
+                  {summary?.facilities ?? 0} facilities by{" "}
+                  {orderLabel.toLowerCase()}
                 </p>
               </div>
             </div>
@@ -177,17 +341,12 @@ function FacilityRankingContent() {
                 />
               </div>
 
-              <button
-                onClick={download}
-                disabled={isExporting}
-                title="Download the whole ranking as a PDF, with the filters applied to it"
-                className="shrink-0 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <FaFileDownload className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">
-                  {isExporting ? "Preparing..." : "PDF"}
-                </span>
-              </button>
+              <PdfMenu
+                current={sortBy}
+                options={orderOptions}
+                exporting={exporting}
+                onDownload={download}
+              />
             </div>
           </div>
 
@@ -222,11 +381,11 @@ function FacilityRankingContent() {
               className="w-full lg:w-48"
               value={sortBy}
               onChange={(value) => {
-                setSortBy(value as FacilityRankingSortBy);
+                setSortBy((value || "total_bookings") as RankingOrder);
                 setPage(1);
               }}
               placeholder="Rank by"
-              options={availableFilters?.sort_by ?? RANKING_SORT_OPTIONS}
+              options={orderOptions}
             />
 
             <KephLevelFilter
@@ -339,8 +498,11 @@ function FacilityRankingContent() {
                   <Table.HeaderCell>Patients</Table.HeaderCell>
                   <Table.HeaderCell>Claims</Table.HeaderCell>
                   <Table.HeaderCell>Non-SHA</Table.HeaderCell>
+                  {/* Both dates in one column: the table already fills its
+                      card, and the pair reads as "how recently is this
+                      facility active" — booking in, result back. */}
                   <Table.HeaderCell align="right">
-                    Last Booking
+                    Last Activity
                   </Table.HeaderCell>
                 </Table.Row>
               </Table.Header>
@@ -352,7 +514,7 @@ function FacilityRankingContent() {
                     No facilities match these filters.
                   </Table.Empty>
                 ) : (
-                  rows.map((row: RankingRow) => (
+                  rows.map((row) => (
                     <Table.Row key={row.facility.id}>
                       <Table.Cell>
                         <span
@@ -433,9 +595,14 @@ function FacilityRankingContent() {
                         )}
                       </Table.Cell>
                       <Table.Cell align="right">
-                        <span className="text-xs text-slate-500">
+                        <div className="text-xs text-slate-500 whitespace-nowrap">
+                          <span className="text-slate-400">Booking </span>
                           {formatDate(row.bookings.last_booking_at)}
-                        </span>
+                        </div>
+                        <div className="text-xs whitespace-nowrap">
+                          <span className="text-slate-400">Result </span>
+                          <LastResult row={row} />
+                        </div>
                       </Table.Cell>
                     </Table.Row>
                   ))
@@ -460,7 +627,7 @@ function FacilityRankingContent() {
                 No facilities match these filters.
               </p>
             ) : (
-              rows.map((row: RankingRow) => (
+              rows.map((row) => (
                 <div key={row.facility.id} className="p-4 space-y-3">
                   <div className="flex items-start gap-3">
                     <span
@@ -528,6 +695,8 @@ function FacilityRankingContent() {
                         : "Claims not reported"}
                       <br />
                       Last booking {formatDate(row.bookings.last_booking_at)}
+                      <br />
+                      Last result <LastResult row={row} />
                     </p>
                   </div>
                 </div>

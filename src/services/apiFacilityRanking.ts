@@ -1,7 +1,7 @@
 import axios from "../lib/axios";
 import { normaliseFilterBlock } from "@/lib/filterOptions";
 import { normalisePagination, NormalisedPagination } from "./pagination";
-import type { FilterOption } from "./apiFacilityReadiness";
+import type { FacilityResults, FilterOption } from "./apiFacilityReadiness";
 
 /**
  * Facility ranking (`GET /admin/facility-ranking`).
@@ -169,3 +169,89 @@ export const RANKING_SORT_OPTIONS: {
   { value: "sha_submission_rate", label: "Submission rate" },
   { value: "sha_verification_rate", label: "Verification rate" },
 ];
+
+/**
+ * Every page of the ranking for these filters.
+ *
+ * The page size is the API's maximum, so a full ranking is a handful of
+ * requests: a report, or an order the API cannot apply, needs all of it.
+ */
+export const getAllFacilityRanking = async (
+  params: FacilityRankingParams,
+): Promise<{
+  rows: RankingRow[];
+  summary: FacilityRankingSummary | undefined;
+}> => {
+  const rows: RankingRow[] = [];
+  let summary: FacilityRankingSummary | undefined;
+  let page = 1;
+  let lastPage = 1;
+
+  do {
+    const response = await getFacilityRanking({
+      ...params,
+      per_page: 100,
+      page,
+    });
+    summary = summary ?? response.summary;
+    rows.push(...response.data);
+    lastPage = response.pagination?.last_page ?? 1;
+    page += 1;
+  } while (page <= lastPage);
+
+  return { rows, summary };
+};
+
+// ── Results sent ─────────────────────────────────────────────────────────
+
+/**
+ * Orders the ranking can be read in. All but one are the API's own; "last
+ * result" is applied here, from the readiness report, until the ranking API
+ * can sort by it itself.
+ */
+export type RankingOrder = FacilityRankingSortBy | "last_result";
+
+export const LAST_RESULT_ORDER = {
+  value: "last_result" as const,
+  label: "Last result sent",
+};
+
+export const RANKING_ORDER_OPTIONS: { value: RankingOrder; label: string }[] = [
+  ...RANKING_SORT_OPTIONS,
+  LAST_RESULT_ORDER,
+];
+
+export const isClientOrder = (order: RankingOrder): order is "last_result" =>
+  order === LAST_RESULT_ORDER.value;
+
+export type RankingRowWithResults = RankingRow & {
+  /** Absent when the facility has no machines installed. */
+  results?: FacilityResults;
+};
+
+export const withResults = (
+  rows: RankingRow[],
+  results: Record<string, FacilityResults> | undefined,
+): RankingRowWithResults[] =>
+  rows.map((row) => ({ ...row, results: results?.[row.facility.id] }));
+
+const resultTime = (row: RankingRowWithResults): number =>
+  row.results?.lastResultAt
+    ? new Date(row.results.lastResultAt.replace(" ", "T")).getTime() || 0
+    : 0;
+
+/**
+ * Most recent sender first. Facilities that have never sent a result fall to
+ * the bottom, still in booking order, so the busiest silent ones lead that
+ * group — they are the ones worth chasing first. Ranks are reassigned to the
+ * new order.
+ */
+export const orderByLastResult = (
+  rows: RankingRowWithResults[],
+): RankingRowWithResults[] =>
+  [...rows]
+    .sort(
+      (a, b) =>
+        resultTime(b) - resultTime(a) || b.bookings.total - a.bookings.total,
+    )
+    .map((row, index) => ({ ...row, rank: index + 1 }));

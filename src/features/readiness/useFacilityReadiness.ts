@@ -7,9 +7,11 @@ import { downloadCsv, datedFilename } from "@/lib/csv";
 import { equipmentDeviceName } from "@/services/apiEquipment";
 import {
   getFacilityReadiness,
+  getFacilityResults,
   FacilityReadinessParams,
 } from "@/services/apiFacilityReadiness";
 import {
+  getAllFacilityRanking,
   getFacilityRanking,
   FacilityRankingParams,
 } from "@/services/apiFacilityRanking";
@@ -35,11 +37,15 @@ export const useFacilityReadiness = (params: FacilityReadinessParams = {}) => {
   };
 };
 
-export const useFacilityRanking = (params: FacilityRankingParams = {}) => {
+export const useFacilityRanking = (
+  params: FacilityRankingParams = {},
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["facility-ranking", params],
     queryFn: () => getFacilityRanking(params),
     placeholderData: (previous) => previous,
+    enabled,
   });
 
   return {
@@ -52,6 +58,45 @@ export const useFacilityRanking = (params: FacilityRankingParams = {}) => {
     error,
     refetch,
   };
+};
+
+/**
+ * The whole ranking for these filters, for an order the API cannot apply.
+ * Only runs when asked to, so the ordinary paged view never pays for it.
+ */
+export const useFullFacilityRanking = (
+  params: FacilityRankingParams,
+  enabled: boolean,
+) => {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["facility-ranking-all", params],
+    queryFn: () => getAllFacilityRanking(params),
+    placeholderData: (previous) => previous,
+    enabled,
+  });
+
+  return {
+    rows: data?.rows ?? [],
+    summary: data?.summary,
+    isLoading,
+    error,
+    refetch,
+  };
+};
+
+/**
+ * Each facility's results-sent facts, folded from the readiness report.
+ * They change as studies arrive rather than with the ranking's filters, so
+ * one fetch serves every filter and order, and is kept for a few minutes.
+ */
+export const useFacilityResults = () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ["facility-results"],
+    queryFn: getFacilityResults,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return { results: data, isLoading };
 };
 
 /**

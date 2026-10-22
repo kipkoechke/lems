@@ -2,7 +2,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import type {
   FacilityRankingSummary,
-  RankingRow,
+  RankingRowWithResults,
 } from "@/services/apiFacilityRanking";
 
 /**
@@ -74,13 +74,16 @@ const section = (doc: jsPDF, label: string, y: number): number => {
 };
 
 export const buildRankingPdf = (
-  rows: RankingRow[],
+  rows: RankingRowWithResults[],
   summary: FacilityRankingSummary | undefined,
   meta: RankingPdfMeta,
 ): jsPDF => {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const width = doc.internal.pageSize.getWidth();
   const generated = meta.generatedAt ?? new Date();
+  // Facilities with machines, and of those how many have ever sent a result.
+  const withMachines = rows.filter((row) => row.results);
+  const sending = withMachines.filter((row) => row.results?.lastResultAt);
 
   // ── Title block ─────────────────────────────────────────────────────────
   doc.setFont("helvetica", "bold");
@@ -196,8 +199,11 @@ export const buildRankingPdf = (
           styles: { fontStyle: "bold", textColor: SLATE_900 },
         },
         count(summary?.non_sha_studies),
-        "",
-        "",
+        {
+          content: "Sending results",
+          styles: { fontStyle: "bold", textColor: SLATE_900 },
+        },
+        `${count(sending.length)} of ${count(withMachines.length)} facilities with machines`,
       ],
     ],
     styles: {
@@ -240,6 +246,7 @@ export const buildRankingPdf = (
         "Claims verified",
         "Non-SHA",
         "Last booking",
+        "Last result",
       ],
     ],
     body: rows.map((row) => [
@@ -261,6 +268,13 @@ export const buildRankingPdf = (
         : "—",
       row.non_sha_studies?.total ? String(row.non_sha_studies.total) : "0",
       stamp(row.bookings.last_booking_at),
+      // "Never" rather than a dash: a facility that has never sent a result
+      // is the finding, not a gap in the data.
+      !row.results
+        ? "No machines"
+        : row.results.lastResultAt
+          ? `${stamp(row.results.lastResultAt)}\n${row.results.sending} of ${row.results.machines} sending`
+          : "Never",
     ]),
     theme: "grid",
     styles: {
@@ -288,7 +302,8 @@ export const buildRankingPdf = (
       4: { cellWidth: 20, halign: "right" },
       5: { cellWidth: 18, halign: "right" },
       8: { cellWidth: 16, halign: "right" },
-      9: { cellWidth: 24, halign: "right" },
+      9: { cellWidth: 22, halign: "right" },
+      10: { cellWidth: 24, halign: "right" },
       1: { halign: "left" },
       2: { halign: "left" },
       3: { halign: "right" },
@@ -322,10 +337,30 @@ export const buildRankingPdf = (
     );
   }
 
+  // Where the results figures come from, and the limit that follows.
+  doc.setPage(doc.getNumberOfPages());
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(SLATE_400);
+  doc.text(
+    "Last result: the most recent study any of the facility's machines sent back, from the readiness report. It is all time and does not follow the period filter.",
+    10,
+    Math.min(
+      (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable
+        .finalY + 6,
+      doc.internal.pageSize.getHeight() - 12,
+    ),
+    { maxWidth: width - 20 },
+  );
+
   doc.setPage(1);
   return doc;
 };
 
-/** `facility-ranking-2026-10-15.pdf` — sorts chronologically in a folder. */
-export const rankingPdfFilename = (at = new Date()): string =>
-  `facility-ranking-${at.toISOString().slice(0, 10)}.pdf`;
+/**
+ * `facility-ranking-completion-rate-2026-10-15.pdf` — sorts chronologically
+ * in a folder, and two orders downloaded the same day do not overwrite each
+ * other.
+ */
+export const rankingPdfFilename = (order: string, at = new Date()): string =>
+  `facility-ranking-${order.replace(/_/g, "-")}-${at.toISOString().slice(0, 10)}.pdf`;

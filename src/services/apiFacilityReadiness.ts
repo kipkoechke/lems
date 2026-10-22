@@ -161,6 +161,73 @@ export const getFacilityReadiness = async (
   };
 };
 
+/**
+ * Whether a facility's machines have ever sent results back, and when last.
+ *
+ * The ranking API does not report this yet, so it is folded out of the
+ * readiness report, which carries it per machine. Two limits follow from
+ * that, and the screens say so rather than hide them:
+ *
+ * - It is all time. Readiness takes no period, so these facts ignore the
+ *   ranking's period filter. "Ever sent" and "last sent" are all-time facts
+ *   anyway; a count of results would not be, so none is shown.
+ * - A facility with no machines installed has no readiness row, and so no
+ *   entry here.
+ */
+export interface FacilityResults {
+  /** Machines installed at the facility. */
+  machines: number;
+  /** Machines that have returned at least one study. */
+  sending: number;
+  /** The most recent study any of its machines sent back. */
+  lastResultAt: string | null;
+}
+
+/** Every facility's results, keyed by facility id. */
+export const getFacilityResults = async (): Promise<
+  Record<string, FacilityResults>
+> => {
+  const results: Record<string, FacilityResults> = {};
+  let page = 1;
+  let lastPage = 1;
+
+  do {
+    const response = await getFacilityReadiness({ per_page: 100, page });
+    lastPage = response.pagination?.last_page ?? 1;
+
+    for (const row of response.data) {
+      let lastResultAt: string | null = null;
+      let sending = 0;
+
+      for (const equipment of row.equipment) {
+        if (equipment.checks.results_ready) sending += 1;
+        const sentAt = equipment.activity?.last_study_sent_at;
+        if (
+          sentAt &&
+          (!lastResultAt || toTime(sentAt) > toTime(lastResultAt))
+        ) {
+          lastResultAt = sentAt;
+        }
+      }
+
+      results[row.facility.id] = {
+        machines: row.equipment.length,
+        // A study on record counts as sending even if the check lags behind.
+        sending: Math.max(sending, lastResultAt ? 1 : 0),
+        lastResultAt,
+      };
+    }
+
+    page += 1;
+  } while (page <= lastPage);
+
+  return results;
+};
+
+/** The API writes "2026-10-22 09:08:00"; Safari will not parse the space. */
+const toTime = (value: string): number =>
+  new Date(value.replace(" ", "T")).getTime() || 0;
+
 /** Badge styling per readiness level. */
 export const readinessClasses = (level: ReadinessLevel): string => {
   switch (level) {
