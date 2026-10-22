@@ -65,6 +65,21 @@ const formatDateTime = (value?: string | null) =>
     : "-";
 
 /**
+ * The name the device announced itself as. Some events arrive with none —
+ * production has study sends from an internal address that carry no calling
+ * AE title — and an empty grey chip said nothing about why.
+ */
+function SourceName({ name }: { name?: string | null }) {
+  return name ? (
+    <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
+      {name}
+    </span>
+  ) : (
+    <span className="text-xs text-slate-400 italic">No name sent</span>
+  );
+}
+
+/**
  * The device activity log.
  *
  * This is an arrival log, not an approval queue: it records what each device
@@ -95,8 +110,7 @@ export default function DeviceActivityView() {
     page_size: 50,
     source_name: search.term || undefined,
     activity_type: (activityType || undefined) as
-      | DeviceActivityType
-      | undefined,
+      DeviceActivityType | undefined,
     period: (period || undefined) as PeriodPreset | undefined,
     keph_level: kephLevel || undefined,
     // Tri-state — "" means no filter at all, not false.
@@ -126,7 +140,10 @@ export default function DeviceActivityView() {
                 Device Activity
               </h2>
               <p className="text-sm text-slate-500">
-                {(summary?.total ?? pagination?.total ?? activity.length
+                {(
+                  summary?.total ??
+                  pagination?.total ??
+                  activity.length
                 ).toLocaleString()}{" "}
                 events from {summary?.devices ?? 0} device
                 {summary?.devices === 1 ? "" : "s"}
@@ -165,6 +182,22 @@ export default function DeviceActivityView() {
               }}
               placeholder="All time"
               options={availableFilters?.period ?? PERIOD_PRESETS}
+            />
+
+            {/* Matched/unmatched filters from a column header on a desktop.
+                The event type needs no twin: the chips below do that job at
+                every width. */}
+            <SearchableSelect
+              label=""
+              compact
+              className="md:hidden w-full col-span-2"
+              value={linked}
+              onChange={(value) => {
+                setLinked(value);
+                setPage(1);
+              }}
+              placeholder="All devices"
+              options={availableFilters?.linked ?? LINKED_OPTIONS}
             />
           </div>
         </div>
@@ -221,9 +254,7 @@ export default function DeviceActivityView() {
               >
                 {style?.icon}
                 {type.label}
-                <span className="font-bold">
-                  {type.count.toLocaleString()}
-                </span>
+                <span className="font-bold">{type.count.toLocaleString()}</span>
               </button>
             );
           })}
@@ -231,7 +262,7 @@ export default function DeviceActivityView() {
       )}
 
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <Table className="w-full">
             <Table.Header>
               <Table.Row>
@@ -272,11 +303,7 @@ export default function DeviceActivityView() {
                 <Table.Loading colSpan={6} rows={8} />
               ) : activity.length === 0 ? (
                 <Table.Empty colSpan={6}>
-                  {search.term ||
-                  activityType ||
-                  period ||
-                  kephLevel ||
-                  linked
+                  {search.term || activityType || period || kephLevel || linked
                     ? "No activity matches these filters."
                     : "No device activity recorded yet."}
                 </Table.Empty>
@@ -288,7 +315,8 @@ export default function DeviceActivityView() {
                       key={event.id}
                       onClick={
                         event.equipment
-                          ? () => router.push(`/equipments/${event.equipment!.id}`)
+                          ? () =>
+                              router.push(`/equipments/${event.equipment!.id}`)
                           : undefined
                       }
                     >
@@ -304,9 +332,7 @@ export default function DeviceActivityView() {
                         </span>
                       </Table.Cell>
                       <Table.Cell>
-                        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
-                          {event.source_name}
-                        </span>
+                        <SourceName name={event.source_name} />
                         {event.device_name &&
                           event.device_name !== event.source_name && (
                             <div className="text-xs text-slate-500 mt-1">
@@ -363,6 +389,85 @@ export default function DeviceActivityView() {
               )}
             </Table.Body>
           </Table>
+        </div>
+
+        {/* Phones get one line-item per event; a matched one opens its
+            machine, as the table row does. */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {isLoading ? (
+            [...Array(4)].map((_, i) => (
+              <div key={i} className="p-4 animate-pulse space-y-2">
+                <div className="h-4 bg-slate-100 rounded w-1/3" />
+                <div className="h-3 bg-slate-100 rounded w-2/3" />
+              </div>
+            ))
+          ) : activity.length === 0 ? (
+            <p className="p-8 text-center text-sm text-slate-500">
+              {search.term || activityType || period || kephLevel || linked
+                ? "No activity matches these filters."
+                : "No device activity recorded yet."}
+            </p>
+          ) : (
+            activity.map((event: DeviceActivity) => {
+              const style = ACTIVITY_STYLE[event.activity_type];
+              return (
+                <div
+                  key={event.id}
+                  className={`p-4 space-y-1.5 ${event.equipment ? "cursor-pointer" : ""}`}
+                  onClick={
+                    event.equipment
+                      ? () => router.push(`/equipments/${event.equipment!.id}`)
+                      : undefined
+                  }
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border ${
+                        style?.cls ??
+                        "bg-slate-50 text-slate-700 border-slate-200"
+                      }`}
+                    >
+                      {style?.icon}
+                      {style?.label ?? event.activity_type}
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      {formatDateTime(event.occurred_at)}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                    <SourceName name={event.source_name} />
+                    <span className="font-mono text-slate-500">
+                      {event.ip_addr || "-"}
+                      {event.port ? `:${event.port}` : ""}
+                    </span>
+                    {event.modality && (
+                      <span className="text-slate-400">{event.modality}</span>
+                    )}
+                  </div>
+                  {event.equipment ? (
+                    <p className="flex items-start gap-1.5 text-xs text-emerald-700">
+                      <FaLink className="w-3 h-3 mt-0.5 shrink-0" />
+                      <span className="line-clamp-2">
+                        {event.equipment.name || event.equipment.code}
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="flex items-center gap-1.5 text-xs text-slate-400">
+                      <FaUnlink className="w-3 h-3" /> Unmatched
+                      {event.device_name &&
+                        event.device_name !== event.source_name &&
+                        ` · announced as ${event.device_name}`}
+                    </p>
+                  )}
+                  {event.facility?.name && (
+                    <p className="text-xs text-slate-500 truncate">
+                      {event.facility.name}
+                    </p>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
 
         {pagination && pagination.last_page > 1 && (

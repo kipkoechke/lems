@@ -33,6 +33,40 @@ const formatDateTime = (value?: string | null) =>
     : "-";
 
 /**
+ * Where the device was discovered. The "?" flags the placeholder port, which
+ * every discovered device carries until someone checks it against the device.
+ */
+function DiscoveredAt({
+  equipment,
+}: {
+  equipment: PendingInstallationEquipment;
+}) {
+  const host = equipment.hl7_host ?? equipment.discovered?.ip;
+  const port = equipment.dicom_port ?? equipment.discovered?.port;
+
+  if (!host) {
+    return (
+      <span className="text-xs text-slate-400">Awaiting first contact</span>
+    );
+  }
+
+  return (
+    <span className="font-mono text-xs text-slate-600">
+      {host}
+      {port ? `:${port}` : ""}
+      {port === PLACEHOLDER_PORT && (
+        <span
+          className="ml-1 text-amber-600"
+          title="Placeholder port — confirm against the device"
+        >
+          ?
+        </span>
+      )}
+    </span>
+  );
+}
+
+/**
  * Claim a discovered device.
  *
  * Devices that appear on the network arrive unowned: no vendor, no facility,
@@ -68,9 +102,7 @@ function ClaimDeviceModal({
       ae_title: equipment.ae_title ?? "",
       ip: equipment.hl7_host ?? equipment.discovered?.ip ?? "",
       port:
-        equipment.dicom_port ??
-        equipment.discovered?.port ??
-        PLACEHOLDER_PORT,
+        equipment.dicom_port ?? equipment.discovered?.port ?? PLACEHOLDER_PORT,
     });
   }, [equipment, reset]);
 
@@ -207,8 +239,9 @@ function ClaimDeviceModal({
 export default function PendingInstallationView() {
   const [page, setPage] = useState(1);
   const [unassignedOnly, setUnassignedOnly] = useState(false);
-  const [claiming, setClaiming] =
-    useState<PendingInstallationEquipment | null>(null);
+  const [claiming, setClaiming] = useState<PendingInstallationEquipment | null>(
+    null,
+  );
 
   const { equipments, pagination, isLoading, error, refetch } =
     usePendingInstallation({
@@ -263,7 +296,7 @@ export default function PendingInstallationView() {
       </div>
 
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <Table className="w-full">
             <Table.Header>
               <Table.Row>
@@ -286,9 +319,6 @@ export default function PendingInstallationView() {
                 </Table.Empty>
               ) : (
                 equipments.map((equipment) => {
-                  const host = equipment.hl7_host ?? equipment.discovered?.ip;
-                  const port =
-                    equipment.dicom_port ?? equipment.discovered?.port;
                   return (
                     <Table.Row key={equipment.id}>
                       <Table.Cell>
@@ -307,24 +337,7 @@ export default function PendingInstallationView() {
                         </span>
                       </Table.Cell>
                       <Table.Cell>
-                        {host ? (
-                          <span className="font-mono text-xs text-slate-600">
-                            {host}
-                            {port ? `:${port}` : ""}
-                            {port === PLACEHOLDER_PORT && (
-                              <span
-                                className="ml-1 text-amber-600"
-                                title="Placeholder port — confirm against the device"
-                              >
-                                ?
-                              </span>
-                            )}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-slate-400">
-                            Awaiting first contact
-                          </span>
-                        )}
+                        <DiscoveredAt equipment={equipment} />
                       </Table.Cell>
                       <Table.Cell>
                         {equipment.vendor ? (
@@ -367,6 +380,62 @@ export default function PendingInstallationView() {
               )}
             </Table.Body>
           </Table>
+        </div>
+
+        {/* Phones get one card per device, with Install opening the same
+            modal as the table. */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {isLoading ? (
+            [...Array(3)].map((_, i) => (
+              <div key={i} className="p-4 animate-pulse space-y-2">
+                <div className="h-4 bg-slate-100 rounded w-1/2" />
+                <div className="h-3 bg-slate-100 rounded w-2/3" />
+              </div>
+            ))
+          ) : equipments.length === 0 ? (
+            <p className="p-8 text-center text-sm text-slate-500">
+              Nothing is waiting to be installed.
+            </p>
+          ) : (
+            equipments.map((equipment) => (
+              <div key={equipment.id} className="p-4 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium text-slate-900 line-clamp-2">
+                      {equipment.name}
+                    </p>
+                    <p className="text-[11px] text-slate-400 font-mono">
+                      {equipment.code}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setClaiming(equipment)}
+                    className="shrink-0 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg"
+                  >
+                    Install
+                  </button>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
+                    {equipment.ae_title || "-"}
+                  </span>
+                  <DiscoveredAt equipment={equipment} />
+                </div>
+                <p className="text-xs text-slate-500">
+                  {equipment.vendor?.name ?? (
+                    <span className="text-slate-400">No vendor</span>
+                  )}
+                  {" · "}
+                  {equipment.facility?.name ?? (
+                    <span className="text-slate-400">No facility</span>
+                  )}
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  Last seen {formatDateTime(equipment.last_seen_at)}
+                </p>
+              </div>
+            ))
+          )}
         </div>
 
         {pagination && pagination.last_page > 1 && (

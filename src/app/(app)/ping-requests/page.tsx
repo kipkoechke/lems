@@ -3,10 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  pingDecisionSchema,
-  PingDecisionFormData,
-} from "@/lib/validations";
+import { pingDecisionSchema, PingDecisionFormData } from "@/lib/validations";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import {
@@ -88,7 +85,10 @@ function PingRequestsContent() {
     label: `${eq.name} (${eq.code})`,
   }));
 
-  const openDecision = (request: PingRequest, decision: "approve" | "reject") => {
+  const openDecision = (
+    request: PingRequest,
+    decision: "approve" | "reject",
+  ) => {
     setActive(request);
     setMode(decision);
     setEquipmentId(request.equipment_id ?? "");
@@ -116,7 +116,10 @@ function PingRequestsContent() {
     const onSuccess = () => setActive(null);
 
     if (mode === "approve") {
-      approveRequest({ pingRequestId: active.id, data: payload }, { onSuccess });
+      approveRequest(
+        { pingRequestId: active.id, data: payload },
+        { onSuccess },
+      );
     } else {
       rejectRequest({ pingRequestId: active.id, data: payload }, { onSuccess });
     }
@@ -136,7 +139,8 @@ function PingRequestsContent() {
                 Machine Ping Requests
               </h1>
               <p className="text-sm text-slate-500">
-                {pingRequests.length} pending approval · {linkedIds.length} linked equipment · refreshes automatically
+                {pingRequests.length} pending approval · {linkedIds.length}{" "}
+                linked equipment · refreshes automatically
               </p>
             </div>
           </div>
@@ -180,85 +184,146 @@ function PingRequestsContent() {
 
         {/* Queue */}
         {tab === "approvals" && !isLoading && !error && (
-        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <Table className="w-full">
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>AE Title</Table.HeaderCell>
-                <Table.HeaderCell>Device Name</Table.HeaderCell>
-                <Table.HeaderCell>Source Address</Table.HeaderCell>
-                <Table.HeaderCell>Type</Table.HeaderCell>
-                <Table.HeaderCell>Modality</Table.HeaderCell>
-                <Table.HeaderCell>Linked Equipment</Table.HeaderCell>
-                <Table.HeaderCell>Seen</Table.HeaderCell>
-                <Table.HeaderCell align="right">Decision</Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
+          <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+            <div className="hidden md:block">
+              <Table className="w-full">
+                <Table.Header>
+                  <Table.Row>
+                    <Table.HeaderCell>AE Title</Table.HeaderCell>
+                    <Table.HeaderCell>Device Name</Table.HeaderCell>
+                    <Table.HeaderCell>Source Address</Table.HeaderCell>
+                    <Table.HeaderCell>Type</Table.HeaderCell>
+                    <Table.HeaderCell>Modality</Table.HeaderCell>
+                    <Table.HeaderCell>Linked Equipment</Table.HeaderCell>
+                    <Table.HeaderCell>Seen</Table.HeaderCell>
+                    <Table.HeaderCell align="right">Decision</Table.HeaderCell>
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                  {pingRequests.length === 0 ? (
+                    <Table.Empty colSpan={8}>
+                      No ping requests are waiting for approval.
+                    </Table.Empty>
+                  ) : (
+                    pingRequests.map((req) => (
+                      <Table.Row key={req.id}>
+                        <Table.Cell>
+                          <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
+                            {req.ae_title}
+                          </span>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <span className="text-sm text-slate-700">
+                            {req.device_name_ae_title || "-"}
+                          </span>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <span className="text-sm text-slate-700 font-mono">
+                            {req.ip_addr}:{req.port}
+                          </span>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <span className="text-sm text-slate-700 capitalize">
+                            {req.request_type || "ping"}
+                          </span>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <span className="text-sm text-slate-700">
+                            {req.modality || "-"}
+                          </span>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <span className="text-sm text-slate-700">
+                            {req.equipment?.name || "Unlinked"}
+                          </span>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <span className="text-sm text-slate-600">
+                            {formatDateTime(req.created_at)}
+                          </span>
+                        </Table.Cell>
+                        <Table.Cell align="right">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => openDecision(req, "approve")}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                            >
+                              <FaCheck className="w-3 h-3" /> Approve
+                            </button>
+                            <button
+                              onClick={() => openDecision(req, "reject")}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+                            >
+                              <FaTimes className="w-3 h-3" /> Reject
+                            </button>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))
+                  )}
+                </Table.Body>
+              </Table>
+            </div>
+
+            {/* Phones get one card per request. Both decisions open the same
+              modal as the table, so nothing is decided on a single tap. */}
+            <div className="md:hidden divide-y divide-slate-100">
               {pingRequests.length === 0 ? (
-                <Table.Empty colSpan={8}>
+                <p className="p-8 text-center text-sm text-slate-500">
                   No ping requests are waiting for approval.
-                </Table.Empty>
+                </p>
               ) : (
                 pingRequests.map((req) => (
-                  <Table.Row key={req.id}>
-                    <Table.Cell>
-                      <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
-                        {req.ae_title}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {req.device_name_ae_title || "-"}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700 font-mono">
-                        {req.ip_addr}:{req.port}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700 capitalize">
-                        {req.request_type || "ping"}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {req.modality || "-"}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {req.equipment?.name || "Unlinked"}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-600">
+                  <div key={req.id} className="p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
+                          {req.ae_title}
+                        </span>
+                        {req.device_name_ae_title && (
+                          <p className="mt-1.5 text-sm text-slate-700 truncate">
+                            {req.device_name_ae_title}
+                          </p>
+                        )}
+                      </div>
+                      <span className="shrink-0 text-[11px] text-slate-400">
                         {formatDateTime(req.created_at)}
                       </span>
-                    </Table.Cell>
-                    <Table.Cell align="right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => openDecision(req, "approve")}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
-                        >
-                          <FaCheck className="w-3 h-3" /> Approve
-                        </button>
-                        <button
-                          onClick={() => openDecision(req, "reject")}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
-                        >
-                          <FaTimes className="w-3 h-3" /> Reject
-                        </button>
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      <span className="font-mono">
+                        {req.ip_addr}:{req.port}
+                      </span>
+                      <span className="capitalize">
+                        {" "}
+                        · {req.request_type || "ping"}
+                      </span>
+                      {req.modality && <span> · {req.modality}</span>}
+                    </p>
+                    <p className="text-xs text-slate-500 line-clamp-2">
+                      {req.equipment?.name || (
+                        <span className="text-slate-400">Unlinked</span>
+                      )}
+                    </p>
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        onClick={() => openDecision(req, "approve")}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium border border-emerald-200 bg-emerald-50 text-emerald-700"
+                      >
+                        <FaCheck className="w-3 h-3" /> Approve
+                      </button>
+                      <button
+                        onClick={() => openDecision(req, "reject")}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium border border-red-200 bg-red-50 text-red-700"
+                      >
+                        <FaTimes className="w-3 h-3" /> Reject
+                      </button>
+                    </div>
+                  </div>
                 ))
               )}
-            </Table.Body>
-          </Table>
-        </div>
+            </div>
+          </div>
         )}
       </div>
 
