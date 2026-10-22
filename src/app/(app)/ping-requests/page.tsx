@@ -22,6 +22,7 @@ import { Table } from "@/components/Table";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { InputField } from "@/components/common/InputField";
 import { ErrorState } from "@/components/common/ErrorState";
+import { SegmentedControl } from "@/components/common/SegmentedControl";
 import { FaSatelliteDish, FaCheck, FaTimes } from "react-icons/fa";
 import DeviceActivityView from "@/features/pingRequests/DeviceActivityView";
 import PendingInstallationView from "@/features/pingRequests/PendingInstallationView";
@@ -145,21 +146,12 @@ function PingRequestsContent() {
             </div>
           </div>
 
-          <div className="flex gap-1 mt-4 border-b border-slate-100 -mb-4">
-            {TABS.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setTab(option.value)}
-                className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  tab === option.value
-                    ? "border-blue-600 text-blue-700"
-                    : "border-transparent text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            className="mt-4"
+            value={tab}
+            onChange={setTab}
+            options={TABS}
+          />
         </div>
 
         {tab === "activity" && <DeviceActivityView />}

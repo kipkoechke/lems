@@ -12,8 +12,24 @@ import {
   HiOutlineClipboardDocumentList,
   HiOutlineCurrencyDollar,
   HiOutlineWrenchScrewdriver,
+  HiOutlineBuildingOffice2,
+  HiOutlineTruck,
+  HiOutlineSignal,
+  HiOutlineShieldCheck,
+  HiOutlineDocumentCheck,
 } from "react-icons/hi2";
-import { useAccessibleNavItems } from "@/lib/navigation";
+import { activeEntryKey, useSidebarEntries } from "@/lib/navigation";
+
+// Groups get an icon for what they hold, not for whichever page leads them.
+const GROUP_ICONS: Record<string, React.ReactNode> = {
+  "group:facilities": <HiOutlineBuildingOffice2 />,
+  "group:vendors": <HiOutlineTruck />,
+  "group:equipment": <HiOutlineCog6Tooth />,
+  "group:connectivity": <HiOutlineSignal />,
+  "group:sha": <HiOutlineDocumentCheck />,
+  "group:administration": <HiOutlineShieldCheck />,
+  "group:bookings": <HiOutlineClipboardDocumentList />,
+};
 
 interface SidebarProps {
   isMobileMenuOpen?: boolean;
@@ -41,7 +57,9 @@ const getIconForRoute = (href: string) => {
 
 function Sidebar({ isMobileMenuOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const accessibleNavItems = useAccessibleNavItems();
+  const entries = useSidebarEntries();
+  // One entry is lit for any page it stands for, detail pages included.
+  const activeKey = activeEntryKey(entries, pathname);
 
   const handleLinkClick = () => {
     if (onClose) {
@@ -77,31 +95,33 @@ function Sidebar({ isMobileMenuOpen, onClose }: SidebarProps) {
 
         <nav>
           <ul className="flex flex-col gap-1">
-            {accessibleNavItems.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  onClick={handleLinkClick}
-                  className={`flex items-center gap-2 text-gray-600 text-sm font-medium px-4 py-2 rounded transition-all ${
-                    pathname === item.href
-                      ? "bg-gray-200 text-gray-800"
-                      : "hover:bg-gray-300 hover:text-gray-800"
-                  }`}
-                  title={item.description}
-                >
-                  <span
-                    className={`w-5 h-5 ${
-                      pathname === item.href
-                        ? "text-brand-600"
-                        : "text-gray-400"
-                    } transition-all`}
+            {entries.map((entry) => {
+              const active = entry.key === activeKey;
+              return (
+                <li key={entry.key}>
+                  <Link
+                    href={entry.href}
+                    onClick={handleLinkClick}
+                    aria-current={active ? "page" : undefined}
+                    className={`flex items-center gap-2 text-gray-600 text-sm font-medium px-4 py-2 rounded transition-all ${
+                      active
+                        ? "bg-gray-200 text-gray-800"
+                        : "hover:bg-gray-300 hover:text-gray-800"
+                    }`}
+                    title={entry.description}
                   >
-                    {getIconForRoute(item.href)}
-                  </span>
-                  <span className="text-sm">{item.label}</span>
-                </Link>
-              </li>
-            ))}
+                    <span
+                      className={`w-5 h-5 ${
+                        active ? "text-brand-600" : "text-gray-400"
+                      } transition-all`}
+                    >
+                      {GROUP_ICONS[entry.key] ?? getIconForRoute(entry.href)}
+                    </span>
+                    <span className="text-sm">{entry.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       </div>

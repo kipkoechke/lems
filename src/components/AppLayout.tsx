@@ -1,6 +1,7 @@
 "use client";
 import Header from "./layout/Header";
 import Sidebar from "./layout/Sidebar";
+import SectionTabs from "./layout/SectionTabs";
 
 import { ReactNode, useState } from "react";
 import { useCurrentUser, useSyncPermissions } from "@/hooks/useAuth";
@@ -48,11 +49,11 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           onClose={closeMobileMenu}
         />
       )}
-      <main
-        className={`overflow-auto ${
-          showSidebar ? "md:col-start-2" : ""
-        }`}
-      >
+      <main className={`overflow-auto ${showSidebar ? "md:col-start-2" : ""}`}>
+        {/* A grouped page's tabs. The padding puts them on the same edge as
+            the page's own content: this wrapper's p-4 plus the page's p-3 on
+            a phone, the page's p-6 on a desktop. */}
+        <SectionTabs className="mx-auto max-w-screen-xl px-7 pt-4 md:px-6 md:pt-6" />
         <div className="mx-auto flex max-w-screen-xl flex-col gap-4 md:gap-8 p-4 md:p-0">
           {children}
         </div>

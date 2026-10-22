@@ -22,6 +22,7 @@ import {
 import { Table } from "@/components/Table";
 import { SearchField } from "@/components/common/SearchField";
 import { ErrorState } from "@/components/common/ErrorState";
+import { SegmentedControl } from "@/components/common/SegmentedControl";
 import {
   FaNetworkWired,
   FaServer,
@@ -251,31 +252,23 @@ function DicomContent() {
         <div className="bg-white rounded-lg border border-slate-200">
           {/* The search drops under the tabs on a phone; beside them it was
               a fixed 16rem that the row could not fit. */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 px-4">
-            <div className="flex gap-6">
-              <button
-                onClick={() => setTab("equipment")}
-                className={`py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                  tab === "equipment"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Equipment ({dicomEquipment.length})
-              </button>
-              <button
-                onClick={() => setTab("modalities")}
-                className={`py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                  tab === "modalities"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Orthanc Modalities ({modalities.length})
-              </button>
-            </div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-100 px-4 py-2">
+            <SegmentedControl
+              value={tab}
+              onChange={setTab}
+              options={[
+                {
+                  value: "equipment",
+                  label: `Equipment (${dicomEquipment.length})`,
+                },
+                {
+                  value: "modalities",
+                  label: `Orthanc Modalities (${modalities.length})`,
+                },
+              ]}
+            />
             {tab === "equipment" && (
-              <div className="w-full sm:w-64 pb-2 sm:py-2">
+              <div className="w-full sm:w-64">
                 <SearchField
                   value={search.input}
                   onChange={search.onInputChange}
