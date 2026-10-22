@@ -5,13 +5,14 @@ import { toast } from "react-hot-toast";
 import {
   getAllFacilityRanking,
   isClientOrder,
-  orderByLastResult,
+  applyClientOrder,
+  getFacilityMachines,
   RANKING_ORDER_OPTIONS,
-  withResults,
+  withMachines,
   type FacilityRankingParams,
   type RankingOrder,
 } from "@/services/apiFacilityRanking";
-import { getFacilityResults } from "@/services/apiFacilityReadiness";
+
 import { rankingPdfFilename, type RankingPdfMeta } from "@/lib/rankingPdf";
 import { apiErrorMessage } from "@/lib/apiError";
 
@@ -24,8 +25,8 @@ import { apiErrorMessage } from "@/lib/apiError";
  *
  * It walks every page of the current filters rather than exporting the page on
  * screen: a report covering the twenty facilities the reader happened to be
- * looking at would be filed as the whole picture. Each facility's results-sent
- * facts are folded in from the readiness report.
+ * looking at would be filed as the whole picture. Each facility's machine
+ * state is folded in from the readiness report.
  *
  * The PDF library is pulled in through a dynamic import rather than a static
  * one, so it lives in a chunk of its own instead of in the page's bundle. Note
@@ -45,15 +46,15 @@ export const useFacilityRankingExport = (
 
     try {
       const clientOrder = isClientOrder(order);
-      const [{ rows, summary }, results] = await Promise.all([
+      const [{ rows, summary }, machines] = await Promise.all([
         getAllFacilityRanking({
           ...params,
-          // The API cannot order by last result; any of its orders will do
+          // The API cannot apply the browser-side orders; any of its own will do
           // as the starting point, and booking volume breaks the ties.
           sort_by: clientOrder ? "total_bookings" : order,
           sort_order: "desc",
         }),
-        getFacilityResults(),
+        getFacilityMachines(),
       ]);
 
       if (!rows.length) {
@@ -61,8 +62,8 @@ export const useFacilityRankingExport = (
         return;
       }
 
-      const merged = withResults(rows, results);
-      const ordered = clientOrder ? orderByLastResult(merged) : merged;
+      const merged = withMachines(rows, machines);
+      const ordered = clientOrder ? applyClientOrder(order, merged) : merged;
       const label =
         RANKING_ORDER_OPTIONS.find((option) => option.value === order)?.label ??
         "Total bookings";

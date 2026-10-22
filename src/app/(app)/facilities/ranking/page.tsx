@@ -26,21 +26,21 @@ import { ErrorState } from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
 import { useSearchControl } from "@/hooks/useSearchControl";
 import {
+  useFacilityMachines,
   useFacilityRanking,
-  useFacilityResults,
   useFullFacilityRanking,
 } from "@/features/readiness/useFacilityReadiness";
 import { useFacilityRankingExport } from "@/features/readiness/useFacilityRankingExport";
 import { PERIOD_PRESETS } from "@/services/apiPingRequests";
 import {
+  applyClientOrder,
+  CLIENT_ORDERS,
   isClientOrder,
-  LAST_RESULT_ORDER,
-  orderByLastResult,
   RANKING_SORT_OPTIONS,
-  withResults,
+  withMachines,
   type RankingOrder,
   type RankingRow,
-  type RankingRowWithResults,
+  type RankingRowWithMachines,
 } from "@/services/apiFacilityRanking";
 
 const PER_PAGE = 20;
@@ -94,15 +94,15 @@ const shaTooltip = (row: RankingRow): string => {
  * "Never" is in amber, not grey: a facility that has machines but has never
  * returned a study is exactly what this column is read to find.
  */
-function LastResult({ row }: { row: RankingRowWithResults }) {
-  if (!row.results) {
+function LastResult({ row }: { row: RankingRowWithMachines }) {
+  if (!row.machines) {
     return <span className="text-slate-400">No machines</span>;
   }
-  if (!row.results.lastResultAt) {
+  if (!row.machines.lastResultAt) {
     return (
       <span
         className="font-medium text-amber-600"
-        title={`None of its ${row.results.machines} machine${row.results.machines === 1 ? "" : "s"} has ever sent a study back`}
+        title={`None of its ${row.machines.total} machine${row.machines.total === 1 ? "" : "s"} has ever sent a study back`}
       >
         Never sent
       </span>
@@ -111,10 +111,63 @@ function LastResult({ row }: { row: RankingRowWithResults }) {
   return (
     <span
       className="text-slate-600"
-      title={`${row.results.sending} of ${row.results.machines} machines have sent results back`}
+      title={`${row.machines.sending} of ${row.machines.total} machines have sent results back`}
     >
-      {formatDate(row.results.lastResultAt.replace(" ", "T"))}
+      {formatDate(row.machines.lastResultAt.replace(" ", "T"))}
     </span>
+  );
+}
+
+/**
+ * The facility's machines against the four checks, in the order they have to
+ * be met: linked, then live, then pulling worklists, then sending results.
+ *
+ * Linked leads as "x of y" because it is the one the facility acts on first;
+ * the other three follow as counts. A zero is amber when the facility has
+ * machines that could be doing it — "0 linked" on three machines is the
+ * finding, not an empty cell.
+ */
+function MachineStatus({
+  row,
+  compact = false,
+}: {
+  row: RankingRowWithMachines;
+  compact?: boolean;
+}) {
+  const facts = row.machines;
+  if (!facts) {
+    return <span className="text-xs text-slate-400">No machines</span>;
+  }
+
+  const zero = (value: number) => (value === 0 ? "text-amber-600" : "");
+  const rest = [
+    { value: facts.live, label: "live" },
+    { value: facts.worklist, label: "worklist" },
+    { value: facts.sending, label: "sending" },
+  ];
+
+  return (
+    <div
+      className={compact ? "text-[11px] text-slate-500" : ""}
+      title="Linked: has reached VEMS. Live: connected now. Worklist: has pulled a worklist. Sending: has sent a study back. Decommissioned machines are not counted."
+    >
+      <span
+        className={`${compact ? "" : "text-sm"} font-medium ${zero(facts.linked) || "text-slate-900"}`}
+      >
+        {facts.linked} of {facts.total} linked
+      </span>
+      {compact ? " · " : <br />}
+      <span className={compact ? "" : "text-[11px] text-slate-400"}>
+        {rest.map((item, index) => (
+          <span key={item.label}>
+            {index > 0 && " · "}
+            <span className={zero(item.value)}>
+              {item.value} {item.label}
+            </span>
+          </span>
+        ))}
+      </span>
+    </div>
   );
 }
 
@@ -241,14 +294,14 @@ function FacilityRankingContent() {
     { ...filters, sort_by: "total_bookings" },
     clientOrder,
   );
-  const { results } = useFacilityResults();
+  const { machines } = useFacilityMachines();
 
-  const ordered = clientOrder
-    ? orderByLastResult(withResults(full.rows, results))
+  const ordered = isClientOrder(sortBy)
+    ? applyClientOrder(sortBy, withMachines(full.rows, machines))
     : [];
-  const rows: RankingRowWithResults[] = clientOrder
+  const rows: RankingRowWithMachines[] = clientOrder
     ? ordered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
-    : withResults(paged.rows, results);
+    : withMachines(paged.rows, machines);
   const summary = clientOrder ? full.summary : paged.summary;
   const pagination = clientOrder
     ? {
@@ -271,7 +324,7 @@ function FacilityRankingContent() {
     ...((availableFilters?.sort_by as
       { value: RankingOrder; label: string }[] | undefined) ??
       RANKING_SORT_OPTIONS),
-    LAST_RESULT_ORDER,
+    ...CLIENT_ORDERS,
   ];
   const orderLabel =
     orderOptions.find((option) => option.value === sortBy)?.label ??
@@ -495,7 +548,11 @@ function FacilityRankingContent() {
                   <Table.HeaderCell>Facility</Table.HeaderCell>
                   <Table.HeaderCell>Bookings</Table.HeaderCell>
                   <Table.HeaderCell>Completion</Table.HeaderCell>
-                  <Table.HeaderCell>Patients</Table.HeaderCell>
+                  {/* Patients moved under Bookings to make room: it is a
+                      second reading of the same volume, where the machines
+                      are a different question — can this facility send at
+                      all. It is still a ranking order and a PDF column. */}
+                  <Table.HeaderCell>Machines</Table.HeaderCell>
                   <Table.HeaderCell>Claims</Table.HeaderCell>
                   <Table.HeaderCell>Non-SHA</Table.HeaderCell>
                   {/* Both dates in one column: the table already fills its
@@ -546,6 +603,9 @@ function FacilityRankingContent() {
                           {row.bookings.total.toLocaleString()}
                         </span>
                         <div className="text-[11px] text-slate-400">
+                          {row.bookings.patients.toLocaleString()} patients
+                        </div>
+                        <div className="text-[11px] text-slate-400">
                           {row.bookings.pending} pending ·{" "}
                           {row.bookings.cancelled} cancelled
                         </div>
@@ -554,9 +614,7 @@ function FacilityRankingContent() {
                         <CompletionBar rate={row.bookings.completion_rate} />
                       </Table.Cell>
                       <Table.Cell>
-                        <span className="text-sm text-slate-700">
-                          {row.bookings.patients.toLocaleString()}
-                        </span>
+                        <MachineStatus row={row} />
                       </Table.Cell>
                       <Table.Cell>
                         {/* Both counts in one cell: two columns for two
@@ -699,6 +757,8 @@ function FacilityRankingContent() {
                       Last result <LastResult row={row} />
                     </p>
                   </div>
+
+                  <MachineStatus row={row} compact />
                 </div>
               ))
             )}

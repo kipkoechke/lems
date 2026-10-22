@@ -2,7 +2,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import type {
   FacilityRankingSummary,
-  RankingRowWithResults,
+  RankingRowWithMachines,
 } from "@/services/apiFacilityRanking";
 
 /**
@@ -74,7 +74,7 @@ const section = (doc: jsPDF, label: string, y: number): number => {
 };
 
 export const buildRankingPdf = (
-  rows: RankingRowWithResults[],
+  rows: RankingRowWithMachines[],
   summary: FacilityRankingSummary | undefined,
   meta: RankingPdfMeta,
 ): jsPDF => {
@@ -82,8 +82,24 @@ export const buildRankingPdf = (
   const width = doc.internal.pageSize.getWidth();
   const generated = meta.generatedAt ?? new Date();
   // Facilities with machines, and of those how many have ever sent a result.
-  const withMachines = rows.filter((row) => row.results);
-  const sending = withMachines.filter((row) => row.results?.lastResultAt);
+  // Facilities with machines in service, and of those how many have ever
+  // sent a result; then the machines themselves, summed across the ranking.
+  const withMachines = rows.filter((row) => row.machines);
+  const sending = withMachines.filter((row) => row.machines?.lastResultAt);
+  const fleet = withMachines.reduce(
+    (sum, row) => ({
+      total: sum.total + (row.machines?.total ?? 0),
+      linked: sum.linked + (row.machines?.linked ?? 0),
+      live: sum.live + (row.machines?.live ?? 0),
+      worklist: sum.worklist + (row.machines?.worklist ?? 0),
+      sending: sum.sending + (row.machines?.sending ?? 0),
+    }),
+    { total: 0, linked: 0, live: 0, worklist: 0, sending: 0 },
+  );
+  const ofFleet = (value: number) =>
+    `${count(value)} of ${count(fleet.total)}${
+      fleet.total ? ` (${Math.round((value / fleet.total) * 100)}%)` : ""
+    }`;
 
   // ── Title block ─────────────────────────────────────────────────────────
   doc.setFont("helvetica", "bold");
@@ -200,10 +216,34 @@ export const buildRankingPdf = (
         },
         count(summary?.non_sha_studies),
         {
-          content: "Sending results",
+          content: "Facilities sending results",
           styles: { fontStyle: "bold", textColor: SLATE_900 },
         },
-        `${count(sending.length)} of ${count(withMachines.length)} facilities with machines`,
+        `${count(sending.length)} of ${count(withMachines.length)} with machines`,
+      ],
+      [
+        {
+          content: "Machines linked",
+          styles: { fontStyle: "bold", textColor: SLATE_900 },
+        },
+        ofFleet(fleet.linked),
+        {
+          content: "Machines live now",
+          styles: { fontStyle: "bold", textColor: SLATE_900 },
+        },
+        ofFleet(fleet.live),
+      ],
+      [
+        {
+          content: "Pulling worklists",
+          styles: { fontStyle: "bold", textColor: SLATE_900 },
+        },
+        ofFleet(fleet.worklist),
+        {
+          content: "Machines sending results",
+          styles: { fontStyle: "bold", textColor: SLATE_900 },
+        },
+        ofFleet(fleet.sending),
       ],
     ],
     styles: {
@@ -245,6 +285,7 @@ export const buildRankingPdf = (
         "Claims submitted",
         "Claims verified",
         "Non-SHA",
+        "Machines",
         "Last booking",
         "Last result",
       ],
@@ -267,13 +308,18 @@ export const buildRankingPdf = (
         ? `${row.sha.verified.toLocaleString()}\n${row.sha.verification_rate}% of sent`
         : "—",
       row.non_sha_studies?.total ? String(row.non_sha_studies.total) : "0",
+      // Linked leads because it comes first: a machine cannot pull a worklist
+      // or send a result before it has reached VEMS.
+      row.machines
+        ? `${row.machines.linked} of ${row.machines.total} linked\n${row.machines.live} live · ${row.machines.worklist} worklist\n${row.machines.sending} sending`
+        : "None",
       stamp(row.bookings.last_booking_at),
       // "Never" rather than a dash: a facility that has never sent a result
       // is the finding, not a gap in the data.
-      !row.results
+      !row.machines
         ? "No machines"
-        : row.results.lastResultAt
-          ? `${stamp(row.results.lastResultAt)}\n${row.results.sending} of ${row.results.machines} sending`
+        : row.machines.lastResultAt
+          ? stamp(row.machines.lastResultAt)
           : "Never",
     ]),
     theme: "grid",
@@ -301,9 +347,10 @@ export const buildRankingPdf = (
       0: { cellWidth: 8, halign: "center" },
       4: { cellWidth: 20, halign: "right" },
       5: { cellWidth: 18, halign: "right" },
-      8: { cellWidth: 16, halign: "right" },
-      9: { cellWidth: 22, halign: "right" },
-      10: { cellWidth: 24, halign: "right" },
+      8: { cellWidth: 15, halign: "right" },
+      9: { cellWidth: 27, halign: "left" },
+      10: { cellWidth: 22, halign: "right" },
+      11: { cellWidth: 22, halign: "right" },
       1: { halign: "left" },
       2: { halign: "left" },
       3: { halign: "right" },
@@ -343,7 +390,7 @@ export const buildRankingPdf = (
   doc.setFontSize(7.5);
   doc.setTextColor(SLATE_400);
   doc.text(
-    "Last result: the most recent study any of the facility's machines sent back, from the readiness report. It is all time and does not follow the period filter.",
+    "Machines come from equipment utilization and last result from the readiness report; both leave out decommissioned machines. Live is the state now, the rest are all time; neither follows the period filter.",
     10,
     Math.min(
       (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable

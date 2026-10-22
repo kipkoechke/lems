@@ -7,11 +7,11 @@ import { downloadCsv, datedFilename } from "@/lib/csv";
 import { equipmentDeviceName } from "@/services/apiEquipment";
 import {
   getFacilityReadiness,
-  getFacilityResults,
   FacilityReadinessParams,
 } from "@/services/apiFacilityReadiness";
 import {
   getAllFacilityRanking,
+  getFacilityMachines,
   getFacilityRanking,
   FacilityRankingParams,
 } from "@/services/apiFacilityRanking";
@@ -85,18 +85,19 @@ export const useFullFacilityRanking = (
 };
 
 /**
- * Each facility's results-sent facts, folded from the readiness report.
- * They change as studies arrive rather than with the ranking's filters, so
- * one fetch serves every filter and order, and is kept for a few minutes.
+ * Each facility's machine state, from utilization and readiness.
+ * It changes as machines connect and studies arrive, not with the ranking's
+ * filters, so one fetch serves every filter and order, and is kept for a few
+ * minutes.
  */
-export const useFacilityResults = () => {
+export const useFacilityMachines = () => {
   const { data, isLoading } = useQuery({
-    queryKey: ["facility-results"],
-    queryFn: getFacilityResults,
+    queryKey: ["facility-machines"],
+    queryFn: getFacilityMachines,
     staleTime: 5 * 60 * 1000,
   });
 
-  return { results: data, isLoading };
+  return { machines: data, isLoading };
 };
 
 /**

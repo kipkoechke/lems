@@ -1,7 +1,11 @@
 import axios from "../lib/axios";
 import { normaliseFilterBlock } from "@/lib/filterOptions";
 import { normalisePagination, NormalisedPagination } from "./pagination";
-import type { FacilityResults, FilterOption } from "./apiFacilityReadiness";
+import {
+  getLastResultByFacility,
+  type FilterOption,
+} from "./apiFacilityReadiness";
+import { getEquipmentUtilization } from "./apiEquipmentUtilization";
 
 /**
  * Facility ranking (`GET /admin/facility-ranking`).
@@ -202,56 +206,168 @@ export const getAllFacilityRanking = async (
   return { rows, summary };
 };
 
-// ── Results sent ─────────────────────────────────────────────────────────
+// ── Machines ─────────────────────────────────────────────────────────────
 
 /**
- * Orders the ranking can be read in. All but one are the API's own; "last
- * result" is applied here, from the readiness report, until the ranking API
- * can sort by it itself.
+ * The state of a facility's machines: how many are linked, live, pulling
+ * worklists and sending results, and when one last sent a result back.
+ *
+ * The ranking API does not report this yet, so it is put together from two
+ * reports, each used for what it gets right:
+ *
+ * - The four counts come from equipment utilization, which carries them per
+ *   machine with its facility and agrees with the dashboard. Readiness
+ *   carries them too, but its own summary contradicts its rows — see
+ *   `getLastResultByFacility`.
+ *   Machines not yet assigned to a facility (discovered devices awaiting
+ *   installation) belong to no row, so a machine live on the network can
+ *   still leave every facility reading "0 live".
+ * - The last result date comes from readiness, the only report with it.
+ *
+ * Limits, which the screens state rather than hide:
+ *
+ * - "Live" is right now and the rest are "ever", so none of it follows the
+ *   ranking's period filter. A count of results would need a period, so
+ *   none is shown.
+ * - Decommissioned machines are left out of every count. A machine taken
+ *   out of service is not one the facility can be expected to link, and
+ *   counting it would leave the facility reading "2 of 3 linked" forever.
+ * - A facility with no machines in service has no entry.
  */
-export type RankingOrder = FacilityRankingSortBy | "last_result";
+export interface FacilityMachines {
+  /** Machines in service at the facility. */
+  total: number;
+  /** Have reached VEMS at least once. */
+  linked: number;
+  /** Connected right now. */
+  live: number;
+  /** Have actually pulled a worklist. */
+  worklist: number;
+  /** Have returned at least one study. */
+  sending: number;
+  /** The most recent study any of its machines sent back. */
+  lastResultAt: string | null;
+}
 
-export const LAST_RESULT_ORDER = {
-  value: "last_result" as const,
-  label: "Last result sent",
+/** Every facility's machine state, keyed by facility id. */
+export const getFacilityMachines = async (): Promise<
+  Record<string, FacilityMachines>
+> => {
+  const machines: Record<string, FacilityMachines> = {};
+
+  const walkUtilization = async () => {
+    let page = 1;
+    let lastPage = 1;
+    do {
+      const response = await getEquipmentUtilization({ per_page: 100, page });
+      lastPage = response.pagination?.last_page ?? 1;
+
+      for (const row of response.data) {
+        if (!row.facility || row.equipment.status === "decommissioned") {
+          continue;
+        }
+        const facts = (machines[row.facility.id] ??= {
+          total: 0,
+          linked: 0,
+          live: 0,
+          worklist: 0,
+          sending: 0,
+          lastResultAt: null,
+        });
+        facts.total += 1;
+        if (row.linked) facts.linked += 1;
+        if (row.live) facts.live += 1;
+        if (row.pulling_worklist) facts.worklist += 1;
+        if (row.sending_results) facts.sending += 1;
+      }
+
+      page += 1;
+    } while (page <= lastPage);
+  };
+
+  const [, lastResult] = await Promise.all([
+    walkUtilization(),
+    getLastResultByFacility(),
+  ]);
+
+  for (const [facilityId, sentAt] of Object.entries(lastResult)) {
+    const facts = machines[facilityId];
+    if (!facts) continue;
+    facts.lastResultAt = sentAt;
+    // A study on record means at least one machine has sent, even where the
+    // utilization flag has not caught up.
+    facts.sending = Math.max(facts.sending, 1);
+  }
+
+  return machines;
 };
+
+/**
+ * Orders the ranking can be read in. Most are the API's own; the two below
+ * are applied here, from the readiness report, until the ranking API can
+ * sort by them itself.
+ */
+export const CLIENT_ORDERS = [
+  { value: "machines_linked", label: "Machines linked" },
+  { value: "last_result", label: "Last result sent" },
+] as const;
+
+export type ClientOrder = (typeof CLIENT_ORDERS)[number]["value"];
+export type RankingOrder = FacilityRankingSortBy | ClientOrder;
 
 export const RANKING_ORDER_OPTIONS: { value: RankingOrder; label: string }[] = [
   ...RANKING_SORT_OPTIONS,
-  LAST_RESULT_ORDER,
+  ...CLIENT_ORDERS,
 ];
 
-export const isClientOrder = (order: RankingOrder): order is "last_result" =>
-  order === LAST_RESULT_ORDER.value;
+export const isClientOrder = (order: RankingOrder): order is ClientOrder =>
+  CLIENT_ORDERS.some((option) => option.value === order);
 
-export type RankingRowWithResults = RankingRow & {
-  /** Absent when the facility has no machines installed. */
-  results?: FacilityResults;
+export type RankingRowWithMachines = RankingRow & {
+  /** Absent when the facility has no machines in service. */
+  machines?: FacilityMachines;
 };
 
-export const withResults = (
+export const withMachines = (
   rows: RankingRow[],
-  results: Record<string, FacilityResults> | undefined,
-): RankingRowWithResults[] =>
-  rows.map((row) => ({ ...row, results: results?.[row.facility.id] }));
+  machines: Record<string, FacilityMachines> | undefined,
+): RankingRowWithMachines[] =>
+  rows.map((row) => {
+    const facts = machines?.[row.facility.id];
+    return { ...row, machines: facts?.total ? facts : undefined };
+  });
 
-const resultTime = (row: RankingRowWithResults): number =>
-  row.results?.lastResultAt
-    ? new Date(row.results.lastResultAt.replace(" ", "T")).getTime() || 0
+const resultTime = (row: RankingRowWithMachines): number =>
+  row.machines?.lastResultAt
+    ? new Date(row.machines.lastResultAt.replace(" ", "T")).getTime() || 0
     : 0;
 
+/** Share of in-service machines linked; -1 puts "no machines" last. */
+const linkedShare = (row: RankingRowWithMachines): number =>
+  row.machines ? row.machines.linked / row.machines.total : -1;
+
 /**
- * Most recent sender first. Facilities that have never sent a result fall to
- * the bottom, still in booking order, so the busiest silent ones lead that
- * group — they are the ones worth chasing first. Ranks are reassigned to the
- * new order.
+ * The browser-side orders. In both, a facility with nothing to show falls to
+ * the bottom still in booking order, so the busiest of them leads that group
+ * — those are the ones worth chasing first. Ranks are reassigned to the new
+ * order.
+ *
+ * - Last result sent: most recent first; never sent, then no machines, last.
+ * - Machines linked: the share of a facility's machines that are linked, a
+ *   share rather than a count so a facility with one machine linked of one
+ *   ranks above one with two of five. More machines linked breaks a tie.
  */
-export const orderByLastResult = (
-  rows: RankingRowWithResults[],
-): RankingRowWithResults[] =>
+export const applyClientOrder = (
+  order: ClientOrder,
+  rows: RankingRowWithMachines[],
+): RankingRowWithMachines[] =>
   [...rows]
-    .sort(
-      (a, b) =>
-        resultTime(b) - resultTime(a) || b.bookings.total - a.bookings.total,
-    )
+    .sort((a, b) => {
+      const primary =
+        order === "last_result"
+          ? resultTime(b) - resultTime(a)
+          : linkedShare(b) - linkedShare(a) ||
+            (b.machines?.linked ?? 0) - (a.machines?.linked ?? 0);
+      return primary || b.bookings.total - a.bookings.total;
+    })
     .map((row, index) => ({ ...row, rank: index + 1 }));
