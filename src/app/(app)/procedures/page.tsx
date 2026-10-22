@@ -27,8 +27,15 @@ import { InputField } from "@/components/common/InputField";
 import { SelectField } from "@/components/common/SelectField";
 import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { ErrorState } from "@/components/common/ErrorState";
-import { FaEdit, FaPlus, FaStethoscope, FaTimes, FaTrash } from "react-icons/fa";
+import {
+  FaEdit,
+  FaPlus,
+  FaStethoscope,
+  FaTimes,
+  FaTrash,
+} from "react-icons/fa";
 
 const LIFECYCLE_BADGE: Record<string, string> = {
   active: "bg-green-100 text-green-800",
@@ -125,6 +132,35 @@ function ProceduresContent() {
     }
   };
 
+  // Shares arrive as decimal strings or not at all; undefined prints as "-".
+  const share = (value?: string | number | null) =>
+    value === undefined || value === null ? undefined : Number(value);
+
+  // One menu for the table row and the phone card, so the two cannot drift.
+  const procedureActions = (p: Procedure) => (
+    <ActionMenu menuId={`procedure-${p.id}`}>
+      <ActionMenu.Trigger />
+      <ActionMenu.Content>
+        <ActionMenu.Item onClick={() => openEdit(p)}>
+          <FaEdit className="text-amber-500" /> Edit
+        </ActionMenu.Item>
+        <ActionMenu.Item onClick={() => setConfirmDelete(p.id)}>
+          <FaTrash className="text-red-500" /> Retire
+        </ActionMenu.Item>
+      </ActionMenu.Content>
+    </ActionMenu>
+  );
+
+  const stateBadge = (p: Procedure) => (
+    <span
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${
+        LIFECYCLE_BADGE[procedureStateLabel(p)] ?? "bg-slate-100 text-slate-700"
+      }`}
+    >
+      {procedureStateLabel(p)}
+    </span>
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-screen p-3 md:p-6">
@@ -188,113 +224,151 @@ function ProceduresContent() {
               <FaPlus className="w-3 h-3" /> Add Procedure
             </button>
           </div>
+
+          {/* The state filter sits in a column header on a desktop; a phone
+              has no headers, so it comes up here instead. */}
+          <div className="md:hidden mt-3">
+            <SearchableSelect
+              label=""
+              compact
+              value={lifecycle}
+              onChange={(v) => {
+                setLifecycle(v);
+                setPage(1);
+              }}
+              placeholder="All States"
+              options={STATE_OPTIONS}
+            />
+          </div>
         </div>
 
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <Table className="w-full">
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>Procedure</Table.HeaderCell>
-                <Table.HeaderCell>Modality</Table.HeaderCell>
-                <Table.HeaderCell>Tariff</Table.HeaderCell>
-                <Table.HeaderCell>Vendor Share</Table.HeaderCell>
-                <Table.HeaderCell>Facility Share</Table.HeaderCell>
-                <Table.HeaderCell>
-                  <ColumnFilter
-                    label="State"
-                    options={STATE_OPTIONS}
-                    value={lifecycle}
-                    onChange={(v) => {
-                      setLifecycle(v);
-                      setPage(1);
-                    }}
-                    allLabel="All States"
-                    searchable={false}
-                  />
-                </Table.HeaderCell>
-                <Table.HeaderCell align="center">Actions</Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {procedures.length === 0 ? (
-                <Table.Empty colSpan={7}>
-                  {search.isSearching || lifecycle
-                    ? "No procedures match your criteria"
-                    : "No procedures defined yet."}
-                </Table.Empty>
-              ) : (
-                procedures.map((p) => (
-                  <Table.Row key={p.id}>
-                    <Table.Cell>
-                      <div className="font-medium text-slate-900">{p.name}</div>
-                      <div className="text-xs text-slate-500 font-mono">
-                        {procedureCode(p)}
+          <div className="hidden md:block">
+            <Table className="w-full">
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell>Procedure</Table.HeaderCell>
+                  <Table.HeaderCell>Modality</Table.HeaderCell>
+                  <Table.HeaderCell>Tariff</Table.HeaderCell>
+                  <Table.HeaderCell>Vendor Share</Table.HeaderCell>
+                  <Table.HeaderCell>Facility Share</Table.HeaderCell>
+                  <Table.HeaderCell>
+                    <ColumnFilter
+                      label="State"
+                      options={STATE_OPTIONS}
+                      value={lifecycle}
+                      onChange={(v) => {
+                        setLifecycle(v);
+                        setPage(1);
+                      }}
+                      allLabel="All States"
+                      searchable={false}
+                    />
+                  </Table.HeaderCell>
+                  <Table.HeaderCell align="center">Actions</Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {procedures.length === 0 ? (
+                  <Table.Empty colSpan={7}>
+                    {search.isSearching || lifecycle
+                      ? "No procedures match your criteria"
+                      : "No procedures defined yet."}
+                  </Table.Empty>
+                ) : (
+                  procedures.map((p) => (
+                    <Table.Row key={p.id}>
+                      <Table.Cell>
+                        <div className="font-medium text-slate-900">
+                          {p.name}
+                        </div>
+                        <div className="text-xs text-slate-500 font-mono">
+                          {procedureCode(p)}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm text-slate-700">
+                          {p.modality || "-"}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm font-medium text-slate-900">
+                          {formatAmount(procedureAmount(p), p.currency)}
+                        </span>
+                        {p.capitated && (
+                          <div className="text-xs text-slate-500">
+                            Capitated
+                          </div>
+                        )}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm text-slate-700">
+                          {formatAmount(share(p.vendor_share), p.currency)}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm text-slate-700">
+                          {formatAmount(share(p.facility_share), p.currency)}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>{stateBadge(p)}</Table.Cell>
+                      <Table.Cell align="center">
+                        {procedureActions(p)}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                )}
+              </Table.Body>
+            </Table>
+          </div>
+
+          {/* Phones get one card per procedure; the three amounts are what
+              people compare, so they sit side by side. */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {procedures.length === 0 ? (
+              <p className="p-8 text-center text-sm text-slate-500">
+                {search.isSearching || lifecycle
+                  ? "No procedures match your criteria"
+                  : "No procedures defined yet."}
+              </p>
+            ) : (
+              procedures.map((p) => (
+                <div key={p.id} className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-900 line-clamp-2">
+                        {p.name}
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        <span className="font-mono">{procedureCode(p)}</span>
+                        {p.modality && <span> · {p.modality}</span>}
+                        {p.capitated && <span> · Capitated</span>}
+                      </p>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-1">
+                      {stateBadge(p)}
+                      {procedureActions(p)}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 rounded-lg bg-slate-50 p-2">
+                    {[
+                      { label: "Tariff", value: procedureAmount(p) },
+                      { label: "Vendor", value: share(p.vendor_share) },
+                      { label: "Facility", value: share(p.facility_share) },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="min-w-0">
+                        <p className="text-[11px] text-slate-400">{label}</p>
+                        <p className="text-xs font-medium text-slate-900 truncate">
+                          {formatAmount(value, p.currency)}
+                        </p>
                       </div>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {p.modality || "-"}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm font-medium text-slate-900">
-                        {formatAmount(procedureAmount(p), p.currency)}
-                      </span>
-                      {p.capitated && (
-                        <div className="text-xs text-slate-500">Capitated</div>
-                      )}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {formatAmount(
-                          p.vendor_share === undefined
-                            ? undefined
-                            : Number(p.vendor_share),
-                          p.currency,
-                        )}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-700">
-                        {formatAmount(
-                          p.facility_share === undefined
-                            ? undefined
-                            : Number(p.facility_share),
-                          p.currency,
-                        )}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${
-                          LIFECYCLE_BADGE[procedureStateLabel(p)] ??
-                          "bg-slate-100 text-slate-700"
-                        }`}
-                      >
-                        {procedureStateLabel(p)}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell align="center">
-                      <ActionMenu menuId={`procedure-${p.id}`}>
-                        <ActionMenu.Trigger />
-                        <ActionMenu.Content>
-                          <ActionMenu.Item onClick={() => openEdit(p)}>
-                            <FaEdit className="text-amber-500" /> Edit
-                          </ActionMenu.Item>
-                          <ActionMenu.Item
-                            onClick={() => setConfirmDelete(p.id)}
-                          >
-                            <FaTrash className="text-red-500" /> Retire
-                          </ActionMenu.Item>
-                        </ActionMenu.Content>
-                      </ActionMenu>
-                    </Table.Cell>
-                  </Table.Row>
-                ))
-              )}
-            </Table.Body>
-          </Table>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
 
           {!search.isSearching && pagination && pagination.last_page > 1 && (
             <Pagination
@@ -343,7 +417,9 @@ function ProceduresContent() {
                     label="Name"
                     type="text"
                     placeholder="e.g. Chest X-Ray PA"
-                    register={register("name", { required: "Name is required" })}
+                    register={register("name", {
+                      required: "Name is required",
+                    })}
                     error={errors.name?.message}
                     required
                   />
