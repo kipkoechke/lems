@@ -19,6 +19,7 @@ import Pagination from "@/components/common/Pagination";
 import { SearchField } from "@/components/common/SearchField";
 import { KephLevelFilter } from "@/components/common/KephLevelFilter";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { ErrorState } from "@/components/common/ErrorState";
 import {
   FaEdit,
@@ -66,6 +67,50 @@ function UsersContent() {
   // new ones — but /users/{id} is GET-only for them, so no edit, permissions
   // or delete actions.
   const canManageUsers = !isFacilityRole(currentUser?.role);
+
+  const roleOptions = assignableRoles.map((role) => ({
+    value: role.value,
+    label: role.label,
+  }));
+
+  // One menu for the table row and the phone card, so the two cannot drift.
+  const userActions = (userId: string) => (
+    <ActionMenu menuId={`user-${userId}`}>
+      <ActionMenu.Trigger />
+      <ActionMenu.Content>
+        <ActionMenu.Item onClick={() => router.push(`/users/${userId}`)}>
+          <FaEye className="text-blue-500" /> View
+        </ActionMenu.Item>
+        {/* Accounts are handed over by email, so this is the way to unstick
+            someone whose welcome mail never arrived. A facility admin may do
+            it for their own staff, which is why it sits outside the
+            system-admin block. */}
+        <ActionMenu.Item
+          onClick={() => sendResetLink(userId)}
+          disabled={isSendingResetLink}
+        >
+          <FaEnvelope className="text-emerald-500" /> Send password reset link
+        </ActionMenu.Item>
+        {canManageUsers && (
+          <>
+            <ActionMenu.Item
+              onClick={() => router.push(`/users/${userId}/edit`)}
+            >
+              <FaEdit className="text-amber-500" /> Edit
+            </ActionMenu.Item>
+            <ActionMenu.Item
+              onClick={() => router.push(`/users/${userId}/permissions`)}
+            >
+              <FaKey className="text-purple-500" /> Permissions
+            </ActionMenu.Item>
+            <ActionMenu.Item onClick={() => setConfirmDelete(userId)}>
+              <FaTrash className="text-red-500" /> Delete
+            </ActionMenu.Item>
+          </>
+        )}
+      </ActionMenu.Content>
+    </ActionMenu>
+  );
 
   if (isLoading) {
     return (
@@ -137,164 +182,209 @@ function UsersContent() {
               <FaPlus className="w-3 h-3" /> Add User
             </button>
           </div>
+
+          {/* Role and status filter from the column headers on a desktop; a
+              phone has no headers, so they come up here instead. */}
+          <div className="md:hidden grid grid-cols-2 gap-2 mt-3">
+            <SearchableSelect
+              label=""
+              compact
+              value={roleFilter}
+              onChange={(v) => {
+                setRoleFilter(v);
+                setPage(1);
+              }}
+              placeholder="All Roles"
+              searchPlaceholder="Search roles..."
+              options={roleOptions}
+            />
+            <SearchableSelect
+              label=""
+              compact
+              value={activeFilter}
+              onChange={(v) => {
+                setActiveFilter(v);
+                setPage(1);
+              }}
+              placeholder="All Status"
+              options={ACTIVE_OPTIONS}
+            />
+          </div>
         </div>
 
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <Table className="w-full">
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>User</Table.HeaderCell>
-                <Table.HeaderCell>Email</Table.HeaderCell>
-                <Table.HeaderCell>
-                  <ColumnFilter
-                    label="Role"
-                    options={assignableRoles.map((role) => ({
-                      value: role.value,
-                      label: role.label,
-                    }))}
-                    value={roleFilter}
-                    onChange={(v) => {
-                      setRoleFilter(v);
-                      setPage(1);
-                    }}
-                    allLabel="All Roles"
-                    searchPlaceholder="Search roles..."
-                  />
-                </Table.HeaderCell>
-                <Table.HeaderCell>Institution</Table.HeaderCell>
-                <Table.HeaderCell>
-                  <ColumnFilter
-                    label="Status"
-                    options={ACTIVE_OPTIONS}
-                    value={activeFilter}
-                    onChange={(v) => {
-                      setActiveFilter(v);
-                      setPage(1);
-                    }}
-                    allLabel="All Status"
-                    searchable={false}
-                  />
-                </Table.HeaderCell>
-                <Table.HeaderCell align="center">Actions</Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {users.length === 0 ? (
-                <Table.Empty colSpan={6}>
-                  {search.isSearching || activeFilter
-                    ? "No users match your criteria"
-                    : "No users found. Create your first user to get started."}
-                </Table.Empty>
-              ) : (
-                users.map((user) => {
-                  const scope = userScopeLabel(user);
-                  const institution = userInstitution(user);
-                  return (
-                    <Table.Row key={user.id}>
-                      <Table.Cell>
-                        <div className="font-medium text-slate-900">
-                          {user.name || user.email}
-                        </div>
-                        {user.phone && (
-                          <div className="text-xs text-slate-500 font-mono">
-                            {user.phone}
+          <div className="hidden md:block">
+            <Table className="w-full">
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell>User</Table.HeaderCell>
+                  <Table.HeaderCell>Email</Table.HeaderCell>
+                  <Table.HeaderCell>
+                    <ColumnFilter
+                      label="Role"
+                      options={roleOptions}
+                      value={roleFilter}
+                      onChange={(v) => {
+                        setRoleFilter(v);
+                        setPage(1);
+                      }}
+                      allLabel="All Roles"
+                      searchPlaceholder="Search roles..."
+                    />
+                  </Table.HeaderCell>
+                  <Table.HeaderCell>Institution</Table.HeaderCell>
+                  <Table.HeaderCell>
+                    <ColumnFilter
+                      label="Status"
+                      options={ACTIVE_OPTIONS}
+                      value={activeFilter}
+                      onChange={(v) => {
+                        setActiveFilter(v);
+                        setPage(1);
+                      }}
+                      allLabel="All Status"
+                      searchable={false}
+                    />
+                  </Table.HeaderCell>
+                  <Table.HeaderCell align="center">Actions</Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {users.length === 0 ? (
+                  <Table.Empty colSpan={6}>
+                    {search.isSearching || activeFilter
+                      ? "No users match your criteria"
+                      : "No users found. Create your first user to get started."}
+                  </Table.Empty>
+                ) : (
+                  users.map((user) => {
+                    const scope = userScopeLabel(user);
+                    const institution = userInstitution(user);
+                    return (
+                      <Table.Row key={user.id}>
+                        <Table.Cell>
+                          <div className="font-medium text-slate-900">
+                            {user.name || user.email}
                           </div>
-                        )}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-sm text-slate-700">
-                          {user.email}
-                        </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${scope.cls}`}
-                        >
-                          {scope.label}
-                        </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        {institution ? (
-                          <>
-                            <div className="text-sm text-slate-900">
-                              {institution.name}
+                          {user.phone && (
+                            <div className="text-xs text-slate-500 font-mono">
+                              {user.phone}
                             </div>
-                            {institution.code && (
-                              <div className="text-xs text-slate-500 font-mono">
-                                {institution.code}
+                          )}
+                        </Table.Cell>
+                        <Table.Cell>
+                          <span className="text-sm text-slate-700">
+                            {user.email}
+                          </span>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${scope.cls}`}
+                          >
+                            {scope.label}
+                          </span>
+                        </Table.Cell>
+                        <Table.Cell>
+                          {institution ? (
+                            <>
+                              <div className="text-sm text-slate-900">
+                                {institution.name}
                               </div>
-                            )}
-                          </>
-                        ) : (
-                          <span className="text-sm text-slate-400">-</span>
+                              {institution.code && (
+                                <div className="text-xs text-slate-500 font-mono">
+                                  {institution.code}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-sm text-slate-400">-</span>
+                          )}
+                        </Table.Cell>
+                        <Table.Cell>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                              user.is_active
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {user.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </Table.Cell>
+                        <Table.Cell align="center">
+                          {userActions(user.id)}
+                        </Table.Cell>
+                      </Table.Row>
+                    );
+                  })
+                )}
+              </Table.Body>
+            </Table>
+          </div>
+
+          {/* Phones get one card per user, with the same action menu. */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {users.length === 0 ? (
+              <p className="p-8 text-center text-sm text-slate-500">
+                {search.isSearching || activeFilter
+                  ? "No users match your criteria"
+                  : "No users found. Create your first user to get started."}
+              </p>
+            ) : (
+              users.map((user) => {
+                const scope = userScopeLabel(user);
+                const institution = userInstitution(user);
+                return (
+                  <div key={user.id} className="p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium text-slate-900 truncate">
+                          {user.name || user.email}
+                        </p>
+                        <p className="text-xs text-slate-500 break-all">
+                          {user.email}
+                        </p>
+                        {user.phone && (
+                          <p className="text-xs text-slate-500 font-mono">
+                            {user.phone}
+                          </p>
                         )}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            user.is_active
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {user.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </Table.Cell>
-                      <Table.Cell align="center">
-                        <ActionMenu menuId={`user-${user.id}`}>
-                          <ActionMenu.Trigger />
-                          <ActionMenu.Content>
-                            <ActionMenu.Item
-                              onClick={() => router.push(`/users/${user.id}`)}
-                            >
-                              <FaEye className="text-blue-500" /> View
-                            </ActionMenu.Item>
-                            {/* Accounts are handed over by email, so this is
-                                the way to unstick someone whose welcome mail
-                                never arrived. A facility admin may do it for
-                                their own staff, which is why it sits outside
-                                the system-admin block. */}
-                            <ActionMenu.Item
-                              onClick={() => sendResetLink(user.id)}
-                              disabled={isSendingResetLink}
-                            >
-                              <FaEnvelope className="text-emerald-500" /> Send
-                              password reset link
-                            </ActionMenu.Item>
-                            {canManageUsers && (
-                              <>
-                                <ActionMenu.Item
-                                  onClick={() =>
-                                    router.push(`/users/${user.id}/edit`)
-                                  }
-                                >
-                                  <FaEdit className="text-amber-500" /> Edit
-                                </ActionMenu.Item>
-                                <ActionMenu.Item
-                                  onClick={() =>
-                                    router.push(`/users/${user.id}/permissions`)
-                                  }
-                                >
-                                  <FaKey className="text-purple-500" />{" "}
-                                  Permissions
-                                </ActionMenu.Item>
-                                <ActionMenu.Item
-                                  onClick={() => setConfirmDelete(user.id)}
-                                >
-                                  <FaTrash className="text-red-500" /> Delete
-                                </ActionMenu.Item>
-                              </>
-                            )}
-                          </ActionMenu.Content>
-                        </ActionMenu>
-                      </Table.Cell>
-                    </Table.Row>
-                  );
-                })
-              )}
-            </Table.Body>
-          </Table>
+                      </div>
+                      <div className="shrink-0">{userActions(user.id)}</div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${scope.cls}`}
+                      >
+                        {scope.label}
+                      </span>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                          user.is_active
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {user.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                    {institution && (
+                      <p className="text-xs text-slate-500 line-clamp-2">
+                        {institution.name}
+                        {institution.code && (
+                          <span className="font-mono text-slate-400 whitespace-nowrap">
+                            {" "}
+                            · {institution.code}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
 
           {!search.isSearching && pagination && pagination.last_page > 1 && (
             <Pagination
