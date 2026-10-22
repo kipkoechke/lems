@@ -25,7 +25,6 @@ import { ShaClaimChip } from "@/components/common/ShaClaimBadges";
 import {
   DELIVERY_BADGES,
   DELIVERY_LABELS,
-  deliveryProgress,
   deliveryState,
   serviceNames,
 } from "@/lib/bookingStatus";
@@ -475,7 +474,6 @@ export default function ServicesPage() {
                     // many without saying which.
                     const services = serviceNames(booking);
                     const state = deliveryState(booking);
-                    const progress = deliveryProgress(booking);
 
                     return (
                       <Table.Row
@@ -531,21 +529,11 @@ export default function ServicesPage() {
                           )}
                         </Table.Cell>
                         <Table.Cell className="px-3 align-top">
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${DELIVERY_BADGES[state]}`}
-                            >
-                              {DELIVERY_LABELS[state]}
-                            </span>
-                            {progress && (
-                              <span
-                                className="text-[11px] text-slate-400"
-                                title="Services delivered on this booking"
-                              >
-                                {progress}
-                              </span>
-                            )}
-                          </div>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${DELIVERY_BADGES[state]}`}
+                          >
+                            {DELIVERY_LABELS[state]}
+                          </span>
                           <div className="mt-1.5">
                             <ShaClaimChip booking={booking} />
                           </div>

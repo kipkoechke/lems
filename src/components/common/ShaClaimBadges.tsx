@@ -34,7 +34,10 @@ const CHIP_BADGE: Record<"verified" | "submitted" | "unsent", string> = {
 };
 
 const CHIP_HINT: Record<"verified" | "submitted" | "unsent", string> = {
-  verified: "SHA answered a payer's query about this claim",
+  verified:
+    "SHA answered a payer's query about this claim. This is about the claim, "
+    + "not the work: it can be answered for a booking whose services are not "
+    + "marked completed yet.",
   submitted:
     "The claim has been sent to SHA — no query has been answered for it yet",
   unsent:

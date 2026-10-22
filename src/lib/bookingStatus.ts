@@ -151,8 +151,7 @@ export const serviceNames = (booking: Booking): string[] => {
  */
 export type DeliveryState =
   | "completed"
-  | "in_progress"
-  | "not_started"
+  | "not_completed"
   | "cancelled"
   | "pending_otp";
 
@@ -164,28 +163,35 @@ export const deliveryState = (booking: Booking): DeliveryState => {
   const total = booking.services_count ?? (booking.services ?? []).length;
   const done = completedServiceCount(booking);
 
-  // A booking with no services recorded is not "completed" by vacuous truth.
-  if (total > 0 && done >= total) return "completed";
-  return done > 0 ? "in_progress" : "not_started";
+  // Two states, not three. "Not started" and "In progress" split a group that
+  // nobody acts on differently — the question this list is scanned for is
+  // whether the work is done. A booking with no services recorded is not
+  // "completed" by vacuous truth.
+  return total > 0 && done >= total ? "completed" : "not_completed";
 };
 
 export const DELIVERY_LABELS: Record<DeliveryState, string> = {
   completed: "Completed",
-  in_progress: "In progress",
-  not_started: "Not started",
+  not_completed: "Not completed",
   cancelled: "Cancelled",
   pending_otp: "Pending OTP",
 };
 
 export const DELIVERY_BADGES: Record<DeliveryState, string> = {
   completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  in_progress: "bg-blue-50 text-blue-700 border-blue-200",
-  not_started: "bg-slate-50 text-slate-600 border-slate-200",
+  not_completed: "bg-slate-50 text-slate-600 border-slate-200",
   cancelled: "bg-red-50 text-red-700 border-red-200",
   pending_otp: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
-/** `"2/3"`, or `""` when the booking lists no services to count. */
+/**
+ * `"2/3"`, or `""` when the booking lists no services to count.
+ *
+ * The export uses this; the table does not. On screen the fraction sat beside
+ * the badge reading "0/1" on nearly every row, which is the badge restated as
+ * arithmetic. In a spreadsheet the same number is worth having, because it can
+ * be summed.
+ */
 export const deliveryProgress = (booking: Booking): string => {
   const total = booking.services_count ?? (booking.services ?? []).length;
   if (!total) return "";
