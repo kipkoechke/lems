@@ -40,31 +40,11 @@ export const forgotPasswordSchema = z.object({
 
 // Facility management schemas
 export const facilitySchema = z.object({
-  // Required fields
-  name: z.string().min(1, "Facility name is required"),
-  code: z.string().min(1, "Facility code is required"),
-  ward_code: z.string().min(1, "Ward is required"),
-
-  // Location fields for UI (will be converted to ward_code)
-  county_id: z.string().min(1, "County is required"),
-  sub_county_id: z.string().min(1, "Sub county is required"),
-
-  // Optional fields
-  regulatory_status: z.string().optional(),
-  facility_type: z.string().optional(),
-  owner: z.string().optional(),
-  keph_level: z.string().optional(),
-  operation_status: z.string().optional(),
-
-  // DHA credentials (optional)
-  dha_pass_id: z.string().optional(),
-  dha_username: z.string().optional(),
-  dha_code: z.string().optional(),
-  dha_agent: z.string().optional(),
-  dha_key: z.string().optional(),
-  dha_secret: z.string().optional(),
-  public_key: z.string().optional(),
-  private_key: z.string().optional(),
+  fr_code: z
+    .string()
+    .trim()
+    .min(1, "FR code is required")
+    .min(3, "FR code must be at least 3 characters"),
 });
 
 /**

@@ -104,24 +104,12 @@ export interface EditFacilityForm {
   keph_level: KephLevel | string;
 }
 
-// New interface matching the API payload you provided
+/**
+ * Creating a facility only requires its FR registry code — the API resolves
+ * the name, classification and location from the registry.
+ */
 export interface CreateFacilityPayload {
-  code: string;
-  name: string;
-  regulatory_status?: string;
-  facility_type?: string;
-  owner?: string;
-  ward_code: string; // required
-  keph_level?: string;
-  operation_status?: string;
-  dha_pass_id?: string;
-  dha_username?: string;
-  dha_code?: string;
-  dha_agent?: string;
-  dha_key?: string;
-  dha_secret?: string;
-  public_key?: string;
-  private_key?: string;
+  fr_code: string;
 }
 
 // Paginated response interface matching the API structure
