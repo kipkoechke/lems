@@ -9,20 +9,25 @@ import type { VendorBookingItem } from "@/types/booking";
 import { Table } from "@/components/Table";
 import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { ErrorState } from "@/components/common/ErrorState";
 import Pagination from "@/components/common/Pagination";
 import { FaCalendarCheck } from "react-icons/fa";
+import { equipmentDeviceName } from "@/services/apiEquipment";
+import { kes, titleCase } from "@/lib/format";
+import {
+  VendorServiceStatus,
+  serviceDate,
+} from "@/features/vendors/vendorServiceStatus";
 
-const SERVICE_STATUS_BADGE: Record<string, string> = {
-  not_started: "bg-amber-50 text-amber-700 border-amber-200",
-  in_progress: "bg-blue-50 text-blue-700 border-blue-200",
-  completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  cancelled: "bg-red-50 text-red-700 border-red-200",
-};
-
-const formatCurrency = (value?: string | null) =>
-  value ? `KES ${Number(value).toLocaleString()}` : "-";
-
+/**
+ * Services booked on the vendor's machines.
+ *
+ * One row per booked service, which is what the API sends and what a vendor
+ * is paid on. The page was titled "Service Requests" under a menu entry
+ * called Bookings, and printed the booking's lifecycle flag ("active") over
+ * the service's own status; it now carries the menu's name and one status.
+ */
 function VendorBookingsContent() {
   const [page, setPage] = useState(1);
   const [serviceStatus, setServiceStatus] = useState("");
@@ -44,37 +49,26 @@ function VendorBookingsContent() {
     search: search.term || undefined,
   });
 
-  // Map available_filters to ColumnFilter options
-  const serviceStatusOptions = availableFilters.service_status.map((f) => ({
+  const statusOptions = availableFilters.service_status.map((f) => ({
     value: f.value,
     label: f.label,
   }));
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen p-3 md:p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg border border-slate-200 p-8 animate-pulse space-y-4">
-            <div className="h-8 bg-slate-200 rounded w-1/4" />
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="h-14 bg-slate-100 rounded" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <ErrorState
-        title="Unable to Load Bookings"
+        title="Unable to load bookings"
         error={error}
-        action={{ label: "Try Again", onClick: () => refetch() }}
+        action={{ label: "Try again", onClick: () => refetch() }}
         fullScreen
       />
     );
   }
+
+  const filtering = search.isSearching || !!serviceStatus;
+  const empty = filtering
+    ? "No bookings match your search"
+    : "No services have been booked on your machines yet";
 
   return (
     <div className="min-h-screen p-3 md:p-6">
@@ -87,137 +81,183 @@ function VendorBookingsContent() {
                 <FaCalendarCheck className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-900">Service Requests</h1>
+                <h1 className="text-xl font-bold text-slate-900">Bookings</h1>
                 <p className="text-sm text-slate-500">
-                  {pagination.total} total
+                  {pagination.total.toLocaleString()}{" "}
+                  {pagination.total === 1 ? "service" : "services"} booked on
+                  your machines
                   {summary.not_started > 0 && (
-                    <span className="ml-2 text-amber-600 font-medium">
-                      · {summary.not_started} pending
+                    <span className="text-amber-700">
+                      {" "}
+                      · {summary.not_started.toLocaleString()} not started
                     </span>
                   )}
                 </p>
               </div>
             </div>
 
-            <div className="flex-1 max-w-xl w-full mx-auto">
+            <div className="flex-1 max-w-xl w-full lg:ml-auto">
               <SearchField
                 value={search.input}
                 onChange={search.onInputChange}
                 onSearch={search.submit}
                 onClear={search.clear}
-                placeholder="Search by booking number, accession number, patient or facility..."
+                placeholder="Search booking, accession, patient or facility..."
               />
             </div>
           </div>
+
+          {/* The status filter lives in the column header on a desktop. */}
+          {statusOptions.length > 0 && (
+            <div className="md:hidden mt-3">
+              <SearchableSelect
+                label=""
+                compact
+                value={serviceStatus}
+                onChange={(v) => {
+                  setServiceStatus(v);
+                  setPage(1);
+                }}
+                placeholder="All statuses"
+                options={statusOptions}
+              />
+            </div>
+          )}
         </div>
 
-        {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <Table className="w-full">
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>Booking #</Table.HeaderCell>
-                <Table.HeaderCell>Accession #</Table.HeaderCell>
-                <Table.HeaderCell>Patient</Table.HeaderCell>
-                <Table.HeaderCell>Facility</Table.HeaderCell>
-                <Table.HeaderCell>
-                  <ColumnFilter
-                    label="Status"
-                    options={serviceStatusOptions}
-                    value={serviceStatus}
-                    onChange={(v) => {
-                      setServiceStatus(v);
-                      setPage(1);
-                    }}
-                    allLabel="All Status"
-                    searchable={false}
-                  />
-                </Table.HeaderCell>
-                <Table.HeaderCell>Modality</Table.HeaderCell>
-                <Table.HeaderCell>Equipment</Table.HeaderCell>
-                <Table.HeaderCell align="right">Vendor Share</Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {bookings.length === 0 ? (
-                <Table.Empty colSpan={8}>
-                  {search.isSearching || serviceStatus
-                    ? "No service requests match your criteria"
-                    : "No service requests found yet"}
-                </Table.Empty>
-              ) : (
-                bookings.map((item: VendorBookingItem) => (
-                  <Table.Row key={item.id}>
-                    <Table.Cell>
-                      <span className="font-mono text-sm text-slate-900">
-                        {item.booking.booking_number}
-                      </span>
-                      <div className="text-xs text-slate-400 mt-0.5">
-                        {item.booking.status}
-                      </div>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="font-mono text-sm text-slate-700">
-                        {item.worklist.accession_number}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-sm text-slate-900">
-                        {item.patient.name}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="text-sm text-slate-900">
-                        {item.facility.name}
-                      </div>
-                      <div className="text-xs text-slate-500 font-mono">
-                        {item.facility.fr_code}
-                      </div>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${
-                          SERVICE_STATUS_BADGE[item.status] ??
-                          "bg-slate-50 text-slate-700 border-slate-200"
-                        }`}
-                      >
-                        {item.status.replace(/_/g, " ")}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
-                        {item.modality}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="text-sm text-slate-900 max-w-[200px] truncate">
-                        {item.equipment.name}
-                      </div>
-                      <div className="text-xs text-slate-500 font-mono">
-                        {item.equipment.code}
-                      </div>
-                    </Table.Cell>
-                    <Table.Cell align="right">
-                      <span className="text-sm font-semibold text-emerald-600">
-                        {formatCurrency(item.vendor_share)}
-                      </span>
-                    </Table.Cell>
-                  </Table.Row>
-                ))
-              )}
-            </Table.Body>
-          </Table>
-        </div>
+          {/* Desktop */}
+          <div className="hidden md:block">
+            <Table className="w-full">
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell>Service</Table.HeaderCell>
+                  <Table.HeaderCell>Patient</Table.HeaderCell>
+                  <Table.HeaderCell>Facility</Table.HeaderCell>
+                  <Table.HeaderCell>Machine</Table.HeaderCell>
+                  <Table.HeaderCell>
+                    <ColumnFilter
+                      label="Status"
+                      options={statusOptions}
+                      value={serviceStatus}
+                      onChange={(v) => {
+                        setServiceStatus(v);
+                        setPage(1);
+                      }}
+                      allLabel="All statuses"
+                      searchable={false}
+                    />
+                  </Table.HeaderCell>
+                  <Table.HeaderCell align="right">Your share</Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {isLoading ? (
+                  <Table.Loading colSpan={6} rows={8} />
+                ) : bookings.length === 0 ? (
+                  <Table.Empty colSpan={6}>{empty}</Table.Empty>
+                ) : (
+                  bookings.map((item: VendorBookingItem) => (
+                    <Table.Row key={item.id}>
+                      <Table.Cell>
+                        <div className="font-medium text-slate-900">
+                          {item.service?.name ?? "—"}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          <span className="font-mono">
+                            {item.booking.booking_number}
+                          </span>{" "}
+                          · {serviceDate(item.booking.created_at)}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-sm text-slate-700">
+                          {item.patient?.name ?? "—"}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="text-sm text-slate-900 max-w-[16rem] truncate">
+                          {titleCase(item.facility?.name ?? "—")}
+                        </div>
+                        <div className="text-xs text-slate-500 font-mono">
+                          {item.facility?.fr_code}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="text-sm text-slate-900 max-w-[12rem] truncate">
+                          {equipmentDeviceName(item.equipment?.name)}
+                        </div>
+                        <div className="text-xs text-slate-500 font-mono">
+                          {item.worklist?.accession_number ??
+                            item.equipment?.code}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <VendorServiceStatus status={item.status} />
+                      </Table.Cell>
+                      <Table.Cell align="right">
+                        <span className="text-sm font-semibold text-slate-900 tabular-nums">
+                          {kes(item.vendor_share)}
+                        </span>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                )}
+              </Table.Body>
+            </Table>
+          </div>
 
-        {/* Pagination */}
-        {!search.isSearching && pagination.total_pages > 1 && (
-          <Pagination
-            currentPage={pagination.current_page}
-            lastPage={pagination.total_pages}
-            total={pagination.total}
-            onPageChange={setPage}
-          />
-        )}
+          {/* Phone: one card per service */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {isLoading ? (
+              <div className="p-4 space-y-3 animate-pulse">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-20 rounded bg-slate-100" />
+                ))}
+              </div>
+            ) : bookings.length === 0 ? (
+              <p className="p-8 text-center text-sm text-slate-500">{empty}</p>
+            ) : (
+              bookings.map((item: VendorBookingItem) => (
+                <div key={item.id} className="p-4 space-y-1.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-medium text-slate-900">
+                      {item.service?.name ?? "—"}
+                    </p>
+                    <VendorServiceStatus status={item.status} />
+                  </div>
+                  <p className="text-sm text-slate-700">
+                    {titleCase(item.facility?.name ?? "—")}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {item.patient?.name} ·{" "}
+                    {equipmentDeviceName(item.equipment?.name)}
+                  </p>
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <span className="text-xs text-slate-500">
+                      <span className="font-mono">
+                        {item.booking.booking_number}
+                      </span>{" "}
+                      · {serviceDate(item.booking.created_at)}
+                    </span>
+                    <span className="text-sm font-semibold text-slate-900 tabular-nums">
+                      {kes(item.vendor_share)}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {!search.isSearching && pagination.total_pages > 1 && (
+            <Pagination
+              currentPage={pagination.current_page}
+              lastPage={pagination.total_pages}
+              total={pagination.total}
+              onPageChange={setPage}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

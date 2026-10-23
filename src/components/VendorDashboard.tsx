@@ -21,6 +21,12 @@ import { equipmentDeviceName } from "@/services/apiEquipment";
 import type { VendorEquipment } from "@/services/apiEquipment";
 import type { VendorBookingItem } from "@/types/booking";
 import { kes, titleCase } from "@/lib/format";
+import {
+  VendorServiceStatus,
+  isAwaitingDelivery,
+  isDelivered,
+  shareOf,
+} from "@/features/vendors/vendorServiceStatus";
 
 /**
  * The vendor's overview.
@@ -61,19 +67,6 @@ const periodStart = (period: Period): Date | null => {
   const start = new Date();
   start.setDate(start.getDate() - PERIOD_DAYS[period]);
   return start;
-};
-
-const SERVICE_STATUS: Record<string, { label: string; className: string }> = {
-  not_started: {
-    label: "Not started",
-    className: "bg-slate-100 text-slate-600",
-  },
-  in_progress: { label: "In progress", className: "bg-blue-50 text-blue-700" },
-  completed: {
-    label: "Delivered",
-    className: "bg-emerald-50 text-emerald-700",
-  },
-  cancelled: { label: "Cancelled", className: "bg-red-50 text-red-700" },
 };
 
 const shortDate = (value?: string | null) =>
@@ -423,10 +416,8 @@ function WorkCard({
   periodLabel: string;
   className?: string;
 }) {
-  const delivered = items.filter((i) => i.status === "completed").length;
-  const waiting = items.filter(
-    (i) => i.status === "not_started" || i.status === "in_progress",
-  ).length;
+  const delivered = items.filter(isDelivered).length;
+  const waiting = items.filter(isAwaitingDelivery).length;
   const nonSha =
     typeof unmatched === "number" ? unmatched : (unmatched?.total ?? 0);
   const nonShaMonth =
@@ -482,8 +473,6 @@ function WorkCard({
           {latest.length ? (
             <ul className="divide-y divide-slate-100">
               {latest.map((item) => {
-                const status =
-                  SERVICE_STATUS[item.status] ?? SERVICE_STATUS.not_started;
                 return (
                   <li
                     key={item.id}
@@ -498,11 +487,7 @@ function WorkCard({
                         {shortDate(item.booking.created_at)}
                       </span>
                     </span>
-                    <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}
-                    >
-                      {status.label}
-                    </span>
+                    <VendorServiceStatus status={item.status} />
                   </li>
                 );
               })}
@@ -539,14 +524,8 @@ function EarningsCard({
   loading: boolean;
   className?: string;
 }) {
-  const sum = (list: VendorBookingItem[]) =>
-    list.reduce((total, i) => total + (Number(i.vendor_share) || 0), 0);
-  const earned = sum(items.filter((i) => i.status === "completed"));
-  const pending = sum(
-    items.filter(
-      (i) => i.status === "not_started" || i.status === "in_progress",
-    ),
-  );
+  const earned = shareOf(items.filter(isDelivered));
+  const pending = shareOf(items.filter(isAwaitingDelivery));
 
   return (
     <Card
