@@ -323,6 +323,18 @@ export const RANKING_ORDER_OPTIONS: { value: RankingOrder; label: string }[] = [
 export const isClientOrder = (order: RankingOrder): order is ClientOrder =>
   CLIENT_ORDERS.some((option) => option.value === order);
 
+/**
+ * Orders only the PDF offers. Results back is counted by walking every
+ * booking, which is fine for a report someone waits for and too slow for a
+ * page that re-sorts on every click.
+ */
+export const REPORT_ONLY_ORDERS = [
+  { value: "results_back", label: "Results back" },
+] as const;
+
+export type ReportOrder =
+  RankingOrder | (typeof REPORT_ONLY_ORDERS)[number]["value"];
+
 export type RankingRowWithMachines = RankingRow & {
   /** Absent when the facility has no machines in service. */
   machines?: FacilityMachines;

@@ -37,8 +37,10 @@ import {
   CLIENT_ORDERS,
   isClientOrder,
   RANKING_SORT_OPTIONS,
+  REPORT_ONLY_ORDERS,
   withMachines,
   type RankingOrder,
+  type ReportOrder,
   type RankingRow,
   type RankingRowWithMachines,
 } from "@/services/apiFacilityRanking";
@@ -182,12 +184,15 @@ function PdfMenu({
   current,
   options,
   exporting,
+  progress,
   onDownload,
 }: {
   current: RankingOrder;
-  options: { value: RankingOrder; label: string }[];
-  exporting: RankingOrder | null;
-  onDownload: (order: RankingOrder) => void;
+  options: { value: ReportOrder; label: string }[];
+  exporting: ReportOrder | null;
+  /** How far the report has got, 0–100, while one is being built. */
+  progress: number;
+  onDownload: (order: ReportOrder) => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -209,12 +214,14 @@ function PdfMenu({
         disabled={exporting !== null}
         aria-expanded={open}
         aria-haspopup="menu"
-        title="Download the whole ranking as a PDF, with the filters applied to it"
+        title="Download the facility performance report as a PDF, with the filters applied to it"
         className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <FaFileDownload className="w-3.5 h-3.5" />
-        <span className="hidden sm:inline">
-          {exporting ? "Preparing..." : "PDF"}
+        {/* The report reads every booking, which takes a while; a number
+            that moves says it is working. */}
+        <span className={exporting ? "tabular-nums" : "hidden sm:inline"}>
+          {exporting ? `Preparing ${progress}%` : "Report"}
         </span>
         <FaChevronDown className="w-2.5 h-2.5 text-slate-400" />
       </button>
@@ -225,7 +232,7 @@ function PdfMenu({
           className="absolute right-0 z-30 mt-1 w-60 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
         >
           <p className="px-3 pt-1.5 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-            Download ranked by
+            Download report ranked by
           </p>
           {options.map((option) => (
             <button
@@ -332,7 +339,7 @@ function FacilityRankingContent() {
 
   // The export covers everything these filters select, not the page on screen,
   // in whichever order the menu asks for.
-  const { download, exporting } = useFacilityRankingExport(
+  const { download, exporting, progress } = useFacilityRankingExport(
     { ...filters, search: undefined },
     {
       // The report names the filters it was built with, so the labels are read
@@ -396,8 +403,9 @@ function FacilityRankingContent() {
 
               <PdfMenu
                 current={sortBy}
-                options={orderOptions}
+                options={[...orderOptions, ...REPORT_ONLY_ORDERS]}
                 exporting={exporting}
+                progress={progress}
                 onDownload={download}
               />
             </div>

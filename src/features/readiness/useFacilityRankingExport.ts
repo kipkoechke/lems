@@ -8,53 +8,77 @@ import {
   applyClientOrder,
   getFacilityMachines,
   RANKING_ORDER_OPTIONS,
+  REPORT_ONLY_ORDERS,
   withMachines,
   type FacilityRankingParams,
-  type RankingOrder,
+  type ReportOrder,
 } from "@/services/apiFacilityRanking";
+import { getBookingResultsByFacility } from "@/services/apiBookingResults";
 
-import { rankingPdfFilename, type RankingPdfMeta } from "@/lib/rankingPdf";
+import {
+  rankingPdfFilename,
+  type RankingPdfMeta,
+  type ReportRow,
+} from "@/lib/rankingPdf";
 import { apiErrorMessage } from "@/lib/apiError";
 
 /**
- * Downloads the ranking as a PDF, in whichever order is asked for.
+ * Most results back first, then booking volume — so facilities with none
+ * still sit in booking order at the foot, busiest first.
+ */
+const byResultsBack = (rows: ReportRow[]): ReportRow[] =>
+  [...rows]
+    .sort((a, b) => {
+      const back =
+        (b.results?.resultsBack ?? 0) - (a.results?.resultsBack ?? 0);
+      if (back) return back;
+      return b.bookings.total - a.bookings.total;
+    })
+    .map((row, index) => ({ ...row, rank: index + 1 }));
+
+/**
+ * Downloads the facility performance report, in whichever order is asked for.
  *
  * The order is chosen at download time rather than read from the screen, so
- * one menu can produce the ranking by completion rate, by claims, by last
- * result sent and so on without the reader re-sorting the page for each.
+ * one menu produces the report by completion rate, by claims, by results back
+ * and so on without the reader re-sorting the page for each.
  *
- * It walks every page of the current filters rather than exporting the page on
- * screen: a report covering the twenty facilities the reader happened to be
- * looking at would be filed as the whole picture. Each facility's machine
- * state is folded in from the readiness report.
+ * It covers every facility the filters select, not the page on screen. Three
+ * sources are folded together: the ranking itself, each facility's machines,
+ * and the results its bookings got back — the last walks every booking in the
+ * period, which is most of the wait, so `progress` reports how far it is.
  *
- * The PDF library is pulled in through a dynamic import rather than a static
- * one, so it lives in a chunk of its own instead of in the page's bundle. Note
- * that the current build also emits that chunk as a preloaded script for this
- * route, so it is fetched on load as well — see the note in `rankingPdf.ts`.
+ * The PDF library is pulled in through a dynamic import, so it lives in a
+ * chunk of its own instead of in the page's bundle.
  */
 export const useFacilityRankingExport = (
   /** The ranking's filters, without an order: each download brings its own. */
   params: Omit<FacilityRankingParams, "sort_by" | "sort_order">,
   meta: Omit<RankingPdfMeta, "sortBy" | "sortOrder">,
 ) => {
-  const [exporting, setExporting] = useState<RankingOrder | null>(null);
+  const [exporting, setExporting] = useState<ReportOrder | null>(null);
+  const [progress, setProgress] = useState(0);
 
-  const download = async (order: RankingOrder) => {
+  const download = async (order: ReportOrder) => {
     if (exporting) return;
     setExporting(order);
+    setProgress(0);
 
     try {
-      const clientOrder = isClientOrder(order);
-      const [{ rows, summary }, machines] = await Promise.all([
+      const apiOrder =
+        order === "results_back" || isClientOrder(order)
+          ? "total_bookings"
+          : order;
+      const [{ rows, summary }, machines, results] = await Promise.all([
         getAllFacilityRanking({
           ...params,
-          // The API cannot apply the browser-side orders; any of its own will do
-          // as the starting point, and booking volume breaks the ties.
-          sort_by: clientOrder ? "total_bookings" : order,
+          sort_by: apiOrder,
           sort_order: "desc",
         }),
         getFacilityMachines(),
+        getBookingResultsByFacility(params.period, (done, total) =>
+          setProgress(Math.round((done / total) * 100)),
+        ),
       ]);
 
       if (!rows.length) {
@@ -62,11 +86,20 @@ export const useFacilityRankingExport = (
         return;
       }
 
-      const merged = withMachines(rows, machines);
-      const ordered = clientOrder ? applyClientOrder(order, merged) : merged;
+      const merged: ReportRow[] = withMachines(rows, machines).map((row) => ({
+        ...row,
+        results: results[row.facility.id],
+      }));
+      const ordered =
+        order === "results_back"
+          ? byResultsBack(merged)
+          : isClientOrder(order)
+            ? (applyClientOrder(order, merged) as ReportRow[])
+            : merged;
       const label =
-        RANKING_ORDER_OPTIONS.find((option) => option.value === order)?.label ??
-        "Total bookings";
+        [...RANKING_ORDER_OPTIONS, ...REPORT_ONLY_ORDERS].find(
+          (option) => option.value === order,
+        )?.label ?? "Total bookings";
 
       const { buildRankingPdf } = await import("@/lib/rankingPdf");
       buildRankingPdf(ordered, summary, {
@@ -75,16 +108,17 @@ export const useFacilityRankingExport = (
         sortOrder: "desc",
       }).save(rankingPdfFilename(order));
       toast.success(
-        `Exported ${rows.length} facilities by ${label.toLowerCase()}`,
+        `Report ready: ${rows.length} facilities by ${label.toLowerCase()}`,
       );
     } catch (error) {
       toast.error(
-        apiErrorMessage(error, "Could not build the PDF. Please try again."),
+        apiErrorMessage(error, "Could not build the report. Please try again."),
       );
     } finally {
       setExporting(null);
+      setProgress(0);
     }
   };
 
-  return { download, exporting, isExporting: exporting !== null };
+  return { download, exporting, progress, isExporting: exporting !== null };
 };
