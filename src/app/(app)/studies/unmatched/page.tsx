@@ -106,7 +106,7 @@ function UnmatchedStudiesContent({ facilityId }: { facilityId: string }) {
     summary,
     availableFilters,
     pagination,
-    isLoading,
+    isLoading: isFetchingFirst,
     error,
     refetch,
   } = useUnmatchedStudies(scope, {
@@ -120,6 +120,11 @@ function UnmatchedStudiesContent({ facilityId }: { facilityId: string }) {
     // Tri-state — "" means no filter, not false.
     attributed: attributed === "" ? undefined : attributed === "true",
   });
+
+  // No scope yet means the signed-in user has not been read: on the server it
+  // never is. Showing "no studies" there and a skeleton in the browser made
+  // React discard the server render, so both show the skeleton.
+  const isLoading = isFetchingFirst || !scope;
 
   // The API lists only the modalities this caller can actually see, so nobody
   // is offered a filter that comes back empty. Deriving them from the page was
