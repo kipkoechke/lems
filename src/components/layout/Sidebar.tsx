@@ -19,6 +19,7 @@ import {
   HiOutlineDocumentCheck,
 } from "react-icons/hi2";
 import { activeEntryKey, useSidebarEntries } from "@/lib/navigation";
+import { useInstitutionName } from "@/hooks/useAuth";
 
 // Groups get an icon for what they hold, not for whichever page leads them.
 const GROUP_ICONS: Record<string, React.ReactNode> = {
@@ -39,6 +40,13 @@ interface SidebarProps {
 // Icon mapping for navigation items
 const getIconForRoute = (href: string) => {
   if (href === "/") return <HiOutlineHome />;
+  // The vendor's own pages, before the admin prefixes they resemble.
+  if (href.startsWith("/vendor/equipments")) return <HiOutlineCog6Tooth />;
+  if (href.startsWith("/vendor/bookings"))
+    return <HiOutlineClipboardDocumentList />;
+  if (href.startsWith("/vendor/contracts")) return <HiOutlineDocumentText />;
+  if (href.startsWith("/vendor/profile")) return <HiOutlineBuildingOffice2 />;
+  if (href.startsWith("/studies")) return <HiOutlineSignal />;
   if (href.startsWith("/patients")) return <HiOutlineUser />;
   if (href.startsWith("/equipments")) return <HiOutlineCog6Tooth />;
   if (href.startsWith("/facilities")) return <HiOutlineUsers />;
@@ -58,6 +66,7 @@ const getIconForRoute = (href: string) => {
 function Sidebar({ isMobileMenuOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const entries = useSidebarEntries();
+  const institutionName = useInstitutionName();
   // One entry is lit for any page it stands for, detail pages included.
   const activeKey = activeEntryKey(entries, pathname);
 
@@ -80,9 +89,13 @@ function Sidebar({ isMobileMenuOpen, onClose }: SidebarProps) {
     `}
     >
       <div className="bg-white rounded-lg shadow p-2 h-full">
-        {/* Mobile close button */}
+        {/* Mobile close button, beside the account's name: the header has
+            no room for the name on a phone. */}
         {isMobileMenuOpen && (
-          <div className="flex justify-end mb-2 md:hidden">
+          <div className="flex items-center justify-between gap-2 mb-2 md:hidden">
+            <p className="min-w-0 truncate px-2 text-sm font-semibold text-gray-900">
+              {institutionName}
+            </p>
             <button
               onClick={onClose}
               className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"

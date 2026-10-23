@@ -254,6 +254,16 @@ const NAV_ITEMS: NavItem[] = [
     permission: Permission.VIEW_VENDOR_BOOKINGS,
     description: "Bookings on your equipment",
   },
+  // Payments — vendor only. The vendor view is built from /vendor/bookings and
+  // /vendor/dashboard, both documented. There is no documented facility
+  // payments endpoint, so facility roles get no Payments entry rather than a
+  // page backed by a route the API reference does not publish.
+  {
+    label: "Payments",
+    href: "/finance/payments",
+    permission: Permission.VIEW_VENDOR_PAYMENTS,
+    description: "Your revenue share per service delivered",
+  },
   {
     label: "Contracts",
     href: "/vendor/contracts",
@@ -339,16 +349,6 @@ const NAV_ITEMS: NavItem[] = [
   //   permission: Permission.VIEW_REPORTS,
   //   description: "View system reports",
   // },
-  // Payments — vendor only. The vendor view is built from /vendor/bookings and
-  // /vendor/dashboard, both documented. There is no documented facility
-  // payments endpoint, so facility roles get no Payments entry rather than a
-  // page backed by a route the API reference does not publish.
-  {
-    label: "Payments",
-    href: "/finance/payments",
-    permission: Permission.VIEW_VENDOR_PAYMENTS,
-    description: "Your revenue share per service delivered",
-  },
 ];
 
 // Component to filter navigation items based on user permissions

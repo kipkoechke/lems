@@ -1,6 +1,7 @@
 "use client";
 
 import { maskPhoneNumber } from "@/lib/maskUtils";
+import { isScopedRole } from "@/lib/rbac";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -10,6 +11,7 @@ import { MdAssignment, MdClose } from "react-icons/md";
 import {
   useCurrentFacility,
   useCurrentUser,
+  useInstitutionName,
   useLogout,
 } from "../../hooks/useAuth";
 
@@ -25,13 +27,11 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
   const user = useCurrentUser();
   const facility = useCurrentFacility();
 
-  // The institution this account belongs to. System admins span every
-  // facility, so they get no name — and an account whose institution has not
-  // resolved shows nothing rather than a placeholder that reads as real.
   const isSystemAdmin = user?.role === "admin" || user?.role === "s_admin";
-  const institutionName = isSystemAdmin
-    ? null
-    : facility?.name || user?.entity?.name || null;
+  const institutionName = useInstitutionName();
+  // Facility staff have a worklist; admins, vendors and the integration
+  // accounts do not, and the page answers them with an error.
+  const canSeeWorklist = !isSystemAdmin && !isScopedRole(user?.role);
   const logoutMutation = useLogout();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +74,7 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
 
   return (
     <div className="bg-white border-b border-gray-200 flex items-center justify-between px-4 py-3 col-span-full">
-      <div className="flex items-center gap-4">
+      <div className="flex shrink-0 items-center gap-2 md:gap-4">
         {/* Mobile menu button */}
         <button
           onClick={onMenuToggle}
@@ -103,10 +103,10 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
           </div>
 
           {/* Vertical Separator Line */}
-          <div className="h-4 md:h-6 w-px bg-gray-300"></div>
+          <div className="hidden sm:block h-4 md:h-6 w-px bg-gray-300"></div>
 
           {/* COG Logo */}
-          <div className="h-10 md:h-12 w-auto">
+          <div className="hidden sm:block h-10 md:h-12 w-auto">
             <Image
               src="/assets/cog-logo.png"
               alt="COG Logo"
@@ -126,9 +126,15 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
       </div>
 
       {/* Center - Facility Name (hidden for admin users) */}
-      <div className="flex-1 max-w-md mx-4">
+      {/* One line, from a small tablet up. On a phone the logo leaves room
+          for two or three letters of it, which reads as a glitch; the pages
+          name the account there instead. The full name is the tooltip. */}
+      <div className="hidden sm:block flex-1 min-w-0 max-w-md mx-2 md:mx-4">
         {institutionName && (
-          <h1 className="text-base md:text-lg font-semibold text-gray-900 text-center">
+          <h1
+            title={institutionName}
+            className="truncate text-sm md:text-lg font-semibold text-gray-900 text-center"
+          >
             {institutionName}
           </h1>
         )}
@@ -136,8 +142,8 @@ const Header = ({ onMenuToggle, isMobileMenuOpen }: HeaderProps) => {
 
       {/* Right side - Icons */}
       <div className="flex items-center gap-3">
-        {/* Worklist Icon (hidden for admin users) */}
-        {user?.role !== "admin" && user?.role !== "s_admin" && (
+        {/* Worklist shortcut */}
+        {canSeeWorklist && (
           <button
             onClick={() => router.push("/practitioner/worklist")}
             className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded relative"

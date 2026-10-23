@@ -26,7 +26,6 @@ const authKeys = {
   profile: ["auth", "profile"] as const,
 };
 
-
 /**
  * Warms the landing dashboard's data during the post-login navigation.
  *
@@ -62,7 +61,6 @@ const prefetchDashboard = (
   // Must match the unfiltered key the dashboard mounts with.
   prefetch(["admin-dashboard", {}], () => getDashboard());
 };
-
 
 /**
  * Loads the dashboard bundle this user will land on.
@@ -163,6 +161,18 @@ export const useCurrentUserWithLoading = () => {
   return { user: auth?.user ?? null, isLoading };
 };
 
+/**
+ * The institution this account belongs to. System admins span every
+ * facility, so they get no name — and an account whose institution has not
+ * resolved shows nothing rather than a placeholder that reads as real.
+ */
+export const useInstitutionName = (): string | null => {
+  const { data: auth } = useAuth();
+  const role = auth?.user?.role;
+  if (role === "admin" || role === "s_admin") return null;
+  return auth?.facility?.name || auth?.user?.entity?.name || null;
+};
+
 // Custom hook for getting current facility
 export const useCurrentFacility = (): Facility | null => {
   const { data: auth } = useAuth();
@@ -196,7 +206,9 @@ export const useSyncPermissions = () => {
     const current = auth.user.permissions ?? {};
     const unchanged =
       Object.keys(permissions).length === Object.keys(current).length &&
-      Object.entries(permissions).every(([code, granted]) => current[code] === granted);
+      Object.entries(permissions).every(
+        ([code, granted]) => current[code] === granted,
+      );
     if (unchanged) return;
 
     const user = { ...auth.user, permissions };
