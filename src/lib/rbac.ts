@@ -245,7 +245,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_MAINTENANCE_HISTORY,
     Permission.VIEW_VENDOR_REVENUE,
     Permission.VIEW_VENDOR_PAYMENTS,
-    Permission.VIEW_PAYMENTS,
+    // Served at /vendor/studies/unmatched for this role.
     Permission.VIEW_UNMATCHED_STUDIES,
   ],
 
@@ -403,6 +403,25 @@ export const resolveApiPermissions = (
 };
 
 /**
+ * Roles whose API surface is a fixed, role-scoped set of routes.
+ *
+ * The login's permission codes are generic — a vendor receives
+ * `view_contracts`, `view_bookings` and `view_reports` — and the map above
+ * resolves each to every page that could answer it, admin pages included. For
+ * these roles that turned on Facility Ranking and the admin Contracts page,
+ * both backed by `/admin/*` routes the account cannot call. So for them the
+ * role's own list is the whole grant: the codes may not widen it.
+ */
+const SCOPED_ROLES: UserRole[] = [
+  UserRole.VENDOR,
+  UserRole.PROVIDER_PORTAL,
+  UserRole.PAYER,
+];
+
+export const isScopedRole = (role?: string | null): boolean =>
+  !!role && SCOPED_ROLES.includes(role as UserRole);
+
+/**
  * Get the effective permissions for a user by merging role-based permissions
  * with any API-returned permission grants.
  */
@@ -411,6 +430,7 @@ export const getEffectivePermissions = (
   apiPermissions?: Record<string, boolean>,
 ): Permission[] => {
   const rolePermissions = getUserPermissions(role);
+  if (SCOPED_ROLES.includes(role)) return rolePermissions;
   const apiResolved = resolveApiPermissions(apiPermissions);
   // Merge and deduplicate
   return [...new Set([...rolePermissions, ...apiResolved])];

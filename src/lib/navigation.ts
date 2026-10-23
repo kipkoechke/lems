@@ -1,7 +1,11 @@
 "use client";
 
-import { Permission } from "@/lib/rbac";
-import { useHasPermission } from "@/hooks/usePermissions";
+import { isScopedRole, Permission } from "@/lib/rbac";
+import {
+  useHasPermission,
+  useUserPermissions,
+  useUserRole,
+} from "@/hooks/usePermissions";
 
 interface NavItem {
   label: string;
@@ -449,6 +453,37 @@ export const useSectionTabs = (
     label: item.tabLabel ?? item.label,
     href: item.href,
   }));
+};
+
+/**
+ * True when this account may not open the page at this route.
+ *
+ * The sidebar hides what a role cannot use, but a bookmark, a shared link or
+ * a typed URL still reaches the page, which then fires calls the account is
+ * refused — a vendor opening /facilities/ranking got three 403s and an error
+ * card. The route is matched to its sidebar page by the longest prefix, the
+ * same way the sidebar lights its entry, and judged by that page's
+ * permission. Routes no sidebar page covers (detail pages such as
+ * /bookings/42) are left alone.
+ *
+ * Only the role-scoped accounts are judged. Their surface is fixed and known;
+ * other roles reach some pages by links outside the sidebar, and this is not
+ * the place to find out which.
+ */
+export const useRouteBlocked = (pathname: string): boolean => {
+  const role = useUserRole();
+  const granted = useUserPermissions();
+  if (!isScopedRole(role)) return false;
+
+  let best: NavItem | undefined;
+  for (const item of NAV_ITEMS) {
+    const matches =
+      pathname === item.href || pathname.startsWith(`${item.href}/`);
+    if (matches && (!best || item.href.length > best.href.length)) {
+      best = item;
+    }
+  }
+  return !!best && !granted.includes(best.permission);
 };
 
 // Role-specific quick actions
