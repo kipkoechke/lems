@@ -5,6 +5,7 @@ import type {
   RankingRowWithMachines,
 } from "@/services/apiFacilityRanking";
 import type { FacilityResults } from "@/services/apiBookingResults";
+import { titleCase } from "@/lib/format";
 
 /**
  * The facility performance report.
@@ -87,22 +88,6 @@ const stamp = (value?: string | null) => {
         year: "numeric",
       });
 };
-
-const SMALL_WORDS = new Set(["and", "of", "the", "for", "in"]);
-
-/** Facility names are stored in capitals; a page of them reads as shouting. */
-const titleCase = (name: string) =>
-  name
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim()
-    .split(" ")
-    .map((word, index) =>
-      index > 0 && SMALL_WORDS.has(word)
-        ? word
-        : word.charAt(0).toUpperCase() + word.slice(1),
-    )
-    .join(" ");
 
 /** "LEVEL 6A" → "Level 6A". */
 const kephLabel = (level?: string) => level?.replace(/^level/i, "Level");
