@@ -20,6 +20,60 @@ const formatDateTime = (value?: string | null) =>
       })
     : null;
 
+export type ConnectionStateKey = "live" | "offline" | "never";
+
+/** Where a device stands: live now, seen before but offline, or never seen. */
+export const connectionState = (
+  isConnected?: boolean | null,
+  linked?: boolean | null,
+): ConnectionStateKey => (isConnected ? "live" : linked ? "offline" : "never");
+
+export const CONNECTION_STATE_LABELS: Record<ConnectionStateKey, string> = {
+  live: "Live",
+  offline: "Offline",
+  never: "Never connected",
+};
+
+/**
+ * The same facts as one badge, for a reader who needs the state rather than
+ * the two flags behind it. The pair read "Offline · Never seen" on 34 of a
+ * vendor's 38 machines — two badges saying one thing.
+ */
+export const ConnectionState: React.FC<
+  Omit<ConnectivityBadgesProps, "stacked">
+> = ({ isConnected, linked, lastSeenAt }) => {
+  const state = connectionState(isConnected, linked);
+  const lastSeen = formatDateTime(lastSeenAt);
+  const styles: Record<ConnectionStateKey, [string, string]> = {
+    live: [
+      "bg-emerald-50 text-emerald-700 border-emerald-200",
+      "bg-emerald-500",
+    ],
+    offline: ["bg-slate-50 text-slate-600 border-slate-200", "bg-slate-400"],
+    never: ["bg-amber-50 text-amber-700 border-amber-200", "bg-amber-400"],
+  };
+  const titles: Record<ConnectionStateKey, string> = {
+    live: "Connected to VEMS right now",
+    offline: lastSeen
+      ? `Has connected before — last seen ${lastSeen}`
+      : "Has connected before, not connected now",
+    never: "Has never reached VEMS — check the AE title and network path",
+  };
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border whitespace-nowrap ${styles[state][0]}`}
+      title={titles[state]}
+    >
+      <span className={`w-2 h-2 rounded-full ${styles[state][1]}`} />
+      {CONNECTION_STATE_LABELS[state]}
+      {state === "offline" && lastSeen && (
+        <span className="font-normal text-slate-400">· {lastSeen}</span>
+      )}
+    </span>
+  );
+};
+
 /**
  * Live and linked state for one device.
  *

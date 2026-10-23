@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchControl } from "@/hooks/useSearchControl";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useMyVendor } from "@/features/vendors/useMyVendor";
@@ -17,7 +17,13 @@ import { ActionMenu } from "@/components/common/ActionMenu";
 import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
-import { ConnectivityBadges } from "@/components/common/ConnectivityBadges";
+import {
+  ConnectionState,
+  connectionState,
+  type ConnectionStateKey,
+} from "@/components/common/ConnectivityBadges";
+import { SegmentedControl } from "@/components/common/SegmentedControl";
+import { titleCase } from "@/lib/format";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
 import {
@@ -62,25 +68,41 @@ const getStatusIcon = (status: string) => {
   }
 };
 
+const PAGE_SIZE = 20;
+
+type ConnectionView = "all" | ConnectionStateKey;
+
 function VendorEquipmentsContent() {
   const router = useRouter();
   const { vendor, vendorId, isLoading: vendorLoading } = useMyVendor();
 
   const [page, setPage] = useState(1);
-  const [status, setStatus] = useState("");
+  // The overview links here with ?status=pending_installation.
+  const [status, setStatus] = useState(useSearchParams().get("status") ?? "");
   const [modality, setModality] = useState("");
+  const [view, setView] = useState<ConnectionView>("all");
   const search = useSearchControl(() => setPage(1));
 
+  // The whole fleet in one request — a vendor has tens of machines — so the
+  // connection views can count and filter it, which the API cannot. Paging
+  // happens here. A fleet past 100 machines would need the API's paging back.
   const { data, isLoading, error, refetch } = useVendorEquipments(vendorId, {
-    // Search is server-side and unpaginated, so it spans the whole inventory
-    // rather than being capped at one page of matches.
-    ...(search.isSearching ? {} : { page, per_page: 20 }),
+    per_page: 100,
     status: status || undefined,
     search: search.term || undefined,
   });
 
-  const equipments: VendorEquipment[] = data?.data ?? [];
+  const fleet: VendorEquipment[] = useMemo(() => data?.data ?? [], [data]);
   const pagination = data?.pagination;
+
+  const stateOf = (eq: VendorEquipment) =>
+    connectionState(eq.is_connected ?? eq.dicom?.is_connected, eq.linked);
+  const counts = fleet.reduce<Record<ConnectionStateKey, number>>(
+    (acc, eq) => ({ ...acc, [stateOf(eq)]: acc[stateOf(eq)] + 1 }),
+    { live: 0, offline: 0, never: 0 },
+  );
+  const inView =
+    view === "all" ? fleet : fleet.filter((eq) => stateOf(eq) === view);
 
   // The endpoint publishes the valid filter values it accepts; fall back to the
   // local list only when a deployment doesn't send them.
@@ -91,15 +113,17 @@ function VendorEquipmentsContent() {
   // The vendor equipment endpoint has no modality filter param, so the options
   // come from what this vendor actually owns and filtering happens client-side.
   const modalityOptions = Array.from(
-    new Set(equipments.map((eq) => eq.modality).filter(Boolean) as string[]),
+    new Set(fleet.map((eq) => eq.modality).filter(Boolean) as string[]),
   )
     .sort()
     .map((m) => ({ value: m, label: m }));
 
-  // Modality has no server param, so it filters the current page client-side.
-  const filtered = modality
-    ? equipments.filter((eq) => eq.modality === modality)
-    : equipments;
+  // Modality has no server param, so it filters client-side.
+  const matching = modality
+    ? inView.filter((eq) => eq.modality === modality)
+    : inView;
+  const lastPage = Math.max(1, Math.ceil(matching.length / PAGE_SIZE));
+  const filtered = matching.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   if (vendorLoading || isLoading) {
     return (
@@ -142,8 +166,8 @@ function VendorEquipmentsContent() {
                   My Equipment
                 </h1>
                 <p className="text-sm text-slate-500">
-                  {pagination?.total ?? equipments.length} items ·{" "}
-                  {vendor?.name}
+                  {pagination?.total ?? fleet.length}{" "}
+                  {status ? "matching" : "machines"} · {vendor?.name}
                 </p>
               </div>
             </div>
@@ -165,6 +189,35 @@ function VendorEquipmentsContent() {
               <FaPlus className="w-3 h-3" /> Add Equipment
             </button>
           </div>
+
+          {/* The question a vendor scans this list for: which machines are
+              reachable. Counts follow the status and search above. */}
+          <SegmentedControl
+            className="mt-3"
+            value={view}
+            onChange={(next) => {
+              setView(next);
+              setPage(1);
+            }}
+            options={(
+              [
+                ["all", "All", fleet.length],
+                ["live", "Live", counts.live],
+                ["offline", "Offline", counts.offline],
+                ["never", "Never connected", counts.never],
+              ] as const
+            ).map(([value, label, count]) => ({
+              value,
+              // Count over label: four "Never connected 34" pills do not fit
+              // a phone side by side.
+              label: (
+                <span className="flex flex-col items-center">
+                  <span className="tabular-nums font-semibold">{count}</span>
+                  <span className="text-xs">{label}</span>
+                </span>
+              ),
+            }))}
+          />
 
           {/* On a desktop these two filters sit in the column headers. The
               phone has no headers, so they come up here instead. */}
@@ -235,7 +288,7 @@ function VendorEquipmentsContent() {
               <Table.Body>
                 {filtered.length === 0 ? (
                   <Table.Empty colSpan={5}>
-                    {search.isSearching || status || modality
+                    {search.isSearching || status || modality || view !== "all"
                       ? "No equipment matches your criteria"
                       : "No equipment yet. Add your first item to get started."}
                   </Table.Empty>
@@ -257,7 +310,7 @@ function VendorEquipmentsContent() {
                           </span>
                           {equipmentOwnerName(eq.name) && (
                             <span className="text-[11px] text-slate-500 truncate">
-                              {equipmentOwnerName(eq.name)}
+                              {titleCase(equipmentOwnerName(eq.name) ?? "")}
                             </span>
                           )}
                           {eq.serial_number && (
@@ -281,13 +334,12 @@ function VendorEquipmentsContent() {
                       <Table.Cell>
                         {/* Live is now, linked is ever — the pair is what tells
                           a vendor whether a machine is actually reachable. */}
-                        <ConnectivityBadges
+                        <ConnectionState
                           isConnected={
                             eq.is_connected ?? eq.dicom?.is_connected
                           }
                           linked={eq.linked}
                           lastSeenAt={eq.last_seen_at ?? eq.dicom?.last_seen_at}
-                          stacked
                         />
                       </Table.Cell>
                       <Table.Cell>
@@ -333,7 +385,7 @@ function VendorEquipmentsContent() {
           <div className="md:hidden divide-y divide-slate-100">
             {filtered.length === 0 ? (
               <p className="p-8 text-center text-sm text-slate-500">
-                {search.isSearching || status || modality
+                {search.isSearching || status || modality || view !== "all"
                   ? "No equipment matches your criteria"
                   : "No equipment yet. Add your first item to get started."}
               </p>
@@ -351,7 +403,7 @@ function VendorEquipmentsContent() {
                       </p>
                       {equipmentOwnerName(eq.name) && (
                         <p className="text-xs text-slate-500 line-clamp-2">
-                          {equipmentOwnerName(eq.name)}
+                          {titleCase(equipmentOwnerName(eq.name) ?? "")}
                         </p>
                       )}
                     </div>
@@ -378,7 +430,7 @@ function VendorEquipmentsContent() {
                       </span>
                     )}
                   </div>
-                  <ConnectivityBadges
+                  <ConnectionState
                     isConnected={eq.is_connected ?? eq.dicom?.is_connected}
                     linked={eq.linked}
                     lastSeenAt={eq.last_seen_at ?? eq.dicom?.last_seen_at}
@@ -388,13 +440,13 @@ function VendorEquipmentsContent() {
             )}
           </div>
 
-          {!search.isSearching && pagination && pagination.last_page > 1 && (
+          {lastPage > 1 && (
             <Pagination
-              currentPage={pagination.current_page}
-              lastPage={pagination.last_page}
-              total={pagination.total}
-              from={pagination.from}
-              to={pagination.to}
+              currentPage={page}
+              lastPage={lastPage}
+              total={matching.length}
+              from={(page - 1) * PAGE_SIZE + 1}
+              to={Math.min(page * PAGE_SIZE, matching.length)}
               onPageChange={setPage}
             />
           )}
@@ -407,7 +459,9 @@ function VendorEquipmentsContent() {
 export default function VendorEquipmentsPage() {
   return (
     <PermissionGate permission={Permission.VIEW_VENDOR_EQUIPMENTS}>
-      <VendorEquipmentsContent />
+      <Suspense fallback={null}>
+        <VendorEquipmentsContent />
+      </Suspense>
     </PermissionGate>
   );
 }
