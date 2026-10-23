@@ -227,11 +227,33 @@ export const loginFetcher = async (
 ): Promise<LoginResponse> => {
   try {
     const response = await axios.post("/auth/login", credentials);
-    const data = response.data;
+    const data = response.data?.data ?? response.data;
+    if (typeof data?.token !== "string" || !data.token.trim()) {
+      throw new Error("Sign-in response did not include a valid session token. Please contact support.");
+    }
+
+    // Integration accounts can return only a token. Resolve their identity
+    // before useLogin persists the session; never infer a role from the email.
+    let apiUser = data.user;
+    if (!apiUser) {
+      try {
+        const profile = await axios.get("/auth/me", {
+          headers: { Authorization: `Bearer ${data.token}` },
+        });
+        const body = profile.data?.data ?? profile.data;
+        apiUser = body?.user ?? body;
+      } catch {
+        throw new Error("Unable to load your user profile. Please try again or contact support to confirm this account has portal access.");
+      }
+    }
+    const role = typeof apiUser?.role === "string" ? apiUser.role : apiUser?.role?.key;
+    if (!apiUser || typeof apiUser.id !== "string" || !apiUser.id || typeof role !== "string" || !role.trim()) {
+      throw new Error("Sign-in response did not include a valid user profile. Please contact support to confirm this account has portal access.");
+    }
 
     // Normalize the user data
-    const normalizedUser = normalizeUser(data.user);
-    const facility = extractFacility(data.user);
+    const normalizedUser = normalizeUser(apiUser);
+    const facility = extractFacility(apiUser);
 
     return {
       user: normalizedUser,
