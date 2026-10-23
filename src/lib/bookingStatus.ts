@@ -205,15 +205,29 @@ const resultsOf = (booking: Booking) =>
 /**
  * A study came back for at least one service on this booking.
  *
- * Evidence, not configuration: a result row exists with a status or a
- * received timestamp, which only happens once the modality sent something.
+ * Every booked service carries a result row from the moment it is created,
+ * with `result_status: "pending"` and no `received_at`, so the row existing
+ * proves nothing. Only a received timestamp, or a status past pending, does.
+ * Checked against production on 2026-10-23: 74 of 8,744 rows, all `final`.
  */
 export const hasSentResults = (booking: Booking): boolean =>
-  resultsOf(booking).some((result) => !!result?.result_status || !!result?.received_at);
+  resultsOf(booking).some(
+    (result) =>
+      !!result?.received_at ||
+      (!!result?.result_status && result.result_status !== "pending"),
+  );
 
 /**
- * The modality queried the worklist for at least one service on this booking.
- * `worklist_status` is only ever written when a C-FIND was actually logged.
+ * The modality picked up the worklist entry for at least one service.
+ *
+ * `worklist_status` starts at `sent` — VEMS has published the entry — on
+ * every service, so its presence proves nothing. Anything past `sent`
+ * (`scheduled`, `completed`) means the machine has seen it.
  */
 export const hasQueriedWorklist = (booking: Booking): boolean =>
-  resultsOf(booking).some((result) => !!result?.worklist_status);
+  resultsOf(booking).some(
+    (result) =>
+      !!result?.worklist_status &&
+      result.worklist_status !== "sent" &&
+      result.worklist_status !== "pending",
+  );
