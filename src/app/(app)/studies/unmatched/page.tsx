@@ -2,6 +2,8 @@
 
 import { Suspense, useState } from "react";
 import Link from "next/link";
+import { titleCase } from "@/lib/format";
+import { equipmentDeviceName } from "@/services/apiEquipment";
 import { useSearchParams } from "next/navigation";
 import {
   FaXRay,
@@ -198,6 +200,33 @@ function UnmatchedStudiesContent({ facilityId }: { facilityId: string }) {
                 placeholder="All time"
                 options={availableFilters?.period ?? PERIOD_PRESETS}
               />
+
+              {/* On a desktop these two sit in the column headers; a phone
+                  has no headers, so they come up here. */}
+              <SearchableSelect
+                label=""
+                compact
+                className="md:hidden w-full"
+                value={modality}
+                onChange={(value) => {
+                  setModality(value);
+                  setPage(1);
+                }}
+                placeholder="All modalities"
+                options={modalityOptions}
+              />
+              <SearchableSelect
+                label=""
+                compact
+                className="md:hidden w-full"
+                value={attributed}
+                onChange={(value) => {
+                  setAttributed(value);
+                  setPage(1);
+                }}
+                placeholder="All studies"
+                options={availableFilters?.attributed ?? ATTRIBUTION_OPTIONS}
+              />
             </div>
           </div>
 
@@ -268,7 +297,7 @@ function UnmatchedStudiesContent({ facilityId }: { facilityId: string }) {
 
         {/* Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <Table className="w-full">
               <Table.Header>
                 <Table.Row>
@@ -436,6 +465,67 @@ function UnmatchedStudiesContent({ facilityId }: { facilityId: string }) {
                 )}
               </Table.Body>
             </Table>
+          </div>
+
+          {/* Phone: one card per study, led by what it was and where. */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {isLoading ? (
+              <div className="p-4 space-y-3 animate-pulse">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-16 rounded bg-slate-100" />
+                ))}
+              </div>
+            ) : studies.length === 0 ? (
+              <p className="p-8 text-center text-sm text-slate-500">
+                {search.term || period || modality || kephLevel || attributed
+                  ? "No studies match these filters."
+                  : "No studies have arrived without an order."}
+              </p>
+            ) : (
+              studies.map((study: UnmatchedStudy) => (
+                <div key={study.id} className="p-4 space-y-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 text-sm font-medium text-slate-900">
+                      {study.study_description || study.body_part || "Study"}
+                      {study.modality && (
+                        <span className="ml-1.5 font-normal text-slate-500">
+                          {study.modality}
+                        </span>
+                      )}
+                    </p>
+                    <span className="shrink-0 text-xs text-slate-500">
+                      {formatDateTime(study.received_at)}
+                    </span>
+                  </div>
+                  {study.attributed && study.equipment ? (
+                    <p className="text-xs text-slate-600">
+                      {[
+                        study.facility?.name && titleCase(study.facility.name),
+                        // The machine's stored name repeats the facility.
+                        equipmentDeviceName(study.equipment.name),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || study.equipment.code}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-amber-700">
+                      Unattributed
+                      {study.source_ae_title
+                        ? ` · sent as ${study.source_ae_title}`
+                        : ""}
+                    </p>
+                  )}
+                  <p className="font-mono text-[11px] text-slate-400">
+                    {study.patient_id || "Unknown patient"}
+                    {/* Many machines send the accession as the patient id. */}
+                    {study.accession_number &&
+                    study.accession_number !== study.patient_id
+                      ? ` · ${study.accession_number}`
+                      : ""}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
 
           {pagination && pagination.last_page > 1 && (
