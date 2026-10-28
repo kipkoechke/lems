@@ -131,9 +131,14 @@ function AdminEquipmentDetails() {
   };
 
   const handleDelete = () => {
-    deleteEquipment(params.id, {
-      onSuccess: () => router.push("/equipments"),
-    });
+    if (!equipment) return;
+    deleteEquipment(
+      {
+        vendorId: equipment.vendor_id ?? equipment.vendor?.id,
+        equipmentId: params.id,
+      },
+      { onSuccess: () => router.push("/equipments") },
+    );
   };
 
   if (isLoading) {
@@ -654,11 +659,12 @@ function AdminEquipmentDetails() {
                 <FaTrash className="w-6 h-6 text-red-600" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-2">
-                Delete Equipment
+                Permanently Delete Equipment
               </h3>
               <p className="text-slate-600 mb-6">
-                Are you sure you want to delete &quot;{equipment.name}&quot;?
-                This action cannot be undone.
+                Deleting &quot;{equipment.name}&quot; also deletes its contract
+                and booked services, any bookings left without services, and its
+                ping requests. This action cannot be undone.
               </p>
 
               <div className="flex gap-3">

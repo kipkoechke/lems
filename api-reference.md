@@ -100,7 +100,7 @@ Full system access — all endpoints.
 | `/vendors`                               | GET/POST       | List / Create vendors          |
 | `/vendors/{id}`                          | GET/PUT/DELETE | Vendor CRUD                    |
 | `/vendors/{id}/equipments`               | GET/POST       | Vendor equipment               |
-| `/vendors/{id}/equipments/{eid}`         | GET/PATCH      | Vendor equipment detail        |
+| `/vendors/{id}/equipments/{eid}`         | GET/PATCH/DELETE | Vendor equipment detail / permanent delete |
 | `/vendors/{id}/bookings`                 | GET            | Vendor bookings                |
 | `/vendors/{id}/dashboard`                | GET            | Vendor dashboard               |
 | `/settings/revenue-distributions`        | GET/POST       | Revenue distributions          |
@@ -1469,6 +1469,28 @@ The equipment response now includes vendor and ownership information.
 ```
 
 > **New fields (2026-06-09):** `vendor_id`, `vendor` (id/name/code), and `owner_type` (`"vendor"` or `"facility"`). Eager-loaded on show, update, store, and list endpoints.
+
+---
+
+### DELETE `/vendors/{vendor}/equipments/{equipment}`
+
+**Admin only.** Permanently deletes a piece of equipment and everything that depends on it. There is no soft delete and no restore.
+
+The delete cascades:
+
+1. Contract services mapped to the equipment are deleted.
+2. Booked services associated with the equipment — directly or through those contract mappings — are deleted.
+3. Bookings left without any services are removed.
+4. Ping requests for the equipment are deleted.
+5. The equipment itself is force-deleted.
+
+**Response `200`**
+
+```json
+{
+  "message": "Equipment deleted successfully."
+}
+```
 
 ---
 

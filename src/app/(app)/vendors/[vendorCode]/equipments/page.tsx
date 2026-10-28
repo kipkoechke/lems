@@ -118,9 +118,11 @@ export default function VendorEquipmentsPage() {
   const filteredEquipments = equipments;
 
   const handleDelete = (equipmentId: string) => {
-    deleteEquipment(equipmentId, {
-      onSuccess: () => setShowDeleteConfirm(null),
-    });
+    if (!vendor?.id) return;
+    deleteEquipment(
+      { vendorId: vendor.id, equipmentId },
+      { onSuccess: () => setShowDeleteConfirm(null) },
+    );
   };
 
   const isLoading = vendorLoading || equipmentsLoading;
@@ -501,11 +503,12 @@ export default function VendorEquipmentsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-lg p-6 w-full max-w-sm mx-4">
             <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              Delete Equipment
+              Permanently Delete Equipment
             </h3>
             <p className="text-slate-600 text-sm mb-4">
-              Are you sure you want to delete this equipment? This action cannot
-              be undone.
+              Deleting this equipment also deletes its contract and booked
+              services, any bookings left without services, and its ping
+              requests. This action cannot be undone.
             </p>
             <div className="flex gap-3">
               <button

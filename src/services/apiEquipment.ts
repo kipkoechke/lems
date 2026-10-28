@@ -335,9 +335,11 @@ export const updateVendorEquipment = async (
 /**
  * DELETE /vendor/equipments/{id}
  *
- * Not documented in the API reference or the vendor portal guide, and no
- * vendor-scoped equivalent is published either. Unused by the UI — confirm the
- * route with the API team before wiring a delete action to it.
+ * Not documented in the API reference or the vendor portal guide. Admins
+ * delete equipment through the cascading
+ * `/vendors/{vendor}/equipments/{equipment}` route instead. No UI wires this
+ * one up — confirm the route with the API team before adding a vendor-facing
+ * delete action.
  */
 export const deleteVendorEquipment = async (
   _vendorId: string,
@@ -752,6 +754,23 @@ export const updateAdminVendorEquipment = async (
     data,
   );
   return response.data?.equipment ?? response.data?.data ?? response.data;
+};
+
+/**
+ * Admin-facing permanent equipment deletion.
+ *
+ * DELETE /vendors/{vendor}/equipments/{equipment}
+ *
+ * Unlike the shared `/equipment/{id}` route, this cascades: it deletes the
+ * contract services mapped to the equipment, the booked services associated with
+ * it directly or through those mappings, any bookings left without services, and
+ * the equipment's ping requests before force-deleting the equipment itself.
+ */
+export const deleteAdminVendorEquipment = async (
+  vendorId: string,
+  equipmentId: string,
+): Promise<void> => {
+  await axios.delete(`/vendors/${vendorId}/equipments/${equipmentId}`);
 };
 
 // GET /equipment/{id}

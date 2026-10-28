@@ -67,7 +67,7 @@ export default function VendorEquipmentDetailPage() {
   const vendorCode = params.vendorCode as string;
   const equipmentId = params.id as string;
 
-  const { isLoading: vendorLoading } = useVendor(vendorCode);
+  const { vendor, isLoading: vendorLoading } = useVendor(vendorCode);
   // Admins read the shared /equipment/{id} route; /vendor/equipments/{id} is
   // gated to the vendor role and 403s here.
   const {
@@ -90,9 +90,12 @@ export default function VendorEquipmentDetailPage() {
 
   const handleDelete = () => {
     if (!equipmentId) return;
-    deleteEquipment(equipmentId, {
-      onSuccess: () => router.push(`/vendors/${vendorCode}/equipments`),
-    });
+    deleteEquipment(
+      { vendorId: vendor?.id ?? equipment?.vendor_id, equipmentId },
+      {
+        onSuccess: () => router.push(`/vendors/${vendorCode}/equipments`),
+      },
+    );
   };
 
   const isLoading = vendorLoading || equipmentLoading;
@@ -395,11 +398,12 @@ export default function VendorEquipmentDetailPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-lg p-6 w-full max-w-sm mx-4">
             <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              Delete Equipment
+              Permanently Delete Equipment
             </h3>
             <p className="text-slate-600 text-sm mb-4">
-              Are you sure you want to delete &ldquo;{equipment.name}&rdquo;?
-              This action cannot be undone.
+              Deleting &ldquo;{equipment.name}&rdquo; also deletes its contract
+              and booked services, any bookings left without services, and its
+              ping requests. This action cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
