@@ -799,7 +799,12 @@ export default function BookingDetailPage() {
               Created {formatDate(booking.created_at)} &middot; Source:{" "}
               <span className="capitalize">
                 {booking.source?.replace(/_/g, " ") ?? "-"}
-              </span>{" "}
+              </span>
+              {/* The partner within the source, where there is one. Null on a
+                  provider-portal booking, which belongs to no partner. */}
+              {booking.source_system_label && (
+                <> &middot; Via: {booking.source_system_label}</>
+              )}{" "}
               &middot; By: {createdByName}
             </p>
           </div>

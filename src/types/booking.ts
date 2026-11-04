@@ -230,6 +230,12 @@ export interface Booking {
    * and because deployments that predate the field send nothing.
    */
   source_system?: string | null;
+  /**
+   * The partner's name as the API writes it, e.g. "Kenya EMR". Sent on list
+   * rows and on the detail payload. Null alongside `source_system` for a
+   * booking with no partner, such as a provider-portal one.
+   */
+  source_system_label?: string | null;
   status: "active" | "pending" | "pending_otp" | "completed" | "cancelled";
   booking_status?: string;
   approval_status?: string;

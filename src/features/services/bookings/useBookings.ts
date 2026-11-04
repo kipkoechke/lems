@@ -84,7 +84,8 @@ export function useBookingsExport(filters: BookingFilters = {}) {
             booking.patient?.name ?? "",
             serviceNames(booking).join("; "),
             booking.source ? prettifyCode(booking.source) : "",
-            booking.source_system ? prettifyCode(booking.source_system) : "",
+            booking.source_system_label ??
+              (booking.source_system ? prettifyCode(booking.source_system) : ""),
             DELIVERY_LABELS[deliveryState(booking)],
             deliveryProgress(booking),
             hasSentResults(booking) ? "Yes" : "No",

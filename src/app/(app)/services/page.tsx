@@ -134,16 +134,20 @@ export default function ServicesPage() {
 
   // Where a booking names a partner, the partner is what the row shows: it is
   // the more specific of the two, and "Kenya EMR" says more than "HMIS".
+  //
+  // The API sends `source_system_label` on every row, so that is used as
+  // given rather than looked up — it is the API's own wording for the
+  // partner, and a lookup could only ever disagree with it. `source` has no
+  // per-row label, so it still resolves against the published options.
   const sourceLabel = useMemo(() => {
-    const labels = new Map(
-      [...sources, ...sourceSystems].map((o) => [o.value, o.label]),
-    );
+    const labels = new Map(sources.map((o) => [o.value, o.label]));
     return (booking: Booking): string => {
-      const code = booking.source_system || booking.source;
-      if (!code) return "";
-      return labels.get(code) ?? prettifyCode(code);
+      if (booking.source_system_label) return booking.source_system_label;
+      if (booking.source_system) return prettifyCode(booking.source_system);
+      if (!booking.source) return "";
+      return labels.get(booking.source) ?? prettifyCode(booking.source);
     };
-  }, [sources, sourceSystems]);
+  }, [sources]);
 
   // Only the controls hidden behind the panel count, so the badge tells the
   // user what they cannot currently see. Search and status are always visible.
