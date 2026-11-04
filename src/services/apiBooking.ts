@@ -1,5 +1,7 @@
 import axios from "../lib/axios";
+import { normaliseFilterOptions } from "@/lib/filterOptions";
 import type {
+  BookingFilterOptions,
   InitiateBookingPayload,
   InitiateBookingResponse,
   VerifyOtpPayload,
@@ -23,6 +25,25 @@ export type {
 } from "@/types/booking";
 
 export type Bookings = Booking;
+
+/**
+ * The source and partner-system lists the bookings list can filter on.
+ *
+ * Run through the shared normaliser rather than used as they arrive: the API
+ * publishes some filter blocks as `{value,label}` and others as a model's own
+ * columns, and a select bound to the second kind renders rows with no text.
+ * Normalising here means this one is right whichever shape it turns up in.
+ */
+export const getBookingFilterOptions =
+  async (): Promise<BookingFilterOptions> => {
+    const response = await axios.get("/bookings/filter-options");
+    const body = response.data?.data ?? response.data ?? {};
+
+    return {
+      sources: normaliseFilterOptions(body.sources),
+      source_systems: normaliseFilterOptions(body.source_systems),
+    };
+  };
 
 // ===== Booking API Functions =====
 

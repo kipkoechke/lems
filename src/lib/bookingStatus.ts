@@ -119,6 +119,24 @@ export const SHA_CLAIM_LABELS: Record<
 };
 
 /**
+ * `afya_apex` as "Afya Apex".
+ *
+ * A fallback only. The API publishes labels for both source and partner
+ * system, and those are what the page shows; this is for a code that arrives
+ * without one, so a row never renders a raw identifier.
+ */
+export const prettifyCode = (code: string): string =>
+  code
+    .split(/[_\s]+/)
+    .filter(Boolean)
+    .map((word) =>
+      word.length <= 3
+        ? word.toUpperCase()
+        : word[0].toUpperCase() + word.slice(1).toLowerCase(),
+    )
+    .join(" ");
+
+/**
  * The service names on a booking, in the order the API lists them.
  *
  * Two payloads reach the listings: the nested one (`services[].service.name`)

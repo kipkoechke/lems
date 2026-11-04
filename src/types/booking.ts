@@ -223,6 +223,13 @@ export interface Booking {
   patient: BookingPatient;
   facility: BookingFacility;
   source?: "standalone" | "dha" | "hmis" | "provider_portal";
+  /**
+   * Which partner system a booking came through, where `source` is only the
+   * category it belongs to: `kenya_emr`, `afya_apex`, `afya_lite`, `hie`.
+   * Optional because a standalone or provider-portal booking has no partner,
+   * and because deployments that predate the field send nothing.
+   */
+  source_system?: string | null;
   status: "active" | "pending" | "pending_otp" | "completed" | "cancelled";
   booking_status?: string;
   approval_status?: string;
@@ -329,6 +336,17 @@ export interface BookingsResponse {
   };
 }
 
+/**
+ * `GET /bookings/filter-options`.
+ *
+ * The source lists are published by the API rather than written into the page
+ * so a new HMIS partner appears in the dropdown without a frontend release.
+ */
+export interface BookingFilterOptions {
+  sources: { value: string; label: string }[];
+  source_systems: { value: string; label: string }[];
+}
+
 export interface BookingFilters {
   // API-spec params
   fr_code?: string;
@@ -348,6 +366,12 @@ export interface BookingFilters {
   lot_service_id?: string;
   status?: "pending_otp" | "active" | "completed" | "cancelled" | string;
   source?: "provider_portal" | "hmis" | "standalone" | string;
+  /**
+   * The partner system, e.g. `afya_apex`. Narrows within `source` rather than
+   * replacing it: `source=hmis` is every HMIS partner, `source_system=afya_apex`
+   * is one of them, and the two combine.
+   */
+  source_system?: string;
   from?: string; // Y-m-d
   to?: string; // Y-m-d
   search?: string;

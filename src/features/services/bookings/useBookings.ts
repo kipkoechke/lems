@@ -9,11 +9,13 @@ import {
   hasQueriedWorklist,
   hasSentResults,
   isShaSubmitted,
+  prettifyCode,
   isShaVerified,
   serviceNames,
 } from "@/lib/bookingStatus";
 import {
   BookingFilters,
+  getBookingFilterOptions,
   getBookings,
   getBookingsWithPagination,
 } from "@/services/apiBooking";
@@ -81,6 +83,8 @@ export function useBookingsExport(filters: BookingFilters = {}) {
             booking.booking_number,
             booking.patient?.name ?? "",
             serviceNames(booking).join("; "),
+            booking.source ? prettifyCode(booking.source) : "",
+            booking.source_system ? prettifyCode(booking.source_system) : "",
             DELIVERY_LABELS[deliveryState(booking)],
             deliveryProgress(booking),
             hasSentResults(booking) ? "Yes" : "No",
@@ -107,6 +111,8 @@ export function useBookingsExport(filters: BookingFilters = {}) {
           "Booking #",
           "Patient",
           "Services",
+          "Source",
+          "Partner System",
           "Status",
           "Services Done",
           "Results Sent",
@@ -126,4 +132,30 @@ export function useBookingsExport(filters: BookingFilters = {}) {
   };
 
   return { download, isExporting };
+}
+
+/**
+ * The source and partner-system filter lists.
+ *
+ * Fetched once and held: the lists change when a new HMIS partner is
+ * onboarded, not between page views, so re-requesting them on every mount
+ * would be a round trip per visit for an answer that is already known. Shared
+ * query key, so the two selects and any other consumer resolve to one request.
+ */
+export function useBookingFilterOptions() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["booking-filter-options"],
+    queryFn: getBookingFilterOptions,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    // An older deployment has no such endpoint; the page must still work, so
+    // a failure leaves the lists empty rather than retrying in a loop.
+    retry: false,
+  });
+
+  return {
+    sources: data?.sources ?? [],
+    sourceSystems: data?.source_systems ?? [],
+    isLoading,
+  };
 }

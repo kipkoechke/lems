@@ -5,6 +5,7 @@ import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
 import { useCurrentFacility } from "@/hooks/useAuth";
 import {
+  useBookingFilterOptions,
   useBookingsExport,
   useBookingsWithPagination,
 } from "@/features/services/bookings/useBookings";
@@ -26,6 +27,7 @@ import {
   DELIVERY_BADGES,
   DELIVERY_LABELS,
   deliveryState,
+  prettifyCode,
   serviceNames,
 } from "@/lib/bookingStatus";
 import {
@@ -65,6 +67,9 @@ export default function ServicesPage() {
   const [facilityId, setFacilityId] = useState("");
   const [status, setStatus] = useState("");
   const [source, setSource] = useState("");
+  // The partner system within a source: `source=hmis` is every HMIS partner,
+  // `source_system=afya_apex` is one of them, and the two combine.
+  const [sourceSystem, setSourceSystem] = useState("");
   const [kephLevel, setKephLevel] = useState("");
   const [modality, setModality] = useState("");
   const [lotId, setLotId] = useState("");
@@ -87,6 +92,7 @@ export default function ServicesPage() {
       search: search.term || undefined,
       status: status || undefined,
       source: source || undefined,
+      source_system: sourceSystem || undefined,
       keph_level: kephLevel || undefined,
       modality: modality || undefined,
       lot_id: lotId || undefined,
@@ -108,6 +114,7 @@ export default function ServicesPage() {
       search.isSearching,
       status,
       source,
+      sourceSystem,
       kephLevel,
       modality,
       lotId,
@@ -121,6 +128,22 @@ export default function ServicesPage() {
   const { data, isLoading, error } = useBookingsWithPagination(filters);
   // The export covers everything these filters select, not the page on screen.
   const { download, isExporting } = useBookingsExport(filters);
+  // Published by the API and cached for the session, so onboarding a new HMIS
+  // partner puts it in the dropdown without a frontend release.
+  const { sources, sourceSystems } = useBookingFilterOptions();
+
+  // Where a booking names a partner, the partner is what the row shows: it is
+  // the more specific of the two, and "Kenya EMR" says more than "HMIS".
+  const sourceLabel = useMemo(() => {
+    const labels = new Map(
+      [...sources, ...sourceSystems].map((o) => [o.value, o.label]),
+    );
+    return (booking: Booking): string => {
+      const code = booking.source_system || booking.source;
+      if (!code) return "";
+      return labels.get(code) ?? prettifyCode(code);
+    };
+  }, [sources, sourceSystems]);
 
   // Only the controls hidden behind the panel count, so the badge tells the
   // user what they cannot currently see. Search and status are always visible.
@@ -131,6 +154,7 @@ export default function ServicesPage() {
     lotServiceId,
     kephLevel,
     source,
+    sourceSystem,
     shaClaim,
     from,
     to,
@@ -144,6 +168,7 @@ export default function ServicesPage() {
     setLotServiceId("");
     setKephLevel("");
     setSource("");
+    setSourceSystem("");
     setShaClaim("");
     setFrom("");
     setTo("");
@@ -377,12 +402,24 @@ export default function ServicesPage() {
                       setPage(1);
                     }}
                     placeholder="All sources"
-                    options={[
-                      { value: "standalone", label: "Standalone" },
-                      { value: "hmis", label: "HMIS" },
-                      { value: "provider_portal", label: "Provider Portal" },
-                    ]}
+                    options={sources}
                   />
+                  {/* The partner, not the category. Offered only once the API
+                      names partners, so a deployment without the endpoint
+                      shows one source filter rather than an empty second. */}
+                  {sourceSystems.length > 0 && (
+                    <SearchableSelect
+                      label=""
+                      compact
+                      value={sourceSystem}
+                      onChange={(value) => {
+                        setSourceSystem(value);
+                        setPage(1);
+                      }}
+                      placeholder="All partner systems"
+                      options={sourceSystems}
+                    />
+                  )}
                   {/* Both SHA claim facts in one control — verified implies
                       submitted, and "not sent" is the negation of it. */}
                   <SearchableSelect
@@ -485,9 +522,9 @@ export default function ServicesPage() {
                             <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">
                               {booking.booking_number}
                             </span>
-                            {booking.source && (
-                              <span className="capitalize text-[11px] text-slate-500 truncate">
-                                {booking.source.replace("_", " ")}
+                            {sourceLabel(booking) && (
+                              <span className="text-[11px] text-slate-500 truncate">
+                                {sourceLabel(booking)}
                               </span>
                             )}
                           </div>
@@ -581,9 +618,16 @@ export default function ServicesPage() {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="min-w-0">
-                      <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">
-                        {booking.booking_number}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">
+                          {booking.booking_number}
+                        </span>
+                        {sourceLabel(booking) && (
+                          <span className="text-[11px] text-slate-500 truncate">
+                            {sourceLabel(booking)}
+                          </span>
+                        )}
+                      </div>
                       <p className="mt-1.5 text-xs text-slate-500 truncate">
                         {services.length ? (
                           <>
