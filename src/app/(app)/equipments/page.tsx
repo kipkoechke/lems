@@ -369,9 +369,9 @@ function AdminEquipmentsView() {
                         <span className="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
                           {eq.code}
                         </span>
-                        {equipmentOwnerName(eq.name) && (
+                        {equipmentOwnerName(eq.name, eq.facility) && (
                           <span className="text-[11px] text-slate-500 truncate">
-                            {equipmentOwnerName(eq.name)}
+                            {equipmentOwnerName(eq.name, eq.facility)}
                           </span>
                         )}
                         {eq.serial_number && (

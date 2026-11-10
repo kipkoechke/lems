@@ -539,6 +539,7 @@ export interface AdminEquipment {
   status_label: string;
   vendor_id: string;
   vendor: AdminEquipmentVendor;
+  facility?: VendorEquipmentFacility | null;
   owner_type: "vendor" | "facility";
   linked?: boolean;
   dicom: AdminEquipmentDicom | null;
