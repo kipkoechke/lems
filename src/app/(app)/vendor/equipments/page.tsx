@@ -308,9 +308,9 @@ function VendorEquipmentsContent() {
                           <span className="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
                             {eq.code}
                           </span>
-                          {equipmentOwnerName(eq.name) && (
+                          {equipmentOwnerName(eq.name, eq.facility) && (
                             <span className="text-[11px] text-slate-500 truncate">
-                              {titleCase(equipmentOwnerName(eq.name) ?? "")}
+                              {titleCase(equipmentOwnerName(eq.name, eq.facility))}
                             </span>
                           )}
                           {eq.serial_number && (
@@ -401,9 +401,9 @@ function VendorEquipmentsContent() {
                       <p className="font-medium text-slate-900 truncate">
                         {equipmentDeviceName(eq.name)}
                       </p>
-                      {equipmentOwnerName(eq.name) && (
+                      {equipmentOwnerName(eq.name, eq.facility) && (
                         <p className="text-xs text-slate-500 line-clamp-2">
-                          {titleCase(equipmentOwnerName(eq.name) ?? "")}
+                          {titleCase(equipmentOwnerName(eq.name, eq.facility))}
                         </p>
                       )}
                     </div>

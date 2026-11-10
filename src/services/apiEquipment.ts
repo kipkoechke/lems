@@ -174,7 +174,13 @@ const NAME_SEPARATOR = " — ";
 export const equipmentDeviceName = (name?: string | null): string =>
   (name ?? "").split(NAME_SEPARATOR)[0];
 
-export const equipmentOwnerName = (name?: string | null): string => {
+/** Prefer the explicit facility relation; older responses encode it in the name. */
+export const equipmentOwnerName = (
+  name?: string | null,
+  facility?: { name?: string | null } | null,
+): string => {
+  const facilityName = facility?.name?.trim();
+  if (facilityName) return facilityName;
   const value = name ?? "";
   return value.includes(NAME_SEPARATOR)
     ? value.slice(value.indexOf(NAME_SEPARATOR) + NAME_SEPARATOR.length)
