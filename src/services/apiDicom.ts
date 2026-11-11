@@ -67,9 +67,16 @@ export interface DicomModality {
   [key: string]: unknown;
 }
 
-/** Display name: the equipment it belongs to, else the raw Orthanc key. */
-export const modalityName = (m: DicomModality): string =>
-  m.equipment?.name || m.name || "-";
+/** Include the explicit facility even when the equipment name has no suffix. */
+export const modalityName = (m: DicomModality): string => {
+  const name = m.equipment?.name || m.name || "-";
+  const facility = m.facility?.name?.trim();
+  if (!facility) return name;
+  // Older generated names already carry a facility after an em dash.
+  // The current relation is authoritative if that suffix has gone stale.
+  const device = name.split(" — ")[0].trim();
+  return `${device} — ${facility}`;
+};
 
 /** AE title, whichever shape the API returned. */
 export const modalityAet = (m: DicomModality): string =>
