@@ -174,13 +174,7 @@ const NAME_SEPARATOR = " — ";
 export const equipmentDeviceName = (name?: string | null): string =>
   (name ?? "").split(NAME_SEPARATOR)[0];
 
-/** Prefer the explicit facility relation; older responses encode it in the name. */
-export const equipmentOwnerName = (
-  name?: string | null,
-  facility?: { name?: string | null } | null,
-): string => {
-  const facilityName = facility?.name?.trim();
-  if (facilityName) return facilityName;
+export const equipmentOwnerName = (name?: string | null): string => {
   const value = name ?? "";
   return value.includes(NAME_SEPARATOR)
     ? value.slice(value.indexOf(NAME_SEPARATOR) + NAME_SEPARATOR.length)
@@ -539,7 +533,6 @@ export interface AdminEquipment {
   status_label: string;
   vendor_id: string;
   vendor: AdminEquipmentVendor;
-  facility?: VendorEquipmentFacility | null;
   owner_type: "vendor" | "facility";
   linked?: boolean;
   dicom: AdminEquipmentDicom | null;
