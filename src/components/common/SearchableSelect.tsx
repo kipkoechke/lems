@@ -25,6 +25,17 @@ interface SearchableSelectProps {
   /** Tighter sizing for filter rows, where the control sits beside others. */
   compact?: boolean;
   className?: string;
+  /**
+   * Pick several options at once.
+   *
+   * The selection then lives in `values`/`onValuesChange`; `value`/`onChange`
+   * are left alone so every existing single-select call site is untouched.
+   * The menu stays open while choosing, since picking several things one
+   * re-open at a time is the slow way to use it.
+   */
+  multiple?: boolean;
+  values?: string[];
+  onValuesChange?: (values: string[]) => void;
 }
 
 export const SearchableSelect: React.FC<SearchableSelectProps> = ({
@@ -41,6 +52,9 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   isLoading = false,
   compact = false,
   className = "",
+  multiple = false,
+  values,
+  onValuesChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,11 +90,32 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
         option?.label?.toLowerCase().includes(searchQuery.toLowerCase()),
       );
 
+  const selected = multiple ? (values ?? []) : value ? [value] : [];
+  const isSelected = (optionValue: string) => selected.includes(optionValue);
+
   // Get selected option label
-  const selectedOption = options.find((opt) => opt?.value === value);
-  const selectedLabel = selectedOption?.label || "";
+  const selectedOption = multiple
+    ? undefined
+    : options.find((opt) => opt?.value === value);
+  // With several chosen, naming them all overflows a filter-row control, so
+  // the first is named and the rest counted.
+  const selectedLabel = multiple
+    ? selected.length === 0
+      ? ""
+      : selected.length === 1
+        ? (options.find((opt) => opt?.value === selected[0])?.label ??
+          selected[0])
+        : `${options.find((opt) => opt?.value === selected[0])?.label ?? selected[0]} +${selected.length - 1}`
+    : selectedOption?.label || "";
 
   const handleSelect = (optionValue: string) => {
+    if (multiple) {
+      const next = isSelected(optionValue)
+        ? selected.filter((item) => item !== optionValue)
+        : [...selected, optionValue];
+      onValuesChange?.(next);
+      return;
+    }
     onChange(optionValue);
     setIsOpen(false);
     setSearchQuery("");
@@ -88,7 +123,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange("");
+    if (multiple) onValuesChange?.([]);
+    else onChange("");
     setSearchQuery("");
   };
 
@@ -124,7 +160,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
             {selectedLabel || placeholder}
           </span>
           <div className="flex items-center space-x-1">
-            {value && !disabled && (
+            {selected.length > 0 && !disabled && (
               <MdClose
                 className="w-4 h-4 text-gray-400 hover:text-gray-600 shrink-0"
                 onClick={handleClear}
@@ -199,12 +235,22 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                   className={`
                     w-full text-left px-3 py-2.5 hover:bg-blue-50 transition-colors text-sm font-semibold
                     ${
-                      value === option.value
+                      isSelected(option.value)
                         ? "bg-blue-100 text-blue-900"
                         : "text-gray-900"
                     }
                   `}
                 >
+                  {multiple && (
+                    <span
+                      aria-hidden
+                      className={`inline-block w-3.5 h-3.5 mr-2 rounded border align-middle ${
+                        isSelected(option.value)
+                          ? "bg-blue-600 border-blue-600"
+                          : "border-gray-300"
+                      }`}
+                    />
+                  )}
                   {option?.label || option?.value || "Unknown"}
                 </button>
               ))

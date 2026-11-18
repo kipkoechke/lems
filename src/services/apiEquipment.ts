@@ -558,7 +558,14 @@ export interface AdminEquipmentParams {
   category?: string;
   status?: string;
   search?: string;
-  vendor_id?: string;
+  /** One or more vendor UUIDs — vendors combine with OR. */
+  vendor_id?: string | string[];
+  /**
+   * One or more HMIS partners (`kenya_emr`, `afya_apex`, `afya_lite`, `hie`).
+   * This filters by booking history, not by any attribute of the equipment:
+   * it returns devices that have served a booking from those partners.
+   */
+  hmis_partner?: string | string[];
   /** Owning facility. */
   facility_id?: string;
   /** That facility's KEPH level, as stored: "Level 4". Case-insensitive. */
@@ -581,6 +588,9 @@ export const getAdminEquipments = async (
       ...params,
       linked: params.linked === undefined ? undefined : String(params.linked),
     },
+    // Multi-value filters go out as `vendor_id[]=a&vendor_id[]=b`; see the
+    // note on the dashboard request.
+    paramsSerializer: { indexes: false },
   });
   return {
     data: response.data?.data ?? [],

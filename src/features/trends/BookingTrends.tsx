@@ -33,7 +33,7 @@ import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { FilterBar } from "@/components/common/FilterBar";
 import { BookingTrendChart } from "@/components/common/BookingTrendChart";
 import { useRouter } from "next/navigation";
-import { unmatchedStudyCount } from "@/services/apiDashboard";
+import { appliedValues, unmatchedStudyCount } from "@/services/apiDashboard";
 import { PERIOD_PRESETS } from "@/services/apiPingRequests";
 import type {
   DashboardAvailableFilters,
@@ -209,17 +209,21 @@ function DashboardFilterBar({
   available,
   filters,
   onChange,
+  onChangeMany,
   onReset,
 }: {
   available?: DashboardAvailableFilters;
   filters: DashboardParams;
   onChange: (key: keyof DashboardParams, value: string) => void;
+  onChangeMany: (key: keyof DashboardParams, values: string[]) => void;
   onReset: () => void;
 }) {
   type Field = {
     key: keyof DashboardParams;
     label: string;
     options?: { value: string; label: string }[];
+    /** Vendors and partners combine with OR, so several can be chosen. */
+    multiple?: boolean;
   };
 
   const fields: Field[] = (
@@ -248,32 +252,70 @@ function DashboardFilterBar({
         label: "All facilities",
         options: available?.facility,
       },
-      { key: "vendor_id", label: "All vendors", options: available?.vendor },
+      {
+        key: "vendor_id",
+        label: "All vendors",
+        options: available?.vendor,
+        multiple: true,
+      },
+      // Only offered where the API publishes partners. Production has no HMIS
+      // bookings yet, so a partner selection empties the dashboard — correct,
+      // not a fault.
+      {
+        key: "hmis_partner",
+        label: "All HMIS partners",
+        options: available?.hmis_partner,
+        multiple: true,
+      },
     ] as Field[]
   ).filter((field) => field.options && field.options.length > 0);
 
   if (fields.length === 0) return null;
 
-  const activeCount = fields.filter((field) => filters[field.key]).length;
+  const activeCount = fields.filter((field) => {
+    const current = filters[field.key];
+    return Array.isArray(current) ? current.length > 0 : Boolean(current);
+  }).length;
 
   return (
     <FilterBar activeCount={activeCount} onReset={onReset}>
-      {fields.map((field) => (
-        <SearchableSelect
-          key={field.key}
-          label=""
-          compact
-          className="w-full lg:w-44"
-          value={(filters[field.key] as string) ?? ""}
-          onChange={(value) => onChange(field.key, value)}
-          placeholder={field.label}
-          searchPlaceholder="Search..."
-          options={field.options!}
-        />
-      ))}
+      {fields.map((field) =>
+        field.multiple ? (
+          <SearchableSelect
+            key={field.key}
+            label=""
+            compact
+            multiple
+            className="w-full lg:w-44"
+            values={asArray(filters[field.key])}
+            onValuesChange={(values) => onChangeMany(field.key, values)}
+            value=""
+            onChange={() => {}}
+            placeholder={field.label}
+            searchPlaceholder="Search..."
+            options={field.options!}
+          />
+        ) : (
+          <SearchableSelect
+            key={field.key}
+            label=""
+            compact
+            className="w-full lg:w-44"
+            value={(filters[field.key] as string) ?? ""}
+            onChange={(value) => onChange(field.key, value)}
+            placeholder={field.label}
+            searchPlaceholder="Search..."
+            options={field.options!}
+          />
+        ),
+      )}
     </FilterBar>
   );
 }
+
+/** A filter value as a list, whichever way it is held. */
+const asArray = (value: unknown): string[] =>
+  Array.isArray(value) ? (value as string[]) : value ? [String(value)] : [];
 
 const MODALITY_BAR_COLORS = [
   "#6366f1",
@@ -296,6 +338,14 @@ export default function BookingTrends() {
   const setFilter = (key: keyof DashboardParams, value: string) =>
     setFilters((current) => ({ ...current, [key]: value || undefined }));
 
+  // An empty selection is dropped rather than sent as `[]`, which would
+  // serialise to nothing useful and still count as an active filter.
+  const setFilters_ = (key: keyof DashboardParams, values: string[]) =>
+    setFilters((current) => ({
+      ...current,
+      [key]: values.length ? values : undefined,
+    }));
+
   const efficiency = dashboardData?.efficiency;
   const bookingTrend = dashboardData?.booking_trend;
   const availableFilters = dashboardData?.filters?.available;
@@ -306,7 +356,9 @@ export default function BookingTrends() {
   // back in `applied`, which is the one the numbers were built from — the
   // client state is only a fallback for deployments that do not echo it.
   const appliedPeriod =
-    dashboardData?.filters?.applied?.period ?? filters.period ?? "";
+    appliedValues(dashboardData?.filters?.applied?.period)[0] ??
+    filters.period ??
+    "";
   const periodLabel = appliedPeriod
     ? ((availableFilters?.period ?? PERIOD_PRESETS).find(
         (option) => option.value === appliedPeriod,
@@ -399,11 +451,11 @@ export default function BookingTrends() {
     <div className="min-h-screen p-4">
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Header */}
+        {/* No page title: the sidebar already says which page this is, and a
+            full-width heading row pushed the first cards below the fold. What
+            is left is the scope line, which the title could not say. */}
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
-            {/* Only what the heading cannot say: the window being shown,
-                and that a new one is on its way. */}
             {(periodLabel || (isFetching && !isLoading)) && (
               <p className="text-xs text-slate-500 mt-0.5">
                 {[periodLabel, isFetching && !isLoading && "updating…"]
@@ -429,6 +481,7 @@ export default function BookingTrends() {
             available={availableFilters}
             filters={filters}
             onChange={setFilter}
+            onChangeMany={setFilters_}
             onReset={() => setFilters({})}
           />
         </div>

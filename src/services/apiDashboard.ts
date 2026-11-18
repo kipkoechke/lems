@@ -142,12 +142,18 @@ export interface DashboardAvailableFilters {
   facility_type?: DashboardFilterOption[];
   keph_level?: DashboardFilterOption[];
   vendor?: DashboardFilterOption[];
+  /** HMIS partners that may have submitted the order: kenya_emr, hie, ... */
+  hmis_partner?: DashboardFilterOption[];
   period?: DashboardFilterOption[];
   trend?: DashboardFilterOption[];
 }
 
 export interface DashboardFilters {
-  applied?: Record<string, string | null>;
+  /**
+   * What the API understood of what was sent. Multi-value filters echo as
+   * arrays, single-value ones as scalars, so a reader must handle both.
+   */
+  applied?: Record<string, string | string[] | null>;
   available?: DashboardAvailableFilters;
 }
 
@@ -157,11 +163,24 @@ export interface DashboardParams {
   facility_type?: string;
   /** Facility KEPH level, as stored: "Level 4". Case-insensitive. */
   keph_level?: string;
-  vendor_id?: string;
+  /** One or more vendor UUIDs — vendors combine with OR. */
+  vendor_id?: string | string[];
+  /**
+   * One or more HMIS partners (`kenya_emr`, `afya_apex`, `afya_lite`, `hie`),
+   * combining with OR. Production has no HMIS bookings yet, so selecting one
+   * legitimately empties the dashboard rather than erroring.
+   */
+  hmis_partner?: string | string[];
   lot_id?: string;
   period?: string;
   trend?: TrendGranularity;
 }
+
+/** The resolved value of a filter the API echoes back, scalar or array. */
+export const appliedValues = (
+  value?: string | string[] | null,
+): string[] =>
+  value == null ? [] : Array.isArray(value) ? value : [value];
 
 export interface DailyBreakdown {
   date: string;
@@ -195,7 +214,14 @@ export interface DashboardResponse {
 export const getDashboard = async (
   params: DashboardParams = {},
 ): Promise<DashboardResponse> => {
-  const response = await axios.get("/admin/dashboard", { params });
+  const response = await axios.get("/admin/dashboard", {
+    params,
+    // Multi-value filters go out as `vendor_id[]=a&vendor_id[]=b`, one of the
+    // three forms the API normalises. Axios' default would serialise an array
+    // as a repeated bare key, which Laravel reads as a scalar overwritten by
+    // the last value — only the final selection would have applied.
+    paramsSerializer: { indexes: false },
+  });
   // Handle both wrapped and unwrapped responses
   const body = response.data as { data?: DashboardResponse } & DashboardResponse;
   const dashboard = (body.data ?? response.data) as DashboardResponse;

@@ -126,3 +126,18 @@ export const SHA_CLAIM_FILTER_OPTIONS: SelectOption[] = [
   { value: "submitted", label: "SHA submitted" },
   { value: "unsent", label: "SHA not sent" },
 ];
+
+/**
+ * HMIS integration partners, for the filters that take `hmis_partner`.
+ *
+ * The dashboard publishes this list in its own `filters.available` block and
+ * should use that; this is for the equipment listing, which does not. The
+ * four values are fixed by the backend enum, so a static list cannot drift
+ * silently — a new partner is a backend release either way.
+ */
+export const HMIS_PARTNER_FILTER_OPTIONS: SelectOption[] = [
+  { value: "kenya_emr", label: "Kenya EMR" },
+  { value: "afya_apex", label: "Afya Apex" },
+  { value: "afya_lite", label: "Afya Lite" },
+  { value: "hie", label: "HIE" },
+];

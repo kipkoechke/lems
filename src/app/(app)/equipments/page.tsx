@@ -27,6 +27,8 @@ import { SearchField } from "@/components/common/SearchField";
 import { ColumnFilter } from "@/components/common/ColumnFilter";
 import { FacilityFilter } from "@/components/common/FacilityFilter";
 import { KephLevelFilter } from "@/components/common/KephLevelFilter";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { HMIS_PARTNER_FILTER_OPTIONS } from "@/lib/selectOptions";
 import { ConnectivityBadges } from "@/components/common/ConnectivityBadges";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -84,6 +86,9 @@ function AdminEquipmentsView() {
   const [facilityFilter, setFacilityFilter] = useState("");
   const [kephFilter, setKephFilter] = useState("");
   const [linkedFilter, setLinkedFilter] = useState("");
+  // Equipment that has served a booking from these partners. Several combine
+  // with OR.
+  const [partnerFilter, setPartnerFilter] = useState<string[]>([]);
   const search = useSearchControl(() => setPage(1));
 
   const { equipments, pagination, availableFilters, isLoading, error, refetch } =
@@ -97,6 +102,7 @@ function AdminEquipmentsView() {
       keph_level: kephFilter || undefined,
       // Tri-state — "" means no filter, not false.
       linked: linkedFilter === "" ? undefined : linkedFilter === "true",
+      hmis_partner: partnerFilter.length ? partnerFilter : undefined,
       search: search.term || undefined,
     });
 
@@ -186,6 +192,23 @@ function AdminEquipmentsView() {
                   setPage(1);
                 }}
                 className="w-full lg:w-40 shrink-0"
+              />
+
+              <SearchableSelect
+                label=""
+                multiple
+                compact
+                className="w-full lg:w-44 shrink-0"
+                values={partnerFilter}
+                onValuesChange={(values) => {
+                  setPartnerFilter(values);
+                  setPage(1);
+                }}
+                value=""
+                onChange={() => {}}
+                placeholder="All HMIS partners"
+                searchPlaceholder="Search partners..."
+                options={HMIS_PARTNER_FILTER_OPTIONS}
               />
 
               <div className="w-full lg:w-56 shrink-0">
