@@ -161,7 +161,10 @@ function AdminEquipmentsView() {
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Header */}
         <div className="bg-white rounded-lg border border-slate-200 px-4 md:px-6 py-4">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+          {/* Wrapping, not just a row: search, three filters and the action
+              button overflow a 1280px viewport, which clipped the button
+              against the right edge of the card. */}
+          <div className="flex flex-col lg:flex-row lg:flex-wrap lg:items-center gap-4">
             <div className="flex items-center gap-3 shrink-0">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                 <FaCog className="w-5 h-5 text-blue-600" />

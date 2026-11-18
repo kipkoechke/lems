@@ -102,11 +102,13 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   const selectedLabel = multiple
     ? selected.length === 0
       ? ""
-      : selected.length === 1
-        ? (options.find((opt) => opt?.value === selected[0])?.label ??
-          selected[0])
-        : `${options.find((opt) => opt?.value === selected[0])?.label ?? selected[0]} +${selected.length - 1}`
+      : (options.find((opt) => opt?.value === selected[0])?.label ??
+        selected[0])
     : selectedOption?.label || "";
+  // Rendered beside the name rather than inside it: a long first label is
+  // truncated, and with the count in the same span the count was what got
+  // cut off — leaving no sign that anything else was selected.
+  const extraCount = multiple && selected.length > 1 ? selected.length - 1 : 0;
 
   const handleSelect = (optionValue: string) => {
     if (multiple) {
@@ -152,12 +154,19 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
         `}
       >
         <div className="flex items-center justify-between">
-          <span
-            className={`block truncate text-sm ${
-              selectedLabel ? "text-gray-900" : "text-gray-500"
-            }`}
-          >
-            {selectedLabel || placeholder}
+          <span className="flex items-baseline gap-1 min-w-0">
+            <span
+              className={`block truncate text-sm ${
+                selectedLabel ? "text-gray-900" : "text-gray-500"
+              }`}
+            >
+              {selectedLabel || placeholder}
+            </span>
+            {extraCount > 0 && (
+              <span className="shrink-0 text-xs font-semibold text-blue-700">
+                +{extraCount}
+              </span>
+            )}
           </span>
           <div className="flex items-center space-x-1">
             {selected.length > 0 && !disabled && (
