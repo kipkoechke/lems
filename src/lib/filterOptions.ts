@@ -1,12 +1,14 @@
 /**
  * Normalising the API's `available_filters` blocks.
  *
- * The API publishes two different shapes in the same block. Lists it composes
- * by hand — period, trend, activity type — arrive as `{value, label}`. Lists
- * it draws from a table — county, facility, vendor — arrive as the model's own
- * columns, `{id, name, code}` or `{id, name, fr_code}`. A select bound
- * straight to the second kind renders rows with no value and no text, which
- * reads as "No results found" rather than as a shape mismatch.
+ * The API publishes three different shapes in the same block. Lists it
+ * composes by hand — period, trend, activity type — arrive as
+ * `{value, label}`. Lists it draws from a table — county, facility, vendor —
+ * arrive as the model's own columns, `{id, name, code}` or
+ * `{id, name, fr_code}`. Lists it plucks a single column from — keph_level,
+ * facility_type — arrive as bare strings. A select bound straight to the
+ * second kind renders rows with no value and no text, which reads as "No
+ * results found" rather than as a shape mismatch.
  *
  * A block can also arrive as neither: when the response is served from a
  * cache that could not rehydrate its Eloquent collections, each list comes
@@ -22,6 +24,15 @@ export interface NormalisedFilterOption {
 }
 
 const optionFrom = (entry: unknown): NormalisedFilterOption | null => {
+  // A third shape: lists the API builds with `pluck()` arrive as bare strings
+  // — `["LEVEL 4A", "LEVEL 5"]` for keph_level and facility_type. Rejecting
+  // them dropped the list, and with it the whole filter: the dashboard simply
+  // had no KEPH level or facility type control, with nothing to say why.
+  if (typeof entry === "string" || typeof entry === "number") {
+    const value = String(entry).trim();
+    return value ? { value, label: value } : null;
+  }
+
   if (!entry || typeof entry !== "object") return null;
 
   const row = entry as Record<string, unknown>;

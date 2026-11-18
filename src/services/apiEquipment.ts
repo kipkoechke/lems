@@ -1,5 +1,9 @@
 import axios from "../lib/axios";
 import { NormalisedPagination, normalisePagination } from "./pagination";
+import {
+  NormalisedFilterOption,
+  normaliseFilterOptions,
+} from "@/lib/filterOptions";
 
 export interface ServiceCategory {
   vendorId: string;
@@ -548,6 +552,13 @@ export interface AdminEquipmentResponse {
   pagination: EquipmentPagination;
   available_filters?: {
     modalities: { code: string; label: string }[];
+    /**
+     * The KEPH levels actually present in the facility register, normalised
+     * from the bare strings the API sends. Worth preferring over any list
+     * composed here: the register holds "LEVEL 4A" and "LEVEL 6B" as well as
+     * "Level 4", so a tidy Level 1-6 list matches only some of it.
+     */
+    keph_level?: NormalisedFilterOption[];
   };
 }
 
@@ -599,7 +610,14 @@ export const getAdminEquipments = async (
       response.data?.pagination,
       params.per_page,
     ),
-    available_filters: response.data?.available_filters,
+    available_filters: response.data?.available_filters
+      ? {
+          ...response.data.available_filters,
+          keph_level: normaliseFilterOptions(
+            response.data.available_filters.keph_level,
+          ),
+        }
+      : undefined,
   };
 };
 

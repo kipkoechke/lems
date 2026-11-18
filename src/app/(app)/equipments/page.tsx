@@ -189,6 +189,10 @@ function AdminEquipmentsView() {
 
             <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 lg:gap-3">
               <KephLevelFilter
+                // The register's own values, which include "LEVEL 4A" and
+                // "LEVEL 6B" — the static Level 1-6 list matched only three
+                // of the seven levels in use.
+                options={availableFilters?.keph_level}
                 value={kephFilter}
                 onChange={(value) => {
                   setKephFilter(value);
