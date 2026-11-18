@@ -211,12 +211,14 @@ function DashboardFilterBar({
   onChange,
   onChangeMany,
   onReset,
+  className,
 }: {
   available?: DashboardAvailableFilters;
   filters: DashboardParams;
   onChange: (key: keyof DashboardParams, value: string) => void;
   onChangeMany: (key: keyof DashboardParams, values: string[]) => void;
   onReset: () => void;
+  className?: string;
 }) {
   type Field = {
     key: keyof DashboardParams;
@@ -278,7 +280,7 @@ function DashboardFilterBar({
   }).length;
 
   return (
-    <FilterBar activeCount={activeCount} onReset={onReset}>
+    <FilterBar activeCount={activeCount} onReset={onReset} className={className}>
       {fields.map((field) =>
         field.multiple ? (
           <SearchableSelect
@@ -454,36 +456,44 @@ export default function BookingTrends() {
         {/* No page title: the sidebar already says which page this is, and a
             full-width heading row pushed the first cards below the fold. What
             is left is the scope line, which the title could not say. */}
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
-          <div>
-            {(periodLabel || (isFetching && !isLoading)) && (
-              <p className="text-xs text-slate-500 mt-0.5">
-                {[periodLabel, isFetching && !isLoading && "updating…"]
-                  .filter(Boolean)
-                  .join(" — ")}
-              </p>
-            )}
-            {/* A windowed dashboard counts only what was created inside the
-                window, and the window moves: figures can fall from one visit
-                to the next without anything being lost. Said out loud here so
-                a smaller number reads as scoped rather than as missing data. */}
-            {periodLabel && (
-              <p
-                className="text-[11px] text-slate-400 mt-0.5"
-                title="Items older than the selected period drop out of the totals as the window moves forward"
-              >
-                Counts cover {periodLabel.toLowerCase()} only — items older than
-                the window fall out, so these figures can decrease over time.
-              </p>
-            )}
-          </div>
+        {/* The filters come first and start at the left edge, where the
+            content below starts. With the title gone they used to be pushed
+            to the right half by a `justify-between` against an empty box,
+            which left the row looking as though something had fallen out of
+            it. The scope note takes whatever width is left over, and when
+            there is no period in force it renders nothing at all. */}
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-2">
           <DashboardFilterBar
             available={availableFilters}
             filters={filters}
             onChange={setFilter}
             onChangeMany={setFilters_}
             onReset={() => setFilters({})}
+            className="min-w-0"
           />
+          {(periodLabel || (isFetching && !isLoading)) && (
+            <div className="lg:text-right lg:max-w-sm shrink-0">
+              <p className="text-xs text-slate-500">
+                {[periodLabel, isFetching && !isLoading && "updating…"]
+                  .filter(Boolean)
+                  .join(" — ")}
+              </p>
+              {/* A windowed dashboard counts only what was created inside the
+                  window, and the window moves: figures can fall from one visit
+                  to the next without anything being lost. Said out loud here
+                  so a smaller number reads as scoped, not as missing data. */}
+              {periodLabel && (
+                <p
+                  className="text-[11px] text-slate-400 mt-0.5"
+                  title="Items older than the selected period drop out of the totals as the window moves forward"
+                >
+                  Counts cover {periodLabel.toLowerCase()} only — items older
+                  than the window fall out, so these figures can decrease over
+                  time.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Quick Stats Row */}
