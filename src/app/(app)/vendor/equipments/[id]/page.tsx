@@ -10,22 +10,31 @@ import {
 } from "@/lib/validations";
 import { PermissionGate } from "@/components/PermissionGate";
 import { Permission } from "@/lib/rbac";
-import { useVendorEquipment } from "@/features/vendors/useVendorEquipments";
+import {
+  useVendorEquipment,
+  useVerifyVendorEquipment,
+} from "@/features/vendors/useVendorEquipments";
 import {
   useConfigureVendorEquipmentDicom,
   useTestVendorEquipmentConnection,
   useVendorEquipmentDicomStatus,
   useVendorWorklistTest,
 } from "@/features/vendors/useVendorEquipmentDicom";
-import { vendorEquipmentDicom } from "@/services/apiEquipment";
+import {
+  isEquipmentVerified,
+  vendorEquipmentDicom,
+} from "@/services/apiEquipment";
+import { VerificationBadge } from "@/components/common/VerificationBadge";
 import { InputField } from "@/components/common/InputField";
 import { ErrorState } from "@/components/common/ErrorState";
 import EquipmentWorklistTests from "@/features/equipment/EquipmentWorklistTests";
 import WorklistTestModal from "@/features/equipment/WorklistTestModal";
 import {
   FaArrowLeft,
+  FaCheckCircle,
   FaCog,
   FaEdit,
+  FaExclamationTriangle,
   FaPlug,
   FaListAlt,
   FaTimes,
@@ -57,6 +66,8 @@ function VendorEquipmentDetailContent() {
 
   const [showConfigure, setShowConfigure] = useState(false);
   const [showWorklistTest, setShowWorklistTest] = useState(false);
+  const [showVerify, setShowVerify] = useState(false);
+  const [verifyNotes, setVerifyNotes] = useState("");
 
   // 1. Equipment metadata — the /vendor/* routes infer the vendor from the
   //    auth token, so no vendor id is needed here.
@@ -72,6 +83,7 @@ function VendorEquipmentDetailContent() {
 
   const { configureDicom, isConfiguring } =
     useConfigureVendorEquipmentDicom(equipmentId);
+  const { verify, isVerifying } = useVerifyVendorEquipment(equipmentId);
   const { testConnection, isTesting } =
     useTestVendorEquipmentConnection(equipmentId);
   const { runWorklistTest, isRunningTest } = useVendorWorklistTest();
@@ -128,6 +140,8 @@ function VendorEquipmentDetailContent() {
   // The portal returns the connection fields flat on the equipment record;
   // the accessor reads either that or the older nested `dicom` block.
   const equipmentDicomBlock = vendorEquipmentDicom(equipment);
+  const verification = equipment.verification;
+  const verified = isEquipmentVerified(equipment);
   const isConnected = dicom?.is_connected ?? equipmentDicomBlock?.is_connected;
   const mwl =
     dicom?.mwl_server ?? dicom?.vendor_config ?? equipment.vendor_config;
@@ -219,6 +233,8 @@ function VendorEquipmentDetailContent() {
               {isConnected ? "Live" : "Offline"}
             </span>
 
+            <VerificationBadge verified={verified} />
+
             <button
               onClick={() =>
                 router.push(`/vendor/equipments/${equipmentId}/edit`)
@@ -227,6 +243,65 @@ function VendorEquipmentDetailContent() {
             >
               <FaEdit className="w-3.5 h-3.5" /> Edit
             </button>
+          </div>
+
+          {/* Verification. It sits above the record it attests to, because
+              what is being confirmed is everything below: serial, AE title,
+              site and configuration. */}
+          <div
+            className={`rounded-lg border p-4 md:p-5 ${
+              verified
+                ? "bg-emerald-50/50 border-emerald-200"
+                : "bg-white border-slate-200"
+            }`}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                  <FaCheckCircle
+                    className={`w-3.5 h-3.5 ${
+                      verified ? "text-emerald-600" : "text-slate-300"
+                    }`}
+                  />
+                  Vendor verification
+                </h2>
+                {verified ? (
+                  <p className="text-sm text-slate-600 mt-1">
+                    Verified by{" "}
+                    <span className="font-medium text-slate-900">
+                      {verification?.verified_by ?? "a vendor user"}
+                    </span>{" "}
+                    on {formatDateTime(verification?.verified_at)}
+                  </p>
+                ) : (
+                  <p className="text-sm text-slate-600 mt-1">
+                    No one has confirmed this record yet. Verify it once the
+                    serial, AE title and site match the machine on site.
+                  </p>
+                )}
+                {verification?.notes && (
+                  <p className="text-sm text-slate-600 mt-2 italic">
+                    &ldquo;{verification.notes}&rdquo;
+                  </p>
+                )}
+              </div>
+
+              <button
+                onClick={() => {
+                  setVerifyNotes(verification?.notes ?? "");
+                  setShowVerify(true);
+                }}
+                disabled={isVerifying}
+                className={`shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+                  verified
+                    ? "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                }`}
+              >
+                <FaCheckCircle className="w-3.5 h-3.5" />
+                {verified ? "Unverify" : "Mark as verified"}
+              </button>
+            </div>
           </div>
 
           {/* Equipment metadata */}
@@ -316,6 +391,100 @@ function VendorEquipmentDetailContent() {
           <EquipmentWorklistTests tests={equipment.worklist_tests} />
         </div>{" "}
         {/* End left column (75%) */}
+        {/* Confirming is a claim about a physical machine, so it is worth a
+            deliberate step: the dialog restates what is being attested and
+            takes the optional note in the same place. */}
+        {showVerify && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {verified ? "Remove verification" : "Verify this equipment"}
+                </h3>
+                <button
+                  onClick={() => setShowVerify(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <FaTimes size={20} />
+                </button>
+              </div>
+
+              <p className="text-sm text-slate-600">
+                {verified
+                  ? "This record will go back to unverified until someone confirms it again."
+                  : "You are confirming that this record matches the machine on site — its serial, AE title, facility and configuration."}
+              </p>
+
+              <dl className="mt-4 rounded-lg bg-slate-50 border border-slate-200 p-3 text-sm space-y-1.5">
+                {[
+                  ["Equipment", equipment.name],
+                  ["Code", equipment.code],
+                  ["Serial", equipment.serial_number],
+                  [
+                    "AE title",
+                    dicom?.ae_title ?? equipmentDicomBlock?.ae_title,
+                  ],
+                  ["Facility", equipment.facility?.name],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex justify-between gap-3">
+                    <dt className="text-slate-500 shrink-0">{label}</dt>
+                    <dd className="text-slate-900 text-right break-all">
+                      {value || "-"}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+
+              <label className="block mt-4">
+                <span className="text-sm font-medium text-slate-700">
+                  Notes <span className="text-slate-400">(optional)</span>
+                </span>
+                <textarea
+                  value={verifyNotes}
+                  onChange={(event) => setVerifyNotes(event.target.value)}
+                  rows={3}
+                  maxLength={1000}
+                  placeholder="e.g. Serial and AE title confirmed with the hospital."
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </label>
+
+              <div className="flex justify-end gap-2 mt-5">
+                <button
+                  onClick={() => setShowVerify(false)}
+                  className="px-4 py-2 rounded-lg text-sm font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() =>
+                    verify(
+                      {
+                        verified: !verified,
+                        ...(verifyNotes.trim()
+                          ? { notes: verifyNotes.trim() }
+                          : {}),
+                      },
+                      { onSuccess: () => setShowVerify(false) },
+                    )
+                  }
+                  disabled={isVerifying}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-50 ${
+                    verified
+                      ? "bg-slate-700 hover:bg-slate-800"
+                      : "bg-emerald-600 hover:bg-emerald-700"
+                  }`}
+                >
+                  {isVerifying
+                    ? "Saving..."
+                    : verified
+                      ? "Unverify"
+                      : "Confirm verification"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {showWorklistTest && (
           <WorklistTestModal
             equipmentName={equipment.name}
@@ -347,6 +516,21 @@ function VendorEquipmentDetailContent() {
               <p className="text-sm text-slate-600 mb-4">
                 Saving registers this device as a modality in Orthanc.
               </p>
+
+              {/* Changing the identity invalidates what was attested, and the
+                  API clears the flag on save. Said before the change, not
+                  after it, so the vendor is not surprised by a record of
+                  theirs quietly going back to unverified. */}
+              {verified && (
+                <div className="flex gap-2 mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                  <FaExclamationTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-sm text-amber-800">
+                    Changing the AE title, IP or port will clear this
+                    equipment&apos;s verification. You will need to confirm it
+                    again afterwards. Saving the same values changes nothing.
+                  </p>
+                </div>
+              )}
 
               <form
                 onSubmit={handleSubmit((data) =>

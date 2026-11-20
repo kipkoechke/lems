@@ -164,7 +164,26 @@ export interface VendorEquipment {
   connected_at?: string | null;
   facility?: VendorEquipmentFacility | null;
   worklist_tests?: WorklistTests | null;
+  /**
+   * A vendor user has confirmed this record describes the physical machine —
+   * serial, AE title, site and configuration. Sent flat on list rows.
+   */
+  is_verified?: boolean;
+  /** The same fact with its provenance, sent on the detail payload only. */
+  verification?: VendorEquipmentVerification | null;
 }
+
+export interface VendorEquipmentVerification {
+  is_verified: boolean;
+  verified_at: string | null;
+  /** A display name, not a UUID. */
+  verified_by: string | null;
+  notes: string | null;
+}
+
+/** Whichever shape the payload carried: detail block first, then the flat row. */
+export const isEquipmentVerified = (equipment: VendorEquipment): boolean =>
+  equipment.verification?.is_verified ?? equipment.is_verified ?? false;
 
 /**
  * Generated equipment names carry the owning facility after an em dash, e.g.
@@ -219,11 +238,29 @@ export interface VendorEquipmentAvailableFilters {
   category?: VendorEquipmentFilterOption[];
   sort_by?: VendorEquipmentFilterOption[];
   sort_order?: VendorEquipmentFilterOption[];
+  /** Sent with real booleans as values, unlike the other lists. */
+  verified?: { value: boolean | string; label: string }[];
+}
+
+/**
+ * Fleet-wide tallies, deliberately NOT narrowed by the filters in the request.
+ * They belong on tab badges, which should hold still as the user switches
+ * between tabs; `pagination.total` is the one that follows the filters.
+ */
+export interface VendorEquipmentSummary {
+  active?: number;
+  pending_installation?: number;
+  maintenance?: number;
+  decommissioned?: number;
+  total?: number;
+  verified?: number;
+  unverified?: number;
 }
 
 interface VendorEquipmentsResponse {
   data: VendorEquipment[];
   pagination: EquipmentPagination;
+  summary?: VendorEquipmentSummary;
   available_filters?: VendorEquipmentAvailableFilters;
 }
 
@@ -262,6 +299,8 @@ export interface VendorEquipmentsParams {
   search?: string;
   sort_by?: "name" | "code" | "status" | "created_at";
   sort_order?: "asc" | "desc";
+  /** Vendor-confirmed records only, or only the unconfirmed. Omit for both. */
+  verified?: boolean;
 }
 
 // Get equipment categories
@@ -284,10 +323,15 @@ export const getVendorEquipments = async (
   params: VendorEquipmentsParams = {},
 ): Promise<VendorEquipmentsResponse> => {
   const response = await axios.get(`/vendor/equipments`, {
-    params,
+    params: {
+      ...params,
+      // Tri-state: absent means both, so it is only sent when explicitly set.
+      verified: params.verified === undefined ? undefined : params.verified,
+    },
   });
   return {
     data: response.data?.data ?? [],
+    summary: response.data?.summary,
     // The vendor portal paginates under `meta` (vendor-portal-guide.md); older
     // deployments sent `pagination`. Reading only one of them silently loses
     // the page count and renders the list as a single page.
@@ -297,6 +341,41 @@ export const getVendorEquipments = async (
     ),
     available_filters: response.data?.available_filters,
   };
+};
+
+export interface VendorEquipmentVerifyRequest {
+  verified: boolean;
+  /** Optional on either state. The API caps it at 1000 characters. */
+  notes?: string;
+}
+
+export interface VendorEquipmentVerifyResponse {
+  id: string;
+  code: string;
+  name: string;
+  is_verified: boolean;
+  verified_at: string | null;
+  verified_by: string | null;
+  verification_notes: string | null;
+  message?: string;
+}
+
+/**
+ * POST /vendor/equipments/{id}/verify
+ *
+ * Idempotent: verifying an already-verified record just refreshes who
+ * confirmed it and when. The response is the new state, so a caller can patch
+ * the row from it instead of refetching.
+ */
+export const verifyVendorEquipment = async (
+  equipmentId: string,
+  data: VendorEquipmentVerifyRequest,
+): Promise<VendorEquipmentVerifyResponse> => {
+  const response = await axios.post(
+    `/vendor/equipments/${equipmentId}/verify`,
+    data,
+  );
+  return response.data?.data ?? response.data;
 };
 
 // GET /vendor/equipments/{id} — vendor inferred from auth token

@@ -8,9 +8,12 @@ import {
   createVendorEquipment,
   updateVendorEquipment,
   deleteVendorEquipment,
+  verifyVendorEquipment,
   VendorEquipmentsParams,
   VendorEquipmentCreateRequest,
+  VendorEquipmentVerifyRequest,
 } from "@/services/apiEquipment";
+import { apiErrorMessage } from "@/lib/apiError";
 
 // Equipment categories hook
 export const useEquipmentCategories = () => {
@@ -52,6 +55,37 @@ export const useVendorEquipment = (vendorId: string, equipmentId: string) => {
     queryFn: () => getVendorEquipment(vendorId, equipmentId),
     enabled: !!equipmentId,
   });
+};
+
+/**
+ * Mark a piece of equipment verified, or undo it.
+ *
+ * The response carries the new state, but the tab badges are read from the
+ * list's `summary`, which is fleet-wide and may have moved under us — another
+ * vendor user can be verifying at the same time. So both queries are
+ * invalidated rather than patched locally.
+ */
+export const useVerifyVendorEquipment = (equipmentId: string) => {
+  const queryClient = useQueryClient();
+
+  const { mutate, mutateAsync, isPending } = useMutation({
+    mutationFn: (data: VendorEquipmentVerifyRequest) =>
+      verifyVendorEquipment(equipmentId, data),
+    onSuccess: (result) => {
+      toast.success(
+        result?.message ??
+          (result?.is_verified
+            ? "Equipment marked as verified"
+            : "Equipment marked as unverified"),
+      );
+      queryClient.invalidateQueries({ queryKey: ["vendorEquipments"] });
+      queryClient.invalidateQueries({ queryKey: ["vendorEquipment"] });
+    },
+    onError: (error) =>
+      toast.error(apiErrorMessage(error, "Failed to update verification")),
+  });
+
+  return { verify: mutate, verifyAsync: mutateAsync, isVerifying: isPending };
 };
 
 // Create mutation

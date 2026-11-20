@@ -23,6 +23,8 @@ import {
   type ConnectionStateKey,
 } from "@/components/common/ConnectivityBadges";
 import { SegmentedControl } from "@/components/common/SegmentedControl";
+import { VerificationBadge } from "@/components/common/VerificationBadge";
+import { isEquipmentVerified } from "@/services/apiEquipment";
 import { titleCase } from "@/lib/format";
 import Pagination from "@/components/common/Pagination";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -72,6 +74,8 @@ const PAGE_SIZE = 20;
 
 type ConnectionView = "all" | ConnectionStateKey;
 
+type VerifiedView = "all" | "verified" | "unverified";
+
 function VendorEquipmentsContent() {
   const router = useRouter();
   const { vendor, vendorId, isLoading: vendorLoading } = useMyVendor();
@@ -81,6 +85,9 @@ function VendorEquipmentsContent() {
   const [status, setStatus] = useState(useSearchParams().get("status") ?? "");
   const [modality, setModality] = useState("");
   const [view, setView] = useState<ConnectionView>("all");
+  // Confirmed-by-a-vendor-user, a different question from reachable-on-the-
+  // network, so it gets its own control rather than more pills in that one.
+  const [verified, setVerified] = useState<VerifiedView>("all");
   const search = useSearchControl(() => setPage(1));
 
   // The whole fleet in one request — a vendor has tens of machines — so the
@@ -90,10 +97,26 @@ function VendorEquipmentsContent() {
     per_page: 100,
     status: status || undefined,
     search: search.term || undefined,
+    // Filtered by the API, unlike the connection views: it is a stored fact,
+    // not something derivable from the rows already loaded.
+    verified: verified === "all" ? undefined : verified === "verified",
   });
 
   const fleet: VendorEquipment[] = useMemo(() => data?.data ?? [], [data]);
   const pagination = data?.pagination;
+  // Fleet-wide and unmoved by the filters above, which is what a tab badge
+  // needs: switching tabs must not change the numbers on the tabs. The
+  // fallback keeps the control usable on a deployment that sends no summary,
+  // where the counts can only describe what was loaded.
+  const summary = data?.summary;
+  const verifiedCounts = {
+    all: summary?.total ?? fleet.length,
+    verified:
+      summary?.verified ?? fleet.filter((eq) => isEquipmentVerified(eq)).length,
+    unverified:
+      summary?.unverified ??
+      fleet.filter((eq) => !isEquipmentVerified(eq)).length,
+  };
 
   const stateOf = (eq: VendorEquipment) =>
     connectionState(eq.is_connected ?? eq.dicom?.is_connected, eq.linked);
@@ -219,6 +242,33 @@ function VendorEquipmentsContent() {
             }))}
           />
 
+          {/* Which records a vendor user has signed off as matching the
+              machine on site. Counts come from the API's fleet-wide summary,
+              so they hold still as the tabs are switched. */}
+          <SegmentedControl
+            className="mt-2"
+            value={verified}
+            onChange={(next) => {
+              setVerified(next);
+              setPage(1);
+            }}
+            options={(
+              [
+                ["all", "All", verifiedCounts.all],
+                ["verified", "Verified", verifiedCounts.verified],
+                ["unverified", "Unverified", verifiedCounts.unverified],
+              ] as const
+            ).map(([value, label, count]) => ({
+              value,
+              label: (
+                <span className="flex flex-col items-center">
+                  <span className="tabular-nums font-semibold">{count}</span>
+                  <span className="text-xs">{label}</span>
+                </span>
+              ),
+            }))}
+          />
+
           {/* On a desktop these two filters sit in the column headers. The
               phone has no headers, so they come up here instead. */}
           <div className="md:hidden grid grid-cols-2 gap-2 mt-3">
@@ -270,6 +320,7 @@ function VendorEquipmentsContent() {
                   <Table.HeaderCell className="w-36">
                     Connection
                   </Table.HeaderCell>
+                  <Table.HeaderCell className="w-28">Verified</Table.HeaderCell>
                   <Table.HeaderCell className="w-32">
                     <ColumnFilter
                       label="Modality"
@@ -287,8 +338,12 @@ function VendorEquipmentsContent() {
               </Table.Header>
               <Table.Body>
                 {filtered.length === 0 ? (
-                  <Table.Empty colSpan={5}>
-                    {search.isSearching || status || modality || view !== "all"
+                  <Table.Empty colSpan={6}>
+                    {search.isSearching ||
+                    status ||
+                    modality ||
+                    view !== "all" ||
+                    verified !== "all"
                       ? "No equipment matches your criteria"
                       : "No equipment yet. Add your first item to get started."}
                   </Table.Empty>
@@ -343,6 +398,12 @@ function VendorEquipmentsContent() {
                         />
                       </Table.Cell>
                       <Table.Cell>
+                        <VerificationBadge
+                          compact
+                          verified={isEquipmentVerified(eq)}
+                        />
+                      </Table.Cell>
+                      <Table.Cell>
                         <span className="text-sm text-slate-700">
                           {eq.modality || "-"}
                         </span>
@@ -385,7 +446,11 @@ function VendorEquipmentsContent() {
           <div className="md:hidden divide-y divide-slate-100">
             {filtered.length === 0 ? (
               <p className="p-8 text-center text-sm text-slate-500">
-                {search.isSearching || status || modality || view !== "all"
+                {search.isSearching ||
+                    status ||
+                    modality ||
+                    view !== "all" ||
+                    verified !== "all"
                   ? "No equipment matches your criteria"
                   : "No equipment yet. Add your first item to get started."}
               </p>
@@ -430,11 +495,17 @@ function VendorEquipmentsContent() {
                       </span>
                     )}
                   </div>
-                  <ConnectionState
-                    isConnected={eq.is_connected ?? eq.dicom?.is_connected}
-                    linked={eq.linked}
-                    lastSeenAt={eq.last_seen_at ?? eq.dicom?.last_seen_at}
-                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <ConnectionState
+                      isConnected={eq.is_connected ?? eq.dicom?.is_connected}
+                      linked={eq.linked}
+                      lastSeenAt={eq.last_seen_at ?? eq.dicom?.last_seen_at}
+                    />
+                    <VerificationBadge
+                      compact
+                      verified={isEquipmentVerified(eq)}
+                    />
+                  </div>
                 </div>
               ))
             )}
